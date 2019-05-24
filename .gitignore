@@ -1,1 +1,13 @@
 /build/
+target/
+logs/
+data/
+.svn/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans

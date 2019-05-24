@@ -57,15 +57,15 @@
 	<!-- ************************************************************************* -->
 	
 	<!-- ################################# -->
-	<!-- ##				ORACLE 11g 						## -->
+	<!-- ##				ORACLE 11g 		## -->
 	<!-- ################################# -->
 	<Resource name="jdbc/msp_oracle"
 	          auth="Container"
 	          type="javax.sql.DataSource" 
 	          driverClassName="oracle.jdbc.OracleDriver"
-	          url="jdbc:oracle:thin:@211.241.199.243:1521:ORCL"
-	          username="admin41"
-	          password="uracle1234"
+	          url="jdbc:oracle:thin:@211.241.199.155:1521:UDB"
+	          username="morpheus5"
+	          password="manager"
 	          maxActive="20"
 	          maxIdle="10"
 	          minIdle="5"
@@ -75,9 +75,9 @@
 	          auth="Container"
 	          type="javax.sql.DataSource" 
 	          driverClassName="oracle.jdbc.OracleDriver"
-	          url="jdbc:oracle:thin:@211.241.199.243:1521:ORCL"
-	          username="push42ee"
-	          password="uracle1234"
+	          url="jdbc:oracle:thin:@211.241.199.155:1521:UDB"
+	          username="morpheus5"
+	          password="manager"
 	          maxActive="20"
 	          maxIdle="10"
 	          minIdle="5"
@@ -110,216 +110,6 @@
               maxWait="-1"
             />-->
 
-
-	<!-- ################################# -->
-	<!-- ##				ORACLE 9i R2 						## -->
-	<!-- ################################# -->
-	<Resource name="jdbc/msp_oracle9i" 
-	          auth="Container"
-	          type="javax.sql.DataSource" 
-	          driverClassName="oracle.jdbc.OracleDriver"
-	          url="jdbc:oracle:thin:@211.241.199.221:1521:MORP10"
-	          username="MSP_ADMIN" 
-	          password="!dusrnthdjemals!" 
-	          maxActive="20"
-	          maxIdle="10"
-	          minIdle="5"
-	          maxWait="-1" 
-	/> 
-	<Resource name="jdbc/msp_oracle9i_push" 
-	          auth="Container"
-	          type="javax.sql.DataSource" 
-	          driverClassName="oracle.jdbc.OracleDriver"
-	          url="jdbc:oracle:thin:@211.241.199.221:1521:MORP10"
-	          username="MSP_PUSH" 
-	          password="!dusrnthvntnl!"
-	          maxActive="20"
-	          maxIdle="10"
-	          minIdle="5"
-	          maxWait="-1" 
-	/> 
-
-
-	<!-- ################################# -->
-	<!-- ##				MSSQL 								## -->
-	<!-- ################################# -->
-    <Resource name="jdbc/msp_mssql" auth="Container"
-              type="javax.sql.DataSource" driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-              url="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=msp41;"
-              username="msp41" password="!dusrnthvntnl!" maxActive="20" minIdle="5" maxIdle="10"
-              maxWait="-1" />
-    <Resource name="jdbc/msp_mssql_push" auth="Container"
-              type="javax.sql.DataSource" driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-              url="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=push41;"
-              username="push41" password="!dusrnthvntnl!" maxActive="20" minIdle="5" maxIdle="10"
-              maxWait="-1" />
-    <Resource name="jdbc/msp_mssql_securepush" auth="Container"
-              type="javax.sql.DataSource" driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-              url="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=SECUREPUSH10;"
-              username="SECUREPUSH10" password="!dusrnthvntnl!" maxActive="20" minIdle="5" maxIdle="10"
-              maxWait="-1" />
-
-    <!--<Resource name="jdbc/msp_mssql" auth="Container"-->
-              <!--type="javax.sql.DataSource" driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"-->
-              <!--url="jdbc:sqlserver://211.241.199.219:1433;DatabaseName=push;selectMethod=cursor;"-->
-              <!--username="push" password="!dusrnthvntnl!" maxActive="500" minIdle="100" maxIdle="500"-->
-              <!--maxWait="-1" />-->
-    <!--<Resource name="jdbc/msp_mssql_push" auth="Container"-->
-              <!--type="javax.sql.DataSource" driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"-->
-              <!--url="jdbc:sqlserver://211.241.199.219:1433;DatabaseName=push;selectMethod=cursor;"-->
-              <!--username="push" password="!dusrnthvntnl!" maxActive="500" minIdle="100" maxIdle="500"-->
-              <!--maxWait="-1" />-->
-	<!-- ################################# -->
-	<!-- ##				MYSQL 								## -->
-	<!-- ################################# -->
-    <Resource name="jdbc/msp_mysql" auth="Container"
-              type="javax.sql.DataSource" driverClassName="com.mysql.jdbc.Driver"
-              url="jdbc:mysql://52.79.96.155:3306/admin40_ee?characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull"
-              username="push" password="dusrnthvntnl" maxActive="20" minIdle="5" maxIdle="10"
-              maxWait="-1"
-              validationQuery="SELECT 1"
-              validationInterval="30000"
-              testWhileIdle="true"/>
-    <Resource name="jdbc/msp_mysql_push" auth="Container"
-              type="javax.sql.DataSource" driverClassName="com.mysql.jdbc.Driver"
-              url="jdbc:mysql://52.79.96.155:3306/push41_ee?characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull"
-              username="push" password="dusrnthvntnl" maxActive="20" minIdle="5" maxIdle="10"
-              maxWait="-1"
-              validationQuery="SELECT 1"
-              validationInterval="30000"
-              testWhileIdle="true"/>
-    <Resource name="jdbc/msp_mysql_securepush" auth="Container"
-              type="javax.sql.DataSource" driverClassName="com.mysql.jdbc.Driver"
-              url="jdbc:mysql://52.79.96.155:3306/SECUREPUSH10?characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull"
-              username="securepush" password="!dusrnthvntnl!" maxActive="20" minIdle="5" maxIdle="10"
-              maxWait="-1"
-              validationQuery="SELECT 1"
-              validationInterval="30000"
-              testWhileIdle="true"/>
-
-	<!-- ################################# -->
-	<!-- ##				CUBRID			## -->
-	<!-- ################################# -->
-	<Resource name="jdbc/msp_cubrid" auth="Container"
-			  type="javax.sql.DataSource" driverClassName="cubrid.jdbc.driver.CUBRIDDriver"
-			  url="jdbc:CUBRID:211.241.199.195:33000:morpheus:public::?charSet=utf-8"
-			  username="morpheus" password="qlqjs" maxActive="20" minIdle="5" maxIdle="10"
-			  maxWait="-1"
-			  validationQuery="SELECT 1"
-			  validationInterval="30000"
-			  testWhileIdle="true"/>
- 
- 	<!-- ################################# -->
-	<!-- ##				DB2 								## -->
-	<!-- ################################# -->
-
-	  <Resource name="jdbc/msp_db2"
-	     auth="Container"
-	     type="javax.sql.DataSource"
-	     username="db2inst1"
-	     password="qlalfqjsgh"
-	     driverClassName="com.ibm.db2.jcc.DB2Driver"
-	     url="jdbc:db2://211.241.199.195:50000/MSP"
-	     maxActive="8"
-	     maxIdle="4" />
-	     
-	  <Resource name="jdbc/msp_db2_push"
-	     auth="Container"
-	     type="javax.sql.DataSource"
-				username="db2inst1"
-				password="qlalfqjsgh"
-				driverClassName="com.ibm.db2.jcc.DB2Driver"
-				url="jdbc:db2://211.241.199.195:50000/MSP"
-	     maxActive="8"
-	     maxIdle="4" />
-	     
-	  <Resource name="jdbc/msp_db2_securepush"
-	     auth="Container"
-	     type="javax.sql.DataSource"
-				username="db2inst1"
-				password="qlalfqjsgh"
-				driverClassName="com.ibm.db2.jcc.DB2Driver"
-				url="jdbc:db2://211.241.199.195:50000/MSP"
-	     maxActive="8"
-	     maxIdle="4" />
-	     
-	     
-	     
-	     
-	<!-- ################################# -->
-	<!-- ##				INFORMIX 		## -->
-	<!-- ################################# -->
-    <Resource name="jdbc/msp_informix" 
-    		  auth="Container"
-              type="javax.sql.DataSource" 
-              driverClassName="com.informix.jdbc.IfxDriver"
-              url="jdbc:informix-sqli://211.241.199.15:9088/msp41:INFORMIXSERVER=ol_informix1170;DB_LOCALE=en_US.819;NEWLOCALE=ko_kr,en_us;NEWCODESET=KSC5601,8859-1,819;DELIMIDENT=Y;"
-              username="informix" 
-              password="1234" 
-              maxActive="20" 
-              minIdle="5" 
-              maxIdle="10"
-              />
-    <Resource name="jdbc/msp_informix_push" 
-    		  auth="Container"
-              type="javax.sql.DataSource" 
-              driverClassName="com.informix.jdbc.IfxDriver"
-              url="jdbc:informix-sqli://211.241.199.84:9090/MSP_PDB:INFORMIXSERVER=test;DB_LOCALE=en_US.819;NEWLOCALE=ko_kr,en_us;NEWCODESET=KSC5601,8859-1,819;DELIMIDENT=Y;"
-              username="informix" 
-              password="1234" 
-              maxActive="500" 
-              minIdle="100" 
-              maxIdle="500"
-              />
-    <Resource name="jdbc/msp_informix_securepush" 
-    		  auth="Container"
-              type="javax.sql.DataSource" 
-              driverClassName="com.informix.jdbc.IfxDriver"
-              url="jdbc:informix-sqli://211.241.199.15:9088/securepush10:INFORMIXSERVER=ol_informix1170;DB_LOCALE=en_US.819;NEWLOCALE=ko_kr,en_us;NEWCODESET=KSC5601,8859-1,819;DELIMIDENT=Y;"
-              username="informix" 
-              password="1234" 
-              maxActive="20" 
-              minIdle="5" 
-              maxIdle="10"
-              />
-
-
-	<!-- ################################# -->
-	<!-- ##				POSTGRESQL 		## -->
-	<!-- ################################# -->
-	<Resource name="jdbc/msp_postgresql"
-			  auth="Container"
-			  type="javax.sql.DataSource"
-			  driverClassName="org.postgresql.Driver"
-			  url="jdbc:postgresql://211.241.199.243:5432/PUSH50EE"
-			  username="push50"
-			  password="uracle1234"
-			  maxActive="20"
-			  minIdle="5"
-			  maxIdle="10"
-			/>
-	<Resource name="jdbc/msp_postgresql_push"
-			  auth="Container"
-			  type="javax.sql.DataSource"
-			  driverClassName="org.postgresql.Driver"
-			  url="jdbc:postgresql://211.241.199.243:5432/PUSH50EE_NEW"
-			  username="push50"
-			  password="uracle1234"
-			  maxActive="20"
-			  minIdle="5"
-			  maxIdle="10"
-			/>
-	<Resource name="jdbc/msp_postgresql_securepush"
-			  auth="Container"
-			  type="javax.sql.DataSource"
-			  driverClassName="org.postgresql.Driver"
-			  url="jdbc:postgresql://211.241.199.243:5432/PUSH50EE"
-			  username="push50"
-			  password="uracle1234"
-			  maxActive="20"
-			  minIdle="5"
-			  maxIdle="10"
-			/>
 	<!-- ************************************************************************* -->
 
  	<!-- ================================================================= -->
