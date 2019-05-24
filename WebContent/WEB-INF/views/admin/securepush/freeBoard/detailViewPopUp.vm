@@ -1,0 +1,388 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery-te-1.4.0.css" >
+<style>
+.jqte_editor, .jqte_source {
+	height: 200px; /*에디터 높이 재정의*/
+	padding:10px;
+	background:#FFF;
+	min-height:100px;
+	max-height:900px;
+	overflow:auto;
+	outline:none;
+	word-wrap:break-word; -ms-word-wrap:break-word;
+	resize:vertical
+}
+
+</style>
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery-te-1.4.0.js"></script>
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+	jQuery("textarea[name=CONT]").jqte();
+	
+	#if(!$itemInfo)
+	fn_setCurrDate();
+	#end
+});
+
+
+//파일 선택 시 업로드.
+$(document).on("change","#ATTACH_FILE",function(){
+	
+	fn_uploadAttachFile();
+});
+
+// 현재 시간 세팅.
+function fn_setCurrDate() {
+	var now = new Date();
+	var res = now.toISOString().slice(0,10);
+	$("#tdRegDt").html(res);
+}
+
+//파일 업로드 후 첨부된 파일 목록에 표시.
+function fn_uploadAttachFile(){
+	var data = "";
+	var url = CONTEXT_PATH + "/admin/securepush/freeBoard/attachUpload";
+	jQuery.ajaxFileUpload({
+		url           : url,
+		secureuri     : false,
+		cache: false,
+		fileElementId :'ATTACH_FILE',
+		dataType	  : 'json', 
+		data          : data,
+		contentType   : 'multipart/form-data',
+		success:function(json){
+			if(json.result > 0){
+				fn_addFileList(json.fileKey, json.fileName, json.fileSize);
+			}else{
+				alert(json.msg);
+			}
+		}
+	});
+}
+
+//업로드한 파일 추가.
+function fn_addFileList(fileKey, fileName, fileSize){
+	
+	var fileDiv = '<div id="'+fileKey+'"><a href="$!{CONTEXT_PATH}/admin/securepush/freeBoard/downBoardFile?FILE_ID='
+		+fileKey+'"><span class="file-name">'+fileName+'('+fn_formatBytes(Number(fileSize))
+		+')</span></a><a href="javascript:fn_removeFile(\''+fileKey+'\');" class="tbl-xbtn"></a></div>';
+	$(".file-list").append(fileDiv);
+}
+
+//파일 목록에서 삭제.
+function fn_removeFile(fileKey){
+	$(".file-list").find("#" + fileKey).remove();
+}
+
+//파일 사이즈를 단위 변환.
+function fn_formatBytes(bytes, decimals){
+	if(bytes == 0) return '0 Bytes';
+	var k = 1000,
+		dm = decimals + 1 || 3,
+		sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+		i = Math.floor(Math.log(bytes) / Math.log(k));
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+
+//입력 폼 validation.
+function fn_validate(){
+	
+	if( $("form[name=frmWrite]").find("input[name=TITLE]").val() == ""){
+		alert('#springMessage("menu.securePush.msgSend.alert.inputTitle")');  //제목을 입력해 주세요.
+		$("form[name=frmWrite]").find("input[name=TITLE]").focus();
+		return false;
+	}
+	if( $("form[name=frmWrite]").find("select[name=CATG_ID]").length){
+		if( $("form[name=frmWrite]").find("select[name=CATG_ID]").val() == ""){
+			alert('#springMessage("menu.securePush.freeBoard.alert.selectCatg")'); // 카테고리를 선택해 주세요.
+			$("form[name=frmWrite]").find("select[name=CATG_ID]").focus();
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+
+//게시글 삭제
+function fn_boardDelete(boardId){
+	
+	if(!confirm('#springMessage("common.alert.doDelete")')){  //삭제하시겠습니까?
+		return;
+	}
+		
+	var PAGE_NUM = $("#PAGE_NUM").val();
+
+	if($(".BOARD_ID").size() == 1){
+		PAGE_NUM = PAGE_NUM - 1;
+	}
+
+	if(PAGE_NUM < 1){
+		PAGE_NUM = 1;
+	}
+
+	var url = CONTEXT_PATH + "/admin/securepush/freeBoard/deleteBoard";
+	var data = "BOARD_ID=" + boardId;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.manageSend.successDelete")'); // 삭제되었습니다.
+				fn_pageList( PAGE_NUM );
+				fn_closePopup();
+			}else{
+				alert(data.msg);
+			}
+		},
+     error: function(jqXHR, textStatus, errorThrown) {
+         alert(errorThrown);
+     }
+	});
+}
+
+
+//첨부파일 삭제
+function fn_attachDelete(boardId, fileId){
+	// 수정 시 이미 게시글에 첨부되어 있던 파일은 이 함수를 호출하여 DB상에서도 삭제 처리함.
+	// 편집 화면에서 임시 업로드한 파일은 굳이 서버로 요청하여 지울 필요 없음.
+	// (서버 상에서 스케쥴러로 사용되지 않는 파일은 삭제처리함.)
+	if(!confirm('#springMessage("common.alert.doDelete")')){  //삭제하시겠습니까?
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/securepush/freeBoard/attachDelete";
+	var data = "BOARD_ID=" + boardId + "&FILE_ID=" + fileId;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.manageSend.successDelete")'); // 삭제되었습니다.
+				fn_removeFile(fileId);
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		}
+	});
+}
+
+
+//게시글 수정
+function fn_boardUpdate(boardId){
+	
+	if(!fn_validate())return;
+	
+	var formData = new FormData();
+	formData.append("TITLE" , $("form[name=frmWrite]").find("input[name=TITLE]").val());
+	formData.append("CONT" , $("form[name=frmWrite]").find("#CONT").val() );
+	formData.append("BOARD_ID", boardId);
+	
+	var fileIdsArr = new Array();
+	$(".file-list").find("div").each(function(){ fileIdsArr.push(this.id); });
+	if(fileIdsArr.length > 0)
+		formData.append("FILE_IDS" , fileIdsArr.join());
+	formData.append("CONT_TYPE", "html");
+	
+	var PAGE_NUM = $("#PAGE_NUM").val();
+
+	if($(".BOARD_ID").size() == 1){
+		PAGE_NUM = PAGE_NUM - 1;
+	}
+
+	if(PAGE_NUM < 1){
+		PAGE_NUM = 1;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/securepush/freeBoard/updateBoard";
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		cache: false,
+		contentType: false,
+		processData: false,
+		data:formData,
+		dataType:"json",
+		success:function(data){
+			
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.freeBoard.alert.editComplete")'); //수정되었습니다.
+				fn_pageList( PAGE_NUM );
+				fn_closePopup();
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		}
+	});
+}
+
+
+//게시글 등록
+function fn_boardWrite(){
+	
+	if(!fn_validate())return;
+	
+	var formData = new FormData();
+	formData.append("TITLE" , $("form[name=frmWrite]").find("input[name=TITLE]").val());
+	formData.append("CONT" , $("form[name=frmWrite]").find("#CONT").val() );
+	formData.append("CATG_ID", $("form[name=frmWrite]").find("select[name=CATG_ID]").val());
+	
+	var fileIdsArr = new Array();
+	$(".file-list").find("div").each(function(){ fileIdsArr.push(this.id); });
+	if(fileIdsArr.length > 0)
+		formData.append("FILE_IDS" , fileIdsArr.join());
+	formData.append("CONT_TYPE", "html");
+	formData.append("BOARD_TYPE", "FREE");
+	
+	var PAGE_NUM = $("#PAGE_NUM").val();
+
+	if($(".BOARD_ID").size() == 1){
+		PAGE_NUM = PAGE_NUM - 1;
+	}
+
+	if(PAGE_NUM < 1){
+		PAGE_NUM = 1;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/securepush/freeBoard/register";
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		cache: false,
+		contentType: false,
+		processData: false,
+		data:formData,
+		dataType:"json",
+		success:function(data){
+			
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.freeBoard.alert.regComplete")'); //등록되었습니다.
+				fn_pageList( PAGE_NUM );
+				fn_closePopup();
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		}
+	});
+}
+	
+</script>
+<div>
+	<form name="frmWrite" method="post">
+	#### S : 리스트  폼 부분  ####
+		<div class="scroll-area">
+			<table class="tbl full-width">
+				<caption>#springMessage("menu.securePush.freeBoard.editPost")</caption> <!-- 게시글 수정 -->
+				<colgroup>
+					<col style="width:120px">
+					<col>
+					<col style="width:120px">
+					<col>
+				</colgroup>
+				<tr>
+					<td colspan="4" class="notice-title">
+						<input type="text" name="TITLE" id="TITLE" style="width:100%;" class="title" placeholder="#springMessage('common.header.title')" value="$!itemInfo.TITLE" /> <!-- 제목 -->
+					</td>
+				</tr>
+				<tr>
+					<th>#springMessage("menu.securePush.freeBoard.boardType")</th> <!-- 게시판 종류 -->
+					<td>
+						#if($itemInfo)
+							#if($!itemInfo.BOARD_TYPE == "FREE")
+						#springMessage("menu.securePush.freeBoard.type.freeBoard") <!-- 자유게시판 -->
+							#else
+						#springMessage("menu.securePush.freeBoard.type.notice") <!-- 공지사항 -->
+							#end
+						#else
+						#springMessage("menu.securePush.freeBoard.type.freeBoard") <!-- 자유게시판 -->
+						#end
+						<input type="hidden" name="BOARD_ID" value="$!itemInfo.BOARD_ID" />
+					</td>
+					<th>#springMessage("menu.securePush.freeBoard.catg")</th> <!-- 카테고리 -->
+					<td>
+						#if($itemInfo)
+						$!itemInfo.CATG_NM
+						#else
+							<select style="width:95%;" name="CATG_ID" id="CATG_ID" onchange="fn_pageList(1)">
+        						<option value="">#springMessage("common.select.choose")</option><!-- 선택 -->
+        						#foreach( $catgInfo in $catgList )
+        						<option value="$!catgInfo.CATG_ID">$!catgInfo.CATG_NM</option>
+        						#end
+        					</select>
+						#end
+					</td>
+				</tr>
+				<tr>
+					<th>#springMessage("menu.securePush.freeBoard.regDt")</th> <!-- 작성 일자 -->
+					<td id="tdRegDt">$!itemInfo.REG_DT</td>
+					<th>#springMessage("common.header.author")</th> <!-- 작성자 -->
+					<td>
+						#if($itemInfo)
+						$!itemInfo.USER_NM ($!itemInfo.DEPT_NM)
+						#else
+						$!senderInfo.USER_NM ($!senderInfo.DEPT_NM)
+						#end
+					</td>
+				</tr>
+				<tr>
+					<th>#springMessage("menu.securePush.freeBoard.updateDt")</th> <!-- 수정 일자 -->
+					<td colspan="3">$!itemInfo.MOD_DT</td>
+				</tr>
+				<tr>
+					<td colspan="4" class="editor-body">
+						<div style="height:235px;">
+							<textarea id="CONT" name="CONT" cols="105" rows="45" placeholder="#springMessage('common.alert.inputContents')">$!itemInfo.CONT</textarea> <!-- 내용을 입력해 주세요. -->
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<th>#springMessage("menu.securePush.msgSend.addFile")</th> <!-- 파일추가 -->
+					<td colspan="3">
+						<input type="file" name="ATTACH_FILE"  id="ATTACH_FILE" />
+					</td>
+				</tr>
+				<tr>
+					<th>#springMessage("common.text.upFile")</th> <!-- 첨부파일 -->
+					<td colspan="3">
+						<div class="file-list" style="height:75px;">
+							#foreach( $fileInfo in $itemInfo.file_list )
+							<div id="$!fileInfo.FILE_ID">
+								<a href="$!{CONTEXT_PATH}/admin/securepush/freeBoard/downBoardFile?FILE_ID=$fileInfo.FILE_ID">
+									<span class="file-name">$!fileInfo.FILE_NM</span>
+								</a>
+								<a href="javascript:fn_attachDelete('$!itemInfo.BOARD_ID','$!fileInfo.FILE_ID');" class="tbl-xbtn"></a>
+							</div>
+							#end
+						</div>
+					</td>
+				</tr>
+			</table>
+
+			<div class="btn-wrap">
+				#if($itemInfo)
+				<a href="javascript:fn_boardDelete('$!itemInfo.BOARD_ID');void(0)" class="btn1 type2" id="pageDeletePop">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+				<a href="javascript:fn_boardUpdate('$!itemInfo.BOARD_ID');void(0);" class="btn1 type2">#springMessage("common.button.modify")</a> <!-- 수정 -->
+				#else
+				<a href="javascript:fn_boardWrite();void(0);" class="btn1 type2">#springMessage("common.button.regist")</a> <!-- 등록 -->
+				#end
+				<a href="javascript:fn_closePopup();void(0);" class="btn1 fr">#springMessage("common.button.close")</a> <!-- 닫기 -->
+			</div>
+
+		</div>
+
+	</form>
+</div>

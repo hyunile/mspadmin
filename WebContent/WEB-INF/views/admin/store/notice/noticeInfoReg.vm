@@ -1,0 +1,104 @@
+<form name="frmNotice" method="post"	enctype="multipart/form-data">	
+	<div class='lightbox'>
+		<input type="hidden" name="BOARD_IDX" value="$!noticeDto.BOARD_IDX">
+		<input type="hidden" name="SVC_ID" value="$!noticeDto.SVC_ID">	
+		
+		<div class="popup_header">
+			#if($noticeDto)
+				<h2>#springMessage("common.text.detailInfo")</h2> <!-- 상세정보 -->
+			#else
+				<h2>#springMessage("menu.store.notice.popupIn")</h2> <!-- 팝업 등록 -->
+			#end
+			<button type="button" id="maskClose" class="btn_close">닫기</button>
+		</div>
+		<div class="popup_content">
+			<table class="tbType1">
+				<colgroup>
+					<col width="15%">
+					<col width="35%">
+					<col width="15%">
+					<col width="35%">
+				</colgroup>
+				<tr>
+					<th>
+						#springMessage("menu.stats.mobile.type") <!-- 구분 -->
+					</th>
+					<td colspan="3">
+						<select name="BOARD_DETAIL_TYPE" >
+							<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							#foreach( $selectBox in $selectBoxList )
+								#if($noticeDto.BOARD_DETAIL_TYPE == $selectBox.CD_ID)
+									<option value="$!selectBox.CD_ID" selected="selected">$!selectBox.CD_NM</option>
+								#else
+									<option value="$!selectBox.CD_ID">$!selectBox.CD_NM</option>
+								#end
+							#end
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th>
+						#springMessage("common.header.title") <!-- 제목 -->
+					</th>
+					<td colspan="3">
+						<input type="text" name="BOARD_TITLE" value="$!noticeDto.BOARD_TITLE">
+					</td>
+				</tr>
+				<tr>
+					<th>
+						#springMessage("menu.mobile.deploy.date") <!-- 등록일 -->
+					</th>
+					<td>
+						<input type="text" name="REG_DT"  readonly="readonly"  value="$!noticeDto.REG_DT">
+					</td>
+					<th>
+						#springMessage("menu.store.notice.seeNum") <!-- 조회수 -->
+					</th>
+					<td>
+						<input type="text" name="HIT"  readonly="readonly"  value="$!noticeDto.HIT">
+					</td>
+				</tr>
+				<tr>
+					<th>
+						#springMessage("common.header.contents") <!-- 내용 -->
+					</th>
+					<td colspan="3">
+						<textarea style="width:470px; height: 150px; overflow-y:auto" name="BOARD_CONTENT" width="100%">$!noticeDto.BOARD_CONTENT</textarea>
+					</td>
+				</tr>
+				<tr>
+					<th>
+						#springMessage("common.text.upFile") <br> <!-- 첨부파일 -->
+					</th>
+					<td colspan="3" style="height: 150px;padding:0px 0px 0px 7px;">
+						
+    				    <table id="fileTable" width="100%" >
+            				<colgroup>
+            					<col width="90%">
+            					<col width="10%">
+            				</colgroup>
+							<tr>
+								<td  style="padding:5px;">
+									<input type="file"   name="files[0]" title="#springMessage('common.alert.chooseFile')" /> <!-- 파일을 선택하세요. -->
+								</td>	
+								<td>
+									<a href="#" id="fileAppend"><img src="${RESOURCES_PATH}/img/icon/btn_plus.gif" alt="file add"/>	</a>
+								</td>	
+							</tr>	
+						
+					    </table>
+					</td>
+				</tr>
+			</table>
+			<div class="btnArea ta_r">
+				#if($noticeDto)
+					<a href="javascript:fn_modify();" class="btn_style1"><span>#springMessage("common.button.modify")</span></a> <!-- 수정 -->
+					<a href="javascript:fn_delete();" class="btn_style1"><span>#springMessage("common.button.delete")</span></a> <!-- 삭제 -->
+				#else
+					<a href="javascript:fn_save();" class="btn_style1"><span>#springMessage("common.button.save")</span></a> <!-- 저장 -->
+				#end
+				<a href="#" id="maskClose" class="btn_style1"><span>#springMessage("common.button.close")</span></a> <!-- 닫기 -->
+			</div>
+		</div>
+	</div>
+</form>

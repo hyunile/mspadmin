@@ -1,0 +1,283 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/jEasyUiTree/easyui.css" >
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/jEasyUiTree/icon.css">
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript" src="$RESOURCES_PATH/jEasyUiTree/jquery.easyui.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+		//공통 페지징 처리
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    });
+    
+    //조회 검색
+    function ch_search(){
+		fn_appManageList(1);
+    }
+    
+    //페이징 처리
+    function fn_appManageList(PAGE_NUM){
+		var selectRowSize = document.getElementById('selRowSize');
+    	var APP_ID = $(selectSvc).val();
+    	var OS_TYPE = $(selectOS).val();
+    	var url = CONTEXT_PATH + "/admin/fraudPrevent/appManageMain";
+    	var type = "POST";
+    	var data ="APP_ID=" + APP_ID + "&" + 
+    			  "OS_TYPE=" + OS_TYPE + "&" +
+    			  "PAGE_NUM=" + PAGE_NUM +
+				  "&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+    	var target = $("#divList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+    
+    //공통코드 페이지 호출(공통)
+    function fn_getPage( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+	
+		
+	
+	//삭제
+	function fn_getAppManageDetailDelete(){
+		if(confirm('#springMessage("menu.prevent.appManage.alert.realDelete")')){ //정말 삭제 하시겠습니까? 
+			fn_deleteApp();
+		}else{
+		}
+	}
+	
+	
+	function fn_deleteApp(){
+		var appId = document.frmServiceInfo.AppId.value;
+        var appVer = document.frmServiceInfo.AppVer.value;
+        var osType = document.frmServiceInfo.OsType.value;
+		
+		var url = CONTEXT_PATH + "/admin/fraudPrevent/deleteAppManage";
+    	var data = "APP_ID=" + appId + "&" + 
+    			   "APP_VER=" + appVer + "&" +
+    			   "OS_TYPE=" + osType;
+    	jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+				cache: false,
+    			success:function(data){
+					var msg;
+					if(data.result == 0){
+						msg = '#springMessage("menu.mobile.common.failDelete")'; //삭제를 실패 하였습니다.
+					}else{
+						msg = '#springMessage("menu.mobile.common.successDelete")'; //"삭제 되었습니다.";
+					}
+    				alert(msg);
+    				fn_appManageList(1);
+    				fn_closePopup();
+    			}
+    		});
+	}
+	
+    
+	
+	//수정
+    function fn_modify(){
+		var appId = document.frmServiceInfo.AppId.value;
+        var appVer = document.frmServiceInfo.AppVer.value;
+        var osType = document.frmServiceInfo.OsType.value;
+    	var FRA_DESC = $("#txtFraDesc").val();
+		
+		var data = "APP_ID=" + appId + "&" + 
+    			   "APP_VER=" + appVer + "&" +
+    			   "OS_TYPE=" + osType + "&" + 
+				   "FRA_DESC=" + FRA_DESC;
+        var url = CONTEXT_PATH + "/admin/fraudPrevent/modifyAppManage";
+    	var type = "POST";
+        			  
+    	jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+				cache: false,
+    			success:function(data){
+					var msg;
+					if(data.result == 0){
+						msg = '#springMessage("menu.mobile.common.failUpdate")'; //"수정을 실패 하였습니다."
+					}else{
+						msg = '#springMessage("menu.mobile.common.successUpdate")'; //"수정을 성공 하였습니다.";
+					}
+    				alert(msg);
+    				fn_appManageList(1);
+    				fn_closePopup();
+    			}
+    		});
+    }
+	
+	//앱 위변조 서비스용 앱 등록 팝업 호출
+    $(document).on("click","#btnEntryFraudPrevent",function(){
+    	var url = CONTEXT_PATH + "/admin/fraudPrevent/appManageDetail";
+    	var type = "GET";
+    	var data = "";
+    	var target = $("#windowPop");
+    	var whideh = 600;
+    	var title = '#springMessage("menu.prevent.appManage.serviceAppIn")'; //"앱 위변조 서비스용 앱 등록";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+    });
+	
+	//수정 팝업
+	function fn_getAppManageDetailModify(APP_ID, APP_VER, OS_TYPE){
+        var url = CONTEXT_PATH + "/admin/fraudPrevent/appManageDetail";
+    	var type = "POST";
+    	var data = "APP_ID=" + APP_ID + "&" + 
+    			   "APP_VER=" + APP_VER + "&" +
+    			   "OS_TYPE=" + OS_TYPE;
+    	var target = $("#windowPop");
+    	var whideh = 600;
+    	var title = '#springMessage("menu.prevent.appManage.serviceAppUpdate")';//"앱 위변조 서비스용 앱 수정";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+	
+	//저장
+    function fn_write(){
+        var FRA_DESC = $("#txtFraDesc").val();
+		
+		if($('#RES_FILE').val() == '') {
+    		alert('#springMessage("common.alert.inputFile")'); //"파일을 입력해주세요."
+    		return;
+        }
+        
+        var file_text = $('#RES_FILE').val();
+        var file_text = file_text.substring(file_text.length-3, file_text.length);
+		
+		if(!(file_text == "apk" || file_text == "ipa")){
+				alert('#springMessage("menu.prevent.appManage.alert.fileInLimit")'); //apk 혹은  ipa 파일만 등록이 가능합니다.
+        	return;	 
+		}
+	
+    	var data = {"FRA_DESC" : FRA_DESC};
+        var url = CONTEXT_PATH + "/admin/fraudPrevent/addAppManage";
+    	var type = "POST";
+		
+		jQuery.ajaxFileUpload( {
+    		url           : url,
+    		secureuri     : false,
+			cache: false,
+    		fileElementId :'RES_FILE',
+			dataType	  : 'json', 
+    		data          : data,
+    		contentType   : 'multipart/form-data',
+    		success       : function (data) {
+				var msg;
+				if(data.result == 1){
+					msg = '#springMessage("menu.mobile.common.successInsert")'; //"등록에 성공 하였습니다.";				
+				}else if(data.result == 0){
+					msg = '#springMessage("menu.mobile.common.failInsert")'; //"등록에 실패 하였습니다.";
+				}else if(data.result == -1){
+					msg = '#springMessage("menu.prevent.appManage.alert.processError")'; //파일을 처리하는 동안 오류가 발생했습니다.
+				}else if(data.result == -2){
+					msg = '#springMessage("menu.prevent.appManage.alert.sameVersionApp")'; //동일한 버전의 앱이 등록되어있습니다.
+				}else if (data.result == -3){
+					msg = '#springMessage("menu.prevent.appManage.alert.notCheckType")'; //파일의 appId 혹은 버전 혹은 OS 타입을 확인할수 없습니다.
+				}
+				alert(msg);
+				fn_appManageList(1);
+				fn_closePopup();
+    		}
+    	});
+    }
+	
+	function fn_changeRowSize(){
+    	fn_commonSetRowSize();
+    	fn_appManageList(1);
+	}
+</script>
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:100px">
+				<col style="width:150px">
+				<col style="width:100px">
+				<col style="width:150px">
+				<col>
+			</colgroup>
+			
+			<thead>
+				<tr>
+					<th>#springMessage("menu.mobile.record.appService")</th> <!-- 앱서비스명 -->
+					<td class="par_30">
+						<select id="selectSvc" class="w232">
+							<option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+							#foreach($svc in $serviceList)
+							<option value="$svc.APP_ID">$svc.SVC_NM</option>
+							#end
+						</select>
+					</td>
+	                <th>OS #springMessage("menu.stats.mobile.type") </th> <!-- 구분 -->
+	                <td class="par_30">
+						<select id="selectOS" class="w90">
+	    					<option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+	    					<option value="A">Android</option>
+	    					<option value="I">IOS</option>
+						</select>
+					</td>
+					<td>
+						<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+					</td>
+	            </tr>
+            </thead>
+        </table>
+	
+	#### E : 조회 폼 부분  ####
+
+	
+	## 도움말
+	<div class="noticeBox">
+		<h2>#springMessage("menu.mobile.upload.advice1")</h2>	<!-- 도움말 -->
+		<p>#springMessage("menu.prevent.appManage.advice2")</p> <!-- 앱 위 변조 정책을 적용할  수 있는 페이지 입니다. -->
+		<p>#springMessage("menu.prevent.appManage.advice3")</p> <!-- 최초 등록 및 버전 업데이트 시, 추가버튼을 클릭하여, 앱을 등록합니다. -->
+	</div>
+		
+	## listView Header
+	<table class="tbl-info">
+		<caption></caption>
+		<tr>
+			<td>
+				<a href="javascript:void(0)" class="btn2" id="btnEntryFraudPrevent" >#springMessage("common.button.regist")</a>	<!-- 등록 -->
+			</td>
+			<td class="txtRight">
+				#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+				<div class="tbl-info-select">
+					<label for="num">#springMessage("common.select.options_10")</label>
+					<select id="selRowSize" onchange="fn_changeRowSize()">
+           				<option value="10">#springMessage("common.select.options_10")</option>
+           				<option value="30">#springMessage("common.select.options_30")</option>
+           				<option value="50">#springMessage("common.select.options_50")</option>
+           			</select>
+				</div>
+			</td>
+		</tr>
+	</table>
+	
+	## ListView Body
+	<div id="divList">
+		#parse("admin/fraudPrevent/appManage/appManageList.vm")
+	</div>
+		
+</div>

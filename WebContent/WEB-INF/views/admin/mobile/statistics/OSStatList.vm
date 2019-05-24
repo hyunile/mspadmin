@@ -1,0 +1,109 @@
+<script language="javascript" type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/charJs/chartJs.js"></script> <!--  챠트관련  -->
+<script language="javascript" type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/charJs/mspCommonCharJs.js"></script> <!--  챠트관련  -->
+
+<script type="text/javascript">
+
+	$(document).ready(function(){
+		setDataBarData();
+		renderChart();
+	});
+	
+	var data = "";
+	function setDataBarData(){
+		var dbData = "";
+        var chartLableList = [];
+        var chatrDataList= [];
+        #if($!{jsonList})
+        	dbData = $!{jsonList};
+        #end
+        
+        if(dbData!=""){
+            for(var i=0; i<dbData.length; i++){
+                var chartLable = dbData[i].OS_NM;
+                var chartData = Math.floor(dbData[i].CNT) + 1;
+
+                chartLableList.push(chartLable);
+                chatrDataList.push(chartData);
+            }
+        }else{
+        	chartLableList=["IOS", "Android"];
+        	chatrDataList=[0,0];
+        }
+        
+        data = {
+			    labels: chartLableList,
+			    datasets: [
+			        {
+			            data: chatrDataList,
+// 			            hoverBackgroundColor:getMspBackgroundColor(chatrDataList.length),
+			            backgroundColor:getMspBorderColor(chatrDataList.length)
+			        }
+			    ]
+			};
+	}
+	
+	function renderChart(){
+		var ctx = document.getElementById("cvsChart");
+		ctx.innerHTML = '';
+		var myRadarChart = new Chart(ctx, {
+											type : "pie",
+											data : data
+											}
+									);
+	}
+
+</script>
+<div id="blockDiv" style="margin-bottom: 10px" class="scrollPane">
+    
+        <canvas id="cvsChart" width="800" height="400"></canvas>
+    
+</div>
+
+<table class="tbl-nb">
+    <colgroup>
+        <col style="width:15%;"/>
+        <col style="width:85%;"/>
+    </colgroup>
+    <thead>
+    <tr>
+        <th>#springMessage("common.text.dayType")</th> <!-- 일자 -->
+        <th>#springMessage("menu.stats.mobile.accessNum")</th> <!-- 접속수 -->
+    </tr>
+    </thead>
+
+    #foreach( $row in $statisticsList )
+        #set($cntPercent = 90*$!row.CNT/$!MaxCnt)
+        #set($j_tot = $row.size())
+
+        <tr>
+            <td>$!row.OS_NM</td>
+            <td style="text-align:left;width:658px;">
+                <div style="float:left;height:15px; width:$cntPercent%;background-color: orange;"/> <p style="font-weight: bold; color: #000000">($!row.CNT)</p>
+            ##            <table border=1 style="height:2px; width:$cntPercent%;"><tr><td style="background-color: orange;">$!row.CNT</td></tr></table>
+            </td>
+        </tr>
+
+    #end
+    #if(!$j_tot)
+        <tr >
+            <td align="center" colspan="3">
+               #springMessage("common.alert.nodata")   <!-- 데이터가 없습니다. -->
+            </td>
+        </tr>
+    #end
+</table>
+
+
+<input type="hidden" id="CODE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+##현재 페이지
+    <input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot" />
+##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+##이밴트
+    <input type="hidden" name="j_event" value="fn_se_select" />
+</div>

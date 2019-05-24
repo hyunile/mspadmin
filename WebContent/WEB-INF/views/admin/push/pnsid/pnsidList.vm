@@ -1,0 +1,58 @@
+<table class="tbl-nb" summary="KEY,VALUE,상세">
+	<colgroup><!--  3cell  -->
+		<col width="46%"/>
+		<col width="auto"/>
+		<col width="70px"/>
+	</colgroup>
+	<thead>
+   		<tr>
+   			<th scope="col">
+   				KRY
+   			</th>
+   			<th scope="col">
+				VALUE
+			</th>
+			<th scope="col">
+				 
+			</th>
+       	</tr>
+    </thead>
+
+    <tbody>
+       	#foreach( $pushPnsid in $pushPnsidList )
+       		#set($j_tot = $!pushPnsid.TOT_CNT)
+           	<tr>
+           		<td>
+           			$esc.xml($!pushPnsid.VNAME)
+           			<input type="hidden" class="VNAME" value="$!pushPnsid.VNAME">
+   				</td>
+   				<td>
+           			$esc.xml($!pushPnsid.VVALUE)
+           		</td>
+   				<td>
+           			<a href="javascript:void(0)" class="btn2" id="pnsidModify">#springMessage("common.header.detail")</a> <!-- 상세 -->
+   				</td>
+       		</tr>
+   		#end
+   		#if(!$j_tot)
+			<tr>
+				<td colspan="3">
+					#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+<input type="hidden" id="PNSID_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+ 	##현재 페이지
+ 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot" />
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_pnsidList" />
+</div>

@@ -1,0 +1,25 @@
+<h2>[App] #springMessage("menu.push.appManage.insertStat") <small>$strPeriodParam</small></h2> <!-- 등록현황 -->
+<a href="javascript:GO_MENU_URL_favori('0000000015','0000000013','/admin/push/appManage');" class="more">#springMessage("common.button.moreView")</a> <!-- 더보기 -->
+
+<table class="tbl-nb">
+	<caption>App: 등록현황</caption>
+	<colgroup>
+		<col style="width:auto">
+		<col style="width:38%">
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("common.text.appname")</th> <!-- App명 -->
+			<th scope="col" class="last">#springMessage("menu.system.date")</th> <!-- 등록일 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $dto in $listDto)
+		<tr>
+			<td class="first">$dto.APP_NM</td>
+			<td class="last">$dto.REG_DTTM</td>
+		</tr>
+		#end
+	</tbody>
+</table>
+

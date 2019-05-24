@@ -1,0 +1,228 @@
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function fn_monitorUserList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/push/monitorUser";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM;
+	var target = $("#monitorUserTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//모니터링 수신자 등록 화면
+$(document).on("click","#monitorUserWrite",function(){
+	var url = CONTEXT_PATH + "/admin/push/monitorUser/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 400;
+	var title = '#springMessage("menu.push.monitoring.receiverRegist")';//"모니터링 수신자 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//모니터링 수신자 수정 화면
+$(document).on("click","#monitorUserModify",function(){
+	var SUPERVISORSEQ = $(this).parent().parent().find(".SUPERVISORSEQ").val();
+	var url = CONTEXT_PATH + "/admin/push/monitorUser/edit";
+	var type = "GET";
+	var data = "SUPERVISORSEQ=" + SUPERVISORSEQ;
+	var target = $("#windowPop");
+	var whideh = 400;
+	var title = '#springMessage("menu.push.monitoring.receiverUpdate")';//"모니터링 수신자 수정";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//모니터링 수신자 등록
+function fn_monitorUserWrite(){
+
+	if( $("form[name=frmMonitorUserInfo]").find("input[name=NAME]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.nameIn")'); //"이름을 입력해주세요.
+		return;
+	} else if( $("form[name=frmMonitorUserInfo]").find("input[name=PHONENO]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.phoneIn")'); //"전화번호을 입력해주세요."
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/monitorUser/regist";
+	var data = $("form[name=frmMonitorUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_monitorUserList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//모니터링 수신자 수정
+function fn_monitorUserModify(){
+
+	if( $("form[name=frmMonitorUserInfo]").find("input[name=NAME]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.nameIn")'); //"이름을 입력해주세요.
+		return;
+	} else if( $("form[name=frmMonitorUserInfo]").find("input[name=PHONENO]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.phoneIn")'); //"전화번호을 입력해주세요."
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/monitorUser/edit";
+	var data = $("form[name=frmMonitorUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_monitorUserList($("#MONITER_NUM").val());
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//모니터링 수신자 삭제
+function fn_monitorUserDelete(){
+
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/monitorUser/delete";
+	var data = $("form[name=frmMonitorUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_monitorUserList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+
+</script>
+
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="headerBg">
+    	<div class="innerNavi">
+    		<a href="#"><img src="/resources/img/icon/icon_home.gif" alt="home"/></a> <span>모바일</span> <span>리소스 관리</span> <span>배포관리</span> <strong>목록</strong>
+		</div>
+		<div class="tb_tit">
+			<h3>#springMessage("menu.push.monitoring.receiverSetting")</h3> <!-- 모니터링 수신자 설정 -->
+		</div>
+	</div>
+    #### E : 프로그램 위치 기술 부분  ####
+
+    <form name="frmList" method="post">
+    #### S : 리스트  폼 부분  ####
+    <div class="contents">
+    	<div class="btnArea1 ta_r">
+			<button type="button" class="btn_style1" id="monitorUserWrite"><span>#springMessage("common.button.regist")</span></button> <!-- 등록 -->
+		</div>
+    	<div class="tbCon">
+		    <div id="monitorUserTableDiv">
+		       	<table class="tbList1">
+		       		<colgroup>
+						<col width="auto"/><col width="25%"/><col width="20%"/><col width="12%"/>
+					</colgroup>
+		       		<thead>
+			       		<tr>
+			       			<th scope="col">
+			       				#springMessage("common.text.name") <!-- 이름 -->
+			       			</th>
+			       			<th scope="col">
+								#springMessage("common.text.phoneNum") <!-- 전화번호 -->
+							</th>
+							<th scope="col">
+								#springMessage("common.text.registDate") <!-- 등록일시 -->
+							</th>
+							<th scope="col">
+								
+							</th>
+			           	</tr>
+			        </thead>
+
+			        <tbody>
+			           	#foreach( $monitorUser in $monitorUserList )
+			           		#set($j_tot = $!monitorUser.TOT_CNT)
+				           	<tr>
+				           		<td style="text-align:left;">
+				           			$esc.xml($!monitorUser.NAME)
+				           			<input type="hidden" class="SUPERVISORSEQ" value="$!monitorUser.SUPERVISORSEQ">
+			       				</td>
+			       				<td>
+				           			$esc.xml($!monitorUser.PHONENO)
+				           		</td>
+				           		<td>
+				           			$esc.xml($!monitorUser.REGDATE)
+				           		</td>
+			       				<td>
+				           			<button type="button" id="monitorUserModify" class="btn_style2">#springMessage("common.header.detail")</button> <!-- 상세 -->
+			       				</td>
+			           		</tr>
+			       		#end
+			       		#if(!$j_tot)
+							<tr>
+								<td colspan="4">
+									#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+								</td>
+							</tr>
+						#end
+
+					</tbody>
+		    	</table>
+		   		<input type="hidden" id="MONITER_NUM" value="$!R_PAGE_NUM">
+		      	<div class="j_page_div">
+		         	##현재 페이지
+		         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+		            ##총 개수
+		            <input type="hidden" name="J_tot" value="$!j_tot">
+		            ##한페이지의 로우수
+		            <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+		            ##한페이지수
+		            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+		            ##이밴트
+		            <input type="hidden" name="j_event" value="fn_monitorUserList">
+		    	</div>
+			</div>
+		</div>
+    </div>
+	#### E : 리스트  폼 부분  ####
+</form>
+</div>

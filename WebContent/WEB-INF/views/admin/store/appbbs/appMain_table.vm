@@ -1,0 +1,145 @@
+<script type="text/javascript">
+
+    jQuery(document).ready(function(){
+  
+        // order by 관련 화면 그리기
+        var target = $("#orderTarget").val();
+        var type = $("#orderType").val();
+        
+        if(target == "SECRET_YN"){
+            if(type == "DESC"){
+                $("#orderSecretYn").text('#springMessage("menu.store.appManage.showYN")'+" ▽"); //공개여부
+            }else{
+                $("#orderSecretYn").text('#springMessage("menu.store.appManage.showYN")'+" △"); //공개여부  △
+            }
+        }else if(target == "BOARD_TITLE"){
+            if(type == "DESC"){
+                $("#orderBoardTitle").text('#springMessage("menu.store.notice.title")'+" ▽"); //글제목
+            }else{
+                $("#orderBoardTitle").text('#springMessage("menu.store.notice.title")'+" △"); //글제목
+            }
+        }else if(target == "HIT"){
+            if(type == "DESC"){
+                $("#orderHit").text('#springMessage("menu.store.notice.seeNum")'+" ▽"); //조회수
+            }else{
+                $("#orderHit").text('#springMessage("menu.store.notice.seeNum")'+" △"); //조회수
+            }
+        }else if(target == "REG_DT"){
+            if(type == "DESC"){
+                $("#orderRegDt").text('#springMessage("menu.push.appManage.insertDate")'+" ▽"); //등록일자
+            }else{
+                $("#orderRegDt").text('#springMessage("menu.push.appManage.insertDate")'+" △"); //등록일자
+            }
+         }else if(target == "REG_ID"){
+            if(type == "DESC"){
+                $("#orderRegId").text('#springMessage("menu.mobile.deploy.writer")'+"ID ▽"); //등록자
+            }else{
+                $("#orderRegId").text('#springMessage("menu.mobile.deploy.writer")'+"ID △"); //등록자
+            }
+        }else if(target == "MOD_DT"){
+            if(type == "DESC"){
+                $("#orderModDt").text('#springMessage("menu.store.notice.updateDate")'+" ▽"); //수정일자
+            }else{
+                $("#orderModDt").text('#springMessage("menu.store.notice.updateDate")'+" △"); //수정일자
+            }
+         }
+    });
+    
+</script>
+<table class="tbl-nb" >
+	<colgroup>
+		<col width="5%"></col>
+		<col width="5%"></col>
+		<col width="10%"></col>
+		<col width="36%"></col>
+		<col width="8%"></col>
+		<col width="12%"></col>
+		<col width="12%"></col>
+		<col width="12%"></col>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">
+				<input type="checkbox" id="all_check" ><label for="all_check"></label>
+			</th>
+    		<th>
+    			NO
+	     	</th>
+	        <th id="orderSecretYn"  style="cursor:pointer;">
+	           	#springMessage("menu.store.appManage.showYN") <!-- 공개여부 -->
+    		</th>
+    		<th id="orderBoardTitle"  style="cursor:pointer;">
+    			#springMessage("menu.store.notice.title") <!--글제목-->
+	       	</th>
+	       	<th id="orderHit"  style="cursor:pointer;">
+	           	#springMessage("menu.store.notice.seeNum") <!--조회수-->
+    		</th>
+	       	<th id="orderRegId"  style="cursor:pointer;">
+	           	#springMessage("menu.mobile.deploy.writer") <!--등록자ID-->
+    		</th>
+    		<th id="orderRegDt"  style="cursor:pointer;">
+    			#springMessage("menu.push.appManage.insertDate") <!--등록일자-->
+	    	</th>
+			<th id="orderModDt"  style="cursor:pointer;">
+    			#springMessage("menu.store.notice.updateDate") <!--수정일자-->
+	    	</th>
+	     
+ 		</tr>
+	</thead>
+	<tbody>
+    	#foreach( $list in $bbsList )
+			#if($!list.BOARD_TITLE.indexOf("<")<0)
+       		#set($j_tot = $list.TOT_CNT)
+            <tr style="cursor:pointer" board_idx="$list.BOARD_IDX">
+            	<td>
+					<input type="checkbox"  class="chkCls" id="$list.BOARD_IDX" value="$list.BOARD_IDX">
+					<label for="$list.BOARD_IDX"></label>
+					<input type="hidden" id="BOARD_IDX" value="$list.BOARD_IDX">				
+				</td>
+				<div >
+            	<td>$!list.RNUM</td>
+            	<td>$!list.SECRET_YN</td>
+            	<td style="text-align:center;" class="data" board_idx="$list.BOARD_IDX">
+                    #if($!list.LVL>0)
+                        #foreach($i in [1..$list.LVL]) &nbsp;&nbsp; #end
+                        <img src="${RESOURCES_PATH}/img/ico_answer.png" alt="answer" />
+                    #end                
+                        [$!list.BOARD_DETAIL_NAME] $!list.BOARD_TITLE</td>
+               
+            	<td>$!list.HIT</td>
+            	<td style="text-align:center;">$!list.REG_ID</td>
+            	<td>$!list.REG_DT</td>
+				<td>$!list.MOD_DT</td>
+				</div>
+         	</tr>
+			#end
+		#end
+		#if(!$j_tot)
+	   		<tr >
+	   			<td align="center" colspan="8">
+					#if($!type == "NOTICE")
+						#springMessage("menu.store.notice.alert.noNotice") <!--검색된 공지사항이 없습니다.-->
+					#else
+						#springMessage("menu.store.notice.alert.noQA") <!--검색된 Q&A가 없습니다.-->
+					#end
+	           	</td>
+	       	</tr>
+	   	#end
+	</tbody>
+</table>
+
+<input type="hidden" name="PAGE_NUM" value="$!R_PAGE_NUM">
+<input type="hidden" name="PAGE_TOT" value="$!j_tot">
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot">
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_appList">
+</div>
+<br/>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.common.mainHome.mapper.MainHomeDao">
+	<!-- push -->
+	<select id="selectPushSendStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO">
+			 SELECT SUM(SEND_CNT) AS GNR_SEND_CNT, 
+			 	SUM(READ_CNT) AS GNR_READ_CNT,
+			 	SUM(REV_CNT) AS GNR_RECV_CNT,
+			 	SUM(FAIL_CNT) AS GNR_FAIL_CNT
+			 FROM T_PUSH_MSG_RECV_MASTER
+			 WHERE RESERVEDATE BETWEEN TO_DATE(#{FROM_DATE}, '%Y.%m.%d') AND TO_DATE(#{TO_DATE}, '%Y.%m.%d %H:%M:%S')
+			 <if test="SENDERID != null and SENDERID != ''">
+			 	AND SENDERID=#{SENDERID}
+			 </if>
+	</select>
+	
+	<select id="selectPushReserveStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO">
+			SELECT *
+			FROM(
+				SELECT COUNT(*) AS GNR_TOT_CNT 
+				FROM T_PUSH_RESERVE_MSG
+				WHERE PROCESS_FLAG = 'Y'
+				)AS A,
+				(
+				SELECT COUNT(*) AS GNR_FAIL_CNT
+				FROM T_PUSH_RESERVE_MSG
+				WHERE PROCESS_FLAG = 'F'
+			    )AS B
+	</select>
+	
+	<select id="selectPushRegistStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO">
+			SELECT A.DT AS "DT", COUNT(*) AS "CNT"
+			FROM(
+		        SELECT TO_CHAR(T1.REGDATE, '%Y.%m.%d') AS DT
+		        FROM T_PUSH_USER_INFO T1
+		         WHERE T1.REGDATE BETWEEN TO_DATE('${FROM_DATE}', '%Y.%m.%d') AND TO_DATE('${TO_DATE}', '%Y.%m.%d %H:%M:%S')
+	
+	        ) AS A
+	        GROUP BY A.DT
+	        ORDER BY A.DT ASC
+	</select>
+	
+	<select id="selectPushSendTotStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO">
+			SELECT SUM(SENT_CNT) AS GNR_TOT_CNT,
+				SUM(UPNS_SENT_CNT) AS UPNS_SENT_CNT,
+				SUM(APNS_SENT_CNT) AS APNS_SENT_CNT,
+				SUM(GCM_SENT_CNT) AS GCM_SENT_CNT
+			FROM T_PUSH_SYSMSG_SENTINFO
+			WHERE TO_DATE(SENDDATE, '%Y%m%d') BETWEEN TO_DATE(#{FROM_DATE}, '%Y.%m.%d') AND TO_DATE(#{TO_DATE}, '%Y.%m.%d %H:%M:%S')
+	</select>
+	<!-- store  -->
+	<select id="selectStoreAppListStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayStoreDTO" resultType="kr.msp.admin.common.mainHome.dto.StoreAppListStatDTO">
+			SELECT SKIP 0 FIRST 3 APP_IDX, APP_NM, REG_DTTM 
+			FROM TB_STO_APP
+	</select>
+	
+	<select id="selectStoreAppDownloadStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayStoreDTO" resultType="kr.msp.admin.common.mainHome.dto.StoreAppDownloadStatDTO">
+			SELECT A.*, D.APP_NM
+			FROM(
+			    SELECT SKIP 0 FIRST 3 BIN_NO, EMP_NO, COUNT(*) AS CNT
+			    FROM TB_STO_DL 
+			    WHERE REG_DTTM BETWEEN TO_DATE(#{FROM_DATE}, '%Y.%m.%d') AND TO_DATE(#{TO_DATE}, '%Y.%m.%d %H:%M:%S')
+			    GROUP BY BIN_NO, EMP_NO
+			    ) AS A
+			    LEFT OUTER JOIN TB_STO_USER AS B
+			    ON A.EMP_NO = B.EMP_NO
+			    LEFT OUTER JOIN TB_STO_AUTH AS C
+			    ON A.EMP_NO = C.EMP_NO
+			    LEFT OUTER JOIN TB_STO_APP AS D
+			    ON C.APP_IDX = D.APP_IDX
+	</select>
+	
+
+	<select id="selectStoreQABoardSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayStoreDTO" resultType="kr.msp.admin.common.mainHome.dto.StoreQABoardDTO">
+			SELECT   SKIP 0 FIRST 6 BOARD_IDX, BOARD_TITLE, REG_DT
+			FROM     TB_STO_BOARD
+	</select>
+	
+		<!-- mobile -->
+	<select id="selectMobileResourceDeployListSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayMobileDTO" resultType="kr.msp.admin.common.mainHome.dto.MobileResourceDeployListDTO">
+		SELECT A.*, B.SVC_NM
+		FROM(
+			SELECT SKIP 0 FIRST 3 A.DPLY_IDX, A.DPLY_NM, A.DPLY_VER, A.REG_DTTM, A.DPLY_DESC, A.SVC_ID
+			FROM TB_MOB_DPLY AS A 
+			INNER JOIN(
+						SELECT  A.SVC_ID
+	 					FROM TB_SVC_AUTH AS A, TB_SYS_USER_AUTH_GRP AS B, TB_MOB_SVC AS C
+	 					WHERE A.AUTH_GRP_ID = B.AUTH_GRP_ID  
+	 							AND B.USER_ID = #{S_ID_USER,mode=IN,jdbcType=VARCHAR}   
+	 							AND A.SVC_ID = C.SVC_ID 
+	 							AND C.USE_YN = 'Y'
+	 				) AS B
+			ON A.SVC_ID = A.SVC_ID
+			ORDER BY  A.DPLY_IDX DESC
+			)AS A
+		LEFT OUTER JOIN TB_SVC AS B
+		ON A.SVC_ID = B.SVC_ID
+	</select>
+	
+	<select id="selectMobilePeriodStatySummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayMobileDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummaryDailyGraph">
+		SELECT A.DT AS DT, COUNT(*) AS CNT
+		FROM(
+			SELECT TO_CHAR(T1.REG_DTTM, '%Y.%m.%d') AS DT
+			FROM   TB_MOB_EVENT_LOG T1
+			WHERE  T1.REG_DTTM BETWEEN TO_DATE(#{FROM_DATE}, '%Y.%m.%d') AND TO_DATE(#{TO_DATE}, '%Y.%m.%d %H:%M:%S')
+			       
+			)AS A
+		GROUP BY A.DT
+       	ORDER BY A.DT ASC
+	</select>
+	
+	
+	<select id="selectMobileProtocolStatusSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayMobileDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummaryDailyGraph">
+		SELECT A.DT AS DT, COUNT(*) AS CNT
+		FROM(
+			SELECT TO_CHAR(T1.REG_DTTM, '%Y.%m.%d') AS DT
+			FROM TB_MOB_EVENT_LOG T1
+			WHERE T1.REG_DTTM BETWEEN TO_DATE(#{FROM_DATE}, '%Y.%m.%d') AND TO_DATE(#{TO_DATE}, '%Y.%m.%d %H:%M:%S') 
+				  AND T1.COMP_CD IS NOT NULL 
+		  	) AS A
+		GROUP BY A.DT
+       	ORDER BY A.DT ASC
+	</select>
+	
+</mapper>

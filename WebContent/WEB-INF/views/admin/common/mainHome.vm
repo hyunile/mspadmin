@@ -1,0 +1,122 @@
+<script type="text/javascript">
+	
+    jQuery(document).ready(function(){
+		fn_setSummaryView();
+		#set ($ableKey = "login.logo.image")
+		#set ( $able = "#springMessage($ableKey)" )
+		#if("able" == $able) 
+		//	alert($('#mainVisual').css("background"));
+			
+			$('#mainVisual').css("background", "url(../resources/images/main/mainVisual_able.jpg) no-repeat 0 0");
+			
+		#end
+    });
+	
+    /*
+	요약뷰 세팅.
+    */
+    function fn_setSummaryView(){
+		var arrSummaryView = $jsonSummaryView;
+		for (var i = 0; i < arrSummaryView.length; i++) {
+			var url = CONTEXT_PATH + arrSummaryView[i];
+			
+    		var data = "";
+    		var type = "POST";
+    		fn_getPage( url, type, data, i );
+        }
+    }
+
+	//페이지 호출
+	function fn_getPage( url, type, data, viewIdx ){
+		var target;
+		if(viewIdx == 0){
+			target =  $("#summary1");
+		}else if(viewIdx == 1){
+			target = $("#summary2");
+		}else if(viewIdx == 2){
+			target =  $("#summary3");
+		}
+	
+	
+		var AjaxHTML = jQuery.ajax({
+			url: url ,
+			type: type ,
+			data: data ,
+			dataType: "html" ,
+			async: false ,
+			cache:false
+		}).responseText;
+
+		target.html(AjaxHTML);
+	}
+	
+	function fn_MainNoticePop(NO_NOTICE){
+		var data = "NO_NOTICE=" + NO_NOTICE;
+		var url = CONTEXT_PATH + "/admin/main";
+		var type = "POST";
+		var target = $("#windowPop");
+		var whideh = 550;
+		var title = '#springMessage("menu.system.noticeDetail")';//"공지 상세";
+		fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+
+</script>
+
+
+<div class="container">
+	<div class="mainVisual" id="mainVisual">
+		<ul>
+			#set($linkIdx = 1)
+			#foreach($linkInfo in $linkList)
+			<li style="height:75px;line-height:75px;" class="favori$linkIdx"><a href="javascript:GO_MENU_URL_favori('$linkInfo.ID_MENU','$linkInfo.ID_MENU_PARENT','$linkInfo.MENU_URL');">$linkInfo.NM_MENU<span style="height:75px;"></span></a></li>
+				#set($linkIdx = ($linkIdx + 1) % 5)
+			#end
+		</ul>
+	</div>
+
+	<div class="mainfl">
+		<div>
+			<h2>#springMessage("menu.system.notice")</h2>  <!-- 공지사항 -->
+			<a href="javascript:GO_MENU_URL_favori('0000000067','0000000066','/admin/system/notice');" class="more">#springMessage("common.button.moreView")</a> <!-- 더보기 -->
+
+			<table class="tbl-nb">
+				<colgroup>
+					<col style="width:auto">
+					<col style="width:auto">
+					<col style="width:38%">
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("common.header.title")</th> <!-- 제목 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.writer")</th> <!-- 등록자 -->
+						<th scope="col" class="last">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+					</tr>
+				</thead>
+				<tbody>
+					#foreach( $notice in $noticelist)
+					<tr>
+						<td class="first"><a href="javascript:fn_MainNoticePop('$notice.NO_NOTICE');"><strong>$notice.NM_TITLE</strong> </a></td>
+						<td class="first">$notice.ID_INSERT</td>
+						<td class="last">$notice.DT_INSERT</td>
+					</tr>
+					#end
+				</tbody>
+			</table>
+		</div>
+		
+		<div id="summary1"></div>
+		
+		
+		
+	</div> <!--  End: mainfl  -->
+			
+			
+	<div class="mainfr">
+	
+		<div id="summary2"></div>
+		
+		<div id="summary3"></div>
+		
+	</div>	<!--  End: mainfr  -->
+
+</div> <!--  End: container  -->

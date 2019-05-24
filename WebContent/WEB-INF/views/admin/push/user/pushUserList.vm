@@ -1,0 +1,77 @@
+<table  class="tbl-nb"  summary="CUID,고객이름,전화번호,등록일시,변경일시,상세">
+	<colgroup>
+		<col >
+		<col style="width:70px">
+		<col style="width:100px">
+		<col style="width:150px">
+		<col style="width:200px">
+		<col style="width:100px">
+		<col style="width:60px">
+	</colgroup>
+				
+    <thead>
+    <tr>
+        <th scope="col">#springMessage("common.text.device")ID</th> <!-- 디바이스 -->
+        <th scope="col">#springMessage("menu.stats.mobile.type")</th> <!-- 구분 -->
+        <th scope="col">#springMessage("login.userid")</th> <!-- 아이디 -->
+		<th scope="col">#springMessage("menu.push.user.clientName")</th> <!-- 고객이름 -->
+<!--        
+		<th scope="col">전화번호</th>
+-->		 
+        <th scope="col">#springMessage("common.text.app")ID</th> <!-- 앱 -->
+		<th scope="col">#springMessage("menu.push.appManage.updateDate")</th> <!--변경일시  -->
+        <th scope="col"> </th>
+    </tr>
+    </thead>
+    <tbody>
+        #foreach( $pushUser in $pushUserList )
+            #set($j_tot = $pushUser.TOT_CNT)
+        <tr>
+            <td style="text-align:center;" >
+                $esc.xml($!pushUser.DEVICEID)
+            </td>
+            <td style="text-align:center;" >
+                $esc.xml($!pushUser.PNSID)
+            </td>
+            <td  >
+                $esc.xml($!pushUser.CUID)
+                <input type="hidden" class="PUSHKEY" value="$!pushUser.PUSHKEY"/>
+            </td>
+            <td >
+                $esc.xml($!pushUser.CNAME)
+            </td>
+<!--            
+            <td>
+                $!pushUser.PHONENO
+            </td>
+-->            
+            <td>
+				$esc.xml($!pushUser.APPID)
+			</td>
+            <td>
+                $esc.xml($!pushUser.MODDATE)
+            </td>
+            <td>
+                <a href="javascript:void(0)" id="userModify" class="tbl-btn1">#springMessage("common.header.detail")</a> <!-- 상세 -->
+            </td>
+        </tr>
+        #end
+	#if(!$j_tot)
+		<tr>
+			<td colspan="7" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+	#end
+	</tbody>
+</table>
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot" />
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_userList" />
+</div>

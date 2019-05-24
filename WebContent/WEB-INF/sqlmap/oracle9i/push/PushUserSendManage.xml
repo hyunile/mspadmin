@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.userSend.mapper.PushUserSendManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+	<sql id="head">
+		SELECT * 
+        FROM ( SELECT 
+                    ROWNUM RNUM
+                   ,COUNT(*) OVER() TOT_CNT
+                   ,A.*
+               FROM (SELECT * FROM (
+	</sql>
+	
+	<sql id="bottom">
+		)
+                    ) A
+             )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+	
+	<select id="selectUserSendCount" parameterType="kr.msp.admin.push.userSend.dto.PushUserSendDto" resultType="java.lang.Integer">
+		SELECT 
+			COUNT(*)
+		FROM (
+		    SELECT
+		       A.CUID
+		       ,CASE WHEN A.RESERVEDATE = A.REGDATE
+			   		THEN 'I'
+			    	ELSE 'R'
+			    END AS RESERVE_TYPE
+		    FROM T_PUSH_MESSAGE A
+		    WHERE A.RESERVEDATE BETWEEN TO_DATE(#{RESERVEDATE_S}, 'YYYYMMDDHH24MI') AND TO_DATE(#{RESERVEDATE_E}, 'YYYYMMDDHH24MI')
+		          AND A.APPID = #{APPID}
+		          AND TYPE = 'N'
+		          <if test="SENDERSEQ != '' and SENDERSEQ != null">
+		          	AND A.SENDERSEQ = #{SENDERSEQ}
+		          </if>
+		) C 
+		INNER JOIN T_PUSH_USER D ON (C.CUID = D.CUID)
+			<where>
+			 	1 = 1
+			 	<if test="CNAME != '' and CNAME != null ">
+			 		AND D.CNAME = #{CNAME}
+			 	</if>
+			 	<if test="CUID != '' and CUID != null ">
+			 		AND D.CUID = #{CUID}
+			 	</if>
+			 	<if test="PHONENO != '' and PHONENO != null ">
+			 		AND D.PHONENO = #{PHONENO}
+			 	</if>
+			 	<if test="RESERVE_TYPE != '' and RESERVE_TYPE != null ">
+			 		AND C.RESERVE_TYPE = #{RESERVE_TYPE}
+			 	</if>
+			 </where>
+	</select>
+   
+   	<!-- 사용자 발송 조회 리스트 -->
+    <select id="selectUserSendList" parameterType="kr.msp.admin.push.userSend.dto.PushUserSendDto" resultType="kr.msp.admin.push.userSend.dto.PushUserSendDto">
+        SELECT SEQNO
+			   ,RESERVEDATE  
+			   ,RESERVE_TYPE
+			   ,APPID
+			   ,CUID
+			   ,SENDERSEQ
+			   ,SENDERCODE
+			   ,MESSAGE
+			   ,SEND_YN
+			   ,READ_YN
+			   ,REGDATE 
+			   ,#{TOT_CNT} AS TOT_CNT
+		FROM (
+           SELECT 
+			    C.SEQNO
+			   ,C.RESERVEDATE  
+			   ,C.RESERVE_TYPE
+			   ,C.APPID
+			   ,C.CUID
+			   ,C.SENDERSEQ
+			   ,C.SENDERCODE
+			   ,C.MESSAGE
+			   ,C.SEND_YN
+			   ,C.READ_YN
+			   ,C.REGDATE
+			   ,ROWNUM AS RNUM
+			FROM (
+			            SELECT
+			                A.SEQNO
+			               ,TO_CHAR(A.RESERVEDATE, 'YYYY.MM.DD HH24:MI:SS') AS RESERVEDATE
+			               ,CASE WHEN A.RESERVEDATE = A.REGDATE
+			                      THEN 'I'
+			                      ELSE 'R'
+			                END AS RESERVE_TYPE
+			               ,A.APPID
+			               ,A.CUID
+			               ,A.SENDERSEQ
+			               ,(SELECT SENDERCODE
+			                   FROM T_PUSH_SENDER_INFO C
+			                  WHERE A.SENDERSEQ = C.SENDERSEQ) AS SENDERCODE
+			               ,A.MESSAGE
+			               ,CASE WHEN (SELECT COUNT(*)
+			                           FROM T_PUSH_COMPLETE B
+			                           WHERE A.SEQNO = B.SEQNO AND A.CUID = B.CUID AND B.RECEIVEACK = 'S') > 0
+			                     THEN 'Y'
+			                     ELSE 'N'
+			                END AS SEND_YN
+			               ,CASE WHEN (SELECT COUNT(*)
+			                           FROM T_PUSH_COMPLETE B
+			                           WHERE A.SEQNO = B.SEQNO AND A.CUID = B.CUID AND B.RECEIVEACK = 'R') > 0
+			                     THEN 'Y'
+			                     ELSE 'N'
+			                END AS READ_YN
+			               ,TO_CHAR(A.REGDATE, 'YYYY.MM.DD HH24:MI:SS') AS REGDATE
+			            FROM T_PUSH_MESSAGE A
+			            WHERE A.RESERVEDATE BETWEEN TO_DATE(#{RESERVEDATE_S}, 'YYYYMMDDHH24MI') AND TO_DATE(#{RESERVEDATE_E}, 'YYYYMMDDHH24MI')
+			                  AND A.APPID = #{APPID}
+			                  AND TYPE = 'N'
+			                  <if test="SENDERSEQ != '' and SENDERSEQ != null">
+			                  	AND A.SENDERSEQ = #{SENDERSEQ}
+			                  </if>
+			            ORDER BY A.SEQNO DESC
+			        ) C 
+			        INNER JOIN T_PUSH_USER D ON (C.CUID = D.CUID)
+			<where>
+			 	1 = 1
+			 	<if test="CNAME != '' and CNAME != null ">
+			 		AND D.CNAME = #{CNAME}
+			 	</if>
+			 	<if test="CUID != '' and CUID != null ">
+			 		AND D.CUID = #{CUID}
+			 	</if>
+			 	<if test="PHONENO != '' and PHONENO != null ">
+			 		AND D.PHONENO = #{PHONENO}
+			 	</if>
+			 	<if test="RESERVE_TYPE != '' and RESERVE_TYPE != null ">
+			 		AND C.RESERVE_TYPE = #{RESERVE_TYPE}
+			 	</if>
+			 </where>
+		)  
+	   	WHERE RNUM BETWEEN #{START_NUM} AND #{END_NUM}
+    </select>
+   
+         <select id="selectUserSendDetailList" parameterType="kr.msp.admin.push.userSend.dto.PushUserSendDto" resultType="kr.msp.admin.push.userSend.dto.PushUserSendDto" >
+      SELECT A.CUID,A.PNSID,
+  CASE WHEN (SELECT COUNT(*) FROM T_PUSH_COMPLETE B WHERE SEQNO =#{SEQNO} AND CUID = #{CUID} AND PNSID=A.PNSID AND RECEIVEACK = 'R') > 0
+  THEN 'Y' ELSE 'N' END AS READ_YN,
+  
+  CASE WHEN (SELECT COUNT(*) FROM T_PUSH_COMPLETE B WHERE SEQNO = #{SEQNO} AND CUID = #{CUID}  AND PNSID=A.PNSID AND RECEIVEACK = 'R') > 0
+  THEN TO_CHAR((SELECT REGDATE FROM T_PUSH_COMPLETE B WHERE SEQNO = #{SEQNO} AND CUID =  #{CUID}  AND PNSID=A.PNSID AND RECEIVEACK = 'R' and rownum=1 ), 'YYYY.MM.DD HH24:MI:SS') END AS READDATE,
+  
+  CASE WHEN (SELECT COUNT(*) FROM T_PUSH_COMPLETE B WHERE SEQNO = #{SEQNO} AND CUID =  #{CUID}  AND PNSID=A.PNSID AND RECEIVEACK = 'S') > 0
+  THEN 'Y' ELSE 'N' END AS SEND_YN,
+  
+  CASE WHEN (SELECT COUNT(*) FROM T_PUSH_COMPLETE B WHERE SEQNO =#{SEQNO} AND CUID = #{CUID} AND PNSID=A.PNSID AND RECEIVEACK = 'S') > 0
+  THEN TO_CHAR((SELECT REGDATE FROM T_PUSH_COMPLETE B WHERE SEQNO = #{SEQNO} AND CUID =  #{CUID} AND PNSID=A.PNSID AND RECEIVEACK = 'S' and rownum=1 ), 'YYYY.MM.DD HH24:MI:SS') END AS SENDDATE
+
+FROM ( SELECT CUID,PNSID from T_PUSH_COMPLETE where SEQNO=#{SEQNO} and CUID= #{CUID} group by CUID,PNSID ) A
+    </select>
+    
+    
+    <!-- 사용자 발송조회 상세 리스트 -->   
+    <!-- <select id="selectUserSendDetailList" parameterType="kr.msp.admin.push.userSend.dto.PushUserSendDto" resultType="kr.msp.admin.push.userSend.dto.PushUserSendDto" >
+        SELECT 
+		    A.CUID
+		   ,A.PNSID
+		   ,A.SEND_YN
+		   ,CASE WHEN (SELECT COUNT(*)
+		                FROM T_PUSH_COMPLETE B
+		                WHERE SEQNO = #{SEQNO} AND CUID = #{CUID} AND RECEIVEACK = 'R'              
+		               ) > 0
+		          THEN 'Y'
+		          ELSE 'N'
+		    END AS READ_YN
+		   ,A.REGDATE
+		FROM (
+		        SELECT 
+		            CUID
+		           ,PNSID
+		           ,'Y' AS SEND_YN
+		           ,TO_CHAR(REGDATE, 'YYYY.MM.DD HH24:MI:SS') AS REGDATE
+		        FROM T_PUSH_COMPLETE
+		        WHERE SEQNO = #{SEQNO} AND CUID = #{CUID} AND RECEIVEACK = 'S'
+		        UNION ALL
+		        SELECT 
+		            CUID
+		           ,PNSID
+		           ,'N' AS SEND_YN
+		           ,TO_CHAR(REGDATE, 'YYYY.MM.DD HH24:MI:SS') AS REGDATE
+		        FROM T_PUSH_FAILED
+		        WHERE SEQNO = #{SEQNO} AND CUID = #{CUID}) A
+    </select>
+	 -->
+	
+</mapper>

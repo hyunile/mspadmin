@@ -1,0 +1,94 @@
+<script type="text/javascript">
+    $(document).ready(function(){
+		//공통 페지징 처리
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+		
+    	//검색메뉴 hide
+    	$(".se_con").each(function(i){
+    		if(i != 0){
+    			$(this).hide();
+    		}
+    	});
+    });
+    
+    $(document).on("change","#conSelect",function(){
+    	var su = $(this).val();
+    	$(".se_con").hide();
+    	$(".se_con").val("");
+    	$(".se_con:eq(" + su + ")").show();
+    });
+    
+	//공통코드 페이지 호출(공통)
+    function fn_getPage( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+	
+	// 검색
+    function ch_search(){
+    	var sfrm=document.popupFrmSearch;
+    	var sval=$("#conSelect").val();
+    	if(sval==0){
+    		if(sfrm.TEMPLATECODE.value.length>0&&sfrm.TEMPLATECODE.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.TEMPLATECODE.value="";
+    			sfrm.TEMPLATECODE.focus();
+    		}
+    	}
+    	fn_getTemplateList(1);
+    }
+    
+    //페이징 처리
+    function fn_getTemplateList(PAGE_NUM){
+    	var url = CONTEXT_PATH + "/admin/commonPush/popup/template";
+    	var type = "POST";
+    	var data = $("form[name=popupFrmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+		var target = $("#divPopupList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+    }
+	
+</script>
+
+	<div class="popup_content">
+		<fieldset>
+			<legend>템플릿 불러오기</legend>
+			<form name="popupFrmSearch" method="post">
+				<div class="popup_search_area">
+					<table>
+						<tr>
+							<td>
+								<select id="conSelect" title="#springMessage('menu.mobile.notice.title.selectSearch')" style="width:130px;"> <!-- 검색항목선택 -->
+									<option value="0">#springMessage("menu.push.setting.templateName")</option> <!-- 템플릿명 -->
+									<option value="1">#springMessage("menu.push.setting.templateType")</option> <!-- 템플릿유형 -->
+								</select>
+								<input class="se_con inp_wd300" type="text" id="TEMPLATECODE" name="TEMPLATECODE" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- "검색어입력" -->
+								<select class="se_con" name="WRITE_TYPE" title="검색항목2 선택" style="width:130px;" onchange="fn_getTemplateList(1)">
+									<option value="">--#springMessage("common.select.choose")--</option> <!-- 선택 -->
+									<option value="TEXT" onkeydown="javascript:if(event.keyCode==13){fn_getTemplateList(1);return false;}">TEXT</option>
+									<option value="RICH" onkeydown="javascript:if(event.keyCode==13){fn_getTemplateList(1);return false;}">RICH</option>
+								</select>
+								<button type="button" class="btn_basic" onClick="ch_search()"><span>#springMessage("common.button.view")</span></button> <!-- 조회  -->
+							</td>
+						</tr>
+					</table>
+				</div>
+			</form>
+			
+			<div id="divPopupList">
+				#parse("admin/commonPush/popup/template/list.vm")
+			</div>
+			
+			<div class="btn_pop">
+				<button type="button" onclick="fn_closePopup();" class="btn_basic"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+			</div>
+		</fieldset>
+	</div>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.bbs.mapper.AppbbsDao">
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT *
+, @RN TOT_CNT
+FROM
+(
+	SELECT A.*
+	,	(@RN := @RN + 1) AS RNUM
+	FROM
+	(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+	) A
+	, (SELECT @RN := 0, @TOT := 0) R
+) A
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+
+    <select id="selectAppbbs" 
+	        parameterType="kr.msp.admin.store.bbs.dto.AppbbsSearchDto"
+	        resultType   ="kr.msp.admin.store.bbs.dto.AppbbsDto">
+	    <!-- Userweb BBS List -->
+		<include refid="head"/>
+		SELECT BOARD_IDX     , SVC_ID   , BOARD_TYPE , BOARD_DETAIL_TYPE, BOARD_TITLE
+             , BOARD_CONTENT , HIT      , USE_YN     , REG_ID           , DATE_FORMAT(REG_DT, '%Y.%m.%d') REG_DT
+             , DATE_FORMAT(MOD_DT, '%Y.%m.%d') MOD_DT        , MOD_ID   , SECRET_YN  
+             ,	(
+					SELECT	CD_NM 
+					FROM	TB_SYS_CD_INFO 
+					WHERE	CD_GRP_ID = (CASE BOARD_TYPE WHEN 'NOTICE' THEN 'ST001' ELSE 'ST005' END)
+						AND CD_ID=BOARD_DETAIL_TYPE
+				) BOARD_DETAIL_NAME
+             , REF , STP , LVL
+        FROM   TB_STO_BOARD A
+        WHERE  BOARD_TYPE    = #{BOARD_TYPE}
+        <if test="SECRET_YN != null and SECRET_YN != ''">   
+        AND    A.SECRET_YN   = #{SECRET_YN}
+        </if>
+        <if test="BOARD_TITLE != null and BOARD_TITLE != ''">   
+        AND    A.BOARD_TITLE LIKE CONCAT('%', #{BOARD_TITLE}, '%')
+        </if>
+    <choose >
+        <when test="ORDER_TYPE == 'ASC' or ORDER_TYPE == 'DESC'">
+			ORDER BY  ${ORDER_TARGET} ${ORDER_TYPE}<if test="BOARD_TYPE == 'QNA'">, STP ASC</if>
+        </when>
+        <otherwise>
+      		ORDER BY  BOARD_IDX DESC<if test="BOARD_TYPE == 'QNA'">, STP ASC</if>
+        </otherwise>
+    </choose>
+     	
+    	<include refid="bottom"/>
+	</select>
+	
+    <update id="updateHit" parameterType="kr.msp.admin.store.bbs.dto.AppbbsSearchDto" >
+        <!-- Increase of Hit Count one -->
+		UPDATE TB_STO_BOARD
+		   SET HIT       = HIT + 1
+		 WHERE BOARD_IDX = #{BOARD_IDX}
+    </update>
+
+    <select id="selectAppbbsView" 
+	        parameterType="kr.msp.admin.store.bbs.dto.AppbbsSearchDto"
+	        resultType   ="kr.msp.admin.store.bbs.dto.AppbbsDto">
+	    <!-- Userweb BBS Detail View -->
+		SELECT BOARD_IDX     , SVC_ID   , BOARD_TYPE , BOARD_DETAIL_TYPE, BOARD_TITLE
+             , BOARD_CONTENT , HIT      , USE_YN     , REG_ID           , DATE_FORMAT(REG_DT, '%Y.%m.%d') REG_DT
+             , DATE_FORMAT(MOD_DT, '%Y.%m.%d') MOD_DT        , MOD_ID   , SECRET_YN  
+             ,	(
+					SELECT	CD_NM 
+					FROM	TB_SYS_CD_INFO 
+					WHERE	CD_GRP_ID = (CASE BOARD_TYPE WHEN 'NOTICE' THEN 'ST001' ELSE 'ST005' END)
+						AND CD_ID=BOARD_DETAIL_TYPE
+				) BOARD_DETAIL_NAME
+             , REF , STP , LVL
+        FROM   TB_STO_BOARD A
+        WHERE  BOARD_IDX  = #{BOARD_IDX}
+	</select>
+
+    <select id="selectAppbbsFiles" 
+	         parameterType="kr.msp.admin.store.bbs.dto.AppbbsSearchDto"
+	         resultType   ="kr.msp.admin.store.bbs.dto.AppbbsDto">
+	    <!-- Userweb BBS Detail Files -->
+		SELECT A.FILE_IDX, A.FILE_PATH, A.FILE_NAME, A.FILE_SAVE_NAME, A.FILE_EXT, A.FILE_SIZE
+        FROM   TB_STO_FILE A
+		WHERE  A.BOARD_IDX = #{BOARD_IDX}
+	</select>
+
+	<insert id="insertBbs" parameterType="kr.msp.admin.store.bbs.dto.AppbbsDto">
+        <!-- insert bbs one row -->
+        <selectKey order="BEFORE" keyProperty="BOARD_IDX" resultType="String">
+			SELECT	IFNULL(MAX(BOARD_IDX), 0) + 1
+			FROM	TB_STO_BOARD
+        </selectKey>
+        INSERT INTO TB_STO_BOARD (
+              BOARD_IDX, SVC_ID, BOARD_TYPE, BOARD_DETAIL_TYPE, BOARD_TITLE, BOARD_CONTENT, HIT, USE_YN, REG_ID, REG_DT, SECRET_YN
+            , REF , STP , LVL
+        ) VALUES (
+              #{BOARD_IDX}
+            , (SELECT SVC_ID FROM TB_STO_SVC WHERE USE_YN = 'Y')
+            , #{BOARD_TYPE}
+            , #{BOARD_DETAIL_TYPE}
+            , #{BOARD_TITLE}
+            , #{BOARD_CONTENT}
+            , 0
+            , #{USE_YN}
+            , #{REG_ID}
+            , NOW()
+            , #{SECRET_YN}
+            , CASE WHEN #{REF}  = '' THEN  #{BOARD_IDX} ELSE #{REF} END
+            , ${STP}
+            , ${LVL}
+        )        
+    </insert>
+
+	<update id="replyBoardstp"  parameterType="kr.msp.admin.store.bbs.dto.AppbbsDto" >
+        <!-- Increase STEP  -->
+        UPDATE TB_STO_BOARD SET
+               STP =  STP + 1
+         WHERE REF =  #{REF}<![CDATA[
+           AND STP >= #{STP}]]>
+    </update>
+    
+    <update id="updateBbs" parameterType="kr.msp.admin.store.bbs.dto.AppbbsDto">
+        <!-- update bbs one row -->
+		UPDATE TB_STO_BOARD
+           SET BOARD_DETAIL_TYPE = #{BOARD_DETAIL_TYPE}
+             , BOARD_TITLE       = #{BOARD_TITLE}
+             , BOARD_CONTENT     = #{BOARD_CONTENT}
+             , USE_YN            = #{USE_YN}
+             , MOD_DT            = NOW()
+             , MOD_ID            = #{REG_ID}
+             , SECRET_YN         = #{SECRET_YN}
+         WHERE BOARD_IDX         = #{BOARD_IDX}
+    </update>
+
+	<insert id="saveFile" parameterType="java.util.HashMap">
+	    <!-- Save file in db -->
+		INSERT INTO TB_STO_FILE (
+			   BOARD_IDX, FILE_NAME, FILE_SAVE_NAME, FILE_PATH, FILE_EXT, FILE_SIZE, STS_CD, REG_ID, REG_DT
+		) VALUES (
+			   #{BOARD_IDX}
+			 , #{FILE_NAME}
+			 , #{FILE_SAVE_NAME}
+			 , #{FILE_PATH}
+			 , #{FILE_EXT}
+			 , #{FILE_SIZE}
+			 , #{STS_CD}
+			 , #{REG_ID}
+			 , NOW()
+		)
+	</insert>
+	
+	<delete id="deleteFile" parameterType="kr.msp.admin.store.bbs.dto.AppbbsDto">
+	    <!-- delete from file info -->
+	    DELETE FROM TB_STO_FILE
+	    WHERE  FILE_IDX = #{FILE_IDX}
+	</delete>
+	
+	<delete id="deleteBbs" parameterType="kr.msp.admin.store.bbs.dto.AppbbsDto">
+        <!-- delete from file info -->
+        DELETE FROM TB_STO_BOARD
+        WHERE  BOARD_IDX = #{BOARD_IDX}
+    </delete>
+    
+	<select id="selectReplyExist" parameterType="kr.msp.admin.store.bbs.dto.AppbbsDto" resultType="int">
+        <!-- count if exist reply -->
+        SELECT COUNT(*) FROM TB_STO_BOARD 
+        WHERE  REF = (
+                    SELECT REF  FROM TB_STO_BOARD 
+                    WHERE  BOARD_IDX = #{BOARD_IDX}
+        )
+        AND    LVL >  (
+                    SELECT LVL  FROM TB_STO_BOARD 
+                    WHERE  BOARD_IDX = #{BOARD_IDX}
+        )
+    </select>
+</mapper>

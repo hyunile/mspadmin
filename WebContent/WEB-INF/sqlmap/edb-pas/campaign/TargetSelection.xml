@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.campaign.targetSelection.mapper.TargetSelectionDao">
+
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+	<sql id="head">
+		SELECT viewC.*
+		FROM (
+		SELECT
+		(ROW_NUMBER() OVER()) AS "RNUM"
+		,COUNT(*) OVER() AS "TOT_CNT"
+		,viewB.*
+		FROM (SELECT viewA.* FROM (
+	</sql>
+
+	<sql id="bottom">
+		) AS viewA
+		) AS viewB
+		) AS viewC
+		WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+	
+	<!--사용자 리스트 조회 -->
+	<select id="selectTargetUserList" parameterType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionParamDTO" resultType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionDTO" >
+		<include refid="head"/>
+		SELECT "CUID" AS "USERID", "CNAME", "CUID"
+		FROM "T_PUSH_USER_INFO"
+		WHERE "PUSHKEY" IS NOT NULL
+		      AND "APPID" = #{APPID, jdbcType=VARCHAR}
+		      AND "PNSID" IN (
+			  				SELECT "PNSID"
+			  				FROM "T_PUSH_SERVICE"
+			  				WHERE "SERVICECODE" = #{SERVICECODE, jdbcType=VARCHAR}
+			  				)
+ 			  AND "CUID" != 'GUEST'
+		<if test="searchKey != null and  searchKey != ''">
+            <if test="searchKey == 'CUID'">
+                AND "CUID" LIKE '%'||#{searchWord, jdbcType=VARCHAR}||'%'
+            </if>
+            <if test="searchKey == 'CNAME'">
+                AND "CNAME" LIKE '%'||#{searchWord, jdbcType=VARCHAR}||'%'
+            </if>
+        </if>
+        GROUP BY "CUID", "CNAME"
+		<include refid="bottom"/>
+	</select>
+	
+	<select id="selectTargetUserPSIDList" parameterType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionParamDTO" resultType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionDTO" >
+		<include refid="head"/>
+		SELECT "PSID" AS "USERID", "CNAME", "PNSID"
+		FROM "T_PUSH_USER_INFO"
+		WHERE "PUSHKEY" IS NOT NULL
+			  AND "APPID" = #{APPID, jdbcType=VARCHAR}
+			  AND "PNSID" IN (
+			  				SELECT "PNSID"
+			  				FROM t_push_service
+			  				WHERE "SERVICECODE" = #{SERVICECODE, jdbcType=VARCHAR}
+			  				)
+ 			  AND "CUID" != 'GUEST'
+		<if test="searchKey != null and  searchKey != ''">
+            <if test="searchKey == 'PSID'">
+                AND "CUID" LIKE '%'||#{searchWord, jdbcType=VARCHAR}||'%'
+            </if>
+            <if test="searchKey == 'CNAME'">
+                AND "CNAME" LIKE '%'||#{searchWord, jdbcType=VARCHAR}||'%'
+            </if>
+        </if>
+        GROUP BY "PSID", "CNAME", "PNSID"
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- 사용자 리스트 조회 (그룹조건 있을경우) -->
+	<select id="selectTargetUserListWithGroupConditions" parameterType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionParamDTO" resultType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionDTO">
+		<include refid="head"/>
+		SELECT B."CUID", B."PUSHKEY", B."CNAME", B."PHONENO"
+		FROM "T_PUSH_USER_GROUP" AS A
+		LEFT OUTER JOIN "T_PUSH_USER_INFO" AS B
+		ON A."CUID" = B."CUID"
+		WHERE B."PUSHKEY" IS NOT NULL AND A."GROUPSEQ" = #{GROUPSEQ, jdbcType=INTEGER}
+			  AND "APPID" = #{APPID, jdbcType=VARCHAR}
+			  AND "PNSID" IN (
+			  				SELECT "PNSID"
+			  				FROM t_push_service
+			  				WHERE "SERVICECODE" = #{SERVICECODE}
+			  				)
+ 			  AND B."CUID" != 'GUEST'
+		<if test="searchKey != null and  searchKey != ''">
+            <if test="searchKey == 'CUID'">
+                AND B."CUID" LIKE '%'||#{searchWord, jdbcType=VARCHAR}||'%'
+            </if>
+            <if test="searchKey == 'CNAME'">
+                AND B."CNAME" LIKE '%'||#{searchWord, jdbcType=VARCHAR}||'%'
+            </if>
+            <if test="searchKey == 'PHONENO'">
+                AND B."PHONENO" LIKE '%'||#{searchWord, jdbcType=VARCHAR}||'%'
+            </if>
+        </if>
+        GROUP BY B."CUID", B."PUSHKEY", B."CNAME", B."PHONENO"
+		<include refid="bottom"/>
+	</select>
+	
+	<select id="selectTargetGroupList" parameterType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionParamDTO" resultType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionDTO">
+		<include refid="head"/>
+		SELECT A."GROUPSEQ", A."GROUPNAME", B."GROUPCNT", A."GROUPDESC"
+		FROM "T_PUSH_USER_GROUP_INFO" AS A
+		LEFT OUTER JOIN (
+		                SELECT "GROUPSEQ", COUNT(*) AS "GROUPCNT"
+		                FROM t_push_user_group
+		                GROUP BY "GROUPSEQ"
+		                ) AS B
+		ON A."GROUPSEQ" = B."GROUPSEQ"
+		<where> 
+			<if test="searchKey != null and  searchKey != ''">
+	            <if test="searchKey == 'GROUPNAME'">
+	                AND A."GROUPNAME" LIKE '%'||#{searchWord, jdbcType=VARCHAR}||'%'
+	            </if>
+	            <if test="searchKey == 'GROUPDESC'">
+	                AND A."GROUPDESC" LIKE '%'||#{searchWord, jdbcType=VARCHAR}||'%'
+	            </if>
+	        </if>
+        </where> 
+		<include refid="bottom"/>
+	</select>
+	
+	<select id="selectCuidPnsidList" parameterType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionParamDTO" resultType="kr.msp.admin.campaign.targetSelection.dto.TargetSelectionDTO">
+		SELECT "CUID", "PNSID"
+		FROM "T_PUSH_USER_INFO"
+		WHERE "CUID" IN
+		<foreach item="listCuid" index="index" collection="listCuid" open="(" separator="," close=")">
+        	#{listCuid}
+  		</foreach>
+		GROUP BY "CUID", "PNSID"
+	</select>
+	
+		
+</mapper>

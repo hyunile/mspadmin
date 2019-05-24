@@ -1,0 +1,22 @@
+<style>
+
+.mqna{height:100px;padding:20px 0;color:#000;font-size:14px;}
+.mqna li{overflow:hidden;margin-bottom:5px;}
+.mqna li.last{margin-bottom:0;}
+.mqna li a{color:#000;}
+.mqna li span{float:right;}
+.mqna li em{display:inline-block;width:35px;font-size:16px;}
+.mqna .qna_q{color:#f80505;}
+.mqna .qna_a{color:#152b75;}
+
+</style>
+
+
+<h2>[App] Q&amp;A #springMessage("menu.store.notice")</h2> <!-- 게시판 -->
+
+<ul class="mqna">
+	#foreach( $dto in $listDto)
+		<li><a href="#"><em class="qna_q">[Q]</em>$dto.BOARD_TITLE</a></li>
+	#end
+</ul>
+

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.sendType.mapper.PushSendTypeManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+	<sql id="head">
+		SELECT *
+        FROM ( SELECT 
+                    ROWNUM RNUM
+                   ,COUNT(*) OVER() TOT_CNT
+                   ,A.*
+               FROM ( SELECT * FROM (
+	</sql>
+	
+	<sql id="bottom">
+									)
+                    ) A
+             )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+    
+    <!-- 발송유형 리스트 조회 -->
+    <select id="SelectSendTypeList" parameterType="kr.msp.admin.push.sendType.dto.PushSendTypeDto" resultType="kr.msp.admin.push.sendType.dto.PushSendTypeDto">
+        <include refid="head"/>
+	        SELECT
+			    SERVICECODE
+			   ,PNSID
+			   ,SERVICENAME
+			   ,RETRYFLAG
+			   ,MAXRETRYCNT
+			   ,RESENDFLAG
+			   ,MAXRESENDCNT
+			   ,FAILSMSFLAG
+			FROM T_PUSH_SERVICE
+			ORDER BY SERVICECODE, PNSID
+        <include refid="bottom"/>
+    </select>
+	
+    <select id="SelectSendTypeOne" parameterType="kr.msp.admin.push.sendType.dto.PushSendTypeDto" resultType="kr.msp.admin.push.sendType.dto.PushSendTypeDto">
+			SELECT
+			    SERVICECODE
+			   ,PNSID
+			   ,SERVICENAME
+			   ,RETRYFLAG
+			   ,MAXRETRYCNT
+			   ,RESENDFLAG
+			   ,MAXRESENDCNT
+			   ,FAILSMSFLAG
+			FROM T_PUSH_SERVICE
+			WHERE SERVICECODE = #{SERVICECODE} AND PNSID = #{PNSID}
+    </select>
+    
+    <!-- 발송유형 코드 중복 조회 -->
+    <select id="SelectSendTypeDupCheck" parameterType="kr.msp.admin.push.sendType.dto.PushSendTypeDto" resultType="java.lang.Integer">
+        SELECT COUNT(*) AS COUNT
+		FROM T_PUSH_SERVICE
+		WHERE SERVICECODE = #{SERVICECODE} AND PNSID = #{PNSID}
+    </select>
+	
+    <!-- 발송유형 등록 -->
+    <insert id="InsertSendType" parameterType="kr.msp.admin.push.sendType.dto.PushSendTypeDto">
+        INSERT INTO T_PUSH_SERVICE (
+                                SERVICECODE
+                               ,PNSID
+                               ,SERVICENAME
+                               ,RETRYFLAG
+                               ,MAXRETRYCNT
+                               ,RESENDFLAG
+                               ,MAXRESENDCNT
+                               ,FAILSMSFLAG
+                            ) VALUES (
+                                #{SERVICECODE}
+                               ,#{PNSID}
+                               ,#{SERVICENAME}
+                               ,#{RETRYFLAG}
+                               ,#{MAXRETRYCNT, jdbcType=NUMERIC}
+                               ,#{RESENDFLAG}
+                               ,'0'
+                               ,#{FAILSMSFLAG, jdbcType=VARCHAR}
+                            )
+    </insert>
+    
+    <!-- 발송유형 수정 -->
+    <update id="UpdateSendType" parameterType="kr.msp.admin.push.sendType.dto.PushSendTypeDto">
+        UPDATE T_PUSH_SERVICE
+		   SET SERVICENAME  = #{SERVICENAME}
+		      ,RETRYFLAG    = #{RETRYFLAG}
+		      ,MAXRETRYCNT  = #{MAXRETRYCNT}
+		      ,RESENDFLAG   = #{RESENDFLAG}
+		      ,FAILSMSFLAG  = #{FAILSMSFLAG}
+		WHERE SERVICECODE = #{SERVICECODE} AND PNSID = #{PNSID}
+    </update>
+    
+    <!-- 발송유형 삭제-->
+    <delete id="DeleteSendType" parameterType="kr.msp.admin.push.sendType.dto.PushSendTypeDto">
+        DELETE FROM T_PUSH_SERVICE
+        WHERE SERVICECODE = #{SERVICECODE} AND PNSID = #{PNSID}
+    </delete>
+</mapper>

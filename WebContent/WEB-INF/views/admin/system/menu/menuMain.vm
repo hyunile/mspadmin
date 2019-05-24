@@ -1,0 +1,290 @@
+<script type="text/javascript">
+$(document).ready(function(){
+
+});
+
+$(document).on("click",".menu_row",function(){
+	$("#menu_list_div").find(".selected").removeClass().addClass("menu_row");		//<!-- select 스타일 변경 필요!
+	$(this).removeClass().addClass("selected");				//<!-- select 스타일 변경 필요!
+	$("#CLICK_ID_MENU").val($(this).find(".ID_MENU").val());
+	get_info();
+});
+
+//메뉴 리스트
+function getMenuList(){
+	var url = CONTEXT_PATH + "/admin/system/menu";
+	var data = "";
+	var type = "POST";
+	var target = $("#menu_list_div");
+
+	fn_getList( url, type, data, target );
+}
+
+//메뉴 등록 화면
+function fn_newRegist(){
+	var menu_row_class = $("#menu_list_div").find(".selected").find("td").attr("class");
+	if( menu_row_class == "menu_level_3" ){
+		alert('#springMessage("menu.system.alert.cannotRegsitSubMenu")');		//하위 메뉴를 등록 할 수 없습니다.
+		return;
+	}
+	var write_type = $("#write_type").val();
+	if(write_type == ""){
+		alert('#springMessage("menu.system.alert.selectMenu")');		//메뉴를 선택해 주세요.
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/system/menu/regist";
+	var data = "";
+	var type = "GET";
+	var target = $("#menu_info_div");
+
+	fn_getList( url, type, data, target );
+}
+
+//메뉴 수정 등록
+function fn_newWrite(){
+
+	if( $("form[name=frmList]").find("input[name=NM_MENU]").val() == ""){
+		alert('#springMessage("menu.system.alert.noMenuName")');		//메뉴명을 입력해주세요.
+		$("form[name=frmList]").find("input[name=NM_MENU]").focus();
+		return;
+	} else if ( $("form[name=frmList]").find("input[name=NO_ORDER]").val() == ""){
+		alert('#springMessage("menu.system.alert.noRank")');		//우선순위를 입력해주세요.
+		$("form[name=frmList]").find("input[name=NO_ORDER]").focus();
+		return;
+	}
+
+	if($("form[name=frmList]").find("input[name=NO_WIDTH]").val() == ""){
+		$("form[name=frmList]").find("input[name=NO_WIDTH]").val(0);
+	}
+	if($("form[name=frmList]").find("input[name=NO_HEIGHT]").val() == ""){
+		$("form[name=frmList]").find("input[name=NO_HEIGHT]").val(0);
+	}
+
+	var url;
+	var write_type = $("#write_type").val();
+
+	if(write_type == "update"){
+		url = CONTEXT_PATH + "/admin/system/menu/edit";
+	} else if(write_type == "insert"){
+		url = CONTEXT_PATH + "/admin/system/menu/regist";
+		$("#ID_MENU_PARENT").val($("#CLICK_ID_MENU").val());
+	} else {
+		alert('#springMessage("menu.system.alert.selectMenu")');	//메뉴를 선택해 주세요.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doSave")')){		//저장하시겠습니까?
+		return;
+	}
+
+	var data = $("form[name=frmList]").serialize();
+
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				getMenuList();
+				$("#CLICK_ID_MENU").val(data.ID_MENU);
+				$("#mu"+$("#CLICK_ID_MENU").val()).removeClass().addClass("selected");
+				//스크롤바 선택 요소로 이동
+				var topPosition = $("#mu" + $("#CLICK_ID_MENU").val()).position().top - $("#menu_list_div").position().top + $("#menu_list_div").scrollTop();
+  				$('#menu_list_div').animate({scrollTop : topPosition});
+  				//상세 호출
+  				get_info();
+			}
+		},
+        error:function(xhr, ajaxOptions, thrownError){
+            alert(thrownError+"[XSS Check]");
+        }
+	});
+}
+
+//메뉴삭제
+function fn_newDelete(){
+	if( $("#CLICK_ID_MENU").val()== "" ){
+		alert('#springMessage("menu.system.alert.selectMenu")');		//메뉴를 선택해 주세요.
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doDelete")')){		//삭제하시겠습니까?
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/system/menu/delete";
+	var data = "ID_MENU=" + $("#CLICK_ID_MENU").val();
+
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				document.location.href = CONTEXT_PATH + "/admin/system/menu";
+			}
+		},
+        error:function(xhr, ajaxOptions, thrownError){
+            alert(thrownError+"[XSS Check]");
+        }
+	});
+}
+
+// 메뉴 상제(공통)
+function get_info(){
+	var ID_MENU = $("#CLICK_ID_MENU").val();
+
+	var url = CONTEXT_PATH + "/admin/system/menu/info";
+	var data = "ID_MENU=" + ID_MENU;
+	var type = "POST";
+	var target = $("#menu_info_div");
+
+	fn_getList( url, type, data, target );
+}
+
+function fn_getList( url, type, data, target ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false ,
+		cache:false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.system")</span>
+		<span>#springMessage("menu.system.menuManage")</span>   ### 메뉴관리 ###
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.menuManage")</h2>	### 메뉴관리 ###
+	#### E : 프로그램 위치 기술 부분  ####
+
+
+	<form name="frmList" method="post">
+		
+		<div class="scroll-area">
+			##HIDDEN##
+			<input type="hidden" id="CLICK_ID_MENU" value="" />
+			##HIDDEN##
+			
+			<table class="full-width">
+				<caption></caption>
+				<colgroup>
+					<col>
+					<col style="width:30px">
+					<col>
+				</colgroup>
+				<tr>
+					<td class="tbl-wrap valignTop">  ######### S: 왼쪽 영역 ####
+					
+						<h2 class="tbl-title">#springMessage("menu.system.menuAllList")</h2>	### 전체 메뉴 목록 ###
+						<table class="tbl full-width">
+							<caption>#springMessage("menu.system.menuAllList")</caption>
+							<tbody>
+							<tr>
+								<td class="paddingNone">
+						
+									<div class="dutyMenu" id="menu_list_div">
+										
+										<table class="tbl-nb full-width" style="width:100%;">
+                    						<tr class="menu_row">
+                    							<td class="menu_level_0" style="cursor:pointer; text-align:left;">
+                    								<b>TOP</b>
+                    								<input type="hidden" class="ID_MENU" value="" />
+                    							</td>
+                    						</tr>
+                    						
+                    						#foreach( $menu in $menuList )
+                    							<tr class="menu_row" id="mu$!menu.ID_MENU">
+                    							
+                    							#if($menu.MENU_LEVEL == 1)
+                    								<td class="menu_level_1" style="cursor:pointer; text-align:left;padding-left:10px;">
+    													<b>$!menu.NM_MENU</b>
+    													<input type="hidden" class="ID_MENU" value="$!menu.ID_MENU"/>
+													</td>
+    					
+    					                		#elseif($menu.MENU_LEVEL == 2)
+                    								<td class="menu_level_2" style="cursor:pointer; text-align:left;padding-left:30px;" > 
+														<img src="$!{CONTEXT_PATH}/resources/images/common/icon_menu2.gif" alt=""/>
+														$!menu.NM_MENU
+														<input type="hidden" class="ID_MENU" value="$!menu.ID_MENU"/>
+													</td>
+                    		
+                    							#elseif($menu.MENU_LEVEL == 3)
+                    								<td class="menu_level_3" style="cursor:pointer; text-align:left;padding-left:50px;"> 
+														<img src="$!{CONTEXT_PATH}/resources/images/common/icon_menu_dot2.gif" class="slash" alt=""/>
+														$!menu.NM_MENU
+														<input type="hidden" class="ID_MENU" value="$!menu.ID_MENU"/>
+													</td>
+                    							#end
+                    							</tr>
+                    						#end
+                    					</table>
+		
+									</div>
+								
+								</td>	
+							</tr>
+							</tbody>
+						</table>
+						
+					</td>  ######### E: 왼쪽 영역 ####
+				
+					<td class="txtCenter">	######### S: 가운데 영역 ####
+					<!-- 
+						<a href="javascript:void(0)" class="btn-arrow">추가</a>
+						<br />
+						<br />
+						<a href="javascript:void(0)" class="btn-arrow reverse">삭제</a>
+					 -->
+					</td>		######### E: 가운데 영역 ####
+					
+					<td class="tbl-wrap valignTop">		######### S: 오른쪽 영역 ####
+					
+						<div class="right_area" id="menu_info_div">
+					
+							<h2 class="tbl-title">#springMessage("menu.system.menuInfo")</h2> 	### 메뉴 정보 ###
+							<table class="tbl full-width">
+								<caption>#springMessage("menu.system.menuInfo")</caption>
+								<colgroup>
+									<col style="width:120px">
+									<col>
+									<col style="width:120px">
+									<col>
+								</colgroup>
+								<tbody>
+									<tr>
+										<th colspan="4" class="ta_c">#springMessage("menu.system.alert.selectMenu")</th> 	### 메뉴를 선택해 주세요. ###
+										<input type="hidden" id="write_type" value=""/>
+									</tr>
+								</tbody>
+							</table>
+							
+						</div>
+			
+					</td>	######### E: 오른쪽 영역 ####
+				</tr>
+			</table>
+			
+			<a href="javascript:fn_newWrite();void(0)" class="btn1 fr">#springMessage("common.button.save")</a>			### 저장 ###
+			<a href="javascript:fn_newDelete();void(0)" class="btn1 fr">#springMessage("common.button.delete")</a>		### 삭제 ###
+			<a href="javascript:fn_newRegist();void(0)" class="btn1 fr">#springMessage("common.button.new")</a>			### 신규 ###
+		</div>
+		
+	</form>
+	
+</div>
+
+
+

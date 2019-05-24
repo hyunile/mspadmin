@@ -1,0 +1,82 @@
+<script type="text/javascript">
+
+// 그룹 목록 라디오 버튼 선택 핸들러.
+$(document).on("change","input[name='MY_GROUP']",function(){
+	var _val = $(this).val();
+	$('#SELECTED_GRP_ID').val(_val);
+	var _grpNm = $(this).parent().parent().find('#GRP_NM').val();
+	$('#SELECTED_GRP_NM').val(_grpNm);
+});
+
+//그룹 선택 처리.
+function fn_onSelectGrp(){
+	var _grpId = $('#SELECTED_GRP_ID').val();
+	if(_grpId == null || _grpId == ''){
+		alert('#springMessage("menu.securePush.msgSend.alert.selectGrp")'); // 그룹을 선택해 주세요.
+		return;
+	}
+	$('#GROUP_ID').val(_grpId);
+	var _grpNm = $('#SELECTED_GRP_NM').val();
+	$('#GROUP_NAME').val(_grpNm);
+	fn_closePopup();
+}
+
+//그룹 구성원 조회 팝업 호출.
+function fn_goViewGrpUserPop(grpId, grpNm){
+	
+	var url = CONTEXT_PATH + "/admin/securepush/msgSend/viewGroupUser";
+	var type = "POST";
+	var data = "GROUP_ID=" + grpId;
+	var target = $("#windowPop");
+	var whideh = 350;
+	var title = grpNm
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+//이미 선택된 값이 있다면 스크롤 처리.
+function fn_scrollToSelected(){
+	var selectedGrpId = $('#SELECTED_GRP_ID').val();
+	if(selectedGrpId != null && selectedGrpId != ''){
+		$('#grp_'+selectedGrpId).prop('checked', true);
+		
+		var topPosition = $("#group-list-row-"+selectedGrpId).position().top - $(".group-list").position().top + $(".group-list").scrollTop();
+		$('.group-list').animate({scrollTop : topPosition});
+	}
+}
+
+</script>
+<div>
+	<div class="group-list">
+	<table class="tbl">
+		<caption>#springMessage("menu.securePush.msgSend.myGrpList")</caption> <!-- 나의 그룹 목록 -->
+		<colgroup>
+			<col style="width:40px">
+			<col style="width:260px">
+		</colgroup>
+		#foreach( $group in $groupList )
+		#set($j_tot = 1)
+		<tr id="group-list-row-$!group.GRP_ID">
+			<td>
+				<input type="radio" name="MY_GROUP" id="grp_$!group.GRP_ID" value="$!group.GRP_ID" /><label for="grp_$!group.GRP_ID"></label>
+			</td>
+			<td>
+				<span style="display:inline-block;width:50%">$!group.GRP_NM</span>
+				<input type="hidden" id="GRP_NM" value="$!group.GRP_NM" />
+				<span id="color_$!group.GRP_ID" class="$!group.GRP_COLOR"></span>
+				<a href="javascript:fn_goViewGrpUserPop('$!group.GRP_ID','$!group.GRP_NM');void(0)" class="tbl-btn1 fr">#springMessage("menu.securePush.msgSend.viewMember")</a> <!-- 구성원 보기 -->
+			</td>
+		</tr>
+		#end
+		
+		#if(!$j_tot)
+			<tr>
+				<td colspan="2" class="ta_c">#springMessage("common.alert.nodata")</td>		### 데이터가 없습니다 ###
+			</tr>
+		#end
+	</table>
+	</div>
+	<div class="btn-wrap">
+		
+		<a href="javascript:fn_onSelectGrp();void(0);" class="btn1 fr">#springMessage("common.select.choose")</a> <!-- 선택 -->
+	</div>
+</div>

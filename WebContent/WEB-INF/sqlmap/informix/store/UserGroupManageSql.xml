@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.userGroup.mapper.UserGroupManageDao">
+
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+    
+	<!-- 사용자그룹 리스트 조회 -->
+	<select id="selectUserGroupList"   parameterType="kr.msp.admin.store.userGroup.dto.UserGroupSearchDto"   resultType="kr.msp.admin.store.userGroup.dto.UserGroupDto">
+        /*  UserGroupManageSql   SelectUserGroupList*/
+	    <include refid="head"/>
+	      SELECT * FROM
+	      (  
+	         SELECT A.UG_IDX, A.GRP_ID, B.GRP_NM, A.EMP_NO, C.EMP_NM ,  C.USERID, TO_CHAR(A.REG_DT, '%Y.%m.%d') REG_DT,
+	                C.EMP_CD, (SELECT CD_NM FROM TB_STO_EMP_CODE WHERE EMP_CD = C.EMP_CD) CD_NM
+			FROM TB_STO_USERGROUP A, TB_STO_GROUP  B, TB_STO_USER C
+			WHERE A.GRP_ID = B.GRP_ID
+			AND A.EMP_NO = C.EMP_NO
+			AND A.USE_YN = 'Y'
+			AND B.USE_YN =  'Y'
+			AND C.USE_YN =  'Y'
+		    <if test="SEARCH_EMP_NM != null and SEARCH_EMP_NM != '' ">
+		        AND C.EMP_NM LIKE '%' || #{SEARCH_EMP_NM} || '%'
+	        </if>
+            <if test="SEARCH_GRP_NM != null and SEARCH_GRP_NM != '' ">
+                AND B.GRP_NM LIKE '%' || #{SEARCH_GRP_NM} || '%'
+            </if>
+          )  
+         <if test="ORDER_TYPE == 'DESC'  or ORDER_TYPE == 'ASC' ">
+            ORDER BY  ${ORDER_TARGET} ${ORDER_TYPE}
+         </if>
+        <include refid="bottom"/>    
+    </select>
+    	  
+	<!-- 그룹 리스트 조회 -->
+    <select id="SelectGroupList"   parameterType="kr.msp.admin.store.userGroup.dto.UserGroupDto"   resultType="kr.msp.admin.store.userGroup.dto.UserGroupDto">
+        /*  UserGroupManageSql   selectGroupList*/
+        SELECT GRP_ID, GRP_NM, REG_DT,ROW_NUMBER() OVER() RNUM
+		FROM TB_STO_GROUP
+		WHERE USE_YN = 'Y'
+    </select>
+    
+    <!-- 사용자 리스트 조회 -->
+    <select id="selectUserList"   parameterType="kr.msp.admin.store.userGroup.dto.UserGroupDto"   resultType="kr.msp.admin.store.userGroup.dto.UserDto">
+        /*  UserGroupManageSql   SelectUserList*/
+			SELECT A.EMP_NO, A.EMP_NM, A.USERID, A.EMP_CD,  (SELECT CD_NM FROM TB_STO_EMP_CODE WHERE EMP_CD = A.EMP_CD) EMP_CD_NM
+			,ROW_NUMBER() OVER() RNUM
+			FROM TB_STO_USER A
+			WHERE A.USE_YN = 'Y'
+    </select>
+	
+    <!-- 사용자그룹 저장-->
+    <!-- 
+    <update id="saveUserGroup" parameterType="kr.msp.admin.store.userGroup.dto.UserGroupDto">
+        /*  UserGroupManageSql saveUserGroup  */
+        MERGE INTO TB_STO_USERGROUP
+        USING DUAL
+        ON (
+            GRP_ID   = #{GRP_ID}
+            AND EMP_NO = #{EMP_NO}
+            AND USE_YN = 'Y'
+        ) 
+        WHEN NOT MATCHED THEN
+        INSERT (
+             GRP_ID, EMP_NO, REG_ID, REG_DT, USE_YN
+        ) VALUES(
+            #{GRP_ID},
+            #{EMP_NO},
+            #{REG_ID},
+            CURRENT,
+            'Y'
+        )
+    </update>
+     -->
+    <select id="selectUserGroupCount" parameterType="kr.msp.admin.store.userGroup.dto.UserGroupDto" resultType="int">
+        /*  UserGroupManageSql saveUserGroup  */
+        SELECT 	COUNT(1) 
+        FROM		TB_STO_USERGROUP
+        WHERE 	GRP_ID   = #{GRP_ID}
+            AND 		EMP_NO = #{EMP_NO}
+            AND 		USE_YN = 'Y'
+    </select>
+    <insert id="insertUserGroup" parameterType="kr.msp.admin.store.userGroup.dto.UserGroupDto">
+        /*  UserGroupManageSql saveUserGroup  */
+        INSERT INTO TB_STO_USERGROUP
+        (
+             GRP_ID, EMP_NO, REG_ID, REG_DT, USE_YN
+        ) VALUES(
+            #{GRP_ID},
+            #{EMP_NO},
+            #{REG_ID},
+            CURRENT,
+            'Y'
+        )
+    </insert>
+    
+    <!-- 사용자그룹 삭제-->
+    <update id="deleteUserGroup" parameterType="kr.msp.admin.store.userGroup.dto.UserGroupDto">
+       /* UserGroupManageSql  deleteUserGroup  */
+        UPDATE TB_STO_USERGROUP
+        SET USE_YN = 'N'
+         , MOD_ID      = #{MOD_ID} 
+         , MOD_DT = CURRENT
+        WHERE  UG_IDX = #{UG_IDX}
+    </update>
+   
+</mapper>

@@ -1,0 +1,1193 @@
+## multipart-form Ajax 전송
+<script type="text/javascript" src="${RESOURCES_PATH}/js/jquery/jquery.treeview.js"></script>
+<script type="text/javascript" src="${RESOURCES_PATH}/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+
+## 전역변수 선언
+//중복확인 체크
+var appNmDupChk = false; //App명
+var pkgNmDupChk = false; //패키지명
+var urlShmDupChk = false; //애플의 경우, 호출 URL
+
+//중복 값이 change 되었는지 체크
+var appNmChangeChk = false; 
+var pkgNmChangeChk = false; 
+var urlShmChangeChk = false;
+
+var menu_cnt = 1; //단계 카운트
+
+
+jQuery(function(){
+     
+    jQuery(document).ready(function(){
+         if(menu_cnt == 1){
+            jQuery('#beforeBtn').hide(); //화면 로드시 이전버튼 안보이게
+        }else{
+            jQuery('#beforeBtn').show();
+        }
+    });
+    
+    ##tab 만들기
+    $( "#tabs" ).tabs({}); 
+    
+    ##목록 리스트 보기 
+    jQuery('#appInfoList').click(function(){
+        //document.location.href='/admin/store/appInfo';
+		document.location.href=CONTEXT_PATH+'/admin/store/appInfo';
+    });
+    
+    ##다음단계 버튼선택
+    jQuery('#nextBtn').click(function(){
+        menu_cnt = parseInt(menu_cnt) + 1;
+        fn_commonBtnProcess(menu_cnt);
+    });
+    
+    ##이전단계 버튼선택
+    jQuery('#beforeBtn').click(function(){
+        menu_cnt = parseInt(menu_cnt) - 1;
+        fn_commonBtnProcess(menu_cnt);
+    });
+	
+    ##이전단계, 다음단계 버튼 처리 
+    function fn_commonBtnProcess(menu_cnt){
+        jQuery('#menu1,#menu2,#menu3').hide();
+        if(menu_cnt == 3){  
+            jQuery('#menu1,#menu2').show(); //기본정보, 상세정보를 모두 SHOW
+        }else{
+            jQuery('#menu' + menu_cnt ).show();
+        }    
+       
+        jQuery('.menu_sub').css('background-color', '#e9e9e9');
+        jQuery('#menu' + menu_cnt + '_title').css('background-color', 'white');
+     
+        if(menu_cnt == 1){
+            jQuery('#beforeBtn').hide();
+        }else{
+            jQuery('#beforeBtn').show();
+        }
+        if(menu_cnt == 3){
+            jQuery('#nextBtn').hide();              //이전단계
+			jQuery('#appInfoUpdate').hide();
+            jQuery('#appInfoSave').show();      //등록 
+			var frm = document.frmAppInfo;
+    		var input= document.getElementsByTagName( 'input' ); 
+            	for ( var z = 0; z < input.length; z++ ) { 
+                	 input[z].readOnly = true;
+					 input[z].disabled = true;
+           		 }
+			var select= document.getElementsByTagName( 'select' ); 
+            	for ( var s = 0; s<select.length; s++ ) { 
+					 select[s].disabled = true;
+           		 }
+			var textarea= document.getElementsByTagName( 'textarea' ); 
+            	for ( var t = 0; t<textarea.length; t++ ) { 
+					 textarea[t].disabled = true;
+           		 }
+			var btn= document.getElementsByTagName( 'button' ); 
+            	for ( var b = 0; b<btn.length; b++ ) { 
+					 btn[b].disabled = true;
+           		 }
+    		document.getElementById('beforeBtn').disabled=false;
+			document.getElementById('appInfoDelete').disabled=false;
+			document.getElementById('appInfoList').disabled=false;
+			document.getElementById('appInfoSave').disabled=false;
+        }else{
+            jQuery('#nextBtn').show();            //다음단계
+			jQuery('#appInfoUpdate').show();
+            jQuery('#appInfoSave').hide();
+			var frm = document.frmAppInfo;
+    		var input= document.getElementsByTagName( 'input' ); 
+            	for ( var z = 0; z < input.length; z++ ) { 
+                	 input[z].readOnly = false;
+					 input[z].disabled = false;
+           		 }
+			var select= document.getElementsByTagName( 'select' ); 
+            	for ( var s = 0; s<select.length; s++ ) { 
+					 select[s].disabled = false;
+           		 }
+			var textarea= document.getElementsByTagName( 'textarea' ); 
+            	for ( var t = 0; t<textarea.length; t++ ) { 
+					 textarea[t].disabled = false;
+           		 }
+			var btn= document.getElementsByTagName( 'button' ); 
+            	for ( var b = 0; b<btn.length; b++ ) { 
+					 btn[b].disabled = false;
+           		 }
+        }
+    }
+    
+    ##상단 기본정보, 상세정보, 정보확인  단계 선택시
+    jQuery('.menu_sub').click(function(){
+        jQuery('#menu1,#menu2,#menu3').hide();
+        var obj = jQuery(this).attr('for');
+        
+        //현재 위치를  전역 변수 cnt에 저장 
+        var lastChar =  obj.charAt(obj.length - 1); 
+        menu_cnt = lastChar;
+        fn_commonBtnProcess(menu_cnt);
+     });
+    
+    ##플랫폼(checkbox) 선택시 버전 db에서 가져와서 버전(select)만들기
+    jQuery('input[name=PLAT_IDX]').click(function(){
+       
+        var plat_idx = jQuery(this).val();                        //플랫폼구분
+        var plat_cd = jQuery(this).attr("platCd");             //플랫폼코드 ex.10,20
+        var plat_ver_idx = "PLAT_VER_IDX_" + plat_cd; //ex.PLAT_VER_IDX_10
+        var plat_ver_select = "select[id=" + plat_ver_idx + "]";
+        
+        jQuery.ajax({
+            url     : 'json/getPlatver',
+            type    : 'post',
+            dataType: "json" ,
+            data    : { PLAT_IDX : plat_idx } ,
+            success : function(json){
+                var txt = '<option value="">선택</option>';
+                for(var i=0;i<json.ver.length;i++){
+                    txt += '<option value="'+json.ver[i].PLAT_VER_IDX+'">'+json.ver[i].PLAT_VER_CD+' '+json.ver[i].PLAT_VER_NM+'</option>';
+                }
+                jQuery(plat_ver_select).html(txt);
+           }
+        });
+        
+        var android_chk,apple_chk,android_val,android_val= "";
+         
+        //선택한 체크박스 에 따라 탭 선택
+        $('input:checkbox[id="PLAT_IDX"]').each(function(i){
+            
+            if(i==0){
+                android_chk = jQuery(this).is(":checked");
+                android_val  = jQuery(this).val();
+            }
+            if(i==1){
+                apple_chk   = jQuery(this).is(":checked");
+                android_val  = jQuery(this).val();
+            }
+          });
+           
+          if(plat_idx == "2"){
+              if(android_chk){
+                  $( "#tabs" ).tabs('enable',0);
+                  $( "#tabs").tabs({'active': 0});
+              }else{
+                  $( "#tabs").tabs({'active': 1});
+                  // $( "#tabs" ).tabs('disabled',0);
+              }
+          }
+          if(plat_idx == "3"){
+              if(apple_chk){
+                  $( "#tabs" ).tabs('enable',1);
+                  $( "#tabs").tabs({'active': 1});
+              }else{
+                 //$( "#tabs").tabs({'disabled': 1});
+                  $( "#tabs").tabs({'active': 0});
+              }
+          }
+     });
+
+    ##플랫폼버전 클릭시 , 플랫폼구분 선택여부 체크
+    jQuery("select[id^='PLAT_VER_IDX_']").click(function(i){
+        var selectedId = jQuery(this).attr("id");
+        if(selectedId == "PLAT_VER_IDX_10"){
+            if(jQuery(this).val() != ""){
+                if( !jQuery(jQuery('input[id="PLAT_IDX"]')[0]).is(":checked") ){
+                    alert("플랫폼 구분을 안드로이드로 선택합니다.");
+                    jQuery(jQuery('input[id="PLAT_IDX"]')[0]).attr("checked", true);
+                    return;
+                }
+            }else{
+                if( !jQuery(jQuery('input[id="PLAT_IDX"]')[0]).is(":checked") ){
+                    alert("플랫폼 구분을 체크해 주세요.");
+                    return;
+                }
+            }
+        }
+        
+        if(selectedId == "PLAT_VER_IDX_20"){
+            if(jQuery(this).val() != ""){
+                if( !jQuery(jQuery('input[id="PLAT_IDX"]')[1]).is(":checked") ){
+                    alert("플랫폼 구분을 애플로 선택합니다.");
+                    jQuery(jQuery('input[id="PLAT_IDX"]')[1]).attr("checked", true);
+                    return;
+                }
+            }else{
+                if( !jQuery(jQuery('input[id="PLAT_IDX"]')[1]).is(":checked") ){
+                    alert("플랫폼 구분을 체크해 주세요.");
+                    return;
+                }
+            }
+        }
+    });
+    
+    ##등록,수정 전  유효성검사
+    function validField(){
+       
+        //플랫폼 구분이 체크 됐는지 검사
+        var chk = "";
+        $('input[id="PLAT_IDX"]').each(function(i){
+            if( jQuery(jQuery('input[id="PLAT_IDX"]')[i]).is(":checked") ){
+                chk = "chk";
+            }
+        });
+        if(chk == ""){
+            alert("플랫폼 구분을 선택해 주세요.");
+            return false;
+        }
+        
+        //안드로이드를 체크했을때
+        if( jQuery(jQuery('input[id="PLAT_IDX"]')[0]).is(":checked") ){
+            if( jQuery("select[name=PLAT_VER_IDX_10] option:selected",'#frmTable10').val() == ""){
+                alert("안드로이드 플랫폼 버전을 선택해주세요.");
+                jQuery("select[name=PLAT_VER_IDX_10]",'#frmTable10').focus();
+                return false;
+            }
+            if(jQuery("#BIN_VER1_10").val() == ""){
+                alert("바이너리 버전을 입력해주세요.");
+                jQuery("input[name=BIN_VER1_10]",'#frmTable10').focus();
+                return false;
+            }else{
+                if(!jQuery("#BIN_VER1_10").val().fn_isNumber()){
+                    alert("바이너리 버전은 숫자로 입력해 주세요.");
+                    jQuery("input[name=BIN_VER1_10]",'#frmTable10').focus();
+                    return false;
+                }
+            }
+            if(jQuery("#BIN_VER2_10").val() == ""){
+                alert("바이너리 버전을 입력해주세요.");
+                jQuery("input[name=BIN_VER2_10]",'#frmTable10').focus();
+                return false;
+            }else{
+                if(!jQuery("#BIN_VER2_10").val().fn_isNumber()){
+                    alert("바이너리 버전은 숫자로 입력해 주세요.");
+                    jQuery("input[name=BIN_VER2_10]",'#frmTable10').focus();
+                    return false;
+                }
+            }
+            if(jQuery("#BIN_VER3_10").val() == ""){
+                alert("바이너리 버전을 입력해주세요.");
+                jQuery("input[name=BIN_VER3_10]",'#frmTable10').focus();
+                return false;
+            }else{
+                if(!jQuery("#BIN_VER3_10").val().fn_isNumber()){
+                    alert("바이너리 버전은 숫자로 입력해 주세요.");
+                    jQuery("input[name=BIN_VER3_10]",'#frmTable10').focus();
+                    return false;
+                }
+            }
+            
+            if(jQuery("#binaryFile_10_text").val() == ""){
+                alert("안드로이드 바이너리 파일을 입력해주세요.");
+                jQuery("#binaryFile_10",'#frmTable10').focus();
+                return false;
+            }
+        }     
+       
+        //애플을 체크했을때
+        if( jQuery(jQuery('input[id="PLAT_IDX"]')[1]).is(":checked") ){
+            if( jQuery("select[name=PLAT_VER_IDX_20] option:selected",'#frmTable20').val() == ""){
+                alert("애플 플랫폼 버전을 선택해주세요.");
+                jQuery("select[name=PLAT_VER_IDX_20]",'#frmTable20').focus();
+                return false;
+            }
+            
+            if(jQuery("#BIN_VER1_20").val() == ""){
+                alert("바이너리 버전을 입력해주세요.");
+                jQuery("input[name=BIN_VER1_20]",'#frmTable20').focus();
+                return false;
+            }else{
+                if(!jQuery("#BIN_VER1_20").val().fn_isNumber()){
+                    alert("바이너리 버전은 숫자로 입력해 주세요.");
+                    jQuery("input[name=BIN_VER1_20]",'#frmTable20').focus();
+                    return false;
+                }
+            }
+            if(jQuery("#BIN_VER2_20").val() == ""){
+                alert("바이너리 버전을 입력해주세요.");
+                jQuery("input[name=BIN_VER2_20]",'#frmTable20').focus();
+                return false;
+            }else{
+                if(!jQuery("#BIN_VER2_20").val().fn_isNumber()){
+                    alert("바이너리 버전은 숫자로 입력해 주세요.");
+                    jQuery("input[name=BIN_VER2_20]",'#frmTable20').focus();
+                    return false;
+                }
+            }
+            if(jQuery("#BIN_VER3_20").val() == ""){
+                alert("바이너리 버전을 입력해주세요.");
+                jQuery("input[name=BIN_VER3_20]",'#frmTable20').focus();
+                return false;
+            }else{
+                if(!jQuery("#BIN_VER3_20").val().fn_isNumber()){
+                    alert("바이너리 버전은 숫자로 입력해 주세요.");
+                    jQuery("input[name=BIN_VER3_20]",'#frmTable20').focus();
+                    return false;
+                }
+            }
+            
+            if(jQuery("#binaryFile_20_text").val() == ""){
+                alert("애플 바이너리 파일을 입력해주세요.");
+                jQuery("#binaryFile_20",'#frmTable20').focus();
+                return false;
+            }
+        }
+         jQuery("form[id=frmAppInfo]").fn_mp_validate(); //유효성 체크
+         return true;
+    }
+   
+     ##앱명, 패키지명, URL 중복체크버튼 선택시
+     jQuery('#checkDupAppNm,#checkDupPakgId, #checklDupCallUrl').click(function(){
+        var check = jQuery(this).attr('check');
+        
+        if(check == "APP_NM" && jQuery("#APP_NM").val() == ""){
+            alert("App명 항목을 입력해 주세요.");
+            jQuery("#APP_NM").focus();
+            return;
+        } else if(check == "PAKG_ID"){
+            if(jQuery('#PAKG_ID').val() == ""){
+                alert("패키지명을 입력해 주세요.");
+                jQuery("#PAKG_ID").focus();
+                return;
+            }else{
+            
+                if(!fn_input_chk(jQuery("#PAKG_ID").val() )){
+                    jQuery("#PAKG_ID").focus();
+                    return;
+                }
+            }
+                         
+        } else if(check == "CALL_URL"){
+            if( jQuery('#CALL_URL').val() == ""){
+                alert("호출 URL을 입력해 주세요.");
+                jQuery("#CALL_URL").focus();
+                return;
+            }else{
+                if(!fn_input_chk(jQuery("#CALL_URL").val() )){
+                    jQuery("#CALL_URL").focus();
+                    return;
+                }
+            }    
+        } 
+        
+        fn_checkDup(check);//중복체크함수 호출
+    });
+    
+    ##중복체크 함수
+    function fn_checkDup(check){
+       var url = CONTEXT_PATH + "/admin/store/appInfoAdd/checkDup";
+       //var data = jQuery("form[name=frmAppInfo]").serialize();
+       jQuery.ajax({
+                url:url,
+                type:"POST",
+                data: {
+                        APP_NM    : jQuery('#APP_NM').val(),
+                        PAKG_ID   : jQuery('#PAKG_ID').val(),
+                        CALL_URL  : jQuery('#CALL_URL').val(),
+                        CHECK      : check
+                        } ,
+                dataType:"json",
+                success:function(data){
+                    alert(data.msg);
+                    
+                    if(data.flag == "OK"){
+                        if(check == "APP_NM")  appNmDupChk = true; //App명
+                        else if(check == "PAKG_ID")  pkgNmDupChk = true; //패키지명
+                        else if(check == "CALL_URL")  urlShmDupChk = true; 
+                    }else{
+                        if(check == "APP_NM")  appNmDupChk = false; //App명
+                        else if(check == "PAKG_ID")  pkgNmDupChk = false; //패키지명
+                        else if(check == "CALL_URL")  urlShmDupChk = false; 
+                    }
+                }
+        });
+    }
+    
+     
+    ## 등록 버튼 클릭시
+    jQuery('#appInfoSave').click(function(){
+        //유효성 검사
+        if(validField()){
+            if(!appNmDupChk){
+                alert("App 명 중복체크를 실행해주세요.");
+                jQuery("#APP_NM").focus();
+                return;
+            }
+         
+            if(!pkgNmDupChk){
+                alert("Package 명 중복체크를 실행해주세요.");
+                jQuery("#PAKG_ID").focus();
+                return;
+            }
+            if(!urlShmDupChk){
+                if( jQuery(jQuery('input[id="PLAT_IDX"]')[1]).is(":checked") ){
+                    alert("호출 URL 중복체크를 실행해주세요.");
+                    jQuery("#CALL_URL").focus();
+                    return;
+                }
+            }
+            if(confirm("등록하시겠습니까?")){
+                //console.debug(jQuery("form[name=frmAppInfo]").serialize()  );
+                document.frmAppInfo.action  = CONTEXT_PATH + "/admin/store/appInfo/regist";
+                document.frmAppInfo.submit(); 
+            }
+        }
+    });
+    
+    ## 수정 버튼 클릭시
+    jQuery(document).on('click', '#appInfoUpdate', function(){
+        //유효성 검사
+        if(validField()){
+           //변경된 경우만 
+            if(appNmChangeChk &&  !appNmDupChk){
+                alert("App 명 중복체크를 실행해주세요.");
+                 jQuery("#APP_NM").focus();
+                return;
+            }
+           
+            if(pkgNmChangeChk && (!pkgNmDupChk)){
+                alert("Package 명 중복체크를 실행해주세요.");
+                 jQuery("#PAKG_ID").focus();
+                return;
+            }
+           
+            if(urlShmChangeChk && !urlShmDupChk){
+                if( jQuery(jQuery('input[id="PLAT_IDX"]')[1]).is(":checked") ){
+                    alert("호출 URL 중복체크를 실행해주세요.");
+                    jQuery("#CALL_URL").focus();
+                    return;
+                }
+            }
+          
+            //console.debug(jQuery("form[name=frmAppInfo]").serialize()  );
+            document.frmAppInfo.action  = CONTEXT_PATH + "/admin/store/appInfo/modify";
+            document.frmAppInfo.submit(); 
+        }
+    });
+    
+    
+    ## 앱정보 삭제
+    jQuery(document).on('click', '#appInfoDelete', function(){
+        if(confirm('선택한 APP 정보는  하위 관련 DB를 모두 삭제합니다.\n\n삭제하시겠습니까?')){
+            jQuery.ajax({
+                url     : CONTEXT_PATH + '/admin/store/appInfo/deleteAppInfo',
+                type    : 'post',
+                dataType: "json" ,
+                data    : { APP_IDX : jQuery('input[name="APP_IDX"]').val() } ,
+                success : function(data){
+                    alert(data.msg);
+                    if(data.result > 0){
+                         document.location.href=CONTEXT_PATH + '/admin/store/appInfo';
+                    }
+                }
+            });
+        }
+    });
+    
+    ## 이미지 개별 삭제
+    jQuery("button[id^='imgDelete']").click(function(){
+         var imgIdx =  jQuery(this).attr("imgIdx") ;
+         var fileNm =  jQuery(this).attr("fileNm") ;  
+         var delImgId = jQuery(this).attr("delImgId"); // 삭제대상 id
+         var imgIdxS =  jQuery(this).attr("imgIdxS");  // HIDDEN IMG_IDXS 값을 초기화.ex.IMG_IDXS1
+        
+         if(fileNm == ""){
+            alert("삭제할 이미지가 없습니다.");
+            return;
+         }
+     
+         if(confirm('삭제 하시겠습니까?')){
+            jQuery.ajax({
+                url     :  CONTEXT_PATH + '/admin/store/appInfo/deleteAppImg',
+                type    : 'post',
+                dataType: "json" ,
+                data    : { IMG_IDX : imgIdx  } ,
+                success : function(data){
+                    alert(data.msg);
+                    if(data.result > 0){
+                         jQuery('img[id=' +  delImgId  +']').attr("src", ""); 
+                         jQuery('input[id=' + imgIdxS + ']').val(""); 
+                         
+                    }
+                }
+            });
+        }
+     
+    });
+   
+    ##App 바이너리 버전 변경시,  
+    jQuery('input[id^="BIN_VER"]').change(function(){
+        var platCd = jQuery(this).attr("platCd");   
+        var ver = jQuery("#BIN_VER1_" + platCd).val() + "." +  jQuery("#BIN_VER2_" + platCd).val() + "." + jQuery("#BIN_VER3_" + platCd).val();
+        jQuery("#BIN_VER_" + platCd).val(ver); 
+        
+    });
+     
+    ##바이너리 파일 변경시, 확장자 체크 
+    jQuery('input[id^="binaryFile"]').on('change',function(){
+        var plat_cd = jQuery(this).attr("platCd");             //플랫폼코드 ex.10,20
+        var binaryFileVal =  jQuery("input[id='binaryFile_" + plat_cd + "']").val();
+        var ext = binaryFileVal.substring(binaryFileVal.lastIndexOf(".")+1);
+        
+        if(plat_cd == "10"){  //안드로이드
+            if(ext != "apk"){
+                alert("등록할 수 없는 파일입니다.");
+                jQuery(this).val("");
+                jQuery(binaryFile_10_text).val("");
+                return;
+            }else{
+                jQuery("#binaryFile_10_text").val(jQuery(this).val());
+            }
+        
+        }else if (plat_cd == "20") { //애플   
+            if(ext != "ipa"){
+                alert("등록할 수 없는 파일입니다.");
+                jQuery(this).val("");
+                jQuery(binaryFile_20_text).val("");
+                return;
+            }else{
+                jQuery("#binaryFile_20_text").val(jQuery(this).val());
+            }       
+        }
+    });
+    
+    ##이미지 파일 확장자 체크
+    jQuery('input[id^="imgFile"]').on('change',function(){
+        var imgFileVal =  jQuery(this).val();
+        var ext = imgFileVal.substring(imgFileVal.lastIndexOf(".")+1).toLowerCase();
+       
+        if(ext != "jpg" && ext != "gif" && ext != "png"){
+             alert("올바르지 못한 이미지 파일입니다.\n\n(가능대상 : jpg, gif, png)");
+        }
+       
+    });
+   
+    //============== 카테고리 팝업 start ====================
+    ##다이얼로그 생성(ID별로 생성 가능)
+    jQuery( "#dialogPop" ).dialog({
+        autoOpen: false,
+        modal   : true,
+        width   : 600,
+        height  : 400, // 'auto' 가능
+        title     : "카테고리 관리",
+        open    : function(){ fn_dialogDesign('dialogPop'); }//타이틀 및 닫기버튼디자인적용(ID전달 필요)
+    });
+    
+    ##다이얼로그 열기
+    jQuery('#popupCatg').click(function(){
+        //컨텐츠 채우기(url, method, data, targetObject)
+        var url = CONTEXT_PATH + "/admin/store/appInfo/tree";
+        fn_getCommonList( url, "GET", "", jQuery('#dialogPop') );
+        
+        //left 트리메뉴
+        $("#browser").treeview({useToggle:false});
+        //색상 및 커서상태 변경
+        $('.treeview span.folder').css({'color':'black','cursor':'text'});    
+        
+        //열기
+        jQuery("#dialogPop").dialog('open');
+    });
+    
+    ##다이얼로그 닫기(button.#id 로 지정한다.)
+    jQuery(document).on('click','button.dialogPop',function(){
+        jQuery( "#dialogPop" ).dialog('close');
+    });
+    //============== 카테고리 팝업 end ====================
+    
+    ##카테고리코드 팝업 조회
+    jQuery(document).on('click','span[catg_cd]',function(e){
+        jQuery('#CATG_NM').val(jQuery(this).text());
+        jQuery('#CATG_CD').val(jQuery(this).attr('catg_cd'));
+        jQuery( "#dialogPop" ).dialog('close');
+    });
+ 
+   
+    ##안드로이드 바이너리 파일 history 조회 팝업
+     $(document).on("click","#binaryHistoryList_10",function(){
+        var appPlatIdx = $('#APP_PLAT_IDX_10').val();
+        var url = CONTEXT_PATH + "/admin/store/appInfo/binaryHistory";
+        var type = "GET";
+        var data = "APP_PLAT_IDX=" + appPlatIdx + "&PAGE_NUM=1" ;
+        
+        var target = $("#windowPop");
+        var whideh = 900;
+        var title = "바이너리 파일 history 조회";
+        fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+    });
+
+    ##애플 바이너리 파일 history 조회 팝업
+    jQuery('#binaryHistoryList_20').click(function(){
+        var appPlatIdx = $('#APP_PLAT_IDX_20').val();
+        var url = CONTEXT_PATH + "/admin/store/appInfo/binaryHistory";
+        var type = "GET";
+        var data = "APP_PLAT_IDX=" + appPlatIdx + "&PAGE_NUM=1" ;
+        
+        var target = $("#windowPop");
+        var whideh = 900;
+        var title = "바이너리 파일 history 조회";
+        fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+    });
+  
+    ##바이너리 파일 history 팝업 페이지 조회 
+    function fn_binaryHistoryList(PAGE_NUM){
+        var url  = CONTEXT_PATH + "/admin/store/appInfo/binaryHistory";
+        var data = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+        alert(data);
+        var target = jQuery("#binaryHistoryTableDiv");
+        var type = "GET";
+        //common.js 에 정의
+        fn_getCommonList( url, type, data, target );
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }      
+}); 
+
+  
+##파일 선택시 이미지 보기 
+function previewImage(targetObj, previewId, width, height) {
+
+    var preview = document.getElementById(previewId); //div id   
+    var ua = window.navigator.userAgent;
+    $('#' + previewId).empty();
+    
+    if (ua.indexOf("MSIE") > -1) {//ie일때
+        targetObj.select();
+        try {
+            var src = document.selection.createRange().text; // get file full path 
+            var ie_preview_error = document.getElementById("ie_preview_error_" + previewId);
+
+            if (ie_preview_error) {
+                preview.removeChild(ie_preview_error); //error가 있으면 delete
+            }
+            var img = document.getElementById(previewId); //이미지가 뿌려질 곳 
+
+            img.style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='"
+                    + src + "', sizingMethod='scale')"; //이미지 로딩, sizingMethod는 div에 맞춰서 사이즈를 자동조절 하는 역할
+        } catch (e) {
+            if (!document.getElementById("ie_preview_error_" + previewId)) {
+                var info = document.createElement("<p>");
+                info.id = "ie_preview_error_" + previewId;
+                info.innerHTML = "not supported FileReader";
+                preview.insertBefore(info, null);
+            }
+        }
+    } else { //ie가 아닐때
+        var files = targetObj.files;
+        for ( var i = 0; i < files.length; i++) {
+
+            var file = files[i];
+            var imageType = /image.*/; //이미지 파일일경우만.. 뿌려준다.
+            if (!file.type.match(imageType))
+                continue;
+
+            var prevImg = document.getElementById("prev_" + previewId); //이전에 미리보기가 있다면 삭제
+            if (prevImg) {
+                preview.removeChild(prevImg);
+            }
+
+            var img = document.createElement("img"); //크롬은 div에 이미지가 뿌려지지 않는다. 그래서 자식Element를 만든다.
+            img.id = "prev_" + previewId;
+            img.classList.add("obj");
+            img.file = file;
+            img.style.width = width; //기본설정된 div의 안에 뿌려지는 효과를 주기 위해서 div크기와 같은 크기를 지정해준다.
+            img.style.height = height;
+            
+            preview.appendChild(img);
+
+            if (window.FileReader) { // FireFox, Chrome, Opera 확인.
+                var reader = new FileReader();
+                reader.onloadend = (function(aImg) {
+                    return function(e) {
+                        aImg.src = e.target.result;
+                    };
+                })(img);
+                reader.readAsDataURL(file);
+            } else { // safari is not supported FileReader
+                //alert('not supported FileReader');
+                if (!document.getElementById("sfr_preview_error_"
+                        + previewId)) {
+                    var info = document.createElement("p");
+                    info.id = "sfr_preview_error_" + previewId;
+                    info.innerHTML = "not supported FileReader";
+                    preview.insertBefore(info, null);
+                }
+            }
+        }
+    }
+}
+
+##중복체크 대상의 값을 임의로 변경했을 경우, 중복체크를 다시 요청하기 위해 검증여부값을 초기화시킴
+function dupChkInit(obj){
+    if(obj.id == "APP_NM"){
+        appNmDupChk = false;
+        appNmChangeChk = true;
+    }else if(obj.id == "PAKG_ID"){
+        pkgNmDupChk = false;
+        pkgNmChangeChk = true;
+    }else if(obj.id == "CALL_URL"){
+        urlShmDupChk = false;
+        urlShmChangeChk = true;
+    }  
+}
+
+##package명 입력 값 체크
+function fn_input_chk(str) {
+    var valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890.-_";
+    var msg = "영문자와 숫자 '.-_'만 입력 가능합니다.";
+    var rtnVal = true;
+    var temp; 
+    for (var i=0; i<str.length; i++) { 
+        temp = "" + str.substring(i, i+1); 
+        if (valid.indexOf(temp) == "-1") {
+            alert('입력값을 확인해 주세요\n'+msg);
+            rtnVal = false;
+            break;
+        }
+    }
+    return rtnVal;
+}   
+</script>
+
+<div id="dialogPop" title="카테고리 조회" style="display:none;"></div>
+
+<div id="conWrap">
+    #### S : 프로그램 위치 기술 부분  ####
+    <div class="headerBg">
+        <div class="innerNavi">
+            <a href="#"><img src="${RESOURCES_PATH}/img/icon/icon_home.gif" alt="home"/></a> <span>ADMIN</span> <span>앱스토어</span> <span>APP 관리</span> <strong>APP 등록</strong>
+        </div>
+        <div class="tb_tit">
+            <h3>APP 등록</h3>
+        </div>
+    </div>
+    #### E : 프로그램 위치 기술 부분  ####
+<form name="frmAppInfo" id="frmAppInfo" method="post" enctype="multipart/form-data">   
+    <input type="hidden" id="APP_IDX"  name="APP_IDX"  value="$appInfo.APP_IDX"/>
+    <div class="contents" style="padding-top:15px;">
+        <div class="menu_sub btn_left"  for="menu1" id="menu1_title" style="width:33%;height:30px;padding-top:8px;font-weight:bold;font-size:14px;text-align:center;cursor:pointer">01.기본정보입력</div>
+        <div class="menu_sub btn_left" for="menu2" id="menu2_title" style="width:33%;height:30px;padding-top:8px;background-color:#e9e9e9;font-weight:bold;font-size:14px;text-align:center;cursor:pointer">02.상세정보입력</div>
+        <div class="menu_sub btn_left" for="menu3" id="menu3_title" style="width:34%;height:30px;padding-top:8px;background-color:#e9e9e9;font-weight:bold;font-size:14px;text-align:center;cursor:pointer">03.등록확인</div>
+        
+        <div id="menu1">
+            <table class="tbType1" summary="제목,내용" id="frmTable">
+                <colgroup>
+                    <col width="20%"/><col width="30%"/><col width="20%"/><col width="auto"/>
+                </colgroup>
+                
+                <tr>
+                    <th scope="row">
+                        <label for="subject">* 서비스명</label>
+                    </th>
+                    <td colspan="3">
+                            #if($appInfo)
+                                <input type="hidden" id="SVC_ID"  name="SVC_ID"  value="$appInfo.SVC_ID"/>
+                                $!appInfo.SVC_NM
+                                <input type="hidden" class="input_txt" id="SVC_NM"  name="SVC_NM" value="$!appInfo.SVC_NM"/>
+                            #else 
+                                <input type="hidden" id="SVC_ID"  name="SVC_ID"  value="$serviceInfo.SVC_ID"/>
+                                $!serviceInfo.SVC_NM
+                                <input type="hidden" class="input_txt" id="SVC_NM"  name="SVC_NM" value="$!serviceInfo.SVC_NM"/>
+                            #end     
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="subject">* App 카테고리</label>
+                    </th>
+                    <td style="position:relative;">
+                        <input type="hidden"  id="CATG_CD"  name="CATG_CD"  value="$appInfo.CATG_CD" />
+                        <input type="text" class="input_txt" id="CATG_NM"  name="CATG_NM" style="width:95px;" #if($!appInfo) value="$!appInfo.CATG_NM" #end/>
+                        <div class="btnArea ta_r" style="width:100px;padding:0px;position:absolute;top:7px;right:7px;">
+                            <button type="button" class="btn_style1" id="popupCatg"><span>카테고리선택</span></button>
+                        </div>
+                    </td>
+                    <th scope="row">
+                        <label for="subject">* App 분류</label>
+                    </th>
+                    <td>
+                        <input type="radio" name="APP_TYPE" value="10"   #if($!appInfo.ANDROID != "") checked="checked" #end> &nbsp;필수 &nbsp;&nbsp;&nbsp;&nbsp;
+                        <input type="radio" name="APP_TYPE" value="20"  #if($!appInfo.APPLE != "") checked="checked"  #end > &nbsp;일반
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="subject">* App 명</label>
+                    </th>
+                     <td colspan="3" style="position:relative;">
+                        <input type="text" class="input_txt" id="APP_NM"  name="APP_NM" #if($!appInfo) value="$!appInfo.APP_NM" #end style="width:80%;"   maxlength="50" onchange="javascript:dupChkInit(this);"  valid_name="App 명" valid_type="x,l:50"/>
+                        <div class="btnArea ta_r" style="width:100px;padding:0px;position:absolute;top:7px;right:7px;">
+                            <button type="button" class="btn_style1" id="checkDupAppNm" check="APP_NM"><span>중복확인</span></button>
+                        </div>
+                    </td>               
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="subject">* 패키지 명(Bundle ID)</label>
+                    </th>
+                     <td colspan="3" style="position:relative;">
+                        <input type="text" class="input_txt" id="PAKG_ID"  name="PAKG_ID" #if($appInfo) value="$!appInfo.PAKG_ID" #end style="width:80%;"  maxlength="200" onchange="javascript:dupChkInit(this);" valid_name="패키지 명" valid_type="x,l:200" />
+                    
+                        <div class="btnArea ta_r" style="width:100px;padding:0px;position:absolute;top:7px;right:7px;">
+                            <button type="button" class="btn_style1" id="checkDupPakgId"  check="PAKG_ID" ><span>중복확인</span></button>
+                        </div>
+                    </td>          
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="subject">* 플랫폼구분</label>
+                    </th>
+                    <td style="position:relative;" >
+                        
+                        <!-- input type="checkbox" id="PLAT_IDX_10" name="PLAT_IDX_10" value="2" platcd="10" #if($!appInfo.ANDROID==2) checked="checked" #end  > 안드로이드     
+                        <input type="hidden" id="PLAT_CD_10" name="PLAT_CD_10" value="10">
+                        <input type="checkbox" id="PLAT_IDX_20" name="PLAT_IDX_20" value="3" platcd="20" #if($!appInfo.APPLE==3) checked="checked" #end>애플  
+                        <input type="hidden" id="PLAT_CD_20" name="PLAT_CD_20" value="20" -->
+                        #foreach( $plat in $platList )
+                            #if($appInfo)
+                                <input type="checkbox" id="PLAT_IDX" name="PLAT_IDX" value="$!plat.PLAT_IDX" platCd="$!plat.PLAT_CD" #if($!plat.PLAT_IDX==$!appInfo.ANDROID) checked="checked" #end  #if($!plat.PLAT_IDX==$!appInfo.APPLE) checked="checked" #end>$!plat.PLAT_NM     
+                                <input type="hidden" id="PLAT_CD" name="PLAT_CD" value="$!plat.PLAT_CD">
+                            #else 
+                                <input type="checkbox" id="PLAT_IDX" name="PLAT_IDX" value="$!plat.PLAT_IDX" platCd="$!plat.PLAT_CD" >$!plat.PLAT_NM &nbsp;
+                                <input type="hidden" id="PLAT_CD" name="PLAT_CD" value="$!plat.PLAT_CD">
+                            #end
+                             #set($chk = $chk + 1)
+                        #end
+                    </td>      
+                    <th scope="row">
+                        <label for="subject">* 정렬우선순위</label>
+                    </th>
+                    <td style="position:relative;">
+                        <input type="text" class="input_txt" id="SORT_NO"  name="SORT_NO" style="width:150px;" valid_name="정렬우선순위" valid_type="i" #if($appInfo) value="$!appInfo.SORT_NO"  #end/>
+                    </td> 
+                 
+                </tr>
+                
+            </table><br/>
+         
+       <div id="tabs">  
+           <ul>   
+               #set($j_tot = 1)
+               #foreach( $plat in $platList )
+                    <li><a href="#tabs_$!plat.PLAT_CD">$!plat.PLAT_NM</a></li>    
+                    #set($j_tot = $j_tot + 1)
+               #end
+           </ul>  
+                <!--  안드로이드   -->
+                <div id="tabs_10">   
+                    <p>
+                    <input type="hidden"  id="APP_PLAT_IDX_10"  name="APP_PLAT_IDX_10" value="$!binaryInfo.APP_PLAT_IDX_10" />      
+                    <table class="tbType1" summary="제목,내용" id="frmTable10">
+                        <colgroup>
+                            <col width="20%"/><col width="30%"/><col width="20%"/><col width="auto"/>
+                        </colgroup>
+                        <tr>
+                            <th scope="row">
+                                <label for="subject">* 플랫폼버전  </label>
+                            </th>
+                            <td>
+                                 <select id = "PLAT_VER_IDX_10" name="PLAT_VER_IDX_10" platCd="10" >
+                                    <option value="">선택</option>
+                                    #if($verList10)
+                                        #foreach( $v in $verList10 )
+                                            <option value="$!v.PLAT_VER_IDX" #if($!v.PLAT_VER_IDX==$!binaryInfo.PLAT_VER_IDX_10) selected="selected" #end>$!v.PLAT_VER_CD $!v.PLAT_VER_NM</option>
+                                        #end
+                                    #end    
+                                </select>
+                            </td>
+                            <th scope="row">
+                                <label for="subject">* App바이너리버전</label>
+                            </th>
+                            <td>
+                                <input type="text" class="input_txt" id="BIN_VER1_10"  name="BIN_VER1_10" style="width:20%;" platCd="10"  #if($binaryInfo) value="$!binaryInfo.BIN_VER1_10" #end /> •
+                                <input type="text" class="input_txt" id="BIN_VER2_10"  name="BIN_VER2_10" style="width:20%;" platCd="10"  #if($binaryInfo) value="$!binaryInfo.BIN_VER2_10" #end/> •
+                                <input type="text" class="input_txt" id="BIN_VER3_10"  name="BIN_VER3_10" style="width:20%;" platCd="10"  #if($binaryInfo) value="$!binaryInfo.BIN_VER3_10" #end />  
+                                <input type="hidden"  id="BIN_VER_10"  name="BIN_VER_10" value="$!binaryInfo.BIN_VER_10" />      
+                           </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="subject">* 바이너리 파일</label>
+                            </th>
+                            <td colspan="3">
+                                <input type="file" name="files[0]"  id="binaryFile_10" platCd="10" />
+                                <input type="text" class="input_txt" id="binaryFile_10_text" style="width:97%;" readonly="readonly" #if($binaryInfo)  value="$!binaryInfo.DL_URL_10$!binaryInfo.ORG_BIN_FILE_NM_10"   #end/>
+                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="subject">변경내역</label>
+                            </th>
+                            <td style="position:relative;" colspan="2">
+                                <textarea style="width:520px; height: 30px; overflow-y:auto" id="UPDATE_DESC_10" name="UPDATE_DESC_10" width="100%">$!binaryInfo.UPDATE_DESC_10</textarea>
+                            </td>                   
+                        </tr>
+                     </table>
+                     
+                     <div class="btnArea ta_r" >
+                     #if($!binaryInfo.PLAT_VER_IDX_10)
+                            <button type="button" class="btn_style1" id="binaryHistoryList_10"  ><strong>history조회 </strong></button>
+                       #end
+                     </div>  
+                </div>  
+                
+                <!--  애플   -->
+                <div id="tabs_20">   
+                    <p>
+                    <input type="hidden"  id="APP_PLAT_IDX_20"  name="APP_PLAT_IDX_20" value="$!binaryInfo.APP_PLAT_IDX_20" />      
+                    <table class="tbType1" summary="제목,내용" id="frmTable20">
+                        <colgroup>
+                            <col width="22%"/><col width="28%"/><col width="20%"/><col width="auto"/>
+                        </colgroup>
+                        <tr>
+                            <th scope="row">
+                                <label for="subject">* 플랫폼버전 </label>
+                            </th>
+                            <td>
+                              
+                                 <select id = "PLAT_VER_IDX_20" name="PLAT_VER_IDX_20" platCd="20" >
+                                    <option value="">선택</option>
+                                    #if($verList20)
+                                        #foreach( $v in $verList20 )
+                                            <option value="$!v.PLAT_VER_IDX" #if($!v.PLAT_VER_IDX==$!binaryInfo.PLAT_VER_IDX_20) selected="selected" #end>$!v.PLAT_VER_CD $!v.PLAT_VER_NM</option>
+                                        #end
+                                    #end    
+                                </select>
+                                  
+                            </td>
+                            <th scope="row">
+                                <label for="subject">* App바이너리버전</label>
+                            </th>
+                            <td>
+                                <input type="text" class="input_txt" id="BIN_VER1_20"  name="BIN_VER1_20" style="width:20%;" platCd="20"  #if($binaryInfo) value="$!binaryInfo.BIN_VER1_20" #end/> •
+                                <input type="text" class="input_txt" id="BIN_VER2_20"  name="BIN_VER2_20" style="width:20%;" platCd="20"  #if($binaryInfo) value="$!binaryInfo.BIN_VER2_20" #end/> •
+                                <input type="text" class="input_txt" id="BIN_VER3_20"  name="BIN_VER3_20" style="width:20%;" platCd="20"  #if($binaryInfo) value="$!binaryInfo.BIN_VER3_20" #end/>  
+                                <input type="hidden"  id="BIN_VER_20"  name="BIN_VER_20" value="$!binaryInfo.BIN_VER_20" />      
+                           </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="subject">* iOS URL SCHEME</label>
+                            </th>
+                           
+                             <td colspan="3" style="position:relative;">
+                                <input type="text" class="input_txt" id="CALL_URL"  name="CALL_URL"  #if($appInfo) value="$!appInfo.CALL_URL" #end style="width:75%;"  onchange="javascript:dupChkInit(this);"    />
+                            
+                                <div class="btnArea ta_r" style="width:100px;padding:0px;position:absolute;top:7px;right:7px;">
+                                    <button type="button" class="btn_style1" id="checklDupCallUrl" check="CALL_URL"><span>중복확인</span></button>
+                                </div>
+                             </td>               
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="subject">* iOS 배포타입 </label>
+                            </th>
+                            <td style="position:relative;" colspan="3">
+                                <select name="DIST_TYPE" >
+                                    #if($distList)
+                                        #foreach( $dist in $distList )
+                                            <option value="$!dist.CD_ID" #if($!dist.CD_ID==$!appInfo.DIST_TYPE) selected="selected" #end>$!dist.CD_NM</option>
+                                        #end
+                                    #end    
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="subject">* 바이너리 파일</label>
+                            </th>
+                            <td colspan="3">
+                                <input type="file" name="files[1]"  id="binaryFile_20" platCd="20" #if($binaryInfo) value="$!binaryInfo.ORG_BIN_FILE_NM_20" #end />
+                                <input type="text" class="input_txt" id="binaryFile_20_text" style="width:97%;" readonly="readonly"   #if($binaryInfo)  value="$!binaryInfo.DL_URL_20$!binaryInfo.ORG_BIN_FILE_NM_20"    #end/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="subject">변경내역</label>
+                            </th>
+                            <td style="position:relative;" colspan="2">
+                                <textarea style="width:520px; height: 30px; overflow-y:auto" id="UPDATE_DESC_20" name="UPDATE_DESC_20" width="100%">$!binaryInfo.UPDATE_DESC_20</textarea>
+                            </td>                   
+                        </tr>
+
+                     </table>
+                     <div class="btnArea ta_r" >
+                     #if($!binaryInfo.PLAT_VER_IDX_20)
+                            <button type="button" class="btn_style1" id="binaryHistoryList_20" ><strong>history조회 </strong></button>
+                       #end
+                     </div>  
+            </div>  <!-- div id="tabs_20" -->
+                
+        </div><!-- div id="tabs"  -->  
+            
+    </div>  
+    
+    <div id="menu2" style="display:none;">
+      
+        <div style="float:left;padding-top:10px;padding-bottom:15px;">
+            <h4 class="title" > App Icon 이미지</h4>
+        </div>
+        <div id="thumbImage">
+            <table class="tbType1"  id="thumbImgTable">
+
+                <colgroup>
+                    <col width="150px">
+                    <col width="150px">
+                    <col width="150px">
+                </colgroup>
+                <tr>
+                    <td id="fileName1" style="text-align:center;">모바일 대시보드(120x120)</td>
+                    <td id="fileName2" style="text-align:center;">모바일 리스트(75x75)</td>
+                    <td id="fileName3" style="text-align:center;">관리자 리스트(30x30)</td>
+                </tr>
+                <tr>
+                    <td height="150px" >
+                    <center>
+                        <div id='thumbNailId1'  style='width: 120px; height: 120px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                            <img id = "thumbImg1" src="#if($appImageInfo)$!appImageInfo.IMG_PATH_1/$!appImageInfo.FILE_NM_1#end" width="120px" height="120px" />
+                        </div>
+                    </center>
+                    </td>
+                    <td height="150px">
+                    <center>
+                        <div id='thumbNailId2' style='width: 75px; height: 75px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                            <img id = "thumbImg2"  src="#if($appImageInfo)$!appImageInfo.IMG_PATH_2/$!appImageInfo.FILE_NM_2#end" width="75px" height="75px" />
+                        </div>
+                    </center>
+                    </td>
+                    <td height="150px">
+                    <center>
+                        <div id='thumbNailId3' style='width: 30px; height: 30px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                            <img id = "thumbImg3"  src="#if($appImageInfo)$!appImageInfo.IMG_PATH_3/$!appImageInfo.FILE_NM_3#end" width="30px" height="30px" />
+                        </div>
+                    </center>
+                    </td>
+
+                </tr>
+                <tr>
+                    <td><center><button type="button" id="imgDelete1" class="btn_style2" imgIdx="$!appImageInfo.IMG_IDX_1" imgIdxS="IMG_IDXS1" delImgId="thumbImg1" fileNm="$!appImageInfo.FILE_NM_1"><span>삭제</span></button>
+                            <input name="files[2]" id="imgFile1" type="file" onchange="previewImage(this,'thumbNailId1', '120','120')"   /></center>
+                            <input type="hidden" id="IMG_IDXS1"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_1"/>
+                    </td>
+                    <td><center><button type="button" id="imgDelete2" class="btn_style2" imgIdx="$!appImageInfo.IMG_IDX_2" imgIdxS="IMG_IDXS2"  delImgId="thumbImg2" fileNm="$!appImageInfo.FILE_NM_2"><span>삭제</span></button>
+                            <input name="files[3]" id="imgFile2" type="file" onchange="previewImage(this,'thumbNailId2', '75','75')"  /></center>
+                            <input type="hidden" id="IMG_IDXS2"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_2"/>
+                    </td>
+                    <td><center><button type="button" id="imgDelete3" class="btn_style2"  imgIdx="$!appImageInfo.IMG_IDX_3" imgIdxS="IMG_IDXS3"  delImgId="thumbImg3" fileNm="$!appImageInfo.FILE_NM_3"><span>삭제</span></button>
+                            <input name="files[4]" id="imgFile3" type="file" onchange="previewImage(this,'thumbNailId3', '30','30')"  /></center>
+                            <input type="hidden" id="IMG_IDXS3"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_3"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div style="float:left;padding-top:10px;padding-bottom:15px;">
+            <h4 class="title"> 미리보기 이미지</h4>
+        </div>
+        
+        
+        <div id="prevImage">
+            <table  class="tbType1"  >
+                <colgroup>
+                    <col width="auto">
+                    <col width="auto">
+                    <col width="auto">
+                    <col width="auto">
+                </colgroup>
+                <tr>
+                    <td style="text-align:center;" colspan=4>미리보기 이미지 (120 X 240)</td>
+                </tr>
+                <tr>
+                    <td height="240px">
+                    <center>
+                        <div id='preview1' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                            <img id='previewImg1' src="#if($appImageInfo)$!appImageInfo.IMG_PATH_4/$!appImageInfo.FILE_NM_4#end" width="120px" height="240px" />
+                        </div>
+                    </center>
+                    </td>
+                    <td height="240px">
+                    <center>
+                        <div id='preview2' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                            <img id='previewImg2' src="#if($appImageInfo)$!appImageInfo.IMG_PATH_5/$!appImageInfo.FILE_NM_5#end" width="120px" height="240px" />
+                        </div>
+                    </center>
+                    </td>
+                    <td height="240px">
+                    <center>
+                        <div id='preview3' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                            <img id='previewImg3' src="#if($appImageInfo)$!appImageInfo.IMG_PATH_6/$!appImageInfo.FILE_NM_6#end" width="120px" height="240px"/>
+                        </div>
+                    </center>
+                    </td>
+                    <td height="240px">
+                    <center>
+                        <div id='preview4' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                            <img id='previewImg4' src="#if($appImageInfo)$!appImageInfo.IMG_PATH_7/$!appImageInfo.FILE_NM_7#end" width="120px" height="240px" />
+                        </div>
+                    </center>
+                    </td>
+                </tr>
+                <tr>
+                    <td><center><button type="button" id="imgDelete4" class="btn_style2" imgIdx="$!appImageInfo.IMG_IDX_4" imgIdxS="IMG_IDXS4"  delImgId="previewImg1"  fileNm="$!appImageInfo.FILE_NM_4"><span>삭제</span></button>
+                            <input name="files[5]" id="imgFile4" type="file" onchange="previewImage(this,'preview1', '120','240')"  /></center>
+                            <input type="hidden" id="IMG_IDXS4"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_4"/>
+                    </td>
+                    <td><center><button type="button" id="imgDelete5" class="btn_style2"  imgIdx="$!appImageInfo.IMG_IDX_5" imgIdxS="IMG_IDXS5" delImgId="previewImg2" fileNm="$!appImageInfo.FILE_NM_5"><span>삭제</span></button>
+                            <input name="files[6]" id="imgFile5" type="file" onchange="previewImage(this,'preview2', '120','240')"  /></center>
+                            <input type="hidden" id="IMG_IDXS5"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_5"/>
+                    </td>
+                    <td><center><button type="button" id="imgDelete6" class="btn_style2" imgIdx="$!appImageInfo.IMG_IDX_6" imgIdxS="IMG_IDXS6"  delImgId="previewImg3" fileNm="$!appImageInfo.FILE_NM_6"><span>삭제</span></button>
+                            <input name="files[7]" id="imgFile6" type="file" onchange="previewImage(this,'preview3', '120','240')"  /></center>
+                            <input type="hidden" id="IMG_IDXS6"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_6"/>
+                    </td>
+                    <td><center><button type="button" id="imgDelete7" class="btn_style2" imgIdx="$!appImageInfo.IMG_IDX_7" imgIdxS="IMG_IDXS7"  delImgId="previewImg4" fileNm="$!appImageInfo.FILE_NM_7"><span>삭제</span></button>
+                            <input name="files[8]" id="imgFile7" type="file" onchange="previewImage(this,'preview4', '120','240')"  /></center>
+                            <input type="hidden" id="IMG_IDXS7"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_7"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div  style="float:left;padding-top:10px;padding-bottom:15px;">
+            <h4 class="title"> App 설명</h4>
+        </div>
+    
+         <div>
+             <table class="tbType1" summary="제목,내용">
+                 <colgroup>
+                     <col width="25%"/><col width="75%"/>
+                 </colgroup>
+              
+                 <tr>
+                     <th scope="row">
+                         <label for="subject">개요</label>
+                     </th>
+                     <td style="position:relative;" colspan="2">
+                         <textarea style="width:97%; height: 30px; overflow-y:auto" id="APP_INFO" name="APP_INFO" >$!appInfo.APP_INFO</textarea>
+                     </td>                   
+                 </tr>
+                  <tr>
+                     <th scope="row">
+                         <label for="subject">소개</label>
+                     </th>
+                     <td style="position:relative;" colspan="2">
+                         <textarea style="width:97%; height: 30px; overflow-y:auto" id="APP_DESC" name="APP_DESC">$!appInfo.APP_DESC</textarea>
+                     </td>                   
+                 </tr>
+             </table><br/>
+         </div>
+    
+    </div>
+    <div id="menu3" style="display:none;">
+    </div>
+
+  </div><!--  class contents  -->
+</form> 
+
+    <div class="btnArea ta_r">
+        <button type="button" class="btn_style1" id="beforeBtn" ><strong>이전단계</strong></button>
+        <button type="button" class="btn_style1" id="nextBtn" ><strong>다음단계</strong></button>
+        #if($!appInfo)
+            <button type="button" class="btn_style1" id="appInfoUpdate" ><strong>수정</strong></button>
+            <button type="button" class="btn_style1" id="appInfoDelete" ><span><em class="icon del">삭제</em></span></button>
+        #else
+            <button type="button" class="btn_style1" id="appInfoSave"  style="display:none;"><strong>등록</strong></button>
+        #end
+      <button type="button" class="btn_style1" id="appInfoList" ><strong>목록</strong></button>
+    </div>
+        
+</div> <!--  id conWrap  -->

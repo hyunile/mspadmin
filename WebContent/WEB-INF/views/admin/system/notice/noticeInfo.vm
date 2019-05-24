@@ -1,0 +1,36 @@
+<form name="frmNotice" method="post">
+	
+	<div >
+		<table class="tbl">
+			<caption>공지사항 등록</caption>
+			<colgroup>
+				<col style="width:100px">
+				<col style="width:400px">
+			</colgroup>
+			<tr>
+				<th><label for="noticeTitle" class="redNotice" >#springMessage("common.header.title")</label></th> <!-- 제목 -->
+				<td>
+					<input type="text"  class="full-width" id="NM_TITLE" name="NM_TITLE" value="$!noticeDto.NM_TITLE" />
+					<input type="hidden" name="NO_NOTICE" value="$!noticeDto.NO_NOTICE" />
+				</td>
+			</tr>
+			<tr>
+				<th><label for="noticeContent" class="redNotice">#springMessage("common.header.contents")</label></th> <!-- 내용 -->
+				<td>
+					<textarea id="CONTENTS" name="CONTENTS" >$!noticeDto.CONTENTS</textarea>
+				</td>
+			</tr>
+		</table>
+
+		<div class="btn-wrap txtCenter">
+			#if($noticeDto)
+				<a href="javascript:fn_modify();void(0);" class="btn1">#springMessage("common.button.modify")</a> <!-- 수정 -->
+				<a href="javascript:fn_delete();void(0);" class="btn1 type2">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+			#else
+				<a href="javascript:fn_save();void(0);" class="btn1">#springMessage("common.button.save")</a> <!-- 저장 -->
+			#end
+			<a href="javascript:fn_closePopup();void(0)" class="btn1 type2 close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+		</div>
+	</div>
+	
+</form>

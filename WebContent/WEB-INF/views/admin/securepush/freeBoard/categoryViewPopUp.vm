@@ -1,0 +1,158 @@
+<script type="text/javascript">
+$(document).ready(function() {
+	
+	#if(!$itemInfo)
+	fn_setCurrDate();
+	#end
+});
+
+//현재 시간 세팅.
+function fn_setCurrDate() {
+	var now = new Date();
+	var res = now.toISOString().slice(0,10);
+	$("#tdRegDtCatg").html(res);
+}
+
+
+//카테고리 등록
+function fn_catgWrite(){
+	if( $("form[name=frmWriteCatgInfo]").find("input[name=CATG_NM]").val() == ""){
+		alert('#springMessage("menu.securePush.freeBoard.alert.inputCategName")'); //카테고리명을 입력해 주세요.
+		$("form[name=frmWriteCatgInfo]").find("input[name=CATG_NM]").focus();
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doSave")')){    //저장하시겠습니까?
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/securepush/freeBoard/addCategory";
+	var data = $("form[name=frmWriteCatgInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.freeBoard.alert.saveComplete")'); // 저장되었습니다.
+				fn_goCatgPop();
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		}
+	});
+}
+
+
+//카테고리 수정
+function fn_catgUpdate(catgId){
+	if( $("form[name=frmWriteCatgInfo]").find("input[name=CATG_NM]").val() == ""){
+		alert('#springMessage("menu.securePush.freeBoard.alert.inputCategName")'); //카테고리명을 입력해 주세요.
+		$("form[name=frmWriteCatgInfo]").find("input[name=CATG_NM]").focus();
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doSave")')){    //저장하시겠습니까?
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/securepush/freeBoard/updateCategory";
+	var data = $("form[name=frmWriteCatgInfo]").serialize() + "&CATG_ID=" + catgId;;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.freeBoard.alert.saveComplete")'); // 저장되었습니다.
+				fn_goCatgPop();
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		}
+	});
+}
+
+
+//카테고리 삭제
+function fn_catgDelete(catgId){
+	
+	if(!confirm('#springMessage("common.alert.doDelete")')){  //삭제하시겠습니까?
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/securepush/freeBoard/deleteCategory";
+	var data = "CATG_ID=" + catgId;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.manageSend.successDelete")'); // 삭제되었습니다.
+				fn_goCatgPop();
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		}
+	});
+}
+	
+</script>
+<div>
+	<div>
+		<form name="frmWriteCatgInfo" method="post">
+		<table  class="tbl">
+			<colgroup>
+				<col width="25%"/><col width="75%"/>
+			</colgroup>
+			<tr>
+				<th scope="row">#springMessage("common.header.author")</th> <!-- 작성자 -->
+				<td>
+					#if( $itemInfo )
+					$!itemInfo.REG_NM
+					#else
+					$!senderInfo.USER_NM ($!senderInfo.DEPT_NM)
+					#end
+				</td>
+			</tr>
+			<tr>
+				<th scope="row">#springMessage("common.header.registDate")</th> <!-- 작성일 -->
+				<td id="tdRegDtCatg">
+					#if( $itemInfo )
+					$!itemInfo.REG_DT
+					#end
+				</td>
+			</tr>
+			<tr>
+				<th scope="row">
+					<label for="CD_GRP">#springMessage("menu.securePush.freeBoard.catgName")</label> <!-- 카테고리명 -->
+				</th>
+				<td>
+					<input type="text" class="input_txt" style="width:95%" id="CATG_NM"  name="CATG_NM" value="$!itemInfo.CATG_NM" />
+				</td>
+			</tr>
+		</table>
+		</form>
+	</div>
+	<div class="btn-wrap txtCenter">
+	#if($itemInfo)
+		<a href="javascript:fn_catgUpdate('$!itemInfo.CATG_ID');void(0);" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+		<a href="javascript:fn_catgDelete('$!itemInfo.CATG_ID');void(0);" class="btn1"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+	#else
+		<a href="javascript:fn_catgWrite();void(0);" class="btn1"><strong>#springMessage("common.button.regist")</strong></a> <!-- 등록 -->
+	#end
+		<a href="javascript:fn_goCatgPop();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+		
+	</div>
+</div>

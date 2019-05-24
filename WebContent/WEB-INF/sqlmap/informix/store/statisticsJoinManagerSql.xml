@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.msp.admin.store.statistics.mapper.StatisticsJoinDao">
+
+   <resultMap type="kr.msp.admin.store.statistics.dto.SvcCodeDto" id="SvcCodeDto">
+		<result property="SVC_ID"				column = "svc_id" 			/>
+		<result property="SVC_NM"				column = "svc_nm" 			/>
+	</resultMap>
+	
+    
+    
+	<!-- statistics by day -->
+	<resultMap type="kr.msp.admin.store.statistics.dto.StatisticsJoinDayDto" id="JoinDayDto">
+		<result property="USER_NM"			column = "user_nm"			/>
+		<result property="USER_ID"				column = "user_id"				/>
+		<result property="D01"						column = "d01" 					/>
+		<result property="D02"						column = "d02" 					/>
+		<result property="D03"						column = "d03" 					/>
+		<result property="D04"						column = "d04" 					/>
+		<result property="D05"						column = "d05" 					/>
+		<result property="D06"						column = "d06" 					/>
+		<result property="D07"						column = "d07" 					/>
+		<result property="D08"						column = "d08" 					/>
+		<result property="D09"						column = "d09" 					/>
+		<result property="D10"						column = "d10" 					/>
+		<result property="D11"						column = "d11" 					/>
+		<result property="D12"						column = "d12" 					/>
+		<result property="D13"						column = "d13" 					/>
+		<result property="D14"						column = "d14" 					/>
+		<result property="D15"						column = "d15" 					/>
+		<result property="D16"						column = "d16" 					/>
+		<result property="D17"						column = "d17" 					/>
+		<result property="D18"						column = "d18" 					/>
+		<result property="D19"						column = "d19" 					/>
+		<result property="D20"						column = "d20" 					/>
+		<result property="D21"						column = "d21" 					/>
+		<result property="D22"						column = "d22" 					/>
+		<result property="D23"						column = "d23" 					/>
+		<result property="D24"						column = "d24" 					/>
+		<result property="D25"						column = "d25" 					/>
+		<result property="D26"						column = "d26" 					/>
+		<result property="D27"						column = "d27" 					/>
+		<result property="D28"						column = "d28" 					/>
+		<result property="D29"						column = "d29" 					/>
+		<result property="D30"						column = "d30" 					/>
+		<result property="D31"						column = "d31" 					/>
+		<result property="RNUM"					column = "rnum" 			/>
+		<result property="TOT_CNT"				column = "tot_cnt" 			/>
+	</resultMap>
+		
+	
+
+    <resultMap type="kr.msp.admin.store.statistics.dto.StatisticsJoinGraphDto" id="GraphDto">
+		<result property="REG_DT"				column = "reg_dt" 					/>
+		<result property="CNT"						column = "cnt" 				/>
+		<result property="RNUM"					column = "rnum" 			/>
+		<result property="TOT_CNT"				column = "tot_cnt" 			/>
+	</resultMap>
+    
+    
+    <resultMap type="kr.msp.admin.store.statistics.dto.StatisticsJoinExcelDto" id="ExcelDto">
+		<result property="D01"						column = "d01" 					/>
+		<result property="D02"						column = "d02" 					/>
+		<result property="D03"						column = "d03" 					/>
+		<result property="D04"						column = "d04" 					/>
+		<result property="D05"						column = "d05" 					/>
+		<result property="D06"						column = "d06" 					/>
+		<result property="D07"						column = "d07" 					/>
+		<result property="D08"						column = "d08" 					/>
+		<result property="D09"						column = "d09" 					/>
+		<result property="D10"						column = "d10" 					/>
+		<result property="D11"						column = "d11" 					/>
+		<result property="D12"						column = "d12" 					/>
+		<result property="D13"						column = "d13" 					/>
+		<result property="D14"						column = "d14" 					/>
+		<result property="D15"						column = "d15" 					/>
+		<result property="D16"						column = "d16" 					/>
+		<result property="D17"						column = "d17" 					/>
+		<result property="D18"						column = "d18" 					/>
+		<result property="D19"						column = "d19" 					/>
+		<result property="D20"						column = "d20" 					/>
+		<result property="D21"						column = "d21" 					/>
+		<result property="D22"						column = "d22" 					/>
+		<result property="D23"						column = "d23" 					/>
+		<result property="D24"						column = "d24" 					/>
+		<result property="D25"						column = "d25" 					/>
+		<result property="D26"						column = "d26" 					/>
+		<result property="D27"						column = "d27" 					/>
+		<result property="D28"						column = "d28" 					/>
+		<result property="D29"						column = "d29" 					/>
+		<result property="D30"						column = "d30" 					/>
+		<result property="D31"						column = "d31" 					/>
+		<result property="RNUM"					column = "rnum" 			/>
+		<result property="TOT_CNT"				column = "tot_cnt" 			/>
+	</resultMap>
+		
+	
+    
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+	
+	
+		
+    <!-- Select List Of DownloadStatistics -->
+    <select id="selectSvcId"  resultMap="SvcCodeDto">
+			SELECT  A.SVC_ID
+			,            A.SVC_NM
+			FROM    TB_SVC A
+			            INNER JOIN TB_STO_SVC B
+			                ON A.SVC_ID = B.SVC_ID
+			WHERE B.USE_YN = 'Y'
+			ORDER BY SVC_NM
+			
+    </select>
+    
+	
+	
+    <!-- Select List Of StoreMember -->
+    <select id="selectStatisticsJoin" parameterType="kr.msp.admin.store.statistics.dto.StatisticsJoinParamDto" resultMap="JoinDayDto">
+        <include refid="head"/><!-- include head of paging query-->
+			 SELECT 
+						USER_NM,   USER_ID,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(0) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D01,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(1) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D02,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(2) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D03,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(3) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D04,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(4) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D05,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(5) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D06,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(6) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D07,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(7) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D08,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(8) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D09,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(9) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D10,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(10) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D11,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(11) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D12,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(12) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D13,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(13) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D14,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(14) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D15,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(15) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D16,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(16) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D17,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(17) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D18,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(18) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D19,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(19) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D20,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(20) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D21,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(21) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D22,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(22) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D23,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(23) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D24,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(24) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D25,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(25) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D26,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(26) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D27,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(27) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D28,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(28) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D29,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(29) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D30,
+						SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN (CASE TO_CHAR(T3.START_DT+ INTERVAL(30) DAY TO DAY, '%d') WHEN '31' THEN TO_CHAR(T3.START_DT+ INTERVAL(30) DAY TO DAY, '%d') END) THEN 1 ELSE 0 END) D31
+			FROM TB_MOB_EVENT_LOG T1 
+					INNER JOIN (
+					    SELECT     TO_DATE(CASE WHEN(MIN_DT > START_DT) THEN MIN_DT ELSE START_DT END, '%Y%m%d') START_DT   					<!--  /* stasrt_dt cannot be smaller better then min_dt. */ -->
+	<![CDATA[   ,               TO_DATE(CASE WHEN (MAX_DT < END_DT) THEN MAX_DT ELSE END_DT END, '%Y%m%d') END_DT	]]>      		<!--  /* end_dt cannot be bigger better then max_dt. */ -->
+					    FROM
+					    (
+						        SELECT     START_DT 
+						        ,               END_DT
+						        ,               TO_CHAR(TO_DATE(SUBSTR(START_DT, 1, 6) || '01', '%Y%m%d'), '%Y%m%d') AS MIN_DT                                  	<!--  /*first day of start_dt's month*/ -->
+						        ,               TO_CHAR(LAST_DAY(TO_DATE(SUBSTR(END_DT, 1, 6) || '01', '%Y%m%d')), '%Y%m%d') AS MAX_DT  <!--  /*last day of end_dt's month*/ -->
+						        FROM
+						        (
+			                        SELECT  
+			                        	CAST(#{START_DT} AS VARCHAR(100)) AS START_DT
+			                        	,CAST(#{END_DT} AS VARCHAR(100)) AS END_DT
+			                        from systables where tabid=1
+						      ) 
+					    ) 
+					) T3
+					ON T1.REG_DTTM BETWEEN TO_DATE(T3.START_DT, '%Y%m%d') AND TO_DATE(T3.END_DT, '%Y%m%d')
+			WHERE T1.USER_NM IS NOT NULL 
+            <if test="SVC_ID != 0" >
+             	AND T1.SVC_ID = ${SVC_ID}
+            </if>
+            <if test="USER_ID != null and USER_ID != '' "  >
+             	AND T1.USER_ID LIKE '%' || #{USER_ID} || '%'
+            </if>
+            <if test="USER_NM != null and USER_NM != '' "  >
+             	AND T1.USER_NM LIKE '%' || #{USER_NM} || '%'
+            </if>
+        	GROUP BY     USER_NM,   USER_ID
+        
+        <include refid="bottom"/><!-- include tail of paging query-->
+    </select>
+    
+    
+	
+    <!-- Select List Of StoreMember -->
+    <select id="selectStatisticsGraph" parameterType="kr.msp.admin.store.statistics.dto.StatisticsJoinParamDto" resultMap="GraphDto">
+    <![CDATA[
+    	SELECT
+    		TO_CHAR(T1.REG_DTTM, '%Y.%m.%d') REG_DT
+			,COUNT(1) CNT
+		FROM TB_MOB_EVENT_LOG T1,
+		(
+			SELECT
+				TO_DATE(CASE WHEN(MIN_DT > START_DT) THEN MIN_DT ELSE START_DT END, '%Y%m%d') START_DT
+		    	,TO_DATE(CASE WHEN (MAX_DT < END_DT) THEN MAX_DT ELSE END_DT END, '%Y%m%d') END_DT
+		    FROM
+		    (
+		        SELECT
+		        	START_DT 
+		        	,END_DT
+		        	,TO_CHAR(TO_DATE(SUBSTR(START_DT, 1, 6) || '01', '%Y%m%d'), '%Y%m%d') AS MIN_DT 
+		        	,TO_CHAR(LAST_DAY(TO_DATE(SUBSTR(END_DT, 1, 6) || '01', '%Y%m%d')), '%Y%m%d') AS MAX_DT 
+		        FROM
+		        (
+	                SELECT  
+	                	CAST(#{START_DT} AS VARCHAR(100)) AS START_DT
+	               		,CAST(#{END_DT} AS VARCHAR(100)) AS END_DT
+	                from systables where tabid=1
+		      	) 
+		    ) 
+		) T3
+		WHERE TO_CHAR(T1.REG_DTTM, '%Y%m%d') BETWEEN TO_CHAR(T3.START_DT, '%Y%m%d') AND TO_CHAR(T3.END_DT, '%Y%m%d')
+		    AND T1.USER_NM IS NOT NULL 
+		]]>
+		<if test="SVC_ID != 0" >
+         	AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        <if test="USER_ID != null and USER_ID != '' "  >
+         	AND T1.USER_ID LIKE '%' || #{USER_ID} || '%'
+        </if>
+        <if test="USER_NM != null and USER_NM != '' "  >
+         	AND T1.USER_NM LIKE '%' || #{USER_NM} || '%'
+        </if>
+		GROUP BY T1.REG_DTTM
+		ORDER BY REG_DT ASC
+    </select>
+    
+    
+     <!-- Select List Of StoreMember -->
+    <select id="selectStatisticsExcel" parameterType="kr.msp.admin.store.statistics.dto.StatisticsJoinParamDto" resultMap="ExcelDto">
+    	SELECT USER_NM,   USER_ID,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(0) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D01,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(1) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D02,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(2) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D03,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(3) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D04,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(4) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D05,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(5) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D06,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(6) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D07,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(7) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D08,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(8) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D09,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(9) DAY TO DAY , '%d') THEN 1 ELSE 0 END) D10,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(10) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D11,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(11) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D12,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(12) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D13,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(13) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D14,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(14) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D15,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(15) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D16,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(16) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D17,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(17) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D18,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(18) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D19,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(19) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D20,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(20) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D21,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(21) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D22,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(22) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D23,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(23) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D24,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(24) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D25,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(25) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D26,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(26) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D27,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(27) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D28,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(28) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D29,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN TO_CHAR(T3.START_DT+ INTERVAL(29) DAY TO DAY, '%d') THEN 1 ELSE 0 END) D30,
+			SUM(CASE TO_CHAR(T1.REG_DTTM, '%d') WHEN (CASE TO_CHAR(T3.START_DT+ INTERVAL(30) DAY TO DAY, '%d') WHEN '31' THEN TO_CHAR(T3.START_DT+ INTERVAL(30) DAY TO DAY, '%d') END) THEN 1 ELSE 0 END) D31
+		FROM TB_MOB_EVENT_LOG T1,
+			(
+			SELECT TO_DATE(CASE WHEN(MIN_DT > START_DT) THEN MIN_DT ELSE START_DT END, '%Y%m%d') START_DT     <!--  /*stasrt_dt is cannot small better then min_dt.*/ -->
+<![CDATA[ 			, TO_DATE(CASE WHEN (MAX_DT < END_DT) THEN MAX_DT ELSE END_DT END, '%Y%m%d') END_DT          ]]> <!--  /*end_dt is cannot big better then max_dt.*/ -->
+			    FROM
+			    (
+			        SELECT     START_DT 
+			        ,               END_DT
+			        ,               TO_CHAR(TO_DATE(SUBSTR(START_DT, 1, 6) || '01', '%Y%m%d'), '%Y%m%d') AS MIN_DT                                      <!--  /*first day of start_dt*/ -->
+			        ,               TO_CHAR(LAST_DAY(TO_DATE(SUBSTR(END_DT, 1, 6) || '01', '%Y%m%d')), '%Y%m%d') AS MAX_DT      <!--  /*last day of end_dt*/ -->
+			        FROM
+			        (
+                        SELECT  
+                        	CAST(#{START_DT} AS VARCHAR(100)) AS START_DT
+                        	,CAST(#{END_DT} AS VARCHAR(100)) AS END_DT
+                        from systables where tabid=1
+			      ) A
+			    ) A
+			) T3
+		WHERE T1.REG_DTTM BETWEEN TO_CHAR(T3.START_DT, '%Y%m%d') AND TO_CHAR(T3.END_DT, '%Y%m%d')
+		AND T1.USER_NM IS NOT NULL 
+           <if test="SVC_ID != 0" >
+            	AND T1.SVC_ID = ${SVC_ID}
+           </if>
+           <if test="USER_ID != null and USER_ID != '' "  >
+            	AND T1.USER_ID LIKE CONCAT('%', #{USER_ID}, '%')
+           </if>
+           <if test="USER_NM != null and USER_NM != '' "  >
+            	AND T1.USER_NM LIKE CONCAT('%', #{USER_NM}, '%')
+           </if>
+       	GROUP BY     USER_NM,   USER_ID
+    </select>
+
+	
+</mapper>

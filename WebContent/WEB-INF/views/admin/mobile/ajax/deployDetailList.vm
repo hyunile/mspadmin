@@ -1,0 +1,56 @@
+
+<div class="tbl-wrap">
+	<h2 class="tbl-title">#springMessage("menu.mobile.deploy.rscList")</h2>	<!-- 리소스 목록 -->
+</div>
+	
+<table class="tbl" summary="번호,파일이름,파일경로,용량,삭제,등록일">
+	<colgroup>
+		<col width="10%"/><!-- col width="25%"/ --><col width="auto"/><col width="10%"/><col width="10%"/><col width="20%"/>
+		
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("common.header.number")</th> <!-- 번호 -->
+			<!-- <th scope="col">파일이름</th> -->
+			<th scope="col">#springMessage("menu.mobile.manage.filePath")</th> <!-- 파일경로 -->
+			<th scope="col">#springMessage("menu.mobile.manage.capacity")(Byte)</th><!-- 용량 -->
+			<th scope="col">#springMessage("common.button.delete")</th> <!-- 삭제 -->
+			<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+		</tr>
+	</thead>
+	<tbody>
+	#foreach($detail in $detailList)
+		#set($j_tot = $detail.TOT_CNT)
+		<tr style="line-height:10px;">
+			<td>$!detail.DPLY_DTL_IDX</td>
+			<!-- <td style="text-align:left;">$!detail.FILE_NM</td> -->
+			<td style="text-align:left;">$!detail.FILE_PATH</td>
+			<td>$!detail.FILE_SIZE</td>
+			<td>$!detail.DEL_YN</td>
+			<td>$!detail.REG_DTTM</td>
+		</tr>
+	#end
+	</tbody>
+</table>
+
+<input type="hidden" id="notice_num" value="$!R_PAGE_NUM"/>
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_noticeList"/>
+</div>
+<br><br>
+
+<script type="text/javascript">
+$(document).ready(function()
+{
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+</script>

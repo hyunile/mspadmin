@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.system.user.mapper.SystemUserDao">
+	
+	<resultMap type="kr.msp.admin.system.user.dto.UsersDto" id="UsersDto">
+		<result property="ID_USER" 		column="user_id"/>
+		<result property="NM_USER" 		column="user_nm"/>
+		<result property="PASSWORD" 	column="user_pw"/>
+		<result property="YN_USE" 		column="use_yn"/>
+		<result property="ID_INSERT" 	column="reg_id"/>
+		<result property="DT_INSERT" 	column="reg_dttm"/>
+		<result property="ID_UPDATE" 	column="mod_id"/>
+		<result property="DT_UPDATE" 	column="mod_dttm"/>
+		<result property="EMAIL" 		column="email"/>
+		<result property="NO_TP" 		column="user_tp"/>
+		<result property="NO_EP" 		column="user_ep"/>
+		<result property="ID_GROUP" 	column="auth_grp_id"/>
+		<result property="NM_GROUP" 	column="auth_grp_nm"/>
+		<result property="RNUM" 		column="rnum"/>
+		<result property="TOT_CNT" 		column="tot_cnt"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.system.user.dto.AuthUserGroup" id="AuthUserGroup">
+		<result property="ID_GROUP" column="auth_grp_id"/>
+		<result property="NM_GROUP" column="auth_grp_nm"/>
+		<result property="AUTH_CHK" column="auth_chk"/>
+	</resultMap>
+
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+	<!-- 사용자 정보 조회 -->
+    <select id="SelectUserList" parameterType="kr.msp.admin.system.user.dto.UsersParamDto" resultMap="UsersDto">
+        <include refid="head"/>
+		SELECT
+             A.USER_ID
+            ,A.USER_NM
+            ,A.USER_PW
+            ,A.USER_TP
+            ,A.USER_EP
+            ,A.EMAIL
+            ,A.USE_YN
+            ,A.REG_ID
+            ,A.MOD_ID AS MOD_ID
+            ,CAST(A.REG_DTTM AS DATE) AS REG_DTTM
+            ,CAST(A.MOD_DTTM AS DATE) AS MOD_DTTM
+            ,B.AUTH_GRP_ID
+            ,C.AUTH_GRP_NM
+        FROM TB_SYS_USER AS A
+        LEFT JOIN TB_SYS_USER_AUTH_GRP AS B
+        ON A.USER_ID = B.USER_ID
+        LEFT JOIN TB_SYS_AUTH_GRP AS C
+        ON B.AUTH_GRP_ID = C.AUTH_GRP_ID
+        <where>
+        	<if test="ID_USER != null">
+                A.USER_ID LIKE '%' || #{ID_USER} || '%'
+            </if>
+            <if test="NM_USER != null">
+                A.USER_NM LIKE '%' || #{NM_USER} || '%'
+            </if>
+            <if test="ID_GROUP != null">
+            	B.AUTH_GRP_ID = #{ID_GROUP}
+            </if>
+        </where>
+         ORDER BY A.USER_ID ASC
+		<include refid="bottom"/>
+    </select><!-- 완료 -->
+    
+    <!-- 사용자 단건 조회 -->
+    <select id="SelectOneUser" parameterType="kr.msp.admin.system.user.dto.UsersParamDto" resultMap="UsersDto">
+		SELECT
+		     USER_ID
+		    ,USER_NM
+		    ,USER_PW
+		    ,USER_TP
+		    ,USER_EP
+		    ,EMAIL
+		    ,USE_YN
+		    ,REG_ID
+		    ,CAST(REG_DTTM AS DATE) AS REG_DTTM
+		    ,MOD_ID
+		    ,CAST(MOD_DTTM AS DATE) AS MOD_DTTM
+		FROM TB_SYS_USER
+	   WHERE USER_ID = #{ID_USER}
+    </select><!-- 완료 -->
+    
+    <!-- 사용자 권한그룹 정보 조회 -->
+    <select id="SelectUserAuthGroup" parameterType="kr.msp.admin.system.user.dto.UsersParamDto" resultMap="AuthUserGroup" >
+        SELECT
+             A.AUTH_GRP_ID
+            ,A.AUTH_GRP_NM
+            ,CASE WHEN B.USER_ID IS NOT NULL 
+                  THEN 'T'
+                  ELSE 'F'
+             END AUTH_CHK
+        FROM TB_SYS_AUTH_GRP A
+        LEFT OUTER JOIN TB_SYS_USER_AUTH_GRP B ON (    A.AUTH_GRP_ID = B.AUTH_GRP_ID 
+                                                   AND B.USER_ID  = #{ID_USER})
+    </select><!-- 완료 -->
+    
+    <select id="SelectSearchAuthGroup" resultMap="AuthUserGroup">
+    	SELECT
+             A.AUTH_GRP_ID AS AUTH_GRP_ID
+            ,A.AUTH_GRP_NM AS AUTH_GRP_NM
+        FROM TB_SYS_AUTH_GRP A
+    </select><!-- 완료 -->
+    
+    <!-- 아이디 중복 검사  -->
+    <select id="SelectUserCount" parameterType="kr.msp.admin.system.user.dto.UsersDto" resultType="java.lang.Integer">
+		SELECT
+		     COUNT(*) AS USER_COUNT
+		FROM TB_SYS_USER
+        WHERE USER_ID =  #{ID_USER}
+    </select><!-- 완료 -->
+    
+    <!-- 사용자등록-->
+    <insert id="InsertUsers" parameterType="kr.msp.admin.system.user.dto.UsersDto">
+        INSERT INTO TB_SYS_USER(
+                 USER_ID
+                ,USER_NM
+                ,USER_PW
+                ,USER_TP
+                ,USER_EP
+                ,EMAIL
+                ,USE_YN
+                ,REG_ID
+                ,REG_DTTM
+                ,MOD_DTTM
+                ,LOCK_TIME
+                )VALUES(
+                 #{ID_USER}
+                ,#{NM_USER}
+                ,#{PASSWORD}
+                ,#{NO_TP}
+                ,#{NO_EP}
+                ,#{EMAIL}
+                ,#{YN_USE}
+                ,#{ID_INSERT}
+                ,CURRENT
+                ,CURRENT
+                ,'2015-01-01 00:00:00'
+                )
+    </insert><!-- 완료 -->
+    
+    <!-- 사용자 권한그룹 등록-->
+    <insert id="InsertAuthUserGroup" parameterType="kr.msp.admin.system.user.dto.UsersDto">
+        INSERT INTO TB_SYS_USER_AUTH_GRP(
+                 USER_ID
+                ,AUTH_GRP_ID
+                )VALUES(
+                 #{ID_USER}
+                ,#{ID_GROUP}
+                )
+    </insert><!-- 완료 -->
+    
+    <!-- 사용자 메뉴권한 그룹정보 테이블 삭제 -->
+    <delete id="DeleteAuthUserGroup" parameterType="kr.msp.admin.system.user.dto.UsersDto">
+        DELETE FROM TB_SYS_USER_AUTH_GRP
+        WHERE USER_ID = #{ID_USER}
+    </delete><!-- 완료 -->
+    
+    <!-- 사용자 수정-->
+    <update id="UpdateUsers" parameterType="kr.msp.admin.system.user.dto.UsersDto">
+		UPDATE TB_SYS_USER
+		    SET USER_NM   = #{NM_USER}
+		    <if test="PASSWORD != null">
+		    	,USER_PW  = #{PASSWORD}
+		    </if>
+		       ,USER_TP     = #{NO_TP}
+		       ,USER_EP     = #{NO_EP}
+		       ,EMAIL     = #{EMAIL}
+		       ,USE_YN    = #{YN_USE}
+		       ,MOD_ID = #{ID_UPDATE}
+		       ,MOD_DTTM = CURRENT
+		       ,LOGIN_LOCK='N'
+		       ,LOCK_TIME= CURRENT
+		       ,LOGIN_FAIL_CNT='0'
+		WHERE USER_ID = #{ID_USER}
+    </update><!-- 완료 -->
+    
+    <!-- 바로가기메뉴 테이블 삭제 -->
+    <delete id="DeleteMenuFavor" parameterType="kr.msp.admin.system.user.dto.UsersDto">
+        DELETE FROM TB_SYS_FAVRT
+        WHERE USER_ID = #{ID_USER}
+    </delete><!-- 완료 -->
+    
+    <!-- 사용자정보 테이블 삭제 -->
+    <delete id="DeleteUsers" parameterType="kr.msp.admin.system.user.dto.UsersDto">
+        DELETE FROM TB_SYS_USER
+        WHERE USER_ID = #{ID_USER}
+    </delete><!-- 완료 -->
+
+    <!-- 로그인 사용자 패스워드 검증-->
+    <select id="SelPassCheck" parameterType="kr.msp.admin.system.user.dto.UsersDto" resultType="hashmap">
+        SELECT FIRST 1 USER_PW from TB_SYS_USER WHERE USER_ID = #{ID_USER}
+    </select><!-- 완료 -->
+</mapper>

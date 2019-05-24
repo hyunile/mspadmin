@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.campaign.automationPush.mapper.AutomationPushDao">
+
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT *
+, @RN TOT_CNT
+FROM
+(
+	SELECT A.*
+	,	(@RN := @RN + 1) AS RNUM
+	FROM
+	(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+	) A
+	, (SELECT @RN := 0, @TOT := 0) R
+) A
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+	
+	<!--자동화 푸시 등록 -->
+	<insert id="insertAutomationPush" parameterType="kr.msp.admin.campaign.automationPush.dto.AutoPushMsgSendDTO" >
+		INSERT INTO TB_CMP_AUTOMATIONPUSH (TYPE, STR_PSID, STR_CUID, MESSAGE, PRIORITY, BADGENO, SERVICECODE, SOUNDFILE, EXT, SENDERCODE, APP_ID, ATTACHFILE, DB_IN, REGDATE, ADMIN_TITLE, STATUS) 
+		VALUES (#{TYPE}, #{STR_PSID}, #{STR_CUID}, #{MESSAGE}, #{PRIORITY}, #{BADGENO}, #{SERVICECODE}, #{SOUNDFILE}, #{EXT}, #{SENDERCODE}, #{APPID}, #{ATTACHFILE}, #{DB_IN}, NOW(), #{ADMINTITLE}, #{STATUS})
+	</insert>
+    
+</mapper>

@@ -1,0 +1,78 @@
+<h2 class="tbl-title">#springMessage("menu.system.serviceList")</h2>	### 서비스 목록 ###
+	<table class="tbl-nb full-width">
+		<colgroup><!--  5cell  -->
+		<col width="auto"/><col width="20%"/><col width="20%"/><col width="20%"/><col width="15%"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th rowspan="2" scope="col">#springMessage("common.header.serviceName")</th>		### 서비스명 ###
+			<th colspan="3" scope="col">#springMessage("common.header.serviceType")</th>		### 제공서비스 ###
+			<th rowspan="2" scope="col">#springMessage("common.header.serviceType")</th>		### 등록일자 ###
+		</tr>
+		<tr>
+			<th scope="col">#springMessage("common.header.mobileService")</th>			### 앱서비스 ###
+			<th scope="col">#springMessage("common.header.pushService")</th>			### PUSH서비스 ###
+			<th scope="col">#springMessage("common.header.storeService")</th>			### 앱스토어 서비스 ###
+		</tr>
+	</thead>
+	<tbody>
+	#foreach($serviceDto in $serviceList)
+		#set($j_tot = $serviceDto.TOT_CNT)
+		<tr class="outCheckTr" style="cursor:pointer">
+			<td style="text-align:left;">
+				$esc.xml($!serviceDto.SVC_NM)
+				<input type="hidden" class="SVC_ID" value="$serviceDto.SVC_ID" />
+			</td>
+			<td>
+			#if($serviceDto.MOB_YN == "X")
+				#springMessage("common.header.notRegistered")		### 미등록 ###
+			#elseif($serviceDto.MOB_YN == "Y")
+				#springMessage("common.header.using")		### 사용중 ###
+			#else
+				중지중
+			#end
+			</td>
+			<td>
+			#if($serviceDto.PUSH_YN == "X")
+				#springMessage("common.header.notRegistered")		### 미등록 ###
+			#elseif($serviceDto.PUSH_YN == "N")
+				#springMessage("common.header.using")		### 사용중 ###
+			#else
+				#springMessage("common.header.stopped")		### 중지중 ###
+			#end
+			</td>
+			<td>
+			#if($serviceDto.STO_YN == "X")
+				#springMessage("common.header.notRegistered")		### 미등록 ###
+			#elseif($serviceDto.STO_YN == "Y")
+				#springMessage("common.header.using")		### 사용중 ###
+			#else
+				#springMessage("common.header.stopped")		### 중지중 ###
+			#end
+			</td>
+			<td>
+				$serviceDto.REG_DTTM
+			</td>
+		</tr>
+	#end
+	#if(!$j_tot)
+		<tr>
+			<td colspan="5" class="ta_c">#springMessage("menu.system.alert.noServiceData")</td>	### 등록된 서비스가 없습니다. ###
+		</tr>
+	#end
+	</tbody>
+</table>
+
+<input type="hidden" id="SERVICE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+		##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+		##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot" />
+		##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+		##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+		##이밴트
+	<input type="hidden" name="j_event" value="fn_serviceList" />
+</div>

@@ -1,0 +1,14 @@
+<div style="overflow:scroll; width:100%; height:400px;">
+	<ul id="resTree" class="easyui-tree" >
+	</ul>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function () {
+	
+	$('#resTree').tree({
+   		checkbox:true,
+    	data: $resTot
+	});
+});
+</script>

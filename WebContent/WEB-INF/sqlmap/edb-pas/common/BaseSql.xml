@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.common.mapper.BaseDao">
+
+	<resultMap type="kr.msp.admin.common.dto.UsersDto" id="UsersDto">
+		<result property="ID_USER" 		column="USER_ID"/>
+		<result property="NM_USER" 		column="USER_NM"/>
+		<result property="PASSWORD" 	column="USER_PW"/>
+		<result property="YN_USE" 		column="USE_YN"/>
+		<result property="ID_INSERT" 	column="REG_ID"/>
+		<result property="DT_INSERT" 	column="REG_DTTM"/>
+		<result property="ID_UPDATE" 	column="MOD_ID"/>
+		<result property="DT_UPDATE" 	column="MOD_DTTM"/>
+		<result property="EMAIL" 		column="EMAIL"/>
+		<result property="NO_TP" 		column="USER_TP"/>
+		<result property="NO_EP" 		column="USER_EP"/>
+	</resultMap>    
+	
+	<resultMap type="kr.msp.admin.common.dto.LoginCheckParamDto" id="LoginCheckParamDto">
+		<result property="LOGIN_CHECK" column="LOGIN_CHECK"/>
+		<result property="NM_USER" column="USER_NM"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.common.dto.MenuDto" id="MenuDto">
+		<result property="ID_MENU" column="MENU_ID"/>
+		<result property="NM_MENU" column="MENU_NM"/>
+		<result property="MENU_URL" column="MENU_URL"/>
+		<result property="YN_POPUP" column="POPUP_YN"/>
+		<result property="NO_WIDTH" column="POPUP_W"/>
+		<result property="NO_HEIGHT" column="POPUP_H"/>
+		<result property="YN_USE" column="STS_CD"/>
+		<result property="ID_INSERT" column="REG_ID"/>
+		<result property="DT_INSERT" column="REG_DTTM"/>
+		<result property="ID_UPDATE" column="MOD_ID"/>
+		<result property="DT_UPDATE" column="MOD_DTTM"/>
+		<result property="DESC_MENU" column="MENU_DESC"/>
+		<result property="NO_ORDER" column="SORT_NO"/>
+		<result property="ID_MENU_PARENT" column="UP_MENU_ID"/>
+		<!-- <result property="YN_DEL" column=""/>  -->
+		<result property="MENU_LEVEL" column="MENU_LEVEL"/>
+		<result property="SORT_ORDER" column="SORT_ORDER"/>
+		<result property="MENU_TYPE" column="MENU_TYPE"/>
+	</resultMap> 
+	
+	<resultMap type="kr.msp.admin.system.menuAuth.dto.MenuAuthDto" id="MenuAuthDto">
+		<result property="YN_SELECT" column="SELECT_YN"/>
+		<result property="YN_INSERT" column="INSERT_YN"/>
+		<result property="YN_UPDATE" column="UPDATE_YN"/>
+		<result property="YN_DELETE" column="DELETE_YN"/>
+		<result property="ID_INSERT" column="REG_ID"/>
+		<result property="DT_INSERT" column="REG_DTTM"/>
+		<result property="ID_UPDATE" column="MOD_ID"/>
+		<result property="DT_UPDATE" column="MOD_DTTM"/>
+		<result property="YN_EXCEL" column="EXCEL_YN"/>
+		<result property="ID_GROUP" column="AUTH_GRP_ID"/>
+		<result property="ID_MENU" column="MENU_ID"/>
+		<result property="ID_MENU_PARENT" column="UP_MENU_ID"/>
+		<result property="NM_MENU" column="MENU_NM"/>
+		<result property="MENU_LEVEL" column="MENU_LEVEL"/>
+		<result property="ROWSU" column="ROWSU"/>
+		<result property="MENU_URL" column="MENU_URL"/>
+	</resultMap>
+
+    <select id="SelNewLoginChk" parameterType="kr.msp.admin.common.dto.UsersDto" resultType="hashmap">
+        SELECT "A"."USER_ID", 
+       "A"."USER_NM", 
+       "A"."USER_PW",
+       "A"."LOGIN_LOCK",
+       TO_CHAR("A"."LOCK_TIME", 'YYYY.MM.DD HH24:MI:SS') AS "LOCK_TIME" ,
+       "A"."LOGIN_STATUS",
+       "A"."LOGIN_FAIL_CNT",
+        TO_CHAR("A"."REG_DTTM", 'YYYY-MM-DD') "REG_DTTM", 
+        COALESCE(TO_CHAR("A"."MOD_DTTM", 'YYYY-MM-DD'),'0000-00-00') "MOD_DTTM", 
+        "C"."AUTH_GRP_ID", 
+        "C"."AUTH_GRP_NM"
+        from "TB_SYS_USER" "A", "TB_SYS_USER_AUTH_GRP" "B", "TB_SYS_AUTH_GRP" "C"
+        where "A"."USER_ID" = "B"."USER_ID"
+        and "B"."AUTH_GRP_ID" = "C"."AUTH_GRP_ID"
+        and "A"."USER_ID" = #{ID_USER}
+        and "A"."USE_YN" = 'Y'
+        limit 1
+    </select>
+
+    <update id="upLoginFailStatus" parameterType="hashmap">
+        update "TB_SYS_USER" set "LOGIN_LOCK"=#{LOGIN_LOCK},"LOCK_TIME"=CURRENT_TIMESTAMP,"LOGIN_FAIL_CNT"="LOGIN_FAIL_CNT"+1 where "USER_ID"=#{USER_ID}
+    </update>
+
+    <update id="upLoginSuccStatus" parameterType="hashmap">
+        update "TB_SYS_USER" set "LOGIN_LOCK"='N',"LOCK_TIME"=CURRENT_TIMESTAMP,"LOGIN_FAIL_CNT"='0' where "USER_ID"=#{USER_ID}
+    </update>
+
+	<select id="SelectLoginCheck" parameterType="kr.msp.admin.common.dto.UsersDto" resultMap="LoginCheckParamDto" >
+	    WITH "LOGIN_CHECK_WITH" AS ( 
+	    	SELECT
+		         CASE WHEN COUNT(*) &lt;=0 OR SUM(CASE WHEN "USER_ID" = #{ID_USER} THEN 1 ELSE 0 END)        &lt;= 0 THEN 'ID_ERROR'
+		              WHEN SUM(CASE WHEN "USER_ID" = #{ID_USER} AND "USER_PW" = #{PASSWORD} THEN 1 ELSE 0 END) &lt;= 0 THEN 'PW_ERROR'
+		              ELSE 'LOGIN_SUCCESS'
+		         END AS "LOGIN_CHECK"
+		        ,'' AS "USER_NM"
+		    FROM "TB_SYS_USER"
+		    WHERE "USE_YN" = 'Y'
+		    UNION ALL
+		    SELECT
+		         '' AS "LOGIN_CHECK"
+		        , "USER_NM"
+		    FROM "TB_SYS_USER"
+		    WHERE "USE_YN"   = 'Y'
+		      AND "USER_ID"  = #{ID_USER}
+		      AND "USER_PW" = #{PASSWORD}
+	    )
+	    SELECT 
+		     MAX("LOGIN_CHECK") AS "LOGIN_CHECK"
+		    ,MAX("USER_NM")     AS "USER_NM"
+		FROM "LOGIN_CHECK_WITH"
+	</select><!-- 완료 -->
+	
+	
+	<insert id="InsertLoginHistory" parameterType="kr.msp.admin.common.dto.LoginHistoryParamDto" >
+		INSERT INTO "TB_SYS_LOGIN_HIST" (
+	             "HIST_IDX"
+	            ,"USER_ID"
+	            ,"LOGIN_DTTM"
+	            ,"REMOTE_IP"
+	        )VALUES(
+	             nextval('"SEQ_SYS_LOGIN_HIST"')
+	            ,#{ID_USER}
+	            ,CURRENT_TIMESTAMP
+	            ,#{REMOTE_IP}
+	        )
+	</insert><!-- 완료 -->
+	
+	<select id="SelectIdFirstMenu" parameterType="kr.msp.admin.common.dto.UsersDto" resultType="String">
+	     SELECT
+            MAX("A"."INTRO_MENU_ID") AS "ID_FIRST_MENU"
+        FROM "TB_SYS_AUTH_GRP" "A"
+        INNER JOIN "TB_SYS_USER_AUTH_GRP" "B" ON ("A"."AUTH_GRP_ID" = "B"."AUTH_GRP_ID")
+        INNER JOIN "TB_SYS_MENU" "C" ON ("A"."INTRO_MENU_ID" = "C"."MENU_ID")
+        WHERE "B"."USER_ID" = #{ID_USER}
+          AND "C"."STS_CD" = 'Y'
+	</select><!-- 완료 -->
+	
+	<select id="SelectTopMenu" parameterType="java.util.HashMap" resultMap="MenuDto" >
+	<!-- 
+		SELECT
+             MENU_ID
+            ,UP_MENU_ID
+            ,MENU_NM
+            ,MENU_URL
+            ,MENU_LEVEL
+            ,SORT_ORDER
+            ,MENU_TYPE
+            ,ID_MENU_GROUP
+            ,INTRO_MENU_ID
+        FROM(
+            SELECT
+                 X.MENU_ID 
+                ,X.UP_MENU_ID
+                ,X.MENU_NM
+                ,X.MENU_URL
+                ,LEVEL AS MENU_LEVEL
+                ,ROWNUM AS SORT_ORDER
+                ,CASE WHEN LEVEL = 1             THEN 'TOP_MENU'
+                      WHEN CONNECT_BY_ISLEAF = 1 THEN 'PROGRAM'
+                      ELSE 'SUB_MENU'
+                 END AS MENU_TYPE
+                ,CONNECT_BY_ROOT X.MENU_ID AS ID_MENU_GROUP
+                ,X.INTRO_MENU_ID
+            FROM(
+                SELECT
+                     A.MENU_ID
+                    ,A.UP_MENU_ID
+                    ,A.MENU_NM
+                    ,A.MENU_URL
+                    ,A.POPUP_YN
+                    ,A.POPUP_W
+                    ,A.POPUP_H
+                    ,A.STS_CD
+                    ,A.MENU_DESC
+                    ,A.SORT_NO
+                    ,MAX(D.INTRO_MENU_ID) AS INTRO_MENU_ID
+                FROM TB_SYS_MENU A
+                INNER JOIN TB_SYS_MENU_AUTH B ON (A.MENU_ID = B.MENU_ID)
+                INNER JOIN TB_SYS_USER_AUTH_GRP C  ON (B.AUTH_GRP_ID = C.AUTH_GRP_ID)
+                INNER JOIN TB_SYS_AUTH_GRP D      ON (C.AUTH_GRP_ID = D.AUTH_GRP_ID)
+                WHERE C.USER_ID = #{ID_USER}
+                  AND A.STS_CD  = 'Y'
+                  AND (B.SELECT_YN != 'N' OR B.INSERT_YN != 'N' OR B.UPDATE_YN != 'N' OR B.DELETE_YN != 'N' OR B.EXCEL_YN != 'N')
+                GROUP BY A.MENU_ID,  A.UP_MENU_ID, A.MENU_NM, A.MENU_URL,  A.POPUP_YN
+                        ,A.POPUP_W, A.POPUP_H, A.STS_CD,  A.MENU_DESC, A.SORT_NO
+            )X
+            START WITH X.UP_MENU_ID IS NULL
+            CONNECT BY PRIOR X.MENU_ID = X.UP_MENU_ID
+            ORDER SIBLINGS BY X.SORT_NO
+        )WHERE MENU_LEVEL = #{MENU_LEVEL}
+        ORDER BY SORT_ORDER ASC
+        -->
+        WITH RECURSIVE 
+		"LST" AS
+		(
+		    SELECT	"A"."MENU_ID"
+		    ,           "A"."UP_MENU_ID"
+		    ,           "A"."MENU_NM"
+		    ,           "A"."MENU_URL"
+		    ,           "A"."POPUP_YN"
+		    ,           "A"."POPUP_W"
+		    ,           "A"."POPUP_H"
+		    ,           "A"."STS_CD"
+		    ,           "A"."MENU_DESC"
+		    ,           100+"A"."SORT_NO" "SORT_NO"
+		    ,           MAX("D"."INTRO_MENU_ID") AS "INTRO_MENU_ID"
+			,			1 "LV"
+			,			"A"."MENU_ID" "SORT_KEY"
+			,			"A"."MENU_ID" "ROOT_MENU_ID"
+		    FROM		"TB_SYS_MENU" "A"
+							INNER JOIN "TB_SYS_MENU_AUTH" "B" ON ("A"."MENU_ID" = "B"."MENU_ID")
+							INNER JOIN "TB_SYS_USER_AUTH_GRP" "C"  ON ("B"."AUTH_GRP_ID" = "C"."AUTH_GRP_ID")
+							INNER JOIN "TB_SYS_AUTH_GRP" "D"      ON ("C"."AUTH_GRP_ID" = "D"."AUTH_GRP_ID")
+		    WHERE		"C"."USER_ID" = #{ID_USER}
+					AND "A"."STS_CD"  = 'Y'
+					AND ("B"."SELECT_YN" != 'N' OR "B"."INSERT_YN" != 'N' OR "B"."UPDATE_YN" != 'N' OR "B"."DELETE_YN" != 'N' OR "B"."EXCEL_YN" != 'N')
+		    GROUP BY	"A"."MENU_ID",  "A"."UP_MENU_ID", "A"."MENU_NM", "A"."MENU_URL",  "A"."POPUP_YN"
+		    ,			"A"."POPUP_W", "A"."POPUP_H", "A"."STS_CD",  "A"."MENU_DESC", "A"."SORT_NO"
+		)
+		, "CONNECT_BY_LIST" ("MENU_ID",				"UP_MENU_ID",			"MENU_NM",		"MENU_URL",			"POPUP_YN"
+		    ,           "POPUP_W",				"POPUP_H",			"STS_CD",			"MENU_DESC",			"SORT_NO"
+		    ,           "INTRO_MENU_ID",			"LV"
+			,			"SORT_KEY"
+			,			"ROOT_MENU_ID") AS
+		(
+			
+		    SELECT      "MENU_ID",				"UP_MENU_ID",			"MENU_NM",		"MENU_URL",			"POPUP_YN"
+		    ,           "POPUP_W",				"POPUP_H",			"STS_CD",			"MENU_DESC",			"SORT_NO"
+		    ,           "INTRO_MENU_ID",			"LV"
+			,			"SORT_NO" || "MENU_ID" "SORT_KEY"
+			,			"MENU_ID"	"ROOT_MENU_ID"
+			FROM		"LST"	
+			WHERE		"UP_MENU_ID" IS NULL
+			UNION ALL
+			
+		    SELECT      "LST_C"."MENU_ID",			"LST_C"."UP_MENU_ID",	"LST_C"."MENU_NM",	"LST_C"."MENU_URL",		"LST_C"."POPUP_YN"
+		    ,           "LST_C"."POPUP_W",			"LST_C"."POPUP_H",		"LST_C"."STS_CD",	"LST_C"."MENU_DESC",	"LST_C"."SORT_NO"
+		    ,           "LST_C"."INTRO_MENU_ID",	"LST_P"."LV" + 1 "LV"
+			,			"LST_P"."SORT_KEY" || '_' || "LST_C"."SORT_NO" || "LST_C"."MENU_ID" "SORT_KEY"
+			,			"LST_P"."ROOT_MENU_ID"
+			FROM		"LST" "LST_C"
+						INNER JOIN "CONNECT_BY_LIST" "LST_P"
+							ON "LST_P"."MENU_ID" = "LST_C"."UP_MENU_ID"
+		)
+		SELECT	"MENU_ID",			"UP_MENU_ID",			"MENU_NM",		"MENU_URL"
+		,		"LV" MENU_LEVEL,		ROW_NUMBER() OVER (ORDER BY "SORT_KEY") "SORT_ORDER"
+		,       CASE WHEN "LV" = 1             THEN 'TOP_MENU'
+		                WHEN (SELECT COUNT(1) FROM "CONNECT_BY_LIST" "B" WHERE "UP_MENU_ID" = "A"."MENU_ID") = 0 THEN 'PROGRAM'
+		                ELSE 'SUB_MENU'
+		        END AS "MENU_TYPE"
+		,		"ROOT_MENU_ID" "ID_MENU_GROUP"
+		,		"INTRO_MENU_ID"
+		,		"SORT_NO"
+		FROM	"CONNECT_BY_LIST" "A"
+		WHERE "LV" = #{MENU_LEVEL}
+		ORDER BY "SORT_ORDER"
+	</select><!-- 완료 -->
+	
+	<select id="SelectLeftMenu" parameterType="java.util.HashMap" resultMap="MenuAuthDto">
+		 <!-- SELECT
+             A.MENU_ID
+            ,A.UP_MENU_ID
+            ,B.AUTH_GRP_ID
+            ,A.MENU_NM
+            ,B.SELECT_YN
+            ,B.INSERT_YN
+            ,B.UPDATE_YN
+            ,B.DELETE_YN
+            ,B.EXCEL_YN
+            ,A.MENU_URL
+            ,CASE WHEN LEVEL = 1             THEN 'TOP_MENU'
+                  WHEN CONNECT_BY_ISLEAF = 1 THEN 'PROGRAM'
+                  ELSE 'SUB_MENU'
+             END AS MENU_TYPE
+            ,LEVEL AS MENU_LEVEL
+            ,ROWNUM AS ROWSU
+        FROM TB_SYS_MENU A
+        	INNER JOIN TB_SYS_MENU_AUTH B 
+        		ON (A.MENU_ID = B.MENU_ID )
+        	INNER JOIN TB_SYS_USER_AUTH_GRP C
+        		ON (B.AUTH_GRP_ID = C.AUTH_GRP_ID AND C.USER_ID = #{ID_USER} )
+        WHERE A.STS_CD = 'Y'
+        START WITH A.MENU_ID = #{ID_MENU}
+        CONNECT BY PRIOR A.MENU_ID = A.UP_MENU_ID
+        ORDER SIBLINGS BY SORT_NO
+        -->
+        		WITH RECURSIVE 
+		"LST" AS
+		(
+		    SELECT		"A"."MENU_ID",		"A"."UP_MENU_ID",		"A"."MENU_NM",		"A"."MENU_URL"
+			,		"B"."SELECT_YN",	"B"."INSERT_YN",		"B"."UPDATE_YN",	"B"."DELETE_YN",	"B"."EXCEL_YN"
+		    ,			"A"."POPUP_YN",		"A"."POPUP_W",			"A"."POPUP_H",		"A"."STS_CD",		"A"."MENU_DESC"
+		    ,           100+"A"."SORT_NO" "SORT_NO"
+		    ,           MAX("D"."INTRO_MENU_ID") AS "INTRO_MENU_ID"
+			,			1 "LV"
+			,			"A"."MENU_ID" "SORT_KEY"
+			,			"A"."MENU_ID" "ROOT_MENU_ID"
+			,			"B"."AUTH_GRP_ID"
+		    FROM		"TB_SYS_MENU" "A"
+						INNER JOIN "TB_SYS_MENU_AUTH" "B" ON ("A"."MENU_ID" = "B"."MENU_ID")
+						INNER JOIN "TB_SYS_USER_AUTH_GRP" "C"  ON ("B"."AUTH_GRP_ID" = "C"."AUTH_GRP_ID")
+						INNER JOIN "TB_SYS_AUTH_GRP" "D"      ON ("C"."AUTH_GRP_ID" = "D"."AUTH_GRP_ID")
+		    WHERE		"C"."USER_ID" = #{ID_USER}
+					AND "A"."STS_CD"  = 'Y'
+					AND ("B"."SELECT_YN" != 'N' OR "B"."INSERT_YN" != 'N' OR "B"."UPDATE_YN" != 'N' OR "B"."DELETE_YN" != 'N' OR "B"."EXCEL_YN" != 'N')
+		    GROUP BY	"A"."MENU_ID",  "A"."UP_MENU_ID", "A"."MENU_NM", "A"."MENU_URL",  "A"."POPUP_YN"
+			,			"B"."SELECT_YN",	"B"."INSERT_YN",		"B"."UPDATE_YN",	"B"."DELETE_YN",	"B"."EXCEL_YN"
+		    ,			"A"."POPUP_W", "A"."POPUP_H", "A"."STS_CD",  "A"."MENU_DESC", "A"."SORT_NO","B"."AUTH_GRP_ID"
+		)
+		, "CONNECT_BY_LIST" ("MENU_ID", "UP_MENU_ID", "MENU_NM", "MENU_URL", "POPUP_YN"
+			,	"SELECT_YN", "INSERT_YN", "UPDATE_YN", "DELETE_YN", "EXCEL_YN"
+		        ,           "POPUP_W", "POPUP_H", "STS_CD", "MENU_DESC", "SORT_NO"
+		        ,           "INTRO_MENU_ID",	"LV"
+			,	"SORT_KEY", "ROOT_MENU_ID", "AUTH_GRP_ID"
+			
+			)AS
+		(
+			
+		    SELECT      "MENU_ID", "UP_MENU_ID", "MENU_NM", "MENU_URL", "POPUP_YN"
+			,	"SELECT_YN", "INSERT_YN", "UPDATE_YN", "DELETE_YN", "EXCEL_YN"
+		    ,           "POPUP_W", "POPUP_H", "STS_CD", "MENU_DESC", "SORT_NO"
+		    ,           "INTRO_MENU_ID",	"LV"
+			,	"SORT_NO" || "MENU_ID" "SORT_KEY"
+			,	"MENU_ID"	"ROOT_MENU_ID"
+			,	"AUTH_GRP_ID"
+			FROM		"LST"	
+			WHERE		"MENU_ID" = #{ID_MENU}
+			UNION ALL
+
+		    SELECT      "LST_C"."MENU_ID",	"LST_C"."UP_MENU_ID",	"LST_C"."MENU_NM",	"LST_C"."MENU_URL",	"LST_C"."POPUP_YN"
+			,	"LST_C"."SELECT_YN",	"LST_C"."INSERT_YN",	"LST_C"."UPDATE_YN",	"LST_C"."DELETE_YN",	"LST_C"."EXCEL_YN"
+		    ,           "LST_C"."POPUP_W",	"LST_C"."POPUP_H",	"LST_C"."STS_CD",	"LST_C"."MENU_DESC",	"LST_C"."SORT_NO"
+		    ,           "LST_C"."INTRO_MENU_ID", "LST_P"."LV" + 1 "LV"
+			,	"LST_P"."SORT_KEY" || '_' || "LST_C"."SORT_NO" || "LST_C"."MENU_ID" "SORT_KEY"
+			,	"LST_P"."ROOT_MENU_ID"
+			,	"LST_C"."AUTH_GRP_ID"
+			FROM	"LST" "LST_C"
+				INNER JOIN "CONNECT_BY_LIST" "LST_P"
+				ON "LST_P"."MENU_ID" = "LST_C"."UP_MENU_ID"
+		)
+		SELECT	"MENU_ID", "UP_MENU_ID", "AUTH_GRP_ID", "MENU_NM"
+		,	"SELECT_YN", "INSERT_YN", "UPDATE_YN", "DELETE_YN", "EXCEL_YN"
+		,	"MENU_URL"
+		,	"LV" "MENU_LEVEL",	ROW_NUMBER() OVER (ORDER BY "SORT_KEY") "ROWSU"
+		,       CASE WHEN "LV" = 1             THEN 'TOP_MENU'
+                WHEN (SELECT COUNT(1) FROM "CONNECT_BY_LIST" "B" WHERE "UP_MENU_ID" = "A"."MENU_ID") = 0 THEN 'PROGRAM'
+                ELSE 'SUB_MENU'
+	        END AS "MENU_TYPE"
+		FROM	"CONNECT_BY_LIST" "A"  
+	</select><!-- 완료 -->
+
+
+	<select id="SelectMenuAuth" parameterType="hashmap" resultType="hashmap">
+		select "MENU_ID", "SELECT_YN", "INSERT_YN", "UPDATE_YN", "DELETE_YN" from "TB_SYS_MENU_AUTH" where "AUTH_GRP_ID"=#{AUTH_GRP_ID}
+	</select>
+</mapper>

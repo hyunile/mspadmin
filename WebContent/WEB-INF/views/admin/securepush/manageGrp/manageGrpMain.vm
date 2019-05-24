@@ -1,0 +1,405 @@
+<style>
+.backgroundPopupDiv{
+    display:none;
+    position:fixed;
+    _position:absolute; /* hack for internet explorer 6*/
+    height:100%;
+    width:100%;
+    top:0px;
+    left:0px;
+    z-index:102;
+    text-align: center;
+}
+</style>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페이징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+});
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+	
+});
+
+//검색
+function ch_search(){
+	var sfrm=document.frmSearch;
+	var sval=$("#conSelect").val();
+	if(!fn_validate(sval))return;
+	
+	fn_pageList(1);
+}
+
+// 검색 입력 폼 validate.
+function fn_validate(sval){
+	var sfrm=document.frmSearch;
+	
+	if(sval==0){
+		if(sfrm.GRP_NM.value.length>0 && sfrm.GRP_NM.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //검색어를 2글자 이상 입력해 주세요.
+			sfrm.TITLE.value="";
+			sfrm.TITLE.focus();
+			return false;
+		}
+	}else if(sval==1){
+		if(sfrm.REG_NM.value.length>0 && sfrm.REG_NM.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //검색어를 2글자 이상 입력해 주세요.
+			sfrm.CONT.value="";
+			sfrm.CONT.focus();
+			return false;
+		}
+	}
+	return true;
+}
+
+//페이지 처리
+function fn_pageList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#listTableDiv");
+	fn_getList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//공통코드 리스트 페이지 호출(공통)
+function fn_getList( url, type, data, target ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false ,
+		cache:false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+// 상세 팝업 호출 후 구성원 편집 팝업에서 이전 팝업으로 돌아올 때 사용.
+var SELECTED_GRPID='';
+// 상세 팝업 호출.
+function fn_goDetailPop(grpId){
+	SELECTED_GRPID = grpId;
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/detailView";
+	var type = "POST";
+	var data = "GRP_ID=" + grpId;
+	var target = $("#windowPop");
+	var whideh = 480;
+	var title = '#springMessage("menu.securePush.manageGrp.grpDetail")';   //그룹 상세
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+// 그룹 삭제
+function fn_grpDelete(grpId){
+	
+	if(!confirm('#springMessage("common.alert.doDelete")')){  //삭제하시겠습니까?
+		return;
+	}
+		
+	var PAGE_NUM = $("#PAGE_NUM").val();
+
+	if($(".MSGSEQ").size() == 1){
+		PAGE_NUM = PAGE_NUM - 1;
+	}
+
+	if(PAGE_NUM < 1){
+		PAGE_NUM = 1;
+	}
+
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/deleteGrp";
+	var data = "GRP_ID=" + grpId;
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.manageSend.successDelete")'); // 삭제되었습니다.
+				fn_pageList( PAGE_NUM );
+				fn_closePopup();
+			}else{
+				alert(data.msg);
+			}
+		},
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert(errorThrown);
+        }
+	});
+}
+
+
+//조직도 검색 팝업 호출.
+function fn_goSelectOrgPop(grpId){
+
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/selectOrg";
+	var type = "POST";
+	var data = "";
+	if(grpId != null && typeof(grpId) != 'undefined')
+		data = 'GRP_ID=' + grpId;
+	var target = $("#windowPop");
+	var whideh = 800;
+	var title = '#springMessage("menu.securePush.manageGrp.assignMember")';  // 구성원 지정
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+//등록 화면 (그룹명, 그룹컬러 지정)
+$(document).on("click","#pageWrite",function(){
+	$("#NEW_GRP_NM").val('');
+	$("#NEW_GRP_COLOR").val('');
+	
+	fn_goAddGrpPop();
+});
+
+//그룹 생성 팝업 호출.
+function fn_goAddGrpPop(){
+	
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/addGrpPop";
+	var type = "POST";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 440;
+	var title = '#springMessage("menu.securePush.manageGrp.addGrp")';  // 그룹 추가
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+//그룹 생성
+function fn_grpAdd(grpNm, grpColor, deptCdArr, userIdArr){
+		
+	var PAGE_NUM = $("#PAGE_NUM").val();
+
+	if($(".GRP_ID").size() == 1){
+		PAGE_NUM = PAGE_NUM - 1;
+	}
+
+	if(PAGE_NUM < 1){
+		PAGE_NUM = 1;
+	}
+
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/addGrp";
+	var data = 'GRP_NM=' + encodeURIComponent(grpNm);
+	data += '&GRP_COLOR=' + grpColor;
+	if(deptCdArr.length != 0)
+		data += '&DEPT_CDS=' + deptCdArr.join(',');
+	if(userIdArr.length != 0)
+		data += '&USER_IDS=' + userIdArr.join(',');
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.freeBoard.alert.regComplete")'); //등록되었습니다.
+				fn_pageList( PAGE_NUM );
+				fn_closePopup();
+			}else{
+				alert(data.msg);
+			}
+		},
+     error: function(jqXHR, textStatus, errorThrown) {
+         alert(errorThrown);
+     }
+	});
+}
+
+
+//그룹 수정 처리.
+function fn_grpUpdate(grpId, deptCdArr, userIdArr){
+	
+	if(!confirm('#springMessage("common.alert.doModify")')){  //수정하시겠습니까?
+		return;
+	}
+	
+	var PAGE_NUM = $("#PAGE_NUM").val();
+
+	if($(".GRP_ID").size() == 1){
+		PAGE_NUM = PAGE_NUM - 1;
+	}
+
+	if(PAGE_NUM < 1){
+		PAGE_NUM = 1;
+	}
+
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/updateGrp";
+	var data = 'GRP_ID=' + grpId;
+	if(deptCdArr.length != 0)
+		data += '&DEPT_CDS=' + deptCdArr.join(',');
+	if(userIdArr.length != 0)
+		data += '&USER_IDS=' + userIdArr.join(',');
+	document.getElementById("loading-indicator").style.display="block";
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			document.getElementById("loading-indicator").style.display="none";
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.freeBoard.alert.editComplete")'); //수정되었습니다.
+				fn_pageList( PAGE_NUM );
+				fn_closePopup();
+			}else{
+				alert(data.msg);
+			}
+		},
+     error: function(jqXHR, textStatus, errorThrown) {
+    	 document.getElementById("loading-indicator").style.display="none";
+         alert(errorThrown);
+     }
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_pageList(1);
+}
+</script>
+<div id="loading-indicator" class="backgroundPopupDiv">
+    <img alt="loading" src= "$RESOURCES_PATH/images/loading.gif" style="margin-top: 15%"/>
+</div>
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span></span>
+		<span></span>
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+				
+		<table class="tbl-search">
+			<caption>#springMessage("menu.securePush.manageGrp")</caption> <!-- 그룹관리 -->
+			<colgroup>
+				<col>
+				<col>
+			</colgroup>
+			<thead>
+				<tr>
+					<td>
+						<div class="tbl-select">
+							<label for="conSelect">#springMessage("menu.securePush.manageGrp.grpName")</label><!-- 그룹명 -->
+							<select id="conSelect" >
+								<option value="0">#springMessage("menu.securePush.manageGrp.grpName")</option><!-- 그룹명 -->
+								<option value="1">#springMessage("common.header.author")</option><!-- 작성자 -->
+        					</select>
+        				</div>
+        				<input class="se_con" type="text" id="GRP_NM" name="GRP_NM" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+						<input class="se_con" type="text" id="REG_NM" name="REG_NM" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+					</td>
+					<td>
+						<a href="javascript:ch_search();" class="tbl-btn2">#springMessage("common.button.view")</a> <!-- 조회 -->
+						<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+					</td>
+				</tr>
+			</thead>
+		</table>
+		
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="pageWrite">#springMessage("menu.securePush.manageGrp.addGrp")</a> <!-- 그룹 추가 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+			
+		<div id="listTableDiv">
+		
+			<table class="tbl-nb" summary="그룹명,그룹컬러,작성자,작성일,상세">
+				<colgroup>
+					<col width="auto" /><col width="14%" /><col width="14%" /><col width="20%" /><col width="11%" />
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("menu.securePush.manageGrp.grpName")</th> <!-- 그룹명 -->
+						<th scope="col">#springMessage("menu.securePush.manageGrp.grpColor")</th> <!-- 그룹컬러 -->
+						<th scope="col">#springMessage("common.header.author")</th> <!-- 작성자 -->
+						<th scope="col">#springMessage("common.header.registDate")</th> <!-- 작성일 -->
+						<th scope="col"></th>
+					</tr>
+				</thead>
+				<tbody>
+					#foreach( $itemInfo in $itemList )
+						#set($j_tot = $!itemInfo.TOT_CNT)
+						<tr class="itemRow">
+							<td >
+								$esc.xml($!itemInfo.GRP_NM)
+								<input type="hidden" class="GRP_ID" value="$!itemInfo.GRP_ID" />
+							</td>
+							<td >
+								<span class="$!itemInfo.GRP_COLOR"></span>
+							</td>
+							<td>
+								$!itemInfo.REG_NM
+							</td>
+							<td>
+								$!itemInfo.REG_DT
+							</td>
+							<td>
+								<a href="javascript:fn_goDetailPop('$!itemInfo.GRP_ID');void(0);" class="btn2">#springMessage("common.button.detail")</a> <!-- 상세 -->
+							</td>
+						</tr>
+					#end
+					#if(!$j_tot)
+						<tr>
+							<td colspan="5" class="ta_c">#springMessage("common.alert.nodata")</td>		### 데이터가 없습니다 ###
+						</tr>
+					#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+		
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot" />
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_pageList" />
+			</div>
+				
+		</div>
+		#### E : 리스트  폼 부분  ####
+
+	</form>
+	<input type="hidden" id="NEW_GRP_NM" value="" />
+	<input type="hidden" id="NEW_GRP_COLOR" value="" />
+</div>

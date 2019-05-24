@@ -1,0 +1,45 @@
+<h2 class="tbl-title">#springMessage("common.header.group")</h2>		### 그룹 ###
+
+<table class="tbl-nb full-width">
+	<colgroup><!--  2cell  -->
+		<col width="20%" /><col width="80%" />
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("common.header.apply")</th>			### 적용 ###
+			<th scope="col">#springMessage("common.header.authGroup")</th>			### 권한그룹명 ###
+		</tr>
+	</thead>
+	<tbody>
+	#set($row = 1)
+	#if($R_SVC_ID != "")
+		#foreach( $authGroup in $systemAuthGroupList )
+		#set($row = 2)
+		<tr>
+			<td>
+				#if($authGroup.AUTH_CHK == 'T')
+				<input type='checkbox' class="AUTH_CHK" id="AUTH_CHK_$authGroup.ID_GROUP" checked="checked" />
+				#else
+				<input type="checkbox" class="AUTH_CHK" id="AUTH_CHK_$authGroup.ID_GROUP"  />
+				#end
+				<label for="AUTH_CHK_$authGroup.ID_GROUP"></label>
+				<input type="hidden" id="ID_GROUP" value="$authGroup.ID_GROUP" />
+			</td>
+			<td>
+				$esc.xml($!authGroup.NM_GROUP)
+			</td>
+		</tr>
+		#end
+	#end
+
+	#if($R_SVC_ID == "")
+		<tr>
+			<td colspan="2" class="ta_c">#springMessage("common.alert.selectService")</td>		### 서비스를 선택해 주세요. ###
+		</tr>
+	#elseif($row == 1)
+		<tr>
+			<td colspan="2" class="ta_c">#springMessage("menu.system.alert.noUserAuth")</td>		### 권한그룹이 없습니다. ###
+		</tr>
+	#end
+	</tbody>
+</table>

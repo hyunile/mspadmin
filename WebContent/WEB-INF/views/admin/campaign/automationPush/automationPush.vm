@@ -1,0 +1,410 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery-te-1.4.0.css" >
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery-te-1.4.0.js"></script>
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+
+<script type="text/javascript">
+
+	$(document).ready(function() {
+		##WISIWIG 생성
+		jQuery("textarea[name=WEBEDIT]").jqte();
+	    
+	    fn_initPage();
+	});
+	
+	function fn_initPage(){
+		//발송시점 초기화
+		$("#idRdoSendType0").prop("checked", true);
+		
+		//메세지 입력 방식 초기화
+		$("#idRdoMsgType0").prop("checked", true);
+		fn_changeMsgInputType(0);
+		
+		fn_changeSelAutomationEvent("");
+	}
+	
+	function fn_changeMsgInputType(inputType){
+		if(inputType == 0){
+			$(".trMsgInputTypeText").css("display","");
+			$(".trMsgInputTypeRich").css("display","none");
+		}else if(inputType == 1){
+			$(".trMsgInputTypeText").css("display","none");
+			$(".trMsgInputTypeRich").css("display","");
+		}
+	}
+	
+	function fn_changeSelAutomationEvent(val){
+		if(val == 1){
+			$("#trFileUpload").css("display","");
+		}else{
+			$("#trFileUpload").css("display","none");
+		}
+	}
+	
+	//템플릿 선택 팝업.
+	function fn_templateSelection(){
+        var url = CONTEXT_PATH + "/admin/commonPush/popup/template";
+    	var type = "GET";
+    	var target = $("#windowPop");
+    	var whideh = 850;
+    	var data = "PAGE_NUM=" + 1;
+    	var title = '#springMessage("campaign.templateLoad")'; //"템플릿 불러오기";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+	
+	//선택된 템플릿 적용
+	function fn_setTemplateSelected(_templatecode){
+		fn_closePopup();
+		// html 메세지 컨텐츠를 파라메터로 넘기지 못하므로 템플릿 아이디로 다시 한번 조회한다.
+		var data = "TEMPLATECODE=" + _templatecode;
+		var url = CONTEXT_PATH + "/admin/commonPush/popup/template/detail";
+		var type = "POST";
+		jQuery.ajax({
+			url:url,
+			type:"POST",
+			data:data,
+			dataType:"json",
+			cache: false,
+			success:function(json){
+				if(json.result > 0){
+					alert('#springMessage("menu.push.sendManage.alert.processError")'+' '+'#springMessage("menu.push.sendManage.alert.askAdmin")'); //처리 중 오류가 발생하였습니다. 관리자에게 문의하세요.
+				}else{
+					var tempData = json.data;
+					fn_displayTempData(tempData);
+					//alert('name: ['+tempData.TEMPLATECODE+'], type: ['+tempData.TEMPLATE_TYPE+'], title: ['+tempData.MESSAGE+'], content: ['+tempData.EXT+']');
+				}
+			}
+		});
+	}
+	
+	function fn_displayTempData(tempData){
+		$("#txtTemplete").val(tempData.TEMPLATECODE);
+		$("#txtMessage").val(tempData.MESSAGE);
+		$("#txtUrl").val(tempData.URL);
+		
+		fn_changeMsgInputType(tempData.TEMPLATE_TYPE);
+		
+		if(tempData.TEMPLATE_TYPE == 0){
+			$("#idRdoMsgType0").prop("checked", true);
+			$("#txtExt").val(tempData.EXT);
+			
+		}else if(tempData.TEMPLATE_TYPE == 1){
+			$("#idRdoMsgType1").prop("checked", true);
+			$("#txtRichExt").jqteVal(tempData.EXT);
+		}
+	}
+	
+	function fn_setTempData(){
+		var message = $("#txtMessage").val();
+		
+		var ext;
+		var MsgType = fn_getMsgType();
+		if(MsgType == 0){
+			//text
+			ext = $("#txtExt").val();
+		}else if(MsgType == 1){
+			//rich
+			ext = $("#txtRichExt").val();
+		}
+		
+		var templateCode = $("#txtTemplete").val();
+		var data = "TEMPLATECODE=" + templateCode + "&" + 
+				   "TEMPLATE_TYPE=" + MsgType + "&" +
+				   "MESSAGE=" + message + "&" +
+				   "EXT=" + ext + "&" +
+//				   "URL=" + _templatecode + "&" +
+				   "REGID=" + $("#userId").val() + "&" +
+				   "REGDATE=" + new Date();
+				   
+		var url = CONTEXT_PATH + "/admin/push/template/regist";
+		var type = "POST";
+		jQuery.ajax({
+			url:url,
+			type:"POST",
+			data:data,
+			dataType:"json",
+			cache: false,
+			success:function(json){
+				if(json.result > 0){
+					alert('#springMessage("menu.push.sendManage.alert.processError")'); // '처리 중 오류가 발생하였습니다.'
+				}else{
+					alert('#springMessage("menu.push.sendManage.alert.doSave")'); //'저장했습니다.'
+				}
+			}
+		});
+	}
+	
+	
+	function fn_setAutomationPushMsg(){
+		var adminTitle = $("#txtAdminTitle").val();
+		var message = $("#txtMessage").val();
+		var appId = $("#selAppId").val();
+		var ext;
+		var webedit;
+		var MsgType = fn_getMsgType();
+		if(MsgType == 0){
+			//text
+			ext = $("#txtExt").val();
+			webedit = "";
+		}else if(MsgType == 1){
+			//rich
+			ext = "";
+			webedit = $("#txtRichExt").val();
+		}
+		var imageUrl = $("#txtUrl").val();
+		
+		
+		var formData = new FormData();
+		formData.append("ADMINTITLE" , adminTitle );
+		formData.append("MESSAGE" , message );
+		formData.append("EXT" , ext);
+		formData.append("WEBEDIT" , webedit);
+		formData.append("APPID" , appId);
+		formData.append("MSGTYPE" , MsgType);
+		formData.append("imageUrl" , imageUrl);
+		if($("input[name=CSV_FILE]")[0].files[0]){
+			formData.append("CSV_FILE" , $("input[name=CSV_FILE]")[0].files[0]);
+		}
+		if($("input[name=IMAGE_FILE]")[0].files[0]){
+			formData.append("IMAGE_FILE" , $("input[name=IMAGE_FILE]")[0].files[0]);
+		}
+		var url = CONTEXT_PATH + "/admin/campaign/automationPush/setAutomationPushMsg";
+
+		jQuery.ajax({
+        url:url,
+        type:"POST",
+        cache: false,
+        contentType: false,
+        processData: false,
+        data:formData,
+        dataType:"json",
+        success:function(returnData){
+            if(returnData.resultCode=="0000"){ //성공
+            	 alert(returnData.resultMsg);
+            }else{ //실패
+                alert(returnData.resultMsg);
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert(errorThrown);
+        }
+        });
+	}
+	
+    function fn_getMsgType(){
+    	var result = 0;
+    	if($("#idRdoMsgType0").is(":checked")){
+    		result = 0;
+    	}else if($("#idRdoMsgType1").is(":checked")){
+    		result = 1;
+    	}
+    	return result;
+    }
+	
+	function fn_goPreview(){
+		var formData = new FormData(document.getElementById('frmList'));
+		formData.append("MESSAGE", $("#txtMessage").val());
+	 	formData.append("EXT", $("#txtExt").val());
+	 	formData.append("WEBEDIT", $("#txtRichExt").val());
+	 	formData.append("imageUrl", $("#txtUrl").val());
+	 	previewPop(formData,"/admin/commonPush/popup/preview");
+	}
+	
+	function previewPop(data,POP_URL){
+		var url = CONTEXT_PATH + POP_URL;
+	    var type = "POST";
+	    var target = $("#windowPop");
+	    var whideh = 500;
+	    var title = '#springMessage("menu.push.sendManage.preview")';//"미리보기";
+	    //fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	    target.dialog({
+			autoOpen: false,
+			modal   : true,
+			width   : whideh,
+			height  : "auto",
+			title   : title,
+			open    : function(){ fn_commondialogDesign(target.attr("id")); }//타이틀 및 닫기버튼디자인적용(ID전달 필요)
+		});
+		var AjaxHTML = $.ajax({
+								url: url ,
+								type: type ,
+								data: data ,
+								dataType: "html" ,
+								async: false ,
+								cache:false, 
+								contentType: false,
+								processData: false
+							}).responseText;
+		if(target)
+		{
+			target.html(AjaxHTML);
+		}
+		
+		target.dialog('open');
+	}   	
+</script>
+<div id="conWrap">
+	<form name="frmList" id="frmList" enctype="multipart/form-data">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="header_bg"> 
+		<div class="inner_navi"></div>
+		<div class="tb_tit"></div>
+	</div>
+	#### E : 프로그램 위치 기술 부분  ####
+		
+	
+	<div class="content">
+		<table class="tb_view">
+			<colgroup>
+		    	<col style="width:140px;"/><col style="width:auto;"/>
+		 	</colgroup>
+		  	<thead>
+		  		<tr>
+		            <th>APP #springMessage("common.select.choose")</th> <!-- 선택 -->
+		            <td>
+			            <select name="APPID" id="selAppId">
+							<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							#foreach( $pushService in $pushServiceList )
+							<option value="$!pushService.APPID">$!pushService.APPNAME</option>
+							#end
+						</select>
+		    		</td>
+		  		</tr>
+		  	</thead>
+		  	<tbody>
+			</tbody>
+		</table>
+		<br/>
+		<table class="tb_view">
+			<colgroup>
+				<col style="width:140px;"/><col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/>
+			</colgroup>
+			<thead>
+				<tr>
+					<th colspan="4">01. #springMessage("campaign.eventInfo")</th> <!-- 이벤트 정보 -->
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+	            	<th>#springMessage("campaign.eventSelect")</th> <!-- 이벤트 선택 -->
+		            <td colspan="2">
+			            <select id="selAutomationEvent" onChange="fn_changeSelAutomationEvent(this.value)">
+							<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							<option value="0">#springMessage("campaign.newUserInstall")</option> <!-- 신규설치자 -->
+							<option value="1">#springMessage("menu.push.sendManage.fileUpload")</option> <!-- 파일업로드 -->
+						</select>
+		            </td>
+		            <td>
+						<button type="button" class="btn_basic">#springMessage("campaign.autoPush")</button> <!-- 자동화 푸시 현황 -->
+					</td>
+				</tr>
+				<tr id="trFileUpload">
+		            <th>#springMessage("menu.push.sendManage.fileUpload")</th> <!-- 파일 업로드 -->
+		            <td colspan="3">
+		            	<input type="file" id="CSV_FILE" name="CSV_FILE"/>
+		            </td>
+	        	</tr>
+<!--	        	
+	        	<tr>
+		            <th>발송시점</th>
+		            <td>
+		            	<input type="radio" id="idRdoSendType0" name="rdoSendType" value="0"> 이벤트 발생 즉시
+					</td>
+					<td>		            	
+		            	<input type="radio" id="idRdoSendType1" name="rdoSendType" value="1"> 이벤트 발생 후
+					</td>
+					<td>		            	
+		            	<input type="radio" id="idRdoSendType2" name="rdoSendType" value="2"> 반복 발송
+		            </td>
+	        	</tr>
+-->	        	
+			</tbody>
+		</table>
+		<br/>
+		<table class="tb_view">
+			<colgroup>
+				<col style="width:140px;"/><col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/>
+			</colgroup>
+			<thead>
+				<tr>
+		        	<th colspan="4">02. #springMessage("campaign.chooseInputWay")</th> <!-- 입력방법 선택 -->
+				</tr>
+			</thead>
+	    	<tbody>
+			<tr>
+	            <th>#springMessage("common.text.msgName")</th> <!-- 메세지명 -->
+	            <td colspan="3">
+	            	<input id="txtAdminTitle" class="width100" type="text"/>
+	            </td>
+			</tr>
+	        <tr> 
+	            <th>#springMessage("campaign.inputWay")</th> <!-- 입력방법 -->
+	            <td>
+		          <input type="radio" id="idRdoMsgType0" name="rdoMsgType" value="0" onClick="fn_changeMsgInputType(this.value)">TEXT
+		        </td>
+		        <td colspan="2">        
+		          <input type="radio" id="idRdoMsgType1" name="rdoMsgType" value="1" onClick="fn_changeMsgInputType(this.value)">RICH
+		        </td>
+	        </tr>
+			</tbody>
+		</table>
+	    <br/>
+	    <table class="tb_view">
+			<colgroup>
+				<col style="width:140px;"/><col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/>
+			</colgroup>
+	  		<thead>
+	    		<tr>
+	    			<th colspan="3">03. #springMessage("menu.push.sendManage.messageIn")</th> <!-- 메세지 입력 -->
+	    			<th>
+	    				<button type="button" class="btn_basic" onClick="fn_setTempData()">#springMessage("menu.push.sendManage.saveTemplate")</button> <!-- 템플릿으로저장 -->
+	    				<button type="button" class="btn_basic" onClick="fn_goPreview()">#springMessage("menu.push.sendManage.preview")</button> <!-- 미리보기 -->
+	    			</th>
+	      		</tr>
+	    	</thead>
+	    	<tbody>
+	      		<tr>
+	        		<th>#springMessage("menu.push.sendManage.template")</th> <!-- 템플릿 -->
+	        		<td colspan="2">
+	              		<input id="txtTemplete" type="text" class="width100"/>
+	            	</td>
+	            	<td>
+	              		<button type="button" class="btn_basic" onClick="javascript:fn_templateSelection();">#springMessage("menu.push.sendManage.load")</button> <!-- 불러오기 -->
+	            	</td>
+	      		</tr>
+	      		<tr>
+	        		<th>#springMessage("menu.stats.push.message")</th> <!-- 메세지 -->
+	        		<td colspan="3">
+	          			<input id="txtMessage" class="width100" type="text"/>
+	        		</td>
+	      		</tr>
+	      
+	      		<tr class="trMsgInputTypeText">
+	        		<th>#springMessage("menu.push.sendManage.appMessage")</th> <!-- 앱 내 메세지 -->
+	        		<td colspan="3">
+	         			<textarea id="txtExt" cols="105" rows="10"></textarea>
+	        		</td>
+	      		</tr>
+	      		<tr class="trMsgInputTypeRich">
+	        		<th>#springMessage("menu.push.sendManage.appMessage")</th> <!-- 앱 내 메세지 -->
+	        		<td colspan="3">
+	      				<textarea id="txtRichExt" name="WEBEDIT" cols="105" rows="10"></textarea>
+	    			</td>
+	      		</tr>
+	     		<tr>
+	        		<th th rowspan="2">#springMessage("common.text.image")</th> <!-- 이미지 -->
+	        		<td colspan="3">
+	          			<input type="file" name="IMAGE_FILE"  id="IMAGE_FILE" />
+	        		</td>
+	      		</tr>
+	      		<tr>
+	      			<td colspan="2">
+	      				<input id="txtUrl" type="text" class="width100"/>
+	      			<td>
+				<tr>
+			</tbody>
+		</table>   
+	</div>
+	<br/>
+	<button type="button" class="btn_basic" onClick="fn_setAutomationPushMsg()">#springMessage("common.button.execute")</button> <!-- 실행 -->
+	</form>
+</div>

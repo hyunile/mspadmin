@@ -1,0 +1,54 @@
+<br />
+<h4 class="st1">#springMessage("common.text.group")#springMessage("common.text.list")</h4> <!-- 그룹목록 -->
+<table class="tbList1" id="groupList">
+	<colgroup>
+		<col style="width:50px;"/>
+		<col />
+    </colgroup>
+	<thead>
+		<tr>
+            <th><input type="checkbox" class="ck_head_grp"/></th>
+			<th>#springMessage("menu.push.user.groupName")</th> <!-- 그룹명 -->
+		</tr>
+    </thead>
+	<tbody>
+	#foreach( $data in $grpList )
+		#set($j_grp_tot = $!data.TOT_CNT)
+	<tr>
+        <td><input type="checkbox" class="ck_row_grp" GRP_ID="$!{data.GRP_ID}" GRP_NM="$!{data.GRP_NM}"/></td>
+		<td style="text-align:left;">$!{data.GRP_NM}</td>
+	</tr>
+	#end
+    </tbody>
+</table>
+
+<form name="frmGroup">
+    <input type="hidden" name="APP_IDX" value="$!{APP_IDX}"/>
+    <input type="hidden" name="PAGE_NUM" value="$!{grpPager.R_PAGE_NUM}"/>
+    <input type="hidden" name="PAGE_SIZE" value="$!{grpPager.R_ROW_SIZE}"/>
+    <input type="hidden" name="GRP_ID" value="$!{GRP_ID}"/>
+    <input type="hidden" name="GRP_NM" value="$!{GRP_NM}"/>
+    <input type="hidden" name="DELEV_DATA"/>
+</form>
+
+
+<!-- 
+<div class="j_grp_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!{grpPager.R_PAGE_NUM}"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_grp_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!{grpPager.R_ROW_SIZE}"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!{grpPager.R_PAGE_SIZE}"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_selectGroupList"/>
+</div>
+ -->
+
+<script type="text/javascript">
+		// 체크박스 초기화
+		fn_mp_bindEvent_listCheckbox("ck_head_grp", "ck_row_grp", function(onEa, offEa){});
+		//fn_page('j_grp_page_div', '$!{CONTEXT_PATH}');
+</script>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.common.menu.mapper.AdminMenuDao">
+
+	<select id="selectAllMenuList" parameterType="kr.msp.admin.common.menu.dto.AdminMenuParamDTO" resultType="kr.msp.admin.common.menu.dto.AdminMenuDTO">
+		SELECT MENU_ID, UP_MENU_ID, MENU_NM, MENU_URL, STS_CD , '' AS INTRO_MENU_ID , '' AS AUTH_GRP_ID , '' AS SELECT_YN , '' AS INSERT_YN , '' AS UPDATE_YN , '' AS DELETE_YN , '' AS EXCEL_YN , SORT_NO , REG_ID, REG_DTTM, MOD_ID, MOD_DTTM 
+		FROM TB_SYS_MENU 
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="STS_CD != null and STS_CD != ''">
+				AND STS_CD = 'Y'
+			</if>
+		</trim>
+		ORDER BY SORT_NO
+	</select>
+		
+	<select id="selectMenuListWithAuth" parameterType="kr.msp.admin.common.menu.dto.AdminMenuParamDTO" resultType="kr.msp.admin.common.menu.dto.AdminMenuDTO">
+		SELECT MN.MENU_ID, MN.UP_MENU_ID, MN.MENU_NM, MN.MENU_URL, MN.STS_CD , SA.INTRO_MENU_ID AS INTRO_MENU_ID , SA.AUTH_GRP_ID AS AUTH_GRP_ID , SA.SELECT_YN AS SELECT_YN , SA.INSERT_YN AS INSERT_YN , SA.UPDATE_YN AS UPDATE_YN , SA.DELETE_YN AS DELETE_YN , SA.EXCEL_YN AS EXCEL_YN , MN.SORT_NO , MN.REG_ID, MN.REG_DTTM, MN.MOD_ID, MN.MOD_DTTM 
+		FROM TB_SYS_MENU MN
+		INNER JOIN(
+		    SELECT SA.MENU_ID , SAG.INTRO_MENU_ID , SA.AUTH_GRP_ID , SA.SELECT_YN , SA.INSERT_YN , SA.UPDATE_YN , SA.DELETE_YN , SA.EXCEL_YN
+		    FROM TB_SYS_MENU_AUTH  SA
+			INNER JOIN TB_SYS_USER_AUTH_GRP  SUAG    
+			ON SA.AUTH_GRP_ID = SUAG.AUTH_GRP_ID
+		    INNER JOIN TB_SYS_AUTH_GRP  SAG     
+		    ON SUAG.AUTH_GRP_ID = SAG.AUTH_GRP_ID
+		WHERE (SA.SELECT_YN != 'N' OR SA.INSERT_YN != 'N' OR SA.UPDATE_YN != 'N' OR SA.DELETE_YN != 'N' OR SA.EXCEL_YN != 'N')
+				    	<if test="AUTH_GRP_ID != null and AUTH_GRP_ID != ''">
+							AND SAG.AUTH_GRP_ID = #{AUTH_GRP_ID}
+						</if>
+				    	<if test="USER_ID != null and USER_ID != ''">
+							AND SUAG.USER_ID = #{USER_ID}
+						</if>
+					) SA
+		ON MN.MENU_ID = SA.MENU_ID
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="STS_CD != null and STS_CD != ''">
+				MN.STS_CD = 'Y'
+			</if>
+		</trim>
+		ORDER BY MN.SORT_NO
+	</select>
+		
+	<select id="selectMenuListWithoutAuth" parameterType="kr.msp.admin.common.menu.dto.AdminMenuParamDTO" resultType="kr.msp.admin.common.menu.dto.AdminMenuDTO">
+		SELECT MN.MENU_ID, MN.UP_MENU_ID, MN.MENU_NM, MN.MENU_URL, MN.STS_CD , SA.INTRO_MENU_ID AS INTRO_MENU_ID , SA.AUTH_GRP_ID AS AUTH_GRP_ID , SA.SELECT_YN AS SELECT_YN , SA.INSERT_YN AS INSERT_YN , SA.UPDATE_YN AS UPDATE_YN , SA.DELETE_YN AS DELETE_YN , SA.EXCEL_YN AS EXCEL_YN , MN.SORT_NO , MN.REG_ID, MN.REG_DTTM, MN.MOD_ID, MN.MOD_DTTM 
+		FROM TB_SYS_MENU MN
+		LEFT JOIN(
+		          SELECT SA.MENU_ID , SAG.INTRO_MENU_ID , SA.AUTH_GRP_ID AS AUTH_GRP_ID , SA.SELECT_YN AS SELECT_YN , SA.INSERT_YN AS INSERT_YN , SA.UPDATE_YN AS UPDATE_YN , SA.DELETE_YN AS DELETE_YN , SA.EXCEL_YN AS EXCEL_YN 
+				  FROM TB_SYS_MENU_AUTH SA
+				  INNER JOIN TB_SYS_AUTH_GRP SAG     
+				  ON SA.AUTH_GRP_ID = SAG.AUTH_GRP_ID
+				  WHERE (SA.SELECT_YN != 'N' OR SA.INSERT_YN != 'N' OR SA.UPDATE_YN != 'N' OR SA.DELETE_YN != 'N' OR SA.EXCEL_YN != 'N')
+		          <if test="AUTH_GRP_ID != null and AUTH_GRP_ID != ''">
+				  		AND SAG.AUTH_GRP_ID = #{AUTH_GRP_ID}
+				  </if>
+		    	  <if test="USER_ID != null and USER_ID != ''">
+				  		AND SAG.AUTH_GRP_ID = (SELECT AUTH_GRP_ID FROM TB_SYS_USER_AUTH_GRP WHERE USER_ID = #{USER_ID})
+				  </if>		          
+		        ) SA
+		ON MN.MENU_ID = SA.MENU_ID
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="STS_CD != null and STS_CD != ''">
+				MN.STS_CD = 'Y'
+			</if>
+		</trim>
+		ORDER BY MN.SORT_NO
+	</select>
+	
+	<select id="selectMenuIdPIdList" parameterType="kr.msp.admin.common.menu.dto.AdminMenuParamDTO" resultType="kr.msp.admin.common.menu.dto.AdminMenuDTO">
+		SELECT MENU_ID, UP_MENU_ID 
+		FROM TB_SYS_MENU 
+	</select>	
+</mapper>

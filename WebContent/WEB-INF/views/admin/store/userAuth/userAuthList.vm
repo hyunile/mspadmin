@@ -1,0 +1,70 @@
+<script type="text/javascript">
+$(document).ready(function () {
+	//그룹에 등록된 사용자 저장
+	$(".EMP_NO").each(function(){
+		or_user_array[or_user_array.length] = $(this).val(); 
+	});
+});
+</script>
+
+<h2 class="tbl-title">#springMessage("common.text.user")</h2>	<!-- 사용자 -->
+<div style="overflow: auto;width: 100%;height: 450px;border-top: 1px solid #818181;border-bottom: 1px solid #818181;">
+<table class="tbl-nb full-width" id="addUserTable">
+	<colgroup>
+		<col width="17%"/>
+		<col width="26%"/>
+		<col width="26%"/>
+		<col width="31%"/>
+	</colgroup>
+	<thead>
+		<tr >
+			<th>
+				<input type="checkbox" id="ch_UserAll"/><label for="ch_UserAll"></label>
+			</th>
+			<th>
+				#springMessage("menu.store.user.position") <!-- 직위 -->
+			</th>
+			<th>
+				#springMessage("common.text.name")<!-- 이름 -->
+			</th>
+			<th>
+				#springMessage("menu.store.user.number") <!-- 사번 -->
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+		#set($j_tot = 0)
+		#foreach( $userOne in $userList )
+			#set($j_tot = $j_tot + 1)
+			<tr>
+				<td >
+					<input type="checkbox" class="CH_BO_USER" id="$!userOne.EMP_NO" value="$!userOne.EMP_NO"><label for="$!userOne.EMP_NO"></label>
+					<input type="hidden" class="EMP_NO" name="EMP_NO" value="$!userOne.EMP_NO">
+				</td>
+				<td >
+					$!userOne.CD_NM
+				</td>
+				<td>
+					$!userOne.EMP_NM
+				</td>
+				<td>
+					$!userOne.EMP_NO
+				</td>
+			</tr>
+		#end
+		#if( !$userList )
+			<tr id="user_null">
+				<td colspan="4" >
+					#springMessage("menu.store.userGroup.alert.chooseGroup") <!-- "그룹을 선택해 주세요." -->
+				</td>			
+			</tr>
+		#elseif($j_tot == 0)
+			<tr id="user_null">
+				<td colspan="4" >
+					#springMessage("common.alert.noInUser") <!--등록된 사용자가 없습니다. -->
+				</td>			
+			</tr>
+		#end
+	</tbody>
+</table>
+</div>

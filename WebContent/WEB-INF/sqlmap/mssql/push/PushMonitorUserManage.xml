@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.monitorUser.mapper.MonitorUserManageDao">
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT CONVERT(integer, #{PAGE_SIZE}) PAGE_SIZE
+	, CONVERT(integer, #{PAGE_NUM}) PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+    
+    <!--  모니터링 수신자 리스트 조회  -->
+    <select id="SelectSupervisorList" parameterType="kr.msp.admin.push.monitorUser.dto.MonitorUserDto" resultType="kr.msp.admin.push.monitorUser.dto.MonitorUserDto">
+       <include refid="head"/>
+            SELECT 
+			    SUPERVISORSEQ
+			   ,NAME
+			   ,PHONENO
+			   , REPLACE(CONVERT(VARCHAR(13), REGDATE, 120), '-' , '.') AS REGDATE
+			   , ROW_NUMBER() OVER(ORDER BY REGDATE DESC) PAGE_KEY
+			FROM T_PUSH_SUPERVISOR
+			WHERE ISDELETED = 'N'
+			
+        <include refid="bottom"/>
+    </select>
+    
+    
+    
+    
+    <!--  모니터링 수신자 리스트 조회  -->
+    <select id="SelectSupervisorOne" parameterType="kr.msp.admin.push.monitorUser.dto.MonitorUserDto" resultType="kr.msp.admin.push.monitorUser.dto.MonitorUserDto">
+            SELECT 
+			    SUPERVISORSEQ
+			   ,NAME
+			   ,PHONENO
+			   ,REGDATE
+			FROM T_PUSH_SUPERVISOR
+			WHERE ISDELETED = 'N'
+			AND SUPERVISORSEQ = #{SUPERVISORSEQ}
+    </select>
+    
+    <!--  모니터링 수신자 등록  -->
+    <insert id="InsertSupervisor" parameterType="kr.msp.admin.push.monitorUser.dto.MonitorUserDto">
+         INSERT INTO T_PUSH_SUPERVISOR (
+         								SUPERVISORSEQ
+		                                ,NAME
+		                                ,PHONENO
+		                                ,ISDELETED
+		                                ,REGDATE
+		                                ,MODDATE
+		                               )
+		SELECT (SELECT ISNULL(MAX(SUPERVISORSEQ), 0) + 1 FROM T_PUSH_SUPERVISOR) SUPERVISORSEQ
+				  ,#{NAME} NAME
+				  ,#{PHONENO} PHONENO
+				  ,'N' ISDELETED
+				  ,GETDATE() REGDATE
+				  ,GETDATE() MODDATE
+    </insert>
+    
+    <!--  모니터링 수신자 수정  -->
+    <update id="UpdateSupervisor" parameterType="kr.msp.admin.push.monitorUser.dto.MonitorUserDto">
+        UPDATE T_PUSH_SUPERVISOR 
+		   SET NAME = #{NAME}
+		      ,PHONENO = #{PHONENO}
+		WHERE SUPERVISORSEQ = #{SUPERVISORSEQ}
+    </update>
+	
+	
+	<!--  모니터링 수신자 삭제  -->
+    <update id="UpdateSupervisorDelete" parameterType="kr.msp.admin.push.monitorUser.dto.MonitorUserDto">
+        UPDATE T_PUSH_SUPERVISOR 
+		   SET ISDELETED = 'Y'
+		WHERE SUPERVISORSEQ = #{SUPERVISORSEQ}
+    </update>
+	
+</mapper>

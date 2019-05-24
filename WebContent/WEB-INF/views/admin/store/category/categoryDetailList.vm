@@ -1,0 +1,45 @@
+<h2 class="tbl-title">하위카테고리</h2>
+<table class="tbl" id="add_rightListTable">
+    <colgroup>
+        <col width="35%"/>
+        <col width="12%"/>
+        <col width="12%"/>
+        <col width="15%"/>
+        <col width="auto"/>
+    </colgroup>
+    <thead>
+    <tr>
+        <th  id="orderCatgNm" >#springMessage("menu.store.appManage.categoryName")</th> <!-- 카테고리명 -->
+        <th  id="orderSortNo"  >#springMessage("menu.store.appManage.range") </th> <!-- 정렬순서 -->
+        <th  id="orderUseYn"  >#springMessage("common.header.useYN") </th> <!-- 사용여부 -->
+        <th  id="orderRegId"  >#springMessage("menu.mobile.deploy.writer") </th> <!-- 등록자 -->
+        <th  id="orderRegDt" >#springMessage("menu.mobile.deploy.date") </th> <!-- 등록일 -->
+    </tr> 
+    </thead>
+    <tbody>
+#foreach( $category in $categoryDetailList )
+    <tr class="appDiv" >
+        <input type="hidden" class="CATG_CD" value="$category.CATG_CD" />
+        <td class="tdClick" style="cursor:pointer;text-align:left;" >$!category.CATG_NM</td>
+        <td class="tdClick" style="cursor:pointer;">$!category.SORT_NO</td>
+        <td class="tdClick" style="cursor:pointer;">$!category.USE_YN</td>
+        <td class="tdClick" style="cursor:pointer;text-align:left;">$!category.REG_ID</td>
+        <td class="tdClick" style="cursor:pointer;">$!category.REG_DT</td>
+    </tr>
+#end
+    </tbody>
+</table>
+   
+<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+    ##현재 페이지
+    <input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot" />
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    ##이밴트R
+    <input type="hidden" name="j_event" value="fn_groupList" />
+</div>

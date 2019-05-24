@@ -1,0 +1,56 @@
+<table class="tb_list" summary="항목선택,CUID,이름,전화번호">
+	<colgroup><!--  4cell  -->
+		<col width="8%" >
+		<col width="auto"/>
+		<col width="40%" >
+		<col width="20%"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col"> </th>
+			<th scope="col">#springMessage("common.text.appname")</th> <!-- App. 명 -->
+			<th scope="col">App ID</th> 
+			<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $mobileService in $mobileServiceList )
+        	#set($j_tot = $!mobileService.TOT_CNT)
+	       	<tr>
+	       		<td>
+	       			<input type="radio" id="ch_radio" name="ch_radio" >
+	       		</td>
+	       		<td id="click_mobileServiceTr" style="text-align:left;">
+	       			$!mobileService.SVC_NM
+	       			<input type="hidden" class="SVC_ID" value="$!mobileService.SVC_ID">
+       			</td>
+				<td id="click_mobileServiceTr"  style="text-align:left;">
+					$!mobileService.APP_ID
+				</td>
+	       		<td id="click_mobileServiceTr">
+	       			$!mobileService.REG_DTTM
+	       		</td>
+        	</tr>
+       	#end
+       	#if(!$j_tot)
+			<tr>
+				<td colspan="3">
+					#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+<input type="hidden" id="MOBILE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+ 	##현재 페이지
+ 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot" />
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_mobileList" />
+</div>

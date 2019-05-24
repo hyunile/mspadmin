@@ -1,0 +1,59 @@
+<br />
+<h4 class="title">앱 권한 목록</h4>
+<table class="tbList1" id="authList">
+	<colgroup >
+		<col style="width:50px;" />
+		<col />
+		<col />
+		<col />
+    </colgroup>
+	<thead>
+		<tr>
+			<th><input type="checkbox" class="ck_head_auth"/></th>
+			<th>#springMessage("menu.stats.mobile.type")</th> <!-- 구분 -->
+			<th>#springMessage("menu.push.user.groupName")</th> <!-- 그룹명 -->
+			<th>#springMessage("common.text.userName")</th> <!-- 사용자명 -->
+		</tr>
+    </thead>
+	<tbody>
+    	#foreach( $data in $authList )
+    		#set($j_auth_tot = $!data.TOT_CNT)
+    	<tr>
+    		<td><input type="checkbox" class="ck_row_auth"  GRP_ID="$!{data.GRP_ID}" EMP_NO="$!{data.EMP_NO}" AUTH_ID="$!{data.AUTH_ID}"/></td>
+    		<td>$!{data.TYPE_NM}</td>
+    		<td  style="text-align:left;">$!{data.GRP_NM}</td>
+    		<td  style="text-align:left;">$!{data.EMP_NM}</td>
+    	</tr>
+		#end
+    </tbody>
+</table>
+
+
+
+<form name="frmAuth">
+    <input type="hidden" name="PAGE_NUM" value="$!{authPager.R_PAGE_NUM}"/>
+    <input type="hidden" name="PAGE_SIZE" value="$!{authPager.R_ROW_SIZE}"/>
+    <input type="hidden" name="DELEV_DATA"/>
+    <input type="hidden" name="APP_IDX" value="$!{APP_IDX}"/>
+</form>
+
+<!-- 
+<div class="j_auth_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!{authPager.R_PAGE_NUM}"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_auth_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!{authPager.R_ROW_SIZE}"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!{authPager.R_PAGE_SIZE}"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_selectAuthList"/>
+</div>
+ -->
+
+<script type="text/javascript">
+		// 체크박스 초기화
+		fn_mp_bindEvent_listCheckbox("ck_head_auth", "ck_row_auth", function(onEa, offEa){});
+		//fn_page('j_auth_page_div', '$!{CONTEXT_PATH}');
+</script>

@@ -1,0 +1,37 @@
+<h2 class="tbl-title">#springMessage("menu.system.noticeGroupList")</h2>
+<table class="tbl full-width">
+	<caption>#springMessage("menu.system.noticeGroupList")</caption>
+	<colgroup>
+		<col width="20%" />
+		<col width="80%" />
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("common.header.apply")</th>
+			<th scope="col">#springMessage("common.header.authGroup")</th>
+		</tr>
+	</thead>
+	<tbody>
+	#foreach( $authGroup in $systemAuthGroupList )
+		<tr>
+			<td>
+			#if($authGroup.AUTH_CHK == 'T')
+				<input type="checkbox" class="AUTH_CHK" id="AUTH_CHK_$authGroup.ID_GROUP" checked="checked" />
+			#else
+				<input type="checkbox" class="AUTH_CHK" id="AUTH_CHK_$authGroup.ID_GROUP" />
+			#end
+				<label for="AUTH_CHK_$authGroup.ID_GROUP"></label>
+				<input type="hidden" id="ID_GROUP" value="$authGroup.ID_GROUP" />
+			</td>
+			<td>
+				$esc.xml($!authGroup.NM_GROUP)
+			</td>
+		</tr>
+	#end
+	#if(!$systemAuthGroupList)
+		<tr>
+			<td colspan="2">#springMessage("menu.system.alert.selectNotice")</td>
+		</tr>
+	#end
+	</tbody>
+</table>

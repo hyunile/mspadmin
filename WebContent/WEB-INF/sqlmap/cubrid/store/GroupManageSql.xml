@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.group.mapper.GroupManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+    <sql id="head">
+        SELECT *
+        FROM ( SELECT 
+                    ROWNUM RNUM
+                   ,COUNT(*) OVER() TOT_CNT
+                   ,A.GRP_ID, A.GRP_NM, A.USE_YN, TO_CHAR(A.REG_DT,'YYYY.MM.DD')  REG_DT, A.REG_ID
+               FROM (SELECT * FROM (
+    </sql>
+    
+    <sql id="bottom">
+        )
+                    ) A
+             )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+    </sql>
+    <!-- 페이징 처리 쿼리 부분 끝 -->
+    
+	<!-- 그룹 리스트 조회 -->
+	<select id="selectGroupList" parameterType="kr.msp.admin.store.group.dto.GroupSearchDto"   resultType="kr.msp.admin.store.group.dto.GroupDto">
+        /*  GroupManageSql   selectGroupList*/
+	    <include refid="head"/>
+	    SELECT 
+              GRP_ID, GRP_NM, USE_YN, REG_DT, REG_ID
+        FROM TB_STO_GROUP
+        WHERE 1=1
+        <if test="SEARCH_GRP_NM != null">
+            AND GRP_NM LIKE '%' || #{SEARCH_GRP_NM} || '%'
+        </if>
+        <choose>
+		<when  test="ORDER_TARGET != null and ORDER_TARGET != ''">
+			<if test="ORDER_TYPE == 'DESC' ">
+			    <if test="ORDER_TARGET == 'GRP_ID' ">
+				   ORDER BY  GRP_ID DESC
+				</if>
+			    <if test="ORDER_TARGET == 'GRP_NM' ">
+				   ORDER BY  GRP_NM DESC
+				</if>
+			    <if test="ORDER_TARGET == 'USE_YN' ">
+				   ORDER BY  USE_YN DESC
+				</if>
+				<if test="ORDER_TARGET == 'REG_DT' ">
+				   ORDER BY  REG_DT DESC
+				</if>
+				<if test="ORDER_TARGET == 'REG_ID' ">
+				   ORDER BY  REG_ID DESC
+				</if>
+				<if test="ORDER_TARGET == 'PLAT_IDX' ">
+				   ORDER BY  PLAT_IDX DESC
+				</if>
+				<if test="ORDER_TARGET == 'BIN_VER' ">
+				    ORDER BY  BIN_VER DESC
+				</if>
+				<if test="ORDER_TARGET == 'RSC_ID' ">
+					ORDER BY  RSC_ID DESC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_NM' ">
+					ORDER BY  FILE_NM DESC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_VER' ">
+					ORDER BY  DPLY_VER DESC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_NM' ">
+				    ORDER BY  DPLY_NM DESC
+				</if>
+				<if test="ORDER_TARGET == 'REG_DTTM' ">
+				    ORDER BY  REG_DTTM DESC
+				</if>	
+				<if test="ORDER_TARGET == 'MOD_DTTM' ">
+				    ORDER BY  MOD_DTTM DESC
+				</if>	
+				<if test="ORDER_TARGET == 'DPLY_TP' ">
+				    ORDER BY  DPLY_TP DESC
+				</if>
+				<if test="ORDER_TARGET == 'USE_YN' ">
+				    ORDER BY  USE_YN DESC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_EXT' ">
+				    ORDER BY  FILE_EXT DESC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_SIZE' ">
+				    ORDER BY  FILE_SIZE DESC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_IDX' ">
+					ORDER BY DPLY_IDX DESC
+				</if>
+			</if>
+			<if test="ORDER_TYPE == 'ASC' ">
+			    <if test="ORDER_TARGET == 'GRP_ID' ">
+				   ORDER BY  GRP_ID ASC
+				</if>
+			    <if test="ORDER_TARGET == 'GRP_NM' ">
+				   ORDER BY  GRP_NM ASC
+				</if>
+			    <if test="ORDER_TARGET == 'USE_YN' ">
+				   ORDER BY  USE_YN ASC
+				</if>
+				<if test="ORDER_TARGET == 'REG_DT' ">
+				   ORDER BY  REG_DT ASC
+				</if>
+				<if test="ORDER_TARGET == 'REG_ID' ">
+				   ORDER BY  REG_ID ASC
+				</if>
+				<if test="ORDER_TARGET == 'PLAT_IDX' ">
+				   ORDER BY  PLAT_IDX ASC
+				</if>
+				<if test="ORDER_TARGET == 'BIN_VER' ">
+				    ORDER BY  BIN_VER ASC
+				</if>
+				<if test="ORDER_TARGET == 'RSC_ID' ">
+					ORDER BY  RSC_ID ASC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_NM' ">
+					ORDER BY  FILE_NM ASC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_VER' ">
+					ORDER BY  DPLY_VER ASC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_NM' ">
+				    ORDER BY  DPLY_NM ASC
+				</if>
+				<if test="ORDER_TARGET == 'REG_DTTM' ">
+				    ORDER BY  REG_DTTM ASC
+				</if>	
+				<if test="ORDER_TARGET == 'MOD_DTTM' ">
+				    ORDER BY  MOD_DTTM ASC
+				</if>	
+				<if test="ORDER_TARGET == 'DPLY_TP' ">
+				    ORDER BY  DPLY_TP ASC
+				</if>
+				<if test="ORDER_TARGET == 'USE_YN' ">
+				    ORDER BY  USE_YN ASC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_EXT' ">
+				    ORDER BY  FILE_EXT ASC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_SIZE' ">
+				    ORDER BY  FILE_SIZE ASC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_IDX' ">
+					ORDER BY  DPLY_IDX ASC
+				</if>
+			</if>
+		</when>
+             <otherwise>
+			ORDER BY  GRP_NM
+             </otherwise>
+         </choose>
+        <include refid="bottom"/>    
+    </select>
+    
+	<select id="selectStoGroupOne" parameterType="kr.msp.admin.store.group.dto.GroupDto" resultType="kr.msp.admin.store.group.dto.GroupDto">
+	    SELECT 
+              GRP_ID, GRP_NM, USE_YN, REG_DT, REG_ID
+        FROM TB_STO_GROUP
+        WHERE GRP_ID = #{GRP_ID}
+	</select>
+    	  
+	<!-- 그룹 이름  중복체크-->
+	<select id="checkDupGroupName"  resultType="java.lang.Integer" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+         /*  GroupManageSql checkDupGroupName  */
+        SELECT COUNT(GRP_NM)  CNT
+        FROM TB_STO_GROUP
+        WHERE  USE_YN = 'Y'
+        AND  GRP_NM = #{GRP_NM}
+    </select>
+	
+    <!-- 그룹 저장-->
+        <!-- 
+    <update id="saveGroup" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+        /*  GroupManageSql saveGroup  */
+        MERGE INTO TB_STO_GROUP
+        USING DUAL
+        ON (
+            GRP_ID   = #{GRP_ID}
+        ) 
+        WHEN MATCHED THEN
+        UPDATE SET
+              MOD_ID    = #{MOD_ID}
+            , MOD_DT    = SYSDATE
+            , GRP_NM    = #{GRP_NM}
+        WHEN NOT MATCHED THEN
+        INSERT (
+             GRP_NM,  USE_YN, REG_ID, REG_DT
+        ) VALUES(
+            #{GRP_NM},
+            'Y',
+            #{REG_ID},
+            SYSDATE
+        )
+    </update>
+         -->
+    <select id="selectGroupCount" parameterType="kr.msp.admin.store.group.dto.GroupDto" resultType="int">
+        /*  GroupManageSql saveGroup  */
+        SELECT COUNT(1) CNT 
+        FROM TB_STO_GROUP
+        WHERE GRP_ID   = #{GRP_ID}
+    </select>
+    <insert id="insertGroupInfo" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+        /*  GroupManageSql saveGroup  */
+        INSERT INTO TB_STO_GROUP
+        (
+             GRP_ID, GRP_NM,  USE_YN, REG_ID, REG_DT
+        ) VALUES(
+        	SEQ_TB_STO_GROUP.NEXTVAL,
+            #{GRP_NM},
+            'Y',
+            #{REG_ID},
+            SYSDATE
+        )
+    </insert>
+    <update id="updateGroupInfo" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+        /*  GroupManageSql saveGroup  */
+        UPDATE TB_STO_GROUP
+        SET
+              MOD_ID    = #{MOD_ID}
+            , MOD_DT    = SYSDATE
+            , GRP_NM    = #{GRP_NM}
+            , USE_YN	= #{USE_YN}
+        WHERE GRP_ID   = #{GRP_ID}
+    </update>
+    
+    <!-- 그룹삭제-->
+    <delete id="deleteGroup" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+       /* GroupManageSql  deleteGroup  */
+        DELETE FROM TB_STO_GROUP WHERE GRP_ID = #{GRP_ID}
+    </delete>
+    
+    <delete id="deleteuUserGroup" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+        DELETE FROM TB_STO_USERGROUP WHERE GRP_ID = #{GRP_ID}
+    </delete>
+    
+    <delete id="deleteuAppGroup" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+        DELETE FROM  TB_STO_AUTH  WHERE GRP_ID = #{GRP_ID} AND AUTH_TYPE = '01'
+    </delete>
+   
+</mapper>

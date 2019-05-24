@@ -1,0 +1,139 @@
+    <form name="frmUserInfo" method="POST">
+    	<div >
+    		
+    			<table class="tbl">
+    				<colgroup><!--  4cell  -->
+    					<col width="20%"/><col width="30%"/><col width="20%"/><col width="30%"/>
+    				</colgroup>
+    				<tr>
+    					<th scope="row" class="txtLeft">
+    						<label class="redNotice" for="ID_USER">#springMessage("common.header.adminUserId")</label>  ### 관리자ID ###
+    					</th>
+    					<td>
+    					#if(!$userOne)
+    						<input type="text" id="ID_USER" name="ID_USER" onblur="fn_idCheck()" value="" />
+    					#else
+    						$!userOne.ID_USER
+    						<input type="hidden" id="ID_USER" name="ID_USER" value="$!userOne.ID_USER" />
+    					#end
+    					</td>
+    					<th scope="row" class="txtLeft">
+    						<label class="redNotice" for="NM_USER">#springMessage("common.header.adminUserName")</label>	### 사용자명 ###
+    					</th>
+    					<td>
+    						<input type="text" id="NM_USER" name="NM_USER" value="$!userOne.NM_USER" />
+    					</td>
+    				</tr>
+
+					#if(!$userOne)
+                        <tr>
+                            <th scope="row" class="txtLeft">
+                                <label class="redNotice" for="PASSWORD">#springMessage("login.passwd")</label>	### 암호 ###
+                            </th>
+                            <td>
+                                <input type="password" id="PASSWORD" name="PASSWORD" class="width95"/>
+                            </td>
+                            <th scope="row" class="txtLeft">
+                                <label for="EMAIL">#springMessage("common.header.email")</label>  ### 이메일 ###
+                            </th>
+                            <td>
+                                <input type="text" id="EMAIL" name="EMAIL" value="$!userOne.EMAIL" />
+                            </td>
+                        </tr>
+					#else
+                        <tr>
+                            <th scope="row" class="txtLeft">
+                                <label class="redNotice" for="PASSWORD">#springMessage("login.new_password")</label>	### 변경 패스워드 ###
+                            </th>
+                            <td>
+                                <input type="password" id="NEW_PASSWORD" name="NEW_PASSWORD" class="width95"/>
+                            </td>
+                            <th scope="row" class="txtLeft">
+                                <label class="redNotice" for="PASSWORD">#springMessage("login.confirm_password")</label>  ### 변경 패스워드 확인 ###
+                            </th>
+                            <td>
+                                <input type="password" id="CONFIRM_PASSWORD" name="CONFIRM_PASSWORD" class="width95" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="txtLeft">
+                                <label class="redNotice" for="PASSWORD">#springMessage("login.pre_passwd")</label>	### 이전 암호 ###
+                            </th>
+                            <td>
+                                <input type="password" id="PASSWORD" name="PASSWORD" class="width95"/>
+                            </td>
+                            <th scope="row" class="txtLeft">
+                                <label for="EMAIL">#springMessage("common.header.email")</label>  ### 이메일 ###
+                            </th>
+                            <td>
+                                <input type="text" id="EMAIL" name="EMAIL" value="$!userOne.EMAIL" />
+                            </td>
+                        </tr>
+					#end
+    				<tr>
+    					<th scope="row" class="txtLeft">
+    						<label for="NO_TP">#springMessage("common.header.phoneNumber")</label>  ### 연락처 ###
+    					</th>
+    					<td>
+    						<input type="text" onkeydown="onlyNumber();" id="NO_TP" name="NO_TP" value="$!userOne.NO_TP" />
+    					</td>
+    					<th scope="row" class="txtLeft">
+    						<label for="NO_EP" class="txtLeft">#springMessage("common.header.emergencyNumber")</label>   ### 비상연락처 ###
+    					</th>
+    					<td>
+    						<input type="text" onkeydown="onlyNumber();" id="NO_EP" name="NO_EP" value="$!userOne.NO_EP" />
+    					</td>
+    				</tr>
+    				<tr>
+    					<th scope="row" class="txtLeft">
+    						<label class="redNotice" for="YN_USE">#springMessage("common.header.useYN")</label>   ### 사용여부 ###
+    					</th>
+    					<td>
+    							<select id="YN_USE" name="YN_USE" class="width50">
+    								<option value="">#springMessage("common.select.choose")</option>
+    
+    							#if($userOne.YN_USE == "Y")
+    								<option value="Y" selected="selected">#springMessage("common.header.use_Y")</option>  ### 사용 ###
+    							#else
+    								<option value="Y">#springMessage("common.header.use_Y")</option>   ### 사용 ###
+    							#end
+    
+    							#if($userOne.YN_USE == "N")
+    								<option value="N" selected="selected">#springMessage("common.header.use_N")</option>  
+    							#else
+    								<option value="N">#springMessage("common.header.use_N")</option>  ### 미사용 ###
+    							#end
+    							</select>
+
+    					</td>
+    					<th scope="row" class="txtLeft">
+    						<label for="ID_GROUP">#springMessage("common.header.adminGroup")</label>	### 사용자그룹 ###
+    					</th>
+    					<td>
+    							<select id="ID_GROUP" name="ID_GROUP"  class="width50">
+    								<option value="">#springMessage("common.select.choose")</option>
+    								#foreach( $authUserGroup in $authUserGroupList )
+    									#if($!authUserGroup.AUTH_CHK == "T")
+    										<option selected="selected" value="$!authUserGroup.ID_GROUP" >$esc.xml($!authUserGroup.NM_GROUP)</option>
+    									#else
+    										<option value="$!authUserGroup.ID_GROUP" >$esc.xml($!authUserGroup.NM_GROUP)</option>
+    									#end
+    								#end
+    							</select>
+    					</td>
+    				</tr>
+    			</table>
+  
+    
+    		<div class="btn-wrap txtCenter">
+    		#if(!$userOne)
+    			<a href="javascript:fn_userWrite();void(0);" class="btn1"><strong>#springMessage("common.button.regist")</strong></a> <!-- 등록 -->
+    		#else
+    			<a href="javascript:fn_userModify();void(0);" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+				<a href="javascript:fn_userDelete();void(0);" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+    		#end
+    			<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a>
+    		</div>
+    		
+    	</div>
+    </form>

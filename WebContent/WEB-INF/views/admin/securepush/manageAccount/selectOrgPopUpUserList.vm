@@ -1,0 +1,42 @@
+<script type="text/javascript">
+
+//조직원 목록 선택 토글 이벤트 처리.
+$(".user-list-div .user-list-row").bind("click keydown", function(){
+	$(this).toggleClass("selected");
+	$(".tree-div .user-list-row").not(this).each(function(){
+		$(this).removeClass("selected");
+	});
+	if($(this).hasClass("selected")){
+		$("#SELECTED_USER_ID").val($(this).find("input").val());
+	}else{
+		$("#SELECTED_USER_ID").val("");
+	}
+});
+
+</script>
+<table class="tbl-pop-info user-list">
+	<colgroup>
+		<col style="width:360px">
+		<col style="width:60px">
+	</colgroup>
+	<tbody>
+		<tr><td colspan="2"><div class="user-list-div">
+			<table>
+				<colgroup>
+					<col style="width:120px">
+					<col style="width:300px">
+				</colgroup>
+				<tr>
+					<th>#springMessage("common.text.name")</th> <!-- 이름 -->
+					<th>#springMessage("common.text.dept")</th> <!-- 부서 -->
+				</tr>
+				#foreach( $emp in $empList )
+				<tr class="user-list-row">
+					<td>$!emp.USER_NM<input type="hidden" class="USER_ID" value="$!emp.USER_ID"/></td>
+					<td>$!emp.FULL_NM</td>
+				</tr>
+				#end
+			</table>
+		</div></td></tr>
+	</tbody>
+</table>

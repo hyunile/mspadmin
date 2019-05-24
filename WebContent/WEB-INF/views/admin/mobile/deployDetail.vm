@@ -1,0 +1,381 @@
+<!-- 
+화면 : 배포관리 상세 메인
+url : admin/mobile/rsc/deploy/deployDetail
+작성자 : 장문규
+ -->
+
+<link rel="stylesheet" type="text/css" href="$!{CONTEXT_PATH}/resources/jEasyUiTree/easyui.css" >
+<link rel="stylesheet" type="text/css" href="$!{CONTEXT_PATH}/resources/jEasyUiTree/icon.css">
+<script type="text/javascript" src="$!{CONTEXT_PATH}/resources/jEasyUiTree/jquery.easyui.min.js"></script>
+<style type="text/css">
+	ul, li {list-style:none; margin:0; padding:0; font-size:10pt; }
+
+	.image_list {clear:both;overflow: auto;position: relative;height: 600px;width: 99%; border:1px solid #e1e1e1; }
+	.image_list .images {position:absolute; display:none; }
+
+	.tab {width:600px;cursor:pointer;}
+	.tab li {width:70px;float:left;border-right:1px solid #e1e1e1;border-top:1px solid #e1e1e1;padding:7px;}
+	.tab li.fir {border-left:1px solid #e1e1e1;}
+
+	.tab_icon {width:800px;cursor:pointer;}
+	.tab_icon li {float:left;}
+
+	.tab li.tabOutClass {font-weight:normal;color:#707070;background-color:#fff}
+	.tab li.tabOverClass {font-weight:bold;color:#000;background-color:#D0D0D0;}
+
+    #loadingDiv{
+        display:none;
+        position:fixed;
+        _position:absolute; /* hack for internet explorer 6*/
+        height:100%;
+        width:100%;
+        top:0px;
+        left:550px;
+        padding-top: 200px;
+        z-index:1;
+    }
+</style>
+<div id="loadingDiv">
+    <img alt="loading" src= "$RESOURCES_PATH/images/loading.gif" />
+</div>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.mobile")</span>
+		<span>#springMessage("menu.mobile.deploy")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.mobile.deploy")</h2> <!-- 모바일 관리    배포 관리 -->
+	
+	#### E : 프로그램 위치 기술 부분  ####
+	<form name="frmDeployDetail" method="post">
+		<input type="hidden"  name="NUM"		value="$NUM" />
+		<input type="hidden"  name="SIZE"    	value="$SIZE" />
+		<input type="hidden"  name="SVC_ID"     value="$SVC_ID" />
+	</form>
+	
+	<div class="detail_searchBox">
+		<p>
+			- #springMessage("menu.mobile.deploy.headText")   <!-- 배포모드와 사용상태를 변경 하실 수 있습니다. -->
+		</p>
+	</div>
+	
+	<br><br>
+	
+	<div class="tbl-wrap">
+		<h2 class="tbl-title">#springMessage("menu.mobile.deployFile")</h2><!-- 배포 파일 -->
+	</div>
+
+	<table class="tbl" summary="앱 서비스명,등록일,배포명,버전,배포 파일명,배포모드,설명">
+		<colgroup ><!--  4cell  -->
+			<col  width="15%" /><col  width="35%" /><col  width="15%" /><col  width="auto" />
+		</colgroup>
+		<tr>
+			<th scope="row">#springMessage("common.text.appname")</th> <!-- App. 명 -->
+			<td>$!SVC_NM</td>
+			<th scope="row">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+			<td>$!REG_DTTM</td>
+		</tr>
+		<tr>
+			<th scope="row">#springMessage("menu.mobile.deploy.name")</th> <!-- 배포명 -->
+			<td>$!DPLY_NM</td>
+			<th scope="row">#springMessage("menu.mobile.deploy.version")</th> <!-- 버전 -->
+			<td>$!DPLY_VER</td>
+		</tr>
+		<tr>
+			<th scope="row">#springMessage("menu.mobile.deploy.name2")</th> <!-- 배포 파일명2 -->
+			<td colspan="3" >
+                      #if($!FILE_NAME!="")
+				<a href="$!{CONTEXT_PATH}/admin/mobile/rsc/download?FILE_IDX=$!FILE_IDX&D_TYPE=rsc">
+					<img src="$!{CONTEXT_PATH}/resources/img/icon/icon_file.gif"title="클릭하여 다운로드" /> $!FILE_NAME
+				</a>
+                      #end
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">#springMessage("menu.mobile.deploy.mode")</th> <!-- 배포모드 -->
+			<td>
+				#if($DPLY_TP == "0")
+					#set($isDevChk = "checked")
+				#else
+					#set($isRealChk = "checked")
+				#end
+				<input type="radio" id="DEPLOY_TYPE1" name="DEPLOY_TYPE" value="1" $isRealChk> <label for="DEPLOY_TYPE1">#springMessage("menu.mobile.deploy.operate")</label> <!-- 운영 -->
+				<input type="radio" id="DEPLOY_TYPE2" name="DEPLOY_TYPE" value="0" $isDevChk> <label for="DEPLOY_TYPE2">#springMessage("menu.mobile.deploy.develop")</label>  <!-- 개발 -->
+			</td>
+			<th scope="row">#springMessage("menu.mobile.deploy.useYN")</th>  <!-- 사용상태 -->
+			<td>
+				#if($USE_YN == "Y")
+					#set($isUseChk = "checked")
+				#else
+					#set($isStopChk = "checked")
+				#end
+				<input type="radio" id="USE_FLAG1" name="USE_FLAG" value="N" $isStopChk> <label for="USE_FLAG1">#springMessage("menu.mobile.deploy.stop")</label>  <!-- 중지 -->
+				<input type="radio" id="USE_FLAG2" name="USE_FLAG" value="Y" $isUseChk> <label for="USE_FLAG2">#springMessage("menu.mobile.deploy.use")</label>  <!-- 사용 -->
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><label for="DPLY_DESC">#springMessage("common.header.desc")</label></th><!-- 설명 -->
+			<td colspan="3" >
+				<textarea name="DPLY_DESC" id="DPLY_DESC" class="width95" style="height:100px;">$!DPLY_DESC</textarea>
+				<input type="hidden" name="DPLY_IDX" id="DPLY_IDX" value="$!DPLY_IDX"/>	<!-- 수정,삭제에 필요  -->
+			</td>
+		</tr>
+	</table>
+	
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:void(0)" id="goList" class="btn1 type2">#springMessage("common.button.list")</a> <!-- 목록으로 -->
+		<a href="javascript:fn_newWrite();void(0)" id="update" class="btn1 type2" title="#springMessage('menu.mobile.deploy.titleText')">#springMessage("common.button.updateSave")</a> <!-- 변경저장    현 설정으로 수정합니다.-->
+	</div>
+	
+	<br><br>
+		
+		
+	<div id="image_list">
+		
+		<div style="display:block;"><!--  content_frame 클래스를 반드시 포함해야 합니다. -->
+			<div id="media" >
+				##배포한 목록 나타날 영역
+				<div id="deployDetailListDiv">
+					#parse("admin/mobile/ajax/deployDetailList.vm")
+				</div>
+			</div>
+		</div>
+		
+	</div>
+	
+
+</div>	##end contents
+
+<script type="text/javascript">
+//백스페이스로 이전화면 진입 방지(배포 후 리스트에서 가는것 방지)
+document.onkeydown=function() {
+    if(event.srcElement.type != "text" && event.srcElement.type != "textarea") {
+    	if(event.keyCode==8) return false;
+    }
+}
+
+function fn_goList(service_id){
+	
+	document.frmDeployDetail.action         = "$!{CONTEXT_PATH}/admin/mobile/rsc/deployList";
+	document.frmDeployDetail.submit();
+	
+	//location.href = "/admin/mobile/rsc/deployList?SVC_ID="+service_id;
+};
+
+function fn_noticeList(pageNum){
+	fn_searchList(pageNum);
+};
+
+function fn_searchList(pageNum){
+
+	var data = "SVC_ID="+$("#selectSvc option:selected").val();
+	data += "&PAGE_NUM="+pageNum;
+	data += "&DPLY_IDX="+$!DPLY_IDX;
+
+	var AjaxHTML =	jQuery.ajax({
+			url: "$!{CONTEXT_PATH}/admin/mobile/rsc/deploy/deployDetail"
+			,type:"post"
+			,data:data
+			,dataType:"html"
+			,async:false
+		}).responseText;
+
+	$('#deployDetailListDiv').html(AjaxHTML);
+};
+
+$(document).ready(function()
+{
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//0. 목록으로 이동
+	$("#goList").click(function(){
+		var service_id = "".concat($!SVC_ID);
+		if("" == service_id) service_id = "all";
+
+		//var data = "SVC_ID="+service_id;
+		//location.href = "/admin/mobile/rsc/deployList?"+data
+
+		fn_goList(service_id);
+
+	});
+
+	//1. 배포상세데이터 트리세팅
+/*	$('#resTree').tree({
+   		checkbox:false,
+    	data: $!detailListTree
+	});
+	*/
+	//fn_searchList(1);
+	
+	
+	//2. 변경저장 버튼
+	$("#update").click(function(){
+
+        document.getElementById("loadingDiv").style.display="block";
+
+		var url = "$!{CONTEXT_PATH}/admin/mobile/rsc/deploy/deployUpdate";
+
+
+		var data = "DPLY_TP=" + $(":input:radio[name=DEPLOY_TYPE]:checked").val();
+		data += "&USE_YN=" + $(":input:radio[name=USE_FLAG]:checked").val();
+		data += "&DPLY_IDX=" + $("#DPLY_IDX").val();
+		data += "&DPLY_DESC=" + escape(encodeURIComponent($("#DPLY_DESC").val()));
+        data += "&SVC_ID=$!{SVC_ID}";
+        data += "&ORG_DPLY_TP=$!{DPLY_TP}";
+        data +="&ORG_USE_YN=$!{USE_YN}";
+
+		jQuery.ajax({
+			url:url,
+			type:"POST",
+			data:data,
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+            dataType:"json",
+			success:function(data){
+                document.getElementById("loadingDiv").style.display="none";
+				alert(data.msg);
+				fn_goList(data.SVC_ID);
+			},
+            error:function(request,status,error){
+                document.getElementById("loadingDiv").style.display="none";
+                alert(error);
+            }
+		});
+	});
+
+	//3. 삭제버튼
+	$("#delete").click(function(){
+
+		if(confirm('#springMessage("menu.mobile.deploy.alertDelete")')){ //해당 배포파일과 정보를 삭제하시겠습니까?
+			var url = "$!{CONTEXT_PATH}/admin/mobile/rsc/deploy/deployDelete";
+			var data = "DPLY_IDX="+$("#DPLY_IDX").val();
+			data += "&SVC_ID="+$!SVC_ID;
+			//data += "&FILE_PATH="+$("#FILE_PATH").val();
+
+    		jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+    			success:function(data){
+    				alert(data.msg);
+					if(data.result > 0){
+						fn_goList(data.SVC_ID);
+					}
+				}
+			});
+		}
+
+	});
+
+});
+
+//tab구성/////////////////////////////////////////////
+
+//new tabView({menu:"tab", menuTag:"LI", callEvent:"click", imageArea:"image_list", imageTag:"DIV"});
+//new tabView({menu:"tab2", menuTag:"IMG", callEvent:"mouseover", imageArea:"image_list_2", imageTag:"DIV"});
+
+function tabView(json){
+
+	if(json.callEvent == "mouseover"){
+		e(json.menu).onmouseover = function(event){
+			var tabs = tn(e(json.menu), json.menuTag);
+			var evt = event || window.event;
+			var t = evt.target || evt.srcElement;
+
+			for(n in tabs){
+				if(tabs[n] == t){
+					viewContent(n);
+					rollOver(t);
+					break;
+				}
+			}
+		}
+	}else if(json.callEvent == "click"){
+		e(json.menu).onclick = function(event){
+			var tabs = tn(e(json.menu), json.menuTag);
+			var evt = event || window.event;
+			var t = evt.target || evt.srcElement;
+
+			for(n in tabs){
+				if(tabs[n] == t){
+					viewContent(n);
+					//rollOver(event.srcElement);
+					rollOver(t);
+					break;
+				}
+			}
+		}
+	};
+
+
+	//내용 보이기
+	function viewContent(nIdx){
+		var els = tn(e(json.imageArea), json.imageTag);
+		if(els.length == 0) return;
+		var arr = new Array();
+
+		for(n=0; n<els.length; n++){
+			if(els[n].getAttribute('class') != null){	//장문규 추가
+    			if(els[n].getAttribute('class').indexOf('content_frame') > 0 ){
+    				arr.push(els[n]);
+    			}
+			}
+		}
+
+		for(n=0; n<arr.length; n++){
+			if(typeof arr[n]=="object"){
+				if(n==nIdx){
+					arr[n].style.display = "block";
+				}else{
+					arr[n].style.display = "none";
+				}
+			}
+		}
+	}
+
+	//라벨 onmouseover 시 클래스 적용
+	function rollOver(obj){
+		//if(c.label == null) return;
+		//var els = c.label.getElementsByTagName(c.labelType);
+		var els = tn(e(json.menu), json.menuTag);
+		if(els.length==0) return;
+
+		if(json.menuTag == "IMG"){
+			for(n in els){
+				if(typeof els[n] == "object"){
+					if(els[n] == obj){
+						els[n].src = els[n].getAttribute("oversrc");
+					}else{
+						els[n].src = els[n].getAttribute("outsrc");
+					}
+				}
+			}
+		}else{
+			for(n in els){
+				if(typeof els[n] == "object"){
+					if(els[n] == obj){
+						var ocss = els[n].className;
+						els[n].className = ocss+" "+els[n].getAttribute("overcss");
+					}else{
+						els[n].className = els[n].getAttribute("outcss");
+					}
+				}
+			}
+		}
+	}// e function rollOver(obj){
+}
+
+
+//객체 반환
+function e(id){
+	return document.getElementById(id);
+}
+
+//pa에 속한 태그들 반환
+function tn(pa, tagName){
+	return pa.getElementsByTagName(tagName);
+}
+
+</script>
+

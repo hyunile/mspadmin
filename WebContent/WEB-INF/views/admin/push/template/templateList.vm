@@ -1,0 +1,64 @@
+<table class="tbl-nb" summary="템플릿유형,템플릿 ID,등록일시,수정일시,작성자,상세">
+	<colgroup>
+		<col width="15%" />
+		<col width="auto" />
+		<col width="15%" />
+		<col width="15%" />
+		<col width="15%" />
+		<col width="70px" />
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("menu.push.setting.templateType")</th> <!-- 템플릿 유형 -->
+    		<th scope="col">#springMessage("menu.push.setting.templateName")</th> <!-- 템플릿명 -->
+			<th scope="col">#springMessage("common.text.registDate")</th> <!-- 등록일시 -->
+    		<th scope="col">#springMessage("common.text.updateDate")</th> <!-- 수정일시 -->
+    		<th scope="col">#springMessage("common.header.author")</th> <!-- 작성자 -->
+			<th scope="col"> </th>
+		</tr>
+	</thead>
+
+	<tbody>
+		#foreach( $template in $templateList )
+		#set($j_tot =$!template.TOT_CNT)
+		<tr>
+			<td>
+				<input type="hidden" class="TEMPLATE_CODE" value="$!template.TEMPLATE_CODE" /> 
+				#if($!template.CATEGORY_TYPE == '0') #springMessage("common.text.base") <!-- 기본 -->  
+				#elseif($!template.CATEGORY_TYPE == '1') #springMessage("common.text.webPage") <!-- 웹페이지 -->
+				#elseif($!template.CATEGORY_TYPE == '2') #springMessage("common.text.video") <!-- 동영상 --> 
+				#elseif($!template.CATEGORY_TYPE == '3') #springMessage("common.text.image") <!-- 이미지 -->
+				#else Undefined
+				#end
+			</td>
+			<td style="text-align: left;">$!esc.xml($!template.TEMPLATE_TITLE)</td>
+			<td>$!esc.xml($!template.REG_DT)</td>
+			<td>$!esc.xml($!template.MOD_DT)</td>
+			<td>$!template.REG_ID</td>
+			<td>
+				<a href="javascript:void(0)" class="btn2" id="templateModify">#springMessage("common.header.detail")</a> <!-- 상세 -->
+			</td>
+		</tr>
+		#end 
+		
+		#if(!$j_tot)
+		<tr>
+			<td colspan="6" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+		#end
+	</tbody>
+</table>
+
+<input type="hidden" id="TEMPLATE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" /> 
+	##총개수 
+	<input type="hidden" name="J_tot" value="$!j_tot" /> 
+	##한페이지의 로우수 
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" /> 
+	##한페이지수 
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" /> 
+	##이밴트 
+	<input type="hidden" name="j_event" value="fn_templateList" />
+</div>

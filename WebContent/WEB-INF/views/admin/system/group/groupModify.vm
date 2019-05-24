@@ -1,0 +1,61 @@
+<form name="frmGroupInfo" method="POST">
+	
+	<div class="con">
+	
+		<table class="tbl" >
+			<colgroup><!--  4cell  -->
+				<col width="120px" /><col width="auto" />
+			</colgroup>
+			<tr>
+				<th scope="row" class="txtLeft">
+					<label for="ID_GROUP" class="redNotice">#springMessage("common.header.authGroup")</label>   ### 그룹명 ###
+				</th>
+				<td>
+				#if($authGroupOne)
+					<input type="hidden" id="ID_GROUP" name="ID_GROUP" value="$!authGroupOne.ID_GROUP" />
+				#end
+					<input type="text" class="width50" id="NM_GROUP" name="NM_GROUP" value="$!authGroupOne.NM_GROUP" />
+				</td>
+			</tr>
+			<tr>
+				<th scope="row" class="txtLeft">
+					<label for="DESC_GROUP">#springMessage("common.header.authGroupDesc")</label>		### 그룹설명 ###
+				</th>
+				<td>
+					<input type="text" class="width95" id="DESC_GROUP" name="DESC_GROUP" value="$!authGroupOne.DESC_GROUP" />
+				</td>
+			</tr>
+			<tr>
+				<th scope="row" class="txtLeft">
+					<label for="ID_FIRST_MENU" class="required">#springMessage("common.header.initialMainMenu")</label>	### 첫화면메뉴 ###
+				</th>
+				<td>
+						<select id="ID_FIRST_MENU" name="ID_FIRST_MENU">
+							<option value="">#springMessage("common.select.choose")</option>
+							#foreach( $firstMenu in $firstMenuList )
+								#if($authGroupOne.ID_FIRST_MENU == $firstMenu.ID_MENU)
+									<option value="$!firstMenu.ID_MENU" selected="selected">$!firstMenu.NM_MENU</option>
+								#else
+									<option value="$!firstMenu.ID_MENU">$!firstMenu.NM_MENU</option>
+								#end
+							#end
+						</select>
+
+				</td>
+			</tr>
+		</table>
+		
+	</div>
+
+	<div class="btn-wrap txtCenter">
+	
+		#if(!$authGroupOne)
+			<a href="javascript:fn_groupWrite();void(0);" class="btn1"><strong>#springMessage("common.button.regist")</strong></a> <!-- 등록 -->
+		#else
+			<a href="javascript:fn_groupModify();void(0);" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+			<a href="javascript:fn_groupDelete();void(0);" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+		#end
+			<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a>
+	</div>
+	
+</form>

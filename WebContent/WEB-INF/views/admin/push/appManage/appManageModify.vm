@@ -1,0 +1,38 @@
+<form name="frmPushService" method="POST">
+	
+	<table class="tbl" summary="APP ID,APP NAME,APP 설명">
+		<colgroup><!--  2cell  -->
+			<col width="25%"/><col width="75%"/>
+		</colgroup>
+		<tr>
+			<th scope="row">APP ID</th>
+			<td colspan="3">
+				$!pushServiceOne.APPID
+				<input type="hidden" name="APPID" value="$!pushServiceOne.APPID" />
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="APPNAME">APP NAME</label>
+			</th>
+			<td>
+				<input type="text" id="APPNAME" name="APPNAME" class="width95" value="$!pushServiceOne.APPNAME" />
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="SVC_DTL">APP #springMessage("common.header.desc")</label> <!-- 설명 -->
+			</th>
+			<td>
+				<textarea id="SVC_DTL" name="SVC_DTL" class="width95" style="height:100px;resize:none;">$!pushServiceOne.SVC_DTL</textarea>
+			</td>
+		</tr>
+	</table>
+		
+
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:void(0);" onclick="fn_Modify();" class="btn1">#springMessage("common.button.modify")</a>	<!-- 수정 -->
+		<a href="javascript:void(0)" onclick="fn_closePopup()" class="btn1 type2 close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+	</div>
+
+</form>

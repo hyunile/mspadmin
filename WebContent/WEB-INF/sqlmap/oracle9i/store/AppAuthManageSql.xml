@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.appauth.mapper.AppAuthDao">
+
+    
+    <!-- Common Paging QUERY start -->
+	<sql id="head">
+		SELECT * FROM ( SELECT ROWNUM RNUM ,COUNT(*) OVER() TOT_CNT ,A.* FROM (SELECT * FROM (
+	</sql>
+	
+	<sql id="bottom">
+		) ) A )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+	<!-- Common Paging QUERY end -->
+   
+   	<!-- begin of sort -->
+	<sql id="order">
+		<if test="ORDER_FIELD != null and ORDER_FIELD != ''">   
+			ORDER BY ${ORDER_FIELD} ${ORDER_TYPE} 
+		</if>
+	</sql>
+	<!-- end of sort -->
+   
+   <select id="selectCommonCodeList"
+       			parameterType="kr.msp.admin.store.appauth.dto.AppAuthCodeDto"
+       			resultType="kr.msp.admin.store.appauth.dto.AppAuthCodeDto">
+
+				SELECT CD_GRP_ID
+				,           CD_ID
+				,           CD_NM
+				FROM    TB_SYS_CD_INFO
+				WHERE   USE_YN = 'Y'
+							AND CD_GRP_ID = #{CD_GRP_ID}
+				ORDER BY SORT_NO
+   </select>
+   
+   
+   <select id="selectAppList"
+       resultType="kr.msp.admin.store.appauth.dto.AppAuthAppInfoDto">
+				SELECT  APP_IDX,     APP_NM
+				FROM    TB_STO_APP
+				WHERE   USE_YN = 'Y'
+				ORDER BY SVC_ID, CATG_CD, SORT_NO
+   </select>
+   
+   
+   <select id="selectGroupList"
+       		parameterType="kr.msp.admin.store.appauth.dto.AppAuthGroupParamDto"
+       		resultType="kr.msp.admin.store.appauth.dto.AppAuthGroupDto">
+      <!-- 
+      <include refid="head"/>
+       -->
+                SELECT GRP.GRP_ID
+                ,           GRP.GRP_NM
+                FROM    TB_STO_GROUP GRP
+                            LEFT JOIN TB_STO_AUTH AUTH
+                                ON GRP.GRP_ID = AUTH.GRP_ID AND AUTH.USE_YN = 'Y' 
+                                	<if test="APP_IDX != null and APP_IDX != '' "  >
+                                	AND AUTH.APP_IDX = #{APP_IDX}
+                                	</if>
+                WHERE   GRP.USE_YN = 'Y'
+                            AND AUTH.AUTH_ID IS NULL
+                            <if test="GRP_NM != null and GRP_NM != '' "  >
+                        	AND GRP.GRP_NM LIKE '%' || #{GRP_NM} || '%'
+                        	</if>
+                ORDER BY GRP.GRP_NM
+      <!-- 
+       <include refid="bottom"/>
+       -->
+   </select>
+   
+   
+   
+   <select id="selectUserList"
+       		parameterType="kr.msp.admin.store.appauth.dto.AppAuthUserParamDto"
+       		resultType="kr.msp.admin.store.appauth.dto.AppAuthUserDto">
+       <!-- 
+       <include refid="head"/>
+        -->
+       
+                SELECT USR.EMP_NO,  USR.EMP_NM
+                FROM TB_STO_USER USR
+                            LEFT JOIN TB_STO_AUTH AUTH
+                                ON USR.EMP_NO = AUTH.EMP_NO AND AUTH.USE_YN = 'Y' 
+                                	<if test="APP_IDX != null and APP_IDX != '' "  >
+                                	AND AUTH.APP_IDX = #{APP_IDX}
+                                	</if>
+                WHERE USR.USE_YN = 'Y'
+                            AND AUTH.AUTH_ID IS NULL
+                            <if test="EMP_NM != null and EMP_NM != '' "  >
+                        	AND USR.EMP_NM LIKE '%' || #{EMP_NM} || '%'
+                        	</if>                            
+                ORDER BY USR.EMP_NM
+       <!--
+       <include refid="bottom"/> 
+        -->
+   </select>
+	
+	
+	
+   <select id="getNewAuthId"
+       			resultType="java.lang.Integer">
+				SELECT NVL(MAX(AUTH_ID), 0) + 1 
+				FROM 	TB_STO_AUTH
+   </select>
+   
+   
+	 <select id="selectAppAuthInfoList"
+	     		parameterType="kr.msp.admin.store.appauth.dto.AppAuthParamDto"
+	     		resultType="kr.msp.admin.store.appauth.dto.AppAuthDto">
+       <!-- 
+       <include refid="head"/>
+        -->
+       
+			SELECT AUTH.AUTH_ID
+			,            AUTH.APP_IDX
+			,           AUTH.EMP_NO
+			,           AUTH.GRP_ID
+			,           AUTH.AUTH_TYPE
+			,           APP.APP_NM
+			,           GRP.GRP_NM
+			,           USR.EMP_NM
+			,           TYPE_CD.CD_NM TYPE_NM
+			FROM    TB_STO_AUTH AUTH
+			            INNER JOIN TB_STO_APP APP
+			                ON AUTH.APP_IDX = APP.APP_IDX
+                              	<if test="APP_IDX != null and APP_IDX != '' "  >
+                              	AND AUTH.APP_IDX = #{APP_IDX}
+                              	</if>
+			            LEFT JOIN TB_STO_GROUP GRP
+			                ON AUTH.GRP_ID = GRP.GRP_ID AND GRP.USE_YN = 'Y'
+			            LEFT JOIN TB_STO_USER USR
+			                ON AUTH.EMP_NO = USR.EMP_NO AND USR.USE_YN = 'Y'
+			            LEFT JOIN TB_SYS_CD_INFO TYPE_CD
+			                ON AUTH.AUTH_TYPE = TYPE_CD.CD_ID AND TYPE_CD.CD_GRP_ID = 'ST008' AND TYPE_CD.USE_YN = 'Y' 
+			WHERE   AUTH.USE_YN = 'Y'
+       	<!--
+       	<include refid="bottom"/> 
+       	 -->
+	 </select>
+	 
+	
+	 <insert id="insertAppAuthInfo" parameterType="kr.msp.admin.store.appauth.dto.AppAuthParamDto">
+		INSERT INTO TB_STO_AUTH
+		(
+		            AUTH_ID
+		,           APP_IDX
+		<if test="EMP_NO != null and EMP_NO != '' "  >
+		,           EMP_NO
+		</if>
+		<if test="GRP_ID != null and GRP_ID != '' "  >
+		,           GRP_ID
+		</if>
+		,           AUTH_TYPE
+		,           USE_YN
+		,           REG_ID
+		,           REG_DT
+		)
+		VALUES
+		(
+		        (SELECT NVL(MAX(AUTH_ID), 0) + 1 FROM TB_STO_AUTH)
+		,       #{APP_IDX}
+		<if test="EMP_NO != null and EMP_NO != '' "  >
+		,       #{EMP_NO}
+		</if>
+		<if test="GRP_ID != null and GRP_ID != '' "  >
+		,       #{GRP_ID}
+		</if>
+		,       #{AUTH_TYPE}
+		,       'Y'
+		,       #{USERID}
+		,       SYSDATE
+		)
+	 </insert>
+	 
+	 <!-- 
+	 <update id="updateAppAuthInfo" parameterType="kr.msp.admin.store.appauth.dto.AppAuthParamDto">
+			UPDATE TB_STO_AUTH
+			SET      APP_IDX = #{APP_IDX}
+			,           EMP_NO = #{EMP_NO}
+			,           GRP_ID = #{GRP_ID}
+			,           AUTH_TYPE = #{AUTH_TYPE}
+			,           MOD_ID = #{USERID}
+			,           MOD_DT = SYSDATE
+			WHERE   AUTH_ID = #{AUTH_ID}
+	 </update>
+	  -->
+	 
+<!-- 
+	 <update id="updateUseYnInfo"  parameterType="java.util.HashMap" >
+		UPDATE TB_STO_AUTH
+		SET   
+		        USE_YN       = 'N'
+		,       MOD_ID       = #{USERID}
+		,       MOD_DT      = SYSDATE
+		<trim prefix="WHERE"  prefixOverrides="AND|OR" >
+			<foreach collection="PARAM_BEAN" item="array" index="index" >
+				OR RV_NO = ${PARAM_BEAN[index].getRV_NO()}
+			</foreach>
+		</trim>
+	</update>	
+	 -->
+	 
+	 
+	 <delete id="deleteAppAuthInfo"  parameterType="int">
+	 <!-- <delete id="deleteAppAuthInfo"  parameterType="kr.msp.admin.store.appauth.dto.AppAuthParamDto" > -->
+	     /* DT */
+		DELETE TB_STO_AUTH
+		WHERE AUTH_ID = #{id}
+	</delete>	
+	<!-- 
+	 <delete id="deleteAppAuthList"  parameterType="java.util.HashMap" >
+		DELETE TB_STO_AUTH
+		<trim prefix="WHERE"  prefixOverrides="AND|OR" >
+			<foreach collection="PARAM_BEAN" item="array" index="index" >
+				OR AUTH_ID = ${PARAM_BEAN[index]}
+			</foreach>
+		</trim>
+	</delete>	
+	-->
+	 	
+</mapper>

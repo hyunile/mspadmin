@@ -1,0 +1,263 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery-te-1.4.0.css" >
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery-te-1.4.0.js"></script>
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+jQuery(function(){
+    ##WISIWIG 생성
+    jQuery("textarea[name=BOARD_CONTENT]").jqte();
+    
+    ##초기 로딩시 input 숨기기 (admin과 본인은 활성화)
+	var s_id_user = '$!request.getSession().getAttribute("S_ID_USER")';
+	var boardType = jQuery('input[name=BOARD_TYPE]').val();
+	var regId = jQuery('input[name=REG_ID]','#popForm').val();
+	
+	
+	jQuery('#updateBtn,#deleteBtn').hide();
+    if(boardType=='QNA'){ 
+        if(s_id_user == 'admin'){
+			if(s_id_user == regId){
+				jQuery('#updateBtn,#deleteBtn').show();
+			}else{
+				jQuery('#deleteBtn').show();
+			}
+        }else{
+			if(s_id_user == regId){
+				jQuery('#updateBtn,#deleteBtn').show();
+			}
+		}
+        jQuery('#replyBtn').show();
+    }else{//공지사항
+		if( s_id_user == 'admin'){
+            jQuery('#updateBtn,#deleteBtn').show();
+        }
+    }
+	
+    if(jQuery('input[name=BOARD_IDX]', 'form[name=upForm]').val().length==0){
+        ## 추가모드
+        jQuery('input[name=STP],input[name=LVL]').val("0");
+        jQuery('div.view').hide();
+        jQuery('#saveBtn').show();
+        jQuery('#updateBtn,#replyBtn,#deleteBtn').hide();
+    }else{
+        ## 수정모드
+        jQuery('.input_class,.jqte', '#popForm').hide();
+    }
+    
+    ##QNA 초기화
+    if(jQuery('input[name=BOARD_TYPE]', 'form[name=frmSearch]').val()=='QNA'){
+        
+        jQuery('select[name=BOARD_DETAIL_TYPE]').prop('disabled', true);
+        if(jQuery('input[name=BOARD_IDX]', 'form[name=upForm]').val().length>0){
+            jQuery('select[name=BOARD_DETAIL_TYPE]').val('20');//답변
+           
+        }else{
+            jQuery('select[name=BOARD_DETAIL_TYPE]').val('10');//질문
+        }
+        
+    }
+    
+    ##수정버튼 클릭
+    jQuery('#updateBtn').click(function(){
+        if(jQuery('input[name=BOARD_IDX]').val().length==0){
+            alert('#springMessage("menu.store.notice.alert.noSelect")'); //"수정할 게시물이 선택되지 않았습니다."
+        }else{
+            jQuery('.input_class,.jqte,#saveBtn').show();
+            jQuery('div.view,#updateBtn,#replyBtn').hide();
+        }
+    });
+    
+   ##답변버튼 클릭
+    jQuery('#replyBtn').click(function(){
+        if(jQuery('input[name=BOARD_IDX]').val().length==0){
+            alert('#springMessage("menu.store.notice.alert.noAnswer")'); //"답변할 게시물이 선택되지 않았습니다." 
+        }else{
+            ##답변은 신규생성임으로 PK를 지우고 나머지 hidden필드는 그대로 둔다.
+            jQuery('input[name=STP]').val( parseInt( jQuery('input[name=STP]').val() ) + 1 );
+            jQuery('input[name=LVL]').val( parseInt( jQuery('input[name=LVL]').val() ) + 1 );
+            //jQuery('input[name=REF]').val( parseInt( jQuery('input[name=BOARD_IDX]').val() ) );
+            jQuery('input[name=BOARD_IDX]').val('');
+            jQuery('.input_class,.jqte,#saveBtn').show();
+            jQuery('div.view,#updateBtn,#replyBtn').hide();
+        }
+    });
+    
+    ##저장버튼 클릭
+    jQuery('#saveBtn').click(function(){
+        if(validPopup()){
+            jQuery('input[name=BOARD_TYPE]', 'form[name=upForm]').val(jQuery('input[name=BOARD_TYPE]', 'form[name=frmSearch]').val());
+            jQuery('input[name=PAGE_NUM]', 'form[name=upForm]').val(jQuery('input[name=PAGE_NUM]', 'div[id=datatableDiv]').val());
+            jQuery('select', '#popForm').prop('disabled', false);
+            document.upForm.action = CONTEXT_PATH + "/admin/store/bbs/saveBbs";
+            jQuery('form[name=upForm]').submit();
+            
+        };
+    }); 
+    
+    ##폼 검증하기
+    function validPopup(){
+        
+        if( jQuery("input[name=BOARD_TITLE]",'#popForm').val() == ""){
+            alert('#springMessage("common.alert.inputTitle")');jQuery("input[name=BOARD_TITLE]",'#popForm').focus(); //"제목을 입력해주세요."
+            return false;
+        } else if( !fnFilter(jQuery("input[name=BOARD_TITLE]",'#popForm').val()) ){
+            jQuery("input[name=BOARD_TITLE]",'#popForm').val('').focus();
+            return false;
+        } else if( jQuery("select[name=SECRET_YN] option:selected",'#popForm').val() == ""){
+            alert('#springMessage("menu.store.notice.alert.showYN")');jQuery("select[name=SECRET_YN]",'#popForm').focus(); //"공개여부를 선택해주세요."
+            return false;
+        } else if( jQuery("select[name=BOARD_DETAIL_TYPE] option:selected",'#popForm').val() == ""){
+            alert('#springMessage("menu.store.notice.alert.noticeType")');jQuery("select[name=BOARD_DETAIL_TYPE]",'#popForm').focus(); //"게시물구분을 선택해주세요."
+            return false;
+        } else if( jQuery("select[name=USE_YN] option:selected",'#popForm').val() == ""){
+            alert('#springMessage("menu.store.notice.alert.useYN")');jQuery("select[name=USE_YN]",'#popForm').focus(); //"사용여부를 선택해주세요."
+            return false;
+        } else if( jQuery("[name=BOARD_CONTENT]",'#popForm').val() == ""){
+            alert('#springMessage("common.alert.inputContents")');jQuery("[name=BOARD_CONTENT]",'#popForm').focus(); //"내용을 입력해주세요."
+            return false;
+        }  
+        return true;
+    }
+ 
+    ##삭제하기
+    jQuery('#deleteBtn').click(function(){
+        if(jQuery('input[name=BOARD_IDX]').val().length==0){
+        	alert('#springMessage("menu.store.notice.alert.noAnswer")'); //"답변할 게시물이 선택되지 않았습니다."
+        }else{
+           
+            if(confirm('#springMessage("common.alert.doDelete")')){ //'삭제하시겠습니까?'
+                jQuery.ajax({
+                    url     : CONTEXT_PATH + '/admin/store/bbs/deleteBbs',
+                    type    : 'post',
+                    dataType: "json" ,
+                    data    : { BOARD_IDX : jQuery('input[name=BOARD_IDX]', 'form[name=upForm]').val() } ,
+                    success : function(json){
+                        if(json.success>0){
+                        	alert('#springMessage("menu.mobile.common.successDelete")'); //"삭제되었습니다."
+                        }else{
+                            alert('#springMessage("menu.store.notice.alert.notDelete")'); //답변이 있는 게시글은 삭제가 불가능합니다.
+                        }
+                        fn_closePopup();
+                        drawTable(1);//테이블내용 다시 로드
+                    }
+                });
+            }
+          
+        }
+    });
+    
+    ##파일다운로드
+    jQuery('a.fileDown').click(function(){
+        //한글처리
+        var fp = encodeURIComponent($(this).attr('file_path'));
+        var fn = encodeURIComponent($(this).attr('file_name'));
+        var dn = encodeURIComponent($(this).text());
+       
+        document.location.href = CONTEXT_PATH + '/admin/download?fileName='+fp+fn+'&dispName='+dn;
+        return false;
+    });
+});
+</script>
+
+<form name="upForm" method="post" enctype="multipart/form-data" >
+	<input type="hidden" name="PAGE_NUM" value="$R_PAGE_NUM" />
+
+<table class="tbl" id="popForm">
+    <colgroup>
+        <col width="18%"></col>
+        <col width="32%"></col>
+        <col width="18%"></col>
+        <col width="auto"></col>
+    </colgroup>
+    
+    <tr>
+        <th><label class="redNotice">#springMessage("common.header.title")</label></th> <!-- 제목 -->
+        <td colspan="3">
+            <input type="hidden" class="input_class" name="BOARD_TYPE"  value="$!row.BOARD_TYPE"/>
+            <input type="hidden" class="input_class" name="REF" value="$!row.REF"/>
+            <input type="hidden" class="input_class" name="STP" value="$!row.STP"/>##현재글의 step으로 답변시 모든 REF의 step를 조절한다.
+            <input type="hidden" class="input_class" name="LVL" value="$!row.LVL"/>##현재글의 레벨.(답변시 1증가)
+            <input type="hidden" class="input_class" name="REG_ID" value="$!row.REG_ID"/>
+            <input type="hidden" class="input_class" name="BOARD_IDX" value="$!row.BOARD_IDX"/>
+          <input type="text" class="input_class" name="BOARD_TITLE" value="$!row.BOARD_TITLE" style="width:98%;"/>
+            <div class="view">$!row.BOARD_TITLE</div>
+        </td>
+    </tr>
+    
+    <tr>
+        <th>#springMessage("menu.store.appManage.showYN")</th> <!-- 공개여부 -->
+        <td><select class="input_class" name="SECRET_YN">
+            <option value="Y" #if($row.SECRET_YN=="Y") selected="selected" #end>#springMessage("menu.store.appManage.show_Y")</option> <!-- 공개 -->
+            <option value="N" #if($row.SECRET_YN=="N") selected="selected" #end>#springMessage("menu.store.appManage.show_N")</option> <!-- 비공개 -->
+        </select>
+        <div class="view">#if($row.SECRET_YN=="Y")#springMessage("menu.store.appManage.show_Y")#else#springMessage("menu.store.appManage.show_N")#end</div> <!-- 공개 비공개 -->
+        </td>
+        <th><label class="redNotice">#springMessage("menu.store.notice.type")</label></th> <!-- 게시물구분 -->
+        <td>
+        <select class="input_class" name="BOARD_DETAIL_TYPE">
+            <option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+        #foreach( $code in $codeST001 )
+            #if(!$row)
+            <option value="$!code.CD_ID" >$!code.CD_NM</option>
+            #else 
+            <option value="$!code.CD_ID" #if($!code.CD_ID==$!row.BOARD_DETAIL_TYPE) selected="selected" #end>$!code.CD_NM</option>
+            #end
+        #end
+        </select>
+        <div class="view">$!row.BOARD_DETAIL_NAME</div>
+        </td>
+    </tr>
+    
+    <tr>
+        <th>#springMessage("common.header.useYN")</th> <!-- 사용여부 -->
+        <td><select class="input_class" name="USE_YN">
+            <option value="Y" #if($row.USE_YN=="Y") selected="selected" #end>#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+            <option value="N" #if($row.USE_YN=="N") selected="selected" #end>#springMessage("common.header.useStop")</option> <!-- 사용중지 -->
+        </select>
+        <div class="view">#if($row.USE_YN=="Y")#springMessage("common.header.use_Y")#else#springMessage("common.header.useStop")#end</div> <!-- 사용 사용중지 -->
+        </td>
+        <th>#springMessage("menu.store.notice.seeNum")</th> <!-- 조회수 -->
+        <td>$!row.HIT</td>
+    </tr>
+    <tr>
+        <th>#springMessage("menu.mobile.deploy.writer")</th> <!-- 등록자 -->
+        <td>$!row.REG_ID</td>
+        <th>#springMessage("menu.push.appManage.insertDate")</th> <!-- 등록일자 -->
+        <td>$!row.REG_DT</td>
+    </tr>
+    
+    <tr>
+        <th>#springMessage("common.text.file")</th> <!-- 파일 -->
+        <td colspan="3" style="line-height:24px;">
+            <div style="width:100%;height:24px;" class="input_class"><input class="left_area" type="file" name="files[0]"/>
+				<!-- <span class="input_class right_area ui-icon ui-icon-plusthick"></span> -->
+			</div>
+    #if($files)
+        #foreach( $file in $files )
+            <div style="width:100%;height:24px;">
+                <a href="#" class="fileDown" style="float:left;width:500px;" file_idx="$file.FILE_IDX" file_name="$file.FILE_SAVE_NAME" file_path="$file.FILE_PATH">$file.FILE_NAME</a>
+                <span style="float:right;" class="ui-icon ui-icon-closethick"></span>
+            </div>
+        #end
+    #end
+        </td>
+    </tr>
+    
+    <tr>
+        <td colspan="4" style="line-height:20px;word-wrap: break-word;">
+            <textarea class="input_class" name="BOARD_CONTENT">$!{row.BOARD_CONTENT}</textarea>
+            <div class="view">$!{row.BOARD_CONTENT}</div>
+        </td>
+    </tr>
+</table>
+</form>
+
+<div class="btn-wrap txtCenter">
+		<a href="javascript:void(0);" id="replyBtn" style="display:none;" class="btn1"><strong>#springMessage("menu.store.notice.answer")</strong></a> <!-- 답변 -->
+		<a href="javascript:void(0);" id="saveBtn" style="display:none;" class="btn1"><strong>#springMessage("common.button.save")</strong></a><!-- 저장 -->
+
+		<a href="javascript:void(0);" id="updateBtn" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+		<a href="javascript:void(0);" id="deleteBtn" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+
+		<a href="javascript:void(0);" id="closeBtn" onclick="fn_closePopup()" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+
+</div>

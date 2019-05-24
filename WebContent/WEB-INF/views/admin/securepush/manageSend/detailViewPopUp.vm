@@ -1,0 +1,175 @@
+<style>
+.jqte_editor, .jqte_source {
+	height: 400px; /*에디터 높이 재정의*/
+	padding:10px;
+	background:#FFF;
+	min-height:100px;
+	max-height:900px;
+	overflow:auto;
+	outline:none;
+	word-wrap:break-word; -ms-word-wrap:break-word;
+	resize:vertical
+}
+.jqte_toolbar {
+	display:none;
+}
+.file-list a{
+	font-size:12px;display:block;padding-top:5px;
+}
+</style>
+<script type="text/javascript">
+$(document).ready(function() {
+	jQuery("textarea[name=MSG_CONT]").jqte();
+	$(".jqte_editor").prop('contenteditable','false');
+});
+	
+</script>
+<div>
+	<form name="frmWrite" method="post">
+	#### S : 리스트  폼 부분  ####
+		<div class="scroll-area">
+			<table class="full-width">
+				<caption></caption>
+				<colgroup>
+					<col>
+					<col style="width:10px">
+					<col>
+				</colgroup>
+				<tr>
+					<td class="tbl-wrap valignTop">
+						<table class="tbl full-width">
+							<colgroup>
+								<col style="width:88px">
+								<col style="width:103px">
+								<col style="width:88px">
+								<col style="width:103px">
+							</colgroup>
+							<tr>
+								<th>#springMessage("common.text.registDate")</th> <!-- 등록일시 -->
+								<td colspan="3">$!itemInfo.REG_DT</td>
+							</tr>
+							<tr>
+								<th>#springMessage("common.header.author")</th> <!-- 작성자 -->
+								<td colspan="3">
+									$!itemInfo.SENDER_NM
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.push.receiverPerson")</th> <!-- 수신자 -->
+								<td colspan="3">
+									$!itemInfo.RECV_NM
+									#if($!itemInfo.RECV_TYPE == "0")
+									(#springMessage("menu.securePush.msgSend.receiveType.individual")) <!-- 개인 -->
+									#elseif($!itemInfo.RECV_TYPE == "1")
+									(#springMessage("menu.securePush.msgSend.receiveType.dept")) <!-- 부서 -->
+									#else
+									(#springMessage("menu.securePush.msgSend.receiveType.group")) <!-- 그룹 -->
+									#end
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.msgType.volatile")</th> <!-- 휘발성 -->
+								<td>$!itemInfo.VOLATILE_YN</td>
+								<th>#springMessage("menu.securePush.msgSend.msgType.urgent")</th> <!-- 긴급 -->
+								<td>$!itemInfo.URGENT_YN</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.expireDate")</th> <!-- 삭제일시 -->
+								<td colspan="3">
+									$!itemInfo.EXPIRE_DT
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.oriDate")</th> <!-- 원본작성일 -->
+								<td colspan="3">$!itemInfo.REF_DT</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.oriAuthor")</th> <!-- 원본작성자 -->
+								<td colspan="3">$!itemInfo.REF_SENDER_NM ($!itemInfo.REF_SENDER_DEPT_NM)</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.msgType.fwdAllow")</th> <!-- 전달가능-->
+								<td colspan="3">
+									$!itemInfo.FWD_ALLOW_YN
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.push.sendManage.sendStatus")</th> <!-- 발송상태 -->
+								<td>
+									#if($!itemInfo.SEND_STATUS == "1")
+									<font style="color:green;">#springMessage("menu.stats.push.send")</font> <!-- 발송 -->
+									#else
+									<font style="color:red;">#springMessage("menu.stats.push.fail")</font> <!-- 실패 -->
+									#end
+								</td>
+								<th>#springMessage("menu.securePush.msgSend.msgStatus")</th> <!-- 메시지상태 -->
+								<td>
+									#if($!itemInfo.DEL_YN == "Y")
+									<font style="color:red;">#springMessage("menu.securePush.msgSend.status.delete")</font> <!-- 삭제 -->
+									#else
+									<font style="color:green;">#springMessage("menu.securePush.msgSend.status.normal")</font> <!-- 정상 -->
+									#end
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("common.text.errorMsg")</th> <!-- 에러메시지 -->
+								<td colspan="3">
+									#if($!itemInfo.SEND_STATUS == "2")
+									[$!itemInfo.SENT_RESULT_CD] $!itemInfo.SENT_RESULT_MSG
+									#end
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("common.text.upFile")</th> <!-- 첨부파일 -->
+								<td colspan="3">
+									<div class="file-list" style="height: 50px;">
+									#foreach( $fileInfo in $itemInfo.fileList )
+									<a href="$!{CONTEXT_PATH}/admin/securepush/reserveMsg/downMsgFile?FILE_ID=$fileInfo.FILE_ID">$!fileInfo.FILE_NM</a>
+									#end
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+					<td></td>
+					<td class="tbl-wrap valignTop">
+						<table class="tbl-editor full-width">
+							<caption>#springMessage("menu.securePush.msgSend.enterTitleCont")</caption> <!-- 제목/내용 입력 -->
+							<colgroup>
+								<col style="width:380px">
+							</colgroup>
+							<tr>
+								<td>
+									#if($!itemInfo.FORWARD_YN == "Y")
+									<input type="text" name="TITLE" id="TITLE" maxlength="20" class="title" placeholder="#springMessage('common.header.title')" value="[FW]$!itemInfo.TITLE" readonly/> <!-- 제목 -->
+									#else
+									<input type="text" name="TITLE" id="TITLE" maxlength="20" class="title" placeholder="#springMessage('common.header.title')" value="$!itemInfo.TITLE" readonly/> <!-- 제목 -->
+									#end
+								</td>
+							</tr>
+							<tr>
+								<td class="editor-body">
+									<div style="height:405px;">
+										<textarea id="MSG_CONT" name="MSG_CONT" cols="105" rows="45" placeholder="#springMessage('common.alert.inputContents')">$!itemInfo.CONT</textarea> <!-- 내용을 입력해 주세요. -->
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+
+			<div class="btn-wrap">
+				<a href="javascript:fn_msgDelete('$!itemInfo.MSGSEQ');void(0)" class="btn1 type2" id="pageDeletePop">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+				<a href="javascript:fn_closePopup();void(0);" class="btn1 type2">#springMessage("common.button.close")</a> <!-- 닫기 -->
+				#if($!itemInfo.DEL_YN == "N")
+				<a href="javascript:fn_goSelectOrgPop();void(0);" class="btn1 fr">#springMessage("common.button.forward")</a> <!-- 전달 -->
+				#else
+				<small class="fr">※ #springMessage("menu.securePush.msgSend.comment.forwardConstraint")</small> <!-- 발신자가 삭제하거나 만료된 메시지는 전달할 수 없습니다. -->
+				#end
+			</div>
+
+		</div>
+
+	</form>
+</div>

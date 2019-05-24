@@ -1,0 +1,31 @@
+<form>
+	<div class="popup_content">
+		<fieldset>
+			<legend></legend>
+			<table class="tb_view" summary="">
+				<colgroup>
+					<col width="AUTO"/>
+				</colgroup>
+				<tr>
+					<td>
+						<input type="radio" id="idRdoReSendType0" name="reSendType" value="0">#springMessage("menu.push.user.allResend")</input> <!-- 전체 재전송 -->
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<input type="radio" id="idRdoReSendType1" name="reSendType" value="1">#springMessage("menu.push.user.FailResend")</input> <!-- 수신 실패자 재 전송 -->
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<input type="radio" id="idRdoReSendType2" name="reSendType" value="2">#springMessage("menu.push.user.msgOpenResend")</input> <!-- 메세지 오픈자 재 전송 -->
+					</td>
+				</tr>
+			</table>
+			<div class="btn_pop">
+				<button type="button" class="btn_basic">재전송</button>
+				<button type="button" class="btn_basic" onclick="fn_closePopup();"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+			</div>
+		</fieldset>
+	</div>
+</form>

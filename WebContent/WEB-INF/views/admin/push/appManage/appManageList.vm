@@ -1,0 +1,73 @@
+<input type="hidden" id="CLICK_APPID" value="$CLICK_APPID" />
+	<table class="tbl-nb" summary="APP ID,APP NAME,등록일자,변경일시,상세">
+		<colgroup><!--  5cell  -->
+			<col width="200px"/>
+			<col width="auto"/>
+			<col width="200px"/>
+			<col width="200px"/>
+			<col width="70px"/>
+			<col width="70px"/>
+		</colgroup>
+		<thead>
+			<tr>
+				<th scope="col">APP ID</th>
+				<th scope="col">APP NAME</th>
+				<th scope="col">#springMessage("menu.push.appManage.insertDate")</th> <!-- 등록일자 -->
+				<th scope="col">#springMessage("menu.push.appManage.updateDate")</th> <!-- 변경일시 -->
+				<th scope="col"> </th>
+				<!--<th scope="col"> </th>-->
+			</tr>
+		</thead>
+		<tbody>
+		#foreach($pushService in $pushServiceList)
+			#set($j_tot = $pushService.TOT_CNT)
+			<tr>
+				<td>
+					$esc.xml($!pushService.APPID)
+					<input type="hidden" class="APPID" value="$pushService.APPID" />
+				</td>
+				#if(!$pushService.APPNAME)
+					<td>
+						$!pushService.APPNAME
+					</td>
+				#else
+				<td>
+					$esc.xml($!pushService.APPNAME)
+				</td>
+				#end
+				<td >
+					$!pushService.REGDATE
+				</td>
+				<td >
+					$!pushService.MODDATE
+				</td>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="serviceModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+				</td>
+				<!--
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="pushtdClick">PNS</a>
+				</td>
+				-->
+			</tr>
+		#end
+		#if(!$j_tot)
+			<tr>
+				<td colspan="5" class="ta_c"> #springMessage("menu.push.appManage.noService") </td> <!-- 등록된 서비스가 없습니다. -->
+			</tr>
+		#end
+		</tbody>
+	</table>
+	<input type="hidden" id="SERVICE_NUM" value="$!R_PAGE_NUM" />
+	<div class="j_page_div">
+		##현재 페이지
+		<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+		##총 개수
+		<input type="hidden" name="J_tot" value="$!j_tot" />
+		##한페이지의 로우수
+		<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+		##한페이지수
+		<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+		##이밴트
+		<input type="hidden" name="j_event" value="fn_serviceList" />
+	</div>

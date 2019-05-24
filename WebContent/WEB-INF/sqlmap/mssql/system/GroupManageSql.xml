@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.system.group.mapper.SystemGroupDao">
+
+	<resultMap type="kr.msp.admin.system.group.dto.AuthGroupDto" id="AuthGroupDto">
+		<result property="ID_GROUP" column="AUTH_GRP_ID"/>
+		<result property="NM_GROUP" column="AUTH_GRP_NM"/>
+		<result property="DESC_GROUP" column="AUTH_GRP_DESC"/>
+		<result property="ID_INSERT" column="REG_ID"/>
+		<result property="DT_INSERT" column="REG_DTTM"/>
+		<result property="ID_UPDATE" column="MOD_ID"/>
+		<result property="DT_UPDATE" column="MOD_DTTM"/>
+		<result property="ID_FIRST_MENU" column="INTRO_MENU_ID"/>
+		<result property="NM_FIRST_MENU" column="NM_FIRST_MENU"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.system.group.dto.FirstMenuDto" id="FirstMenuDto">
+		<result property="ID_MENU" column="MENU_ID"/>
+		<result property="NM_MENU" column="MENU_NM"/>
+	</resultMap>
+
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	
+	<!--  권한그룹 정보 조회  -->
+    <select id="SelectAuthGroup" parameterType="kr.msp.admin.system.group.dto.AuthGroupParamDto" resultMap="AuthGroupDto">
+        <include refid="head"/>
+		SELECT
+		     A.AUTH_GRP_ID
+		    ,A.AUTH_GRP_NM
+		    ,A.AUTH_GRP_DESC
+		    ,A.INTRO_MENU_ID
+		    ,B.MENU_NM AS NM_FIRST_MENU
+		    ,A.REG_ID
+		    ,CONVERT(CHAR(10), A.REG_DTTM, 102) AS REG_DTTM
+		    ,A.MOD_ID
+		    ,CONVERT(CHAR(10), A.MOD_DTTM, 102) AS MOD_DTTM
+		    , ROW_NUMBER() OVER(ORDER BY AUTH_GRP_NM ASC) PAGE_KEY
+		FROM TB_SYS_AUTH_GRP A
+		LEFT OUTER JOIN TB_SYS_MENU B ON (A.INTRO_MENU_ID = B.MENU_ID)
+        <where>
+            <if test="NM_GROUP != null">
+                AUTH_GRP_NM LIKE '%' + #{NM_GROUP} + '%'
+            </if>
+        </where>
+        
+        <include refid="bottom"/>
+    </select><!--  완료  -->
+    
+    <!--  첫메뉴 지정 리스트 조회  -->
+    <select id="FirstMenuSelectBoxList" resultMap="FirstMenuDto">
+		SELECT 	MENU_ID
+		,		MENU_NM
+		,		1 LV
+		,		CONVERT(VARCHAR(1000), CONVERT(VARCHAR,SORT_NO + 100) + MENU_ID) SORT_KEY
+		FROM	TB_SYS_MENU
+		WHERE	UP_MENU_ID IS NULL
+		ORDER BY SORT_KEY
+    </select><!--  완료  -->
+    
+    <!--  권한그룹 단건 정보 조회  -->
+    <select id="SelectOneAuthGroup" parameterType="kr.msp.admin.system.group.dto.AuthGroupParamDto" resultMap="AuthGroupDto">
+		SELECT
+		     A.AUTH_GRP_ID
+		    ,A.AUTH_GRP_NM
+		    ,A.AUTH_GRP_DESC
+		    ,A.INTRO_MENU_ID
+		    ,B.MENU_NM AS NM_FIRST_MENU
+		    ,A.REG_ID
+		    ,CONVERT(CHAR(10), A.REG_DTTM, 102) AS REG_DTTM
+		    ,A.MOD_ID
+		    ,CONVERT(CHAR(10), A.MOD_DTTM, 102) AS MOD_DTTM
+		FROM TB_SYS_AUTH_GRP A
+		LEFT OUTER JOIN TB_SYS_MENU B ON (A.INTRO_MENU_ID = B.MENU_ID)
+       WHERE A.AUTH_GRP_ID = #{ID_GROUP}
+    </select><!--  완료  -->
+    
+    <!--  권한그룹 등록 -->
+    <insert id="InsertAuthGroup" parameterType="kr.msp.admin.system.group.dto.AuthGroupDto">
+		
+        INSERT INTO TB_SYS_AUTH_GRP(
+		             AUTH_GRP_ID
+		            ,AUTH_GRP_NM
+		            ,AUTH_GRP_DESC
+		            ,INTRO_MENU_ID
+		            ,REG_ID
+		            ,REG_DTTM
+		        )
+				SELECT
+		             (
+						SELECT  REPLICATE(RV,  L - LEN(V)) + V
+						FROM
+						(
+						    SELECT
+								10 L
+							,  '0' RV
+							,	CONVERT(CHAR, ISNULL(MAX(AUTH_GRP_ID), 0)+1) V
+						    FROM TB_SYS_AUTH_GRP
+						) A		
+					) AUTH_GRP_ID
+		            ,#{NM_GROUP} AUTH_GRP_NM
+		            ,#{DESC_GROUP} AUTH_GRP_DESC
+		            ,#{ID_FIRST_MENU} INTRO_MENU_ID
+		            ,#{ID_INSERT} REG_ID
+		            ,GETDATE() REG_DTTM
+        
+    </insert><!--  완료  -->
+    
+    <!--  권한그룹 수정 -->
+    <update id="UpdateAuthGroup" parameterType="kr.msp.admin.system.group.dto.AuthGroupDto">
+		UPDATE TB_SYS_AUTH_GRP
+		    SET AUTH_GRP_NM       = #{NM_GROUP}
+		       ,AUTH_GRP_DESC     = #{DESC_GROUP}
+		       ,INTRO_MENU_ID  = #{ID_FIRST_MENU}
+		       ,MOD_ID      = #{ID_UPDATE}
+		       ,MOD_DTTM      = GETDATE()
+		WHERE AUTH_GRP_ID = #{ID_GROUP}
+    </update><!--  완료  -->
+    
+    <!--  권한그룹 삭제  -->
+    <delete id="DeleteAuthGroup" parameterType="kr.msp.admin.system.group.dto.AuthGroupDto">
+        DELETE FROM TB_SYS_AUTH_GRP
+        WHERE AUTH_GRP_ID = #{ID_GROUP}
+    </delete><!--  완료  -->
+    
+    <!--  사용자메뉴권한그룹 삭제  -->
+    <delete id="DeleteAuthUserGroup" parameterType="kr.msp.admin.system.group.dto.AuthGroupDto">
+        DELETE FROM TB_SYS_USER_AUTH_GRP
+        WHERE AUTH_GRP_ID = #{ID_GROUP}
+    </delete><!--  완료  -->
+    
+    <!--  그룹별 메뉴권한정보 삭제  -->
+    <delete id="DeleteMenuAuthGroup" parameterType="kr.msp.admin.system.group.dto.AuthGroupDto">
+        DELETE FROM TB_SYS_MENU_AUTH
+        WHERE AUTH_GRP_ID = #{ID_GROUP}
+    </delete><!--  완료  -->
+    
+</mapper>

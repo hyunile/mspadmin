@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd 
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+		">
+<!-- 
+    <context:property-placeholder location="WEB-INF/config/msp.properties" />
+ 	<beans:bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	    <beans:property name="properties" ref="mspConfig"/>
+	</beans:bean>
+ -->
+    <beans:bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	    <beans:property name="properties" ref="mspConfig"/>
+	</beans:bean>
+
+    <context:annotation-config />
+
+	<mvc:annotation-driven />
+    <!--제우스일 경우 주석 해제 하고 다음줄 주석 처리-->
+    <!--<mvc:default-servlet-handler default-servlet-name="WorkerServlet"/>-->
+	<mvc:default-servlet-handler/>
+	
+	<aop:aspectj-autoproxy/>
+
+	<context:component-scan base-package="kr.msp.admin">
+        <context:exclude-filter type="regex" expression="kr.msp.admin.push.*"/>
+        <context:exclude-filter type="regex" expression="kr.msp.admin.store.*"/>
+    </context:component-scan>
+	<context:component-scan base-package="kr.msp.common"/>
+
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/admin/**"/>
+			<mvc:mapping path="/common/**"/>
+			<mvc:exclude-mapping path="/admin/store/download"/>
+			<beans:bean class="kr.msp.admin.common.interceptor.EventExpirationCheckInterceptor"/>
+		</mvc:interceptor>
+		<mvc:interceptor>
+		    <mvc:mapping path="/"/>
+			<mvc:mapping path="/resources/**"/>
+            <mvc:mapping path="/index"/>
+		    <mvc:mapping path="/logOut"/>
+		    <mvc:mapping path="/lose_session"/>
+			<beans:bean class="kr.msp.admin.common.interceptor.EventExpirationHomeInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+    <beans:import resource="velocity-context.xml"/>
+
+    <beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<beans:property name="basename" value="classpath:messages" />
+		<beans:property name="defaultEncoding" value="UTF-8" />
+	</beans:bean>
+	
+	<!-- <beans:bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver">
+		<beans:property name="defaultLocale" value="en" />
+	</beans:bean> -->
+
+	<!--
+	<beans:bean id="eventScheduler" class="kr.msp.event.service.EventSchedulerService"/>
+	<task:scheduler id="scheduler" pool-size="1"/>
+    <task:scheduled-tasks scheduler="scheduler" >
+        <task:scheduled ref="eventScheduler" method= "getAdminRsrvMsg" cron="0 0/5 * * * ?" />
+        <task:scheduled ref="eventScheduler" method= "sendAdminRsrvMsg" cron="0 0/1 * * * ?" />
+    </task:scheduled-tasks>
+    -->
+    <!-- 시큐어 푸쉬 인사 정보 동기화 스케쥴러. 이중화 시 한쪽 서버에서만 동작하도록 설정할 것. -->
+    <!-- <beans:bean id="securepushHRSync" class="kr.msp.admin.securepush.schedule.service.HRSyncService"/>
+	<task:scheduler id="securepushHRSyncScheduler" pool-size="1"/>
+    <task:scheduled-tasks scheduler="securepushHRSyncScheduler" >
+        <task:scheduled ref="securepushHRSync" method= "syncHR" cron="0 0 03 * * ?" />
+    </task:scheduled-tasks> -->
+</beans:beans>
+

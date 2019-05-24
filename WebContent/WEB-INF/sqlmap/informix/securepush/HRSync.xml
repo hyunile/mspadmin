@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.securepush.schedule.mapper.HRSyncDao">
+
+	<resultMap type="kr.msp.admin.securepush.schedule.dto.DeptDto" id="DeptDto">
+		<result property="DEPT_CD"	column="dept_cd"/>
+		<result property="DEPT_NM"	column="dept_nm"/>
+		<result property="FULL_NM"	column="full_nm"/>
+		<result property="UP_DEPT_CD"	column="up_dept_cd"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.securepush.schedule.dto.EmpDto" id="EmpDto">
+		<result property="USER_ID"	column="user_id"/>
+		<result property="EMP_NO"	column="emp_no"/>
+		<result property="USER_NM"	column="user_nm"/>
+		<result property="LOGIN_ID"	column="login_id"/>
+		<result property="DEPT_CD"	column="dept_cd"/>
+		<result property="DEPT_NM"	column="dept_nm"/>
+		<result property="POS_CD"	column="pos_cd"/>
+		<result property="POS_NM"	column="pos_nm"/>
+		<result property="FULL_NM"	column="full_nm"/>
+		<result property="TEL_NO"	column="tel_no"/>
+		<result property="CELL_NO"	column="cell_no"/>
+		<result property="EMAIL"	column="email"/>
+		<result property="PHOTO_PATH"	column="photo_path"/>
+		<result property="RESP_CD"	column="resp_cd"/>
+		<result property="RESP_NM"	column="resp_nm"/>
+		<result property="WORK_YN"	column="work_yn"/>
+		<result property="REG_DT"	column="reg_dt"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.securepush.schedule.dto.UserDto" id="UserDto">
+		<result property="USER_ID"	column="user_id"/>
+		<result property="EMP_NO"	column="emp_no"/>
+		<result property="USER_NM"	column="user_nm"/>
+		<result property="DEPT_CD"	column="dept_cd"/>
+		<result property="DEPT_NM"	column="dept_nm"/>
+		<result property="ADMIN_CD"	column="admin_cd"/>
+		<result property="USE_YN"	column="use_yn"/>
+		<result property="AGREE_YN"	column="agree_yn"/>
+		<result property="REG_DT"	column="reg_dt"/>
+		<result property="MOD_DT"	column="mod_dt"/>
+	</resultMap>
+
+
+	<!-- 시큐어 푸쉬 DB 부서 목록 조회 -->
+	<select id="selectDeptList" parameterType="hashmap" resultMap="DeptDto">
+		SELECT
+			DEPT_CD
+			,DEPT_NM
+			,FULL_NM
+			,UP_DEPT_CD
+        FROM TB_SPUSH_DEPT 
+        ORDER BY DEPT_CD 
+    </select>
+    
+    <!-- 시큐어푸쉬 DB 사원 정보 조회. -->
+    <select id="selectEmpList" parameterType="hashmap" resultMap="EmpDto">
+		SELECT
+			EMP_NO
+			,USER_NM
+			,LOGIN_ID
+			,DEPT_CD
+			,POS_CD
+			,RESP_CD
+			,TEL_NO
+			,CELL_NO
+			,EMAIL
+			,PHOTO_PATH
+			,WORK_YN
+			,TO_CHAR(REG_DT, '%Y.%m.%d %H:%M:%S') AS REG_DT
+        FROM TB_SPUSH_EMPLOYEE 
+        ORDER BY EMP_NO 
+    </select>
+    
+    <!-- 시큐어 푸쉬 부서 테이블 정보 업데이트. -->
+    <update id="updateDept" parameterType="kr.msp.admin.securepush.schedule.dto.DeptDto">
+    	UPDATE TB_SPUSH_DEPT 
+		SET
+			DEPT_NM = #{DEPT_NM}
+			,UP_DEPT_CD = #{UP_DEPT_CD}
+			,FULL_NM = #{FULL_NM} 
+		WHERE
+			DEPT_CD = #{DEPT_CD}
+    </update>
+    
+    <!-- 시큐어 푸쉬 조직원 테이블 정보 업데이트. -->
+    <update id="updateEmp" parameterType="kr.msp.admin.securepush.schedule.dto.EmpDto">
+    	UPDATE TB_SPUSH_EMPLOYEE 
+		SET
+			USER_NM = #{USER_NM}
+			,LOGIN_ID = #{LOGIN_ID}
+			<if test="LOGIN_PWD != null and LOGIN_PWD != ''">
+	        	,LOGIN_PWD = #{LOGIN_PWD}
+	 		</if>
+			,POS_CD = #{POS_CD}
+			,RESP_CD = #{RESP_CD}
+			,DEPT_CD = #{DEPT_CD} 
+			,TEL_NO = #{TEL_NO}
+			,CELL_NO = #{CELL_NO}
+			,EMAIL = #{EMAIL}
+			,PHOTO_PATH = #{PHOTO_PATH}
+			,WORK_YN = #{WORK_YN}
+		WHERE
+			EMP_NO = #{EMP_NO}
+    </update>
+    
+    <update id="updateUser" parameterType="kr.msp.admin.securepush.schedule.dto.UserDto">
+    	UPDATE TB_SPUSH_USER 
+		SET
+			USER_NM = #{USER_NM}
+			,DEPT_CD = #{DEPT_CD}
+			,DEPT_NM = #{DEPT_NM}
+			,MOD_DT = CURRENT
+		WHERE
+			EMP_NO = #{EMP_NO}
+    </update>
+    
+    <!-- 시큐어 푸쉬 조직원 정보 퇴직(삭제) 처리. -->
+ 	<update id="updateDelEmp" parameterType="string">
+        UPDATE TB_SPUSH_EMPLOYEE 
+        SET 
+        	WORK_YN = 'N'
+        WHERE 
+        	EMP_NO = #{EMP_NO}
+ 	</update>
+    
+    <!-- 시큐어 푸쉬 부서 정보 목록 등록 -->
+    <insert id="insertDepts" parameterType="java.util.List">
+        INSERT INTO TB_SPUSH_DEPT(DEPT_CD, DEPT_NM, UP_DEPT_CD, FULL_NM) 
+        SELECT * FROM (
+        <foreach item="item" index="index" collection="list" separator=" UNION ALL ">
+        	SELECT '${item.DEPT_CD}', '${item.DEPT_NM}', '${item.UP_DEPT_CD}', '${item.FULL_NM}' from table(set{1})
+		</foreach>
+		)
+ 	</insert>
+ 	
+ 	<!-- 시큐어 푸쉬 조직원 정보 목록 등록 -->
+    <insert id="insertEmps" parameterType="java.util.List">
+        INSERT INTO TB_SPUSH_EMPLOYEE(EMP_NO, POS_CD, RESP_CD, DEPT_CD, LOGIN_ID, LOGIN_PWD, USER_NM, TEL_NO, CELL_NO
+        	, EMAIL, PHOTO_PATH, WORK_YN, REG_DT)
+        SELECT * FROM (
+        <foreach item="item" index="index" collection="list" separator=" UNION ALL ">
+			SELECT '${item.EMP_NO}', '${item.POS_CD}', '${item.RESP_CD}', '${item.DEPT_CD}', '${item.LOGIN_ID}', '${item.LOGIN_PWD}', '${item.USER_NM}'
+				, '${item.TEL_NO}', '${item.CELL_NO}', '${item.EMAIL}', '${item.PHOTO_PATH}', 'Y', CURRENT 
+			from table(set{1})
+		</foreach>
+		)
+ 	</insert>
+ 	
+ 	<!-- 시큐어 푸쉬 사용자 정보 목록 등록 -->
+    <insert id="insertUsers" parameterType="java.util.List">
+        INSERT INTO TB_SPUSH_USER(USER_ID, EMP_NO, USER_NM, DEPT_CD, DEPT_NM, ADMIN_CD, USE_YN, AGREE_YN, REG_DT) 
+        SELECT * FROM (
+        <foreach item="item" index="index" collection="list" separator=" UNION ALL ">
+			SELECT '${item.USER_ID}', '${item.EMP_NO}', '${item.USER_NM}', '${item.DEPT_CD}', '${item.DEPT_NM}', '0', 'Y', 'N', CURRENT 
+			from table(set{1})
+		</foreach>
+		)
+ 	</insert>
+ 	
+ 	<!-- 시큐어 푸쉬 직급 목록 등록 -->
+    <insert id="insertPositions" parameterType="java.util.List">
+        INSERT INTO TB_SPUSH_POS(POS_CD, POS_NM) 
+        SELECT * FROM (
+        <foreach item="item" index="index" collection="list" separator=" UNION ALL ">
+			SELECT '${item.POS_CD}', '${item.POS_NM}' from table(set{1})
+		</foreach>
+		)
+ 	</insert>
+ 	
+ 	<!-- 시큐어 푸쉬 직책 목록 등록 -->
+    <insert id="insertResps" parameterType="java.util.List">
+        INSERT INTO TB_SPUSH_RESP(RESP_CD, RESP_NM) 
+        SELECT * FROM (
+        <foreach item="item" index="index" collection="list" separator=" UNION ALL ">
+			SELECT '${item.RESP_CD}', '${item.RESP_NM}' from table(set{1})
+		</foreach>
+		)
+ 	</insert>
+ 	
+ 	<!-- 시큐어 푸쉬 부서 정보 목록 삭제. -->
+ 	<delete id="deleteDepts" parameterType="java.util.List">
+        DELETE FROM TB_SPUSH_DEPT 
+        WHERE 
+        	DEPT_CD IN
+	        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+	 		 	#{item} 
+	 		</foreach>
+ 	</delete>
+ 	
+ 	<!-- 시큐어 푸쉬 직급 목록 삭제. -->
+ 	<delete id="deletePositions">
+        DELETE FROM TB_SPUSH_POS 
+ 	</delete>
+ 	
+ 	<!-- 시큐어 푸쉬 직책 목록 삭제. -->
+ 	<delete id="deleteResps">
+        DELETE FROM TB_SPUSH_RESP 
+ 	</delete>
+	
+</mapper>

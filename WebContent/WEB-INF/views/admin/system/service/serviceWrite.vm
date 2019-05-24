@@ -1,0 +1,69 @@
+<form name="frmServiceWrite">
+	<div>
+		<table class="tbl">
+			<colgroup><!--  2cell  -->
+				<col width="23%"/><col width="auto"/>
+			</colgroup>
+			<tr>
+				<th scope="row">
+					#springMessage("common.header.appId") 			#### 앱아이디 ####
+				</th>
+				<td>
+					$esc.xml($!serviceOne.APP_ID)
+					<input type="hidden" name="APP_ID" value="$!serviceOne.APP_ID" />
+				</td>
+			</tr>
+			#if($serviceName == "PUSH_SVC")
+			<tr>
+				<th scope="row">
+					<label for="APPNAME">#springMessage("common.header.pushServiceName") </label>		### PUSH 서비스명 ###
+				</th>
+				<td>
+					<input type="text" class="width95" id="APPNAME" name="APPNAME" />
+				</td>
+			</tr>
+			#end
+			<tr>
+				<th scope="row">
+					<label for="SVC_DTL">#springMessage("common.header.serviceDesc")</label>		### 서비스 설명 ###
+				</th>
+				<td>
+				#if($serviceName == "PUSH_SVC")
+					<textarea id="SVC_DTL" name="SVC_DTL" class="width95" style="height:70px;"></textarea>
+				#else
+					<textarea id="SVC_DTL" name="SVC_DTL" class="width95" style="height:100px;"></textarea>
+				#end
+					<input type="hidden" name="SVC_ID" value="$SVC_ID" />
+				</td>
+			</tr>
+			<tr>
+				<th scope="row">
+					<label for="USE_YN" class="redNotice">#springMessage("common.header.useYN")</label>		### 사용여부 ###
+				</th>
+				
+				#if($serviceName == "PUSH_SVC")
+					<td>
+						<select id="USE_YN" name="USE_YN" >
+							<option value="">#springMessage("common.select.choose")</option>					### 선택 ###
+							<option value="N">#springMessage("common.header.use_Y")</option>					### 사용 ###
+							<option value="Y">#springMessage("common.header.use_N")</option>					### 미사용 ###
+						</select>
+					</td>
+				#else
+					<td>
+						<select id="USE_YN" name="USE_YN" >
+							<option value="">#springMessage("common.select.choose")</option>				### 선택 ###
+							<option value="Y">#springMessage("common.header.use_Y")</option>				### 사용 ###
+							<option value="N">#springMessage("common.header.use_N")</option>				### 미사용 ###
+						</select>
+					</td>
+				#end
+			</tr>
+		</table>
+		
+		<div class="btn-wrap txtCenter">
+			<a href="javascript:fn_serviceSubWrite('$serviceName');void(0);" class="btn1"><strong>#springMessage("common.button.regist")</strong></a> <!-- 등록 -->
+			<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a>
+		</div>
+	</div>
+</form>

@@ -1,0 +1,112 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	fn_setEditedCont();
+});
+
+// 이전 입력했던 내용이 있으면 세팅.
+function fn_setEditedCont() {
+	var editedGrpNm = $("#NEW_GRP_NM").val();
+	if(editedGrpNm != null && editedGrpNm != '')
+		$("form[name=frmEditGrpNameColor]").find("input[name=GRP_NM]").val(editedGrpNm);
+	
+	var editedGrpColor = $("#NEW_GRP_COLOR").val();
+	if(editedGrpColor != null && editedGrpColor != '')
+		$("form[name=frmEditGrpNameColor]").find("#"+editedGrpColor).prop('checked', true);
+}
+
+// 그룹 컬러 라디오 버튼 선택 핸들러.
+$(document).on("change","input[name='groupColor']",function(){
+	var _val = $(this).val();
+	$('#NEW_GRP_COLOR').val(_val);
+});
+
+//그룹명 입력 완료 처리.
+function fn_onInputGrpName(){
+	
+	if( $("form[name=frmEditGrpNameColor]").find("input[name=GRP_NM]").val() == ""){
+		alert('#springMessage("menu.securePush.manageGrp.alert.inputGrpName")'); //그룹명을 입력해 주세요.
+		$("form[name=frmEditGrpNameColor]").find("input[name=GRP_NM]").focus();
+		return;
+	}
+	var _dupChk = $('#NM_DUPLICATE_CHECK').val();
+	if(_dupChk != 'Y'){
+		alert('#springMessage("menu.securePush.manageGrp.alert.checkGrpNameDuplicate")'); //그룹명 중복 체크를 해주세요.
+		return;
+	}
+	
+	var _grpColor = $('#NEW_GRP_COLOR').val();
+	if(_grpColor == null || _grpColor == ''){
+		alert('#springMessage("menu.securePush.manageGrp.alert.selectGrpColor")'); // 그룹 컬러를 선택해 주세요.
+		return;
+	}
+	
+	$('#NEW_GRP_NM').val($("form[name=frmEditGrpNameColor]").find("input[name=GRP_NM]").val());
+	
+	fn_goSelectOrgPop();
+}
+
+//그룹명 중복 체크
+function fn_grpNameCheck(){
+	
+	if( $("form[name=frmEditGrpNameColor]").find("input[name=GRP_NM]").val() == ""){
+		alert('#springMessage("menu.securePush.manageGrp.alert.inputGrpName")'); //그룹명을 입력해 주세요.
+		$("form[name=frmEditGrpNameColor]").find("input[name=GRP_NM]").focus();
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/grpNameCheck";
+	var data = $("form[name=frmEditGrpNameColor]").serialize();
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.manageGrp.alert.availGrpName")'); //사용할 수 있는 그룹명입니다.
+				$("#NM_DUPLICATE_CHECK").val('Y');
+			}else{
+				alert(data.msg);
+				$("#windowPop").find("input[name=GRP_NM]").focus();
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		}
+	});
+}
+
+</script>
+<div>
+	<form name="frmEditGrpNameColor" method="POST">
+	<table class="tbl">
+		<caption>#springMessage("menu.securePush.manageGrp.addGrp")</caption> <!-- 그룹 추가 -->
+		<colgroup>
+			<col style="width:86px">
+			<col style="width:234px">
+		</colgroup>
+		<tr>
+			<th><label for="groupName">#springMessage("menu.securePush.manageGrp.assignGrpName")</label></th> <!-- 그룹명 지정 -->
+			<td>
+				<input type="text" name="GRP_NM" id="GRP_NM" placeholder="#springMessage('menu.securePush.manageGrp.grpName.placeholder')" maxlength="30" size="24"> <!-- 30자 이내로 입력 해 주세요. -->
+				<a href="javascript:fn_grpNameCheck();void(0);" class="btn2 fr">#springMessage("common.button.duplicateCheck")</a> <!-- 중복체크 -->
+				<small>* #springMessage("menu.securePush.manageGrp.grpName.comment")</small> <!-- 중복된 그룹명은 지정하실 수 없습니다. -->
+				
+			</td>
+		</tr>
+		<tr>
+			<th>#springMessage("menu.securePush.manageGrp.selectionGrpColor")</th> <!-- 그룹 컬러 선택 -->
+			<td>
+				#foreach( $colorInfo in $groupColorList )
+				<input type="radio" name="groupColor" id="$!colorInfo.GRP_COLOR" value="$!colorInfo.GRP_COLOR"><label for="$!colorInfo.GRP_COLOR"></label>
+				<span class="$!colorInfo.GRP_COLOR" style="margin-left:-5px;"></span>
+				#end
+			</td>
+		</tr>
+	</table>
+	</form>
+	<input type="hidden" id="NM_DUPLICATE_CHECK" value="N" />
+	<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 fl close">#springMessage("common.button.cancel")</a> <!-- 취소 -->
+	<a href="javascript:fn_onInputGrpName();void(0);" class="btn1 fr close" >#springMessage("common.button.okay")</a> <!-- 확인 -->
+</div>

@@ -1,0 +1,18 @@
+<h2 class="tbl-title">#springMessage("menu.push.sendManage.addTarget")</h2><!-- 추가 대상자 -->
+
+<div style="height:350px; overflow-x:hidden; overflow-y:scroll;">
+	<table class="tbl-nb full-width" id="tblInUser">
+		<thead>
+			<tr>
+				<th scope="col" style="width: AUTO">#springMessage("login.userid")</th> <!-- 아이디 -->
+                <th scope="col" style="width: AUTO">#springMessage("common.text.name")</th> <!-- 이름 -->
+                <th scope="col" style="width: AUTO">PNSID</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr id="default_text">
+				<td colspan="3">#springMessage("menu.push.alert.chooseUser")</td> <!-- 사용자를 선택해 주세요. -->
+	        </tr>
+        </tbody>
+	</table>
+</div>

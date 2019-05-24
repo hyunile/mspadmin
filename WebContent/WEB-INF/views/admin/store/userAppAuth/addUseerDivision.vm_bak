@@ -1,0 +1,23 @@
+<div style="max-height:500px; overflow-y:auto;">
+	<ul id="resTree" class="easyui-tree" >
+	</ul>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function () {
+
+	console.log('addUserDivision.vm is Executed');
+	
+	$('#resTree').tree({
+   		checkbox:true,
+    	data: $userList
+	});
+	
+	
+	$(".tree-node").each(function(){
+		if($(this).attr("node-id") == "por"){
+			$(this).find(".tree-file").removeClass().addClass("tree-icon").addClass("tree-folder");
+		}
+	});
+});
+</script>

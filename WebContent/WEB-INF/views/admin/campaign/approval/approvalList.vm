@@ -1,0 +1,91 @@
+<table class="tbl-nb"  id="tbList" summary="항목선택,리소스ID,파일명,확장자,크기">
+	<colgroup >
+<!-- 		<col  width="12%"/> -->
+		<col  width="20%"/>
+		<col  width="AUTO"/>
+		<col  width="10%"/>
+		<col  width="13%"/>
+		<col  width="20%"/>
+	</colgroup>
+	<thead>
+		<tr>
+<!-- 			<th>#springMessage("menu.push.sendManage.sendForm")</th> --> <!-- 발송형태 -->
+			<th>#springMessage("common.text.appname")</th> <!-- App명 -->
+			<th>#springMessage("menu.push.sendManage.messageName")</th> <!-- 메세지명 -->
+			<th>#springMessage("common.header.author")</th> <!-- 작성자 -->
+			<th>#springMessage("menu.push.appManage.insertDate")</th> <!-- 등록일자 -->
+			<th>#springMessage("menu.push.approve.approveYN")</th> <!-- 승인여부 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $rowData in $listApproval )
+		#set($j_tot = $!rowData.TOT_CNT)
+			<tr>
+<!-- 				<td> -->
+<!-- 					#if($!rowData.CMP_TYPE == "N") -->
+<!-- 						#if($!rowData.TEXT_TYPE == "R") -->
+<!-- 							#springMessage("menu.push.approve.general")(RICH) --> <!-- 일반 -->
+<!-- 						#else -->
+<!-- 							#springMessage("menu.push.approve.general")(TEXT) --> <!-- 일반 -->
+<!-- 						#end -->
+<!-- 					#else -->
+<!-- 						#if($!rowData.TEXT_TYPE == "R") -->
+<!-- 							#springMessage("menu.push.approve.campaign")(RICH) --> <!-- 캠페인 -->
+<!-- 						#else -->
+<!-- 							#springMessage("menu.push.approve.campaign")(TEXT) --> <!-- 캠페인 -->
+<!-- 						#end -->
+<!-- 					#end -->
+<!-- 				</td> -->
+				<td>$!rowData.APP_ID</td>
+				<td>
+					#if($!rowData.MESSAGE.length() > 15)
+						$!rowData.MESSAGE.substring(0,15) ...
+					#else
+						$!rowData.MESSAGE
+					#end
+				</td>
+	            <td>$!rowData.SENDERCODE</td>
+	            <td>$!rowData.REGDATE.substring(0,16)</td>
+	            <td>
+	            	#if($!rowData.APPROVAL_FLAG == "A")
+						 #springMessage("menu.push.approve.success") <!-- 승인완료 -->
+					#elseif($!rowData.APPROVAL_FLAG == "R")
+						 #springMessage("menu.push.approve.fail")  <!-- 승인거부 -->
+					#elseif($!rowData.APPROVAL_FLAG == "C")
+						 #springMessage("menu.push.approve.cancel")  <!-- 승인요청 취소 -->
+					#else
+						<!--승인대기:S-->
+						#if($!request.getSession().getAttribute("S_ID_AUTH_GRP") == "0000000003")
+							 #springMessage("menu.push.approve.wait") <!-- 승인대기 -->
+							&nbsp;
+							<a href="javascript:void(0)" id="cancel" onclick="on_click_cancel($!rowData.APPROVAL_SEQNO)" class="tbl-btn1">#springMessage("menu.push.approve.cancel")</a>	<!-- 취소요청 -->
+						#else
+							<a href="javascript:void(0)" id="agree" onclick="on_click_agree($!rowData.APPROVAL_SEQNO)" class="tbl-btn1">#springMessage("menu.push.approve.ok")</a>	<!-- 승인 -->
+			            	&nbsp;
+			            	<a href="javascript:void(0)" id="reject" onclick="on_click_reject($!rowData.APPROVAL_SEQNO)" class="tbl-btn1">#springMessage("menu.push.approve.deny")</a>	<!-- 거부 -->
+						#end
+					#end
+	            </td>
+			</tr>	
+		#end	
+		
+		#if(!$j_tot)
+		<tr>
+			<td colspan="5" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+		#end
+	</tbody>
+</table>
+
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_approvalList"/>
+</div>

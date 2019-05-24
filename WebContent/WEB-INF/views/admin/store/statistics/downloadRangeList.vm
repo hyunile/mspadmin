@@ -1,0 +1,60 @@
+             		<br/><br/>
+             		<h2 class="tbl-title">#springMessage("menu.stats.store.dayDownNum")</h2><br/> <!-- 기간별 App 다운로드 횟수 -->
+					 
+					<table class="tbl-nb full-width">
+						<colgroup>
+							<col style="width:20%;"/>
+							<col style="width:40%;"/>
+							<col style="width:40%;"/>
+                        </colgroup>
+						<thead>
+    						<tr>
+    							<th>IDX</th>
+    							<th>#springMessage("common.text.appname")</th> <!-- App. 명 -->
+    							<th>#springMessage("menu.stats.store.downNum")</th> <!-- 다운로드 수 -->
+    						</tr>
+						</thead>
+						<tbody>
+			    	#foreach( $row in $rangeList )
+			       		#set($j_RANGE_tot = $row.TOT_CNT)
+			            <tr class="joinDiv">
+			            	<td>$!row.APP_IDX</td>
+			            	<td>$!row.APP_NM</td>
+			            	<td>$!row.CNT</td>
+			         	</tr>
+					#end
+					#if(!$j_RANGE_tot)
+				   		<tr >
+				   			<td align="center" colspan="3">
+								#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+				           	</td>
+				       	</tr>
+				   	#end
+				   		</tbody>
+					</table>
+						
+					
+					
+        <input type="hidden" id="R_RANGE_PAGE_NUM" value="$!R_RANGE_PAGE_NUM" />
+		<input type="hidden" id="R_RANGE_PAGE_SIZE" value="$!R_RANGE_PAGE_SIZE" />
+		
+		<!-- 
+    	j_now : $!R_RANGE_PAGE_NUM<br/>
+    	J_tot : $!j_RANGE_tot<br/>
+    	j_row :$!R_RANGE_PAGE_SIZE<br/>
+    	j_page : $!R_RANGE_PAGE_SIZE<br/>
+    	j_event : fn_select_rangeData<br/>
+		 -->
+
+		<div class="j_range_page_div">
+        	##현재 페이지
+        	<input type="hidden" name="j_now" value="$!R_RANGE_PAGE_NUM" />
+        	##총 개수
+        	<input type="hidden" name="J_tot" value="$!j_RANGE_tot" />
+        	##한페이지의 로우수
+        	<input type="hidden" name="j_row" value="$!R_RANGE_ROW_SIZE" />
+        	##한페이지수
+        	<input type="hidden" name="j_page" value="$!R_RANGE_PAGE_SIZE" />
+        	##이밴트
+        	<input type="hidden" name="j_event" value="fn_select_rangeData" />
+        </div>

@@ -1,0 +1,121 @@
+<form name="frmUserInfo" method="post">
+		
+			<table class="tbl">
+				<colgroup>
+					<col width="20%">
+					<col width="30%">
+					<col width="20%">
+					<col width="30%">
+				</colgroup>
+				<tr>
+					<th>
+						* #springMessage("menu.store.user.number") <!-- 사번 -->
+					</th>
+					<td>
+						#if($userDto)
+							$!userDto.EMP_NO
+							<input type="hidden" name="EMP_NO"  value="$!userDto.EMP_NO" >
+						#else
+							<input type="text" id="EMP_NO" name="EMP_NO"  value="" style="width:100px;">
+							<button type="button" class="btn_style2" onclick="fn_empnoCheck()">#springMessage("menu.push.appManage.sameCheck")</button> <!-- 중복체크 -->
+            				<input type="hidden" id="empno_con" value="X">
+						#end
+					</td>
+					<th class="redNotice">
+						#springMessage("common.text.name") <!-- 이름 -->
+					</th>
+					<td >
+            			<input type="text" name="EMP_NM"  value="$!userDto.EMP_NM">
+					</td>
+				</tr>
+				<tr>
+					<th class="redNotice">
+						#springMessage("common.text.user") #springMessage("login.userid") <!-- 사용자 아이디 -->
+					</th>
+					<td >
+						#if($userDto)
+							$!userDto.USERID
+						#else
+							<input type="text" id="USERID" name="USERID"  value="$!userDto.USERID" style="width:100px;">
+            				<button type="button" class="btn_style2" onclick="fn_useridCheck()">#springMessage("menu.push.appManage.sameCheck")</button> <!-- 중복체크 -->
+            				<input type="hidden" id="userid_con" value="X">
+						#end
+					</td>
+					<th class="redNotice">
+						#springMessage("login.passwd") <!-- 비밀번호 -->
+					</th>
+					<td >
+						<input type="text" name="PASSWD"  value="">
+					</td>
+				</tr>
+				<tr>
+					<th class="redNotice">
+						#springMessage("menu.store.user.rankCode") <!-- 직급코드 -->
+					</th>
+					<td>
+						<select name="EMP_CD">
+							<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							#foreach( $empCd in $empList )
+								#if($userDto.EMP_CD == $empCd.EMP_CD)
+									<option value="$!empCd.EMP_CD" selected="selected">$!empCd.CD_NM</option>
+								#else
+									<option value="$!empCd.EMP_CD">$!empCd.CD_NM</option>
+								#end
+							#end
+						</select>
+					</td>
+					<th class="redNotice">
+						#springMessage("menu.store.user.team") <!-- 부서 -->
+					</th>
+					<td>
+						<select name="DIVISION_ID" >
+							<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							#foreach( $division in $divisionList )
+								#if($userDto.DIVISION_ID == $division.DIVISION_ID)
+									<option value="$division.DIVISION_ID" selected="selected">$division.DIVISION_NM</option>
+								#else
+									<option value="$division.DIVISION_ID">$division.DIVISION_NM</option>
+								#end
+							#end
+						</select>			
+					</td>
+				</tr>
+				<tr>
+					<th>
+						#springMessage("menu.store.user.workCode") <!-- 작업코드 -->
+					</th>
+					<td>
+						<!-- 
+						<select name="WORK_CD" >
+							<option value="">선택</option>
+							#foreach( $workCd in $workcdList )
+								#if($userDto.WORK_CD == $workCd.CD_ID)
+									<option value="$!workCd.CD_ID" selected="selected">$!workCd.CD_NM</option>
+								#else
+									<option value="$!workCd.CD_ID">$!workCd.CD_NM</option>
+								#end
+							#end
+						</select>
+						 -->
+						<input type="text" name="WORK_CD" style="width:100%;" value="$!userDto.WORK_CD">
+					</td>
+					<th class="redNotice">
+						#springMessage("common.header.email") <!-- 이메일 -->
+					</th>
+					<td>
+						<input type="text" name="EMAIL"  value="$!userDto.EMAIL">
+            		</td>
+				</tr>
+			</table>
+			
+			<div class="btn-wrap txtCenter">
+				#if($userDto)
+					<a href="javascript:void(0);" onclick="fn_modify();" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+					<a href="javascript:void(0);" onclick="fn_delete();" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+				#else
+					<a href="javascript:void(0);" onclick="fn_save();" class="btn1"><strong>#springMessage("common.button.save")</strong></a><!-- 저장 -->
+                #end
+                <a href="javascript:void(0);" id="maskClose" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+			</div>
+		
+</form>

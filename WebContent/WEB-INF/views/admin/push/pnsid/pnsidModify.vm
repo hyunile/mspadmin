@@ -1,0 +1,44 @@
+<form name="frmPnsidInfo" method="POST">
+	
+	<table class="tbl">
+		<colgroup><!--  2cell  -->
+			<col width="30%"/>
+			<col width="80%"/>
+		</colgroup>
+		<tr>
+			<th>
+				<label class="redNotice">KEY</label>
+			</th>
+			<td>
+				#if($pushPnsidOne)
+					$!pushPnsidOne.VNAME
+					<input type="hidden" name="VNAME" value="$!pushPnsidOne.VNAME">
+				#else
+					<input type="hidden" id="CHECK_CODE" value="0">
+					<input type="text" name="VNAME" onchange="fn_pnsid_change()" style="width:100px;">&nbsp;
+					<a href="javascript:void(0)" class="btn2" onclick="fn_pnsid_check()">#springMessage("menu.push.appManage.sameCheck")</a>  <!-- 중복체크 -->
+				#end
+			</td>
+		</tr>
+		
+		<tr>
+			<th>
+				<label class="redNotice">VALUE</label>
+			</th>
+			<td>
+				<input type="text" name="VVALUE" value="$!pushPnsidOne.VVALUE">
+			</td>
+		</tr>
+	</table>
+	
+	<div class="btn-wrap txtCenter">
+	#if(!$pushPnsidOne)
+		<a href="javascript:void(0)" onclick="fn_pnsidWrite();" class="btn1">#springMessage("common.button.save")</a>	<!-- 저장 -->
+	#else
+		<a href="javascript:void(0)" onclick="fn_pnsidModify();" class="btn1">#springMessage("common.button.modify")</a>	<!--수정  -->
+		<a href="javascript:void(0)" onclick="fn_pnsidDelete();" class="btn1 type2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+	#end
+		<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div> 
+
+</form>

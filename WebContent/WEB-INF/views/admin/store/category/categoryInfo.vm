@@ -1,0 +1,51 @@
+<form name="frmCategory" method="post">
+    <input type="hidden" id="CATG_CD" name="CATG_CD"  value="$!categoryInfo.CATG_CD" />
+    <input type="hidden" id="UP_CATG_CD" name="UP_CATG_CD"  value="$!categoryInfo.UP_CATG_CD" />  
+    <input type="hidden" id="SVC_ID" name="SVC_ID"  value="$!categoryInfo.SVC_ID" />  
+    
+    <table class="tbl full-width" >
+            <colgroup>
+                <col width="30%"/><col width="70%"/>
+            </colgroup>
+                <tr>
+                        <th scope="row">
+                            <label for="subject">#springMessage("menu.store.appManage.categoryName")</label> <!-- 카테고리명 -->
+                        </th>
+                        <td style="position:relative;" >
+                             <input type="text" class="input_txt" id="CATG_NM"  name="CATG_NM" #if($categoryInfo) value="$!categoryInfo.CATG_NM" #end/>
+                            
+                        </td>
+               </tr>
+                <tr>
+                        <th scope="row" >
+                            <label for="subject">#springMessage("menu.store.appManage.range")</label> <!-- 정렬순서 -->
+                        </th>
+                        <td style="position:relative;" >
+                            <input type="text" class="input_txt" style="width:50px;" id="SORT_NO"  name="SORT_NO" #if($categoryInfo) value="$!categoryInfo.SORT_NO" #end/>
+                        </td> 
+				</tr>
+				<tr>
+                        <th scope="row">
+                            <label for="subject">#springMessage("common.header.useYN")</label> <!-- 사용여부 -->
+                        </th>
+                        <td>
+                            <select name="USE_YN">
+                                <option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+                                <option value="Y" #if($!categoryInfo.USE_YN=="Y") selected="selected" #end>#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+                                <option value="N" #if($!categoryInfo.USE_YN=="N") selected="selected" #end>#springMessage("common.header.use_N")</option> <!-- 미사용 -->   
+                            </select>
+                        </td>
+               </tr>
+               <tr>
+                        <th scope="row">
+                            <label for="subject">#springMessage("menu.store.appManage.categoryDesc")</label> <!-- 카테고리설명 -->
+                        </th>
+                        <td style="position:relative;" colspan="3">
+                               <textarea id="CATG_DESC"  name="CATG_DESC" cols="10" rows="3">#if($categoryInfo)$esc.xml($!categoryInfo.CATG_DESC) #end</textarea>
+										
+                        </td>                   
+                                         
+               </tr>
+               
+        </table>
+</form>    

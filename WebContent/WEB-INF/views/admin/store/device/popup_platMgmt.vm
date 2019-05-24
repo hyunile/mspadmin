@@ -1,0 +1,470 @@
+<script type="text/javascript">
+var platWorkStat = "", verWorkStat = '';
+//jQuery(function(){
+	//좌측 테이블 클릭
+	//jQuery(document).on('click', '#leftListTable tr.platformDiv', fn_clickLeftListTable());
+	//우측 테이블 클릭
+	//jQuery(document).on('click', '#rightListTable tr.verDiv', fn_clickRightListTable());
+	
+	//=============== 플랫폼 관리 ====================
+	//jQuery('#platInsert').click(fn_platInsert());
+	//jQuery('#platUpdate').click(fn_platUpdate());
+	//jQuery('#platCancel').click(fn_platCancel());
+	//jQuery('#platSave').click(fn_platSave());
+	//jQuery('#platDelete').click(fn_platDelete());
+	//============================ 버전관리 ===================================
+	//jQuery('#verInsert').click(fn_verInsert());
+	//jQuery('#verUpdate').click(fn_verUpdate());
+	//jQuery('#verCancel').click(fn_verCancel());
+	//jQuery('#verSave').click(fn_verSave());
+	//jQuery('#verDelete').click(fn_verDelete());
+	
+//});
+
+
+
+// 좌측 테이블 클릭 이벤트
+function fn_clickLeftListTable(event_tr)
+{
+	if(platWorkStat=='insert'){
+		alert('#springMessage("menu.store.device.alert.workComplete")'); //진행중인 작업을 완료하세요.
+	}
+	else if(platWorkStat=='update') 
+	{
+		if(!jQuery(el_this).hasClass('select'))
+		{
+			alert('#springMessage("menu.store.device.alert.workComplete")'); //진행중인 작업을 완료하세요.
+		}
+	}
+	else 
+	{
+		var el_this =  jQuery(event_tr);
+		verWorkStat = '';
+		// ---------------------------------------------------------------------------------------------
+		// 동작에 오류가 있어서 로직을 수정함.
+		// radio 버튼이 추가 되면서 UI의 일괄성이 없어져 버렸다.
+		// 그냥 일괄적으로 모두 select class를 제거 하고, 현재 row에만 select class를 추가 하도록 코드를 수정 한다.
+		// 그리고 row를 선택한 경우 radio 의 상태도 함께 변경 시켜서 UI 동작의 일괄성을 유지 하도록 수정 한다.
+		// ---------------------------------------------------------------------------------------------
+		// if(jQuery(el_this).hasClass('select'))
+		// {
+		// 	jQuery(el_this).removeClass('select');
+		// 	jQuery('#rightListTable tbody').html('');
+		// 	btnStusts('lbtns', false, true, true, true);
+		// }
+		// else
+		// {
+		// 	//jQuery('.select','#leftListTable').removeClass('select');
+		// 	jQuery(el_this).addClass('select');
+		// 	drawRightTable();
+		// 	btnStusts('lbtns', false, true, false, false);
+		// }
+		// ---------------------------------------------------------------------------------------------
+
+		el_this.parent().find(".selected").removeClass("selected");
+		jQuery('.select','#leftListTable').removeClass('selected');
+		el_this.addClass('selected');
+		drawRightTable();
+		btnStusts('lbtns', false, true, false, false);
+		
+		el_this.parent().find("input:radio", "tr[class!='selected']").each(function(i){
+			if(this.parentNode.parentNode !== event_tr)
+			{
+				jQuery(this).removeAttr("checked");
+			}
+		})
+		el_this.find("input:radio").prop("checked", true);		// jquery>=1.6
+		// el_this.find("input:radio").attr("checked", "checked");	//jQuery<1.6
+	}
+}
+	
+	
+// 우측 테이블 클릭 이벤트
+ function fn_clickRightListTable(){
+	var el_this =  jQuery(event.target).parent();
+		if(verWorkStat=='insert'){
+			alert('#springMessage("menu.store.device.alert.workComplete")'); //진행중인 작업을 완료하세요.
+		} else if(verWorkStat=='update') {
+			if(!jQuery(el_this).hasClass('select')){
+				alert('#springMessage("menu.store.device.alert.workComplete")'); //진행중인 작업을 완료하세요.
+			}
+		} else {
+    		if(jQuery(el_this).hasClass('selected')){
+    			jQuery(el_this).removeClass('selected');
+    			btnStusts('rbtns', false, true, false, false);
+    		}else{
+        		jQuery('.selected','#rightListTable').removeClass('selected');
+        		jQuery(el_this).addClass('selected');
+    			btnStusts('rbtns', false, true, false, false);
+    		}
+		}
+	}
+
+	
+
+var pcd = '<select style="width:70px;" name="PLAT_CD"><option value=""></option>#foreach( $pcd in $platCd )<option value="$!pcd.CD_ID">$!pcd.CD_NM</option>#end</select>';
+function fn_platInsert(){ //등록하기 버튼클릭
+		platWorkStat = "insert";
+		btnStusts('lbtns', true, false, true, true);
+		jQuery('#leftListTable tr.selected').removeClass('selected');
+		var nRow = jQuery('#leftListTable tr.new');
+		if(nRow.length>0){
+			alert('#springMessage("menu.store.device.alert.registComplete")'); //등록 작업을 완료하십시요.
+		}else{
+
+			jQuery('#leftListTable tbody').append('<tr class="selected"><td>'+pcd+'</td><td><input type="text" name="PLAT_DESC" style="width:80px;"/></td><td><input type="text" name="PLAT_NM" style="width:120px;"/></td><td><input type="text" name="MFG_NM" style="width:120px;"/></td></tr>');
+		}
+	}
+	
+function fn_platUpdate(){ //수정하기 버튼클릭
+		platWorkStat = "update";
+		var row = jQuery('#leftListTable tr.selected');
+		if(row.length > 0){
+			btnStusts('lbtns', true, false, true, true);
+			var txt = '<td>'+pcd+'</td>'
+					+ '<td><input type="text" name="PLAT_DESC" value="'+jQuery('td:nth-child(2)', row).text()+'"/></td>'
+				    + '<td><input type="text" name="PLAT_NM" value="'+jQuery('td:nth-child(3)', row).text()+'"/></td>'
+				    + '<td><input type="text" name="MFG_NM" value="'+jQuery('td:nth-child(4)', row).text()+'"/></td>';
+
+			jQuery('#leftListTable tr.select').html(txt);
+			jQuery('select[name="PLAT_CD"]').val(jQuery(row).attr('plat_cd'));
+		}else{
+			alert('#springMessage("menu.store.device.alert.modifyRow")'); //수정하실 로우를 선택하세요.
+		}
+	}
+function fn_platCancel(){//취소하기(우측 테이블 다시 그리자)
+		drawLeftTable();
+		jQuery('#rightListTable tbody').html('');
+		return false;
+	}
+function fn_platSave(){//플랫폼 정보 저장하기
+		if(platValidation()){
+        	jQuery.ajax({
+        		url     : platWorkStat=='update'?'platformUpdate':'platformSave', 
+        		type    : 'post',
+        		dataType: "json" ,
+				data    : {
+					PLAT_IDX  : jQuery('.select', '#leftListTable').attr('plat_idx'),
+					PLAT_CD   : jQuery('select[name="PLAT_CD"]', '#leftListTable').val(),
+					PLAT_DESC : jQuery('input[name=PLAT_DESC]', '#leftListTable').val(),
+					PLAT_NM   : jQuery('input[name=PLAT_NM]', '#leftListTable').val(),
+					MFG_NM    : jQuery('input[name=MFG_NM]', '#leftListTable').val()
+				},
+        		success : function(json){
+    				if(json.count>0){
+    					alert('#springMessage("menu.store.device.alert.save")'); //저장되었습니다.
+    				}else{
+    					alert('#springMessage("menu.store.device.alert.saveError")'); //저장중 장애가 발생하였습니다
+    				}
+					//목록리프레쉬
+					drawLeftTable();
+        		}
+        	});
+		}
+	}
+	
+function fn_platDelete(){//플랫폼 정보 삭제하기
+		if(jQuery('#rightListTable tbody tr').length>0){
+			alert('#springMessage("menu.store.device.alert.allDelete")'); //플랫폼의 버전정보가 남아있습니다. 모두 삭제 후 시도하세요.
+			return;
+		}
+	
+		if(jQuery('.selected', '#leftListTable').length>0 && confirm('#springMessage("common.alert.doDelete")')){ ///'삭제하시겠습니까?'
+			var platIdx = jQuery('.selected', '#leftListTable').attr('plat_idx');
+        	jQuery.ajax({
+        		url     : 'platformDelete', 
+        		type    : 'post',
+        		dataType: "json" ,
+				data    : {PLAT_IDX : platIdx} ,
+        		success : function(json){
+    				if(json.count>0){
+    					alert('#springMessage("menu.mobile.common.successDelete")'); //"삭제되었습니다."
+    				}else{
+    					alert('#springMessage("menu.store.device.alert.deleteError")'); //삭제중 장애가 발생하였니다
+    				}
+					//목록리프레쉬
+					drawLeftTable();
+        		}
+        	});
+		}
+	}
+function platValidation(){
+	if( jQuery("select[name=PLAT_CD] option:selected",'#leftListTable').val() == ""){
+		alert('#springMessage("menu.store.device.alert.choosePlatform")'); //플랫폼을 선택해주세요.
+		jQuery("select[name=PLAT_CD]",'#leftListTable').focus();
+		return false;
+	} else if( jQuery("input[name=PLAT_DESC]",'#leftListTable').val() == ""){
+		alert('#springMessage("menu.store.device.alert.platformIn")'); //플랫폼을 입력해주세요.
+		jQuery("input[name=PLAT_DESC]",'#leftListTable').focus();
+		return false;
+	} else if( jQuery("input[name=PLAT_NM]",'#leftListTable').val() == ""){
+		alert('#springMessage("menu.store.device.alert.platformNameIn")'); //플랫폼명을 입력해주세요.
+		jQuery("input[name=PLAT_NM]",'#leftListTable').focus();
+		return false;
+	} else if( jQuery("input[name=MFG_NM]",'#leftListTable').val() == ""){
+		alert('#springMessage("menu.store.device.alert.makeNameIn")'); //제조사명을 입력해주세요.
+		jQuery("input[name=MFG_NM]",'#leftListTable').focus();
+		return false;
+	}
+	return true;
+}
+
+	
+//버전등록 버튼클릭
+function fn_verInsert(){ 
+		if(jQuery('.selected', '#leftListTable').length > 0){
+    		verWorkStat = "insert";
+    		btnStusts('rbtns', true, false, true, true);
+    		jQuery('#rightListTable tr.selected').removeClass('selected');
+    		var nRow = jQuery('#rightListTable tr.new');
+    		if(nRow.length>0){
+    			alert('#springMessage("menu.store.device.alert.registComplete")'); //등록 작업을 완료하십시요.
+    		}else{
+    			jQuery('#rightListTable tbody').append('<tr class="selected"><td><input type="text" name="PLAT_VER_CD"/></td><td><input type="text" name="PLAT_VER_NM"/></td></tr>');
+    		}
+		}else{
+			verWorkStat = '';
+			alert('#springMessage("menu.store.device.alert.inVersion")'); //버전등록할 플랫폼을 선택하십시요.
+		}
+	}
+	
+function fn_verUpdate(){ //수정하기 버튼클릭
+		if(jQuery('.selected', '#leftListTable').length>0){
+    		verWorkStat = "update";
+    		var row = jQuery('#rightListTable tr.selected');
+    		if(row.length > 0){
+    			btnStusts('rbtns', true, false, true, true);
+    			var txt = '<td><input type="text" name="PLAT_VER_CD" value="'+jQuery('td:nth-child(1)', row).text()+'"/></td>'
+    				    + '<td><input type="text" name="PLAT_VER_NM" value="'+jQuery('td:nth-child(2)', row).text()+'"/></td>';
+    
+    			jQuery('#rightListTable tr.selected').html(txt);
+    		}else{
+    			alert('#springMessage("menu.store.device.alert.modifyRow")'); //수정하실 로우를 선택하세요.
+    		}
+		}else{
+			verWorkStat = '';
+			alert('#springMessage("menu.store.device.alert.inVersion")'); //버전등록할 플랫폼을 선택하십시요.
+		}
+	}
+	
+//function fn_verCancel(){//취소하기(우측 테이블 다시 그리자)
+//		drawRightTable();
+//		return false;
+//	}
+function fn_verSave() {//플랫폼버전 정보 저장하기
+		if(verValidation()){
+        	jQuery.ajax({
+        		url     : verWorkStat=='update'?'versionUpdate':'versionSave', 
+        		type    : 'post',
+        		dataType: "json" ,
+				data    : {
+					PLAT_VER_IDX  : jQuery('.select', '#rightListTable').attr('plat_ver_idx'),
+					PLAT_VER_CD   : jQuery('input[name=PLAT_VER_CD]', '#rightListTable').val(),
+					PLAT_VER_NM   : jQuery('input[name=PLAT_VER_NM]', '#rightListTable').val(),
+					PLAT_IDX      : jQuery('.selected', '#leftListTable').attr('plat_idx')
+				},
+        		success : function(json){
+    				if(json.count>0){
+    					alert('#springMessage("menu.store.device.alert.save")'); //저장되었습니다.
+    				}else{
+    					alert('#springMessage("menu.store.device.alert.saveError")'); //저장중 장애가 발생하였습니다
+    				}
+					//목록리프레쉬
+					drawRightTable();
+        		}
+        	});
+		}
+	}
+
+function verValidation(){
+	if( jQuery("input[name=PLAT_VER_CD]",'#rightListTable').val() == ""){
+		alert('#springMessage("menu.store.device.alert.platformVersion")'); //플랫폼버전을 선택해주세요.
+		jQuery("input[name=PLAT_VER_CD]",'#rightListTable').focus();
+		return false;
+	} else if( jQuery("input[name=PLAT_VER_NM]",'#rightListTable').val() == ""){
+		alert('#springMessage("menu.store.device.alert.platformVersionNameIn")'); //플랫폼의 버전명을 입력해주세요.
+		jQuery("input[name=PLAT_VER_NM]",'#rightListTable').focus();
+		return false;
+	}
+	return true;
+}
+function fn_verDelete(){//플랫폼버전 정보 삭제하기
+		if(jQuery('.selected', '#rightListTable').length>0 &&
+			confirm('#springMessage("common.alert.doDelete")') //삭제 하시겠습니까?
+		){
+			var platVerIdx = jQuery('.selected', '#rightListTable').attr('plat_ver_idx');
+        	jQuery.ajax({
+        		url     : 'versionDelete', 
+        		type    : 'post',
+        		dataType: "json" ,
+				data    : {PLAT_VER_IDX : platVerIdx} ,
+        		success : function(json){
+    				if(json.count>0){
+    					alert('#springMessage("menu.mobile.common.successDelete")'); //"삭제되었습니다."
+    				}else{
+    					alert('#springMessage("menu.store.device.alert.deleteError")'); //삭제중 장애가 발생하였니다
+    				}
+					//목록리프레쉬
+					drawRightTable();
+        		}
+        	});
+		}
+	}
+
+//좌측테이블을 그린다.
+function drawLeftTable(){
+	platWorkStat = '';
+	btnStusts('lbtns', false, true, true, true);
+	jQuery.ajax({
+		url     : 'platformList', 
+		type    : 'post',
+		dataType: "json" ,
+		success : function(json){
+			var txt = '';
+			for(var i=0;i<json.platList.length;i++){
+				txt += '<tr class="platformDiv" plat_idx="'+json.platList[i].PLAT_IDX+'" plat_cd="'+json.platList[i].PLAT_CD+'" onclick="fn_clickLeftListTable(this)">';
+				txt += '<td>'+json.platList[i].PLAT_CD_NM+'</td>';
+				txt += '<td>'+json.platList[i].PLAT_DESC+'</td>';
+				txt += '<td>'+json.platList[i].PLAT_NM+'</td>'
+				txt += '<td>'+json.platList[i].MFG_NM+'</td>';
+				txt += '</tr>';
+			}
+			jQuery('#leftListTable tbody').html(txt);
+		}
+	});
+}
+
+//우측 테이블 목록을 그린다.
+function drawRightTable(){
+	verWorkStat = '';
+	btnStusts('rbtns', false, true, true, true);
+
+	if(jQuery('#leftListTable tr.selected').attr('plat_idx'))
+	{
+    	jQuery.ajax({
+    		url     : 'versionList', 
+    		type    : 'post',
+    		dataType: "json" ,
+    		data    : { PLAT_IDX : jQuery('#leftListTable tr.selected').attr('plat_idx') } ,
+    		success : function(json){
+    			var txt = ''; 
+    			for(var i=0;i<json.ver.length;i++){
+    				txt += '<tr class="verDiv" plat_ver_idx="'+json.ver[i].PLAT_VER_IDX+'" onclick=";fn_clickRightListTable()">';
+    				txt += '<td>'+json.ver[i].PLAT_VER_CD+'</td>';
+    				txt += '<td>'+json.ver[i].PLAT_VER_NM+'</td>';
+    				txt += '</tr>';
+    			}
+    			
+    			jQuery('#rightListTable tbody').html(txt);
+    		}
+    	});
+	}
+};
+
+/*등록,저장,수정,삭제*/
+function btnStusts(pane, f1, f2, f3, f4){
+	jQuery('#'+pane+' button:nth-child(1)').prop('disabled', f1).css('display', (f1?'none':'inline'));
+	jQuery('#'+pane+' button:nth-child(2)').prop('disabled', f2).css('display', (f2?'none':'inline'));
+	jQuery('#'+pane+' button:nth-child(3)').prop('disabled', f3).css('display', (f3?'none':'inline'));
+	jQuery('#'+pane+' button:nth-child(4)').prop('disabled', f4).css('display', (f4?'none':'inline'));
+};
+</script>
+
+
+	<table>
+		<caption></caption>
+		<colgroup>
+			<col>
+			<col style="width:10px">
+			<col>
+		</colgroup>
+		<tr>
+			<td class="tbl-wrap valignTop">
+				
+				<table class="tbl-nb" id="leftListTable">
+					<caption></caption>
+					<colgroup>
+						<col style="width:40px">
+						<col style="width:80px">
+						<col style="width:120px">
+						<col style="width:120px">
+					</colgroup>
+					<thead>
+			    		<tr>
+			    			<th scope="row">#springMessage("menu.stats.mobile.type")</th> <!-- 구분 -->
+			    			<th scope="row">#springMessage("menu.store.appManage.platform")</th> <!-- 플랫폼 -->
+			    			<th scope="row">#springMessage("menu.store.device.platformName")</th> <!-- 플랫폼명 -->
+			    			<th scope="row">#springMessage("menu.store.appManage.makeName")</th> <!-- 제조사명 -->
+			    		</tr> 
+			            </thead>
+					<tbody>
+						#foreach( $plat in $platList )
+				            <tr class="platformDiv" plat_idx="$plat.PLAT_IDX" plat_cd="$plat.PLAT_CD" onclick="fn_clickLeftListTable(this)">
+				            	<td><input type="radio" name="platCd" id="$!plat.PLAT_CD" value="$!plat.PLAT_CD"/><label for="$!plat.PLAT_CD"></label></td>
+				            	<!-- <td>$!plat.PLAT_CD_NM</td> -->
+				            	<td>$esc.xml($!plat.PLAT_DESC)</td>
+				            	<td>$esc.xml($!plat.PLAT_NM)</td>
+				            	<td>$esc.xml($!plat.MFG_NM)</td>
+				         	</tr>
+				    	#end
+					</tbody>
+				</table>
+				
+			</td>
+			
+			<td></td>
+			
+			<td class="tbl-wrap valignTop">
+			
+				<table class="tbl-nb" id="rightListTable">
+					<caption></caption>
+					<colgroup>
+						<col style="width:160px">
+						<col style="width:200px">
+					</colgroup>
+					<thead>
+						<tr>
+			    			<th scope="row">#springMessage("menu.mobile.deploy.version")</th> <!-- 버전 -->
+			    			<th scope="row">#springMessage("menu.store.device.versionName")</th> <!-- 버전명 -->
+			    		</tr> 
+					</thead>
+					<tbody>
+           			</tbody>
+				</table>
+			</td>
+		</tr>
+	</table>
+	
+	<table class="marginBottom20">
+		<caption></caption>
+		<colgroup>
+			<col style="width:360px">
+			<col style="width:10px">
+			<col style="width:360px">
+		</colgroup>
+		<tr>
+			<td class="btn-wrap txtCenter" >
+				<div id="lbtns">
+					<a href="javascript:void(0)" id="platInsert" onclick="fn_platInsert()" class="btn2">#springMessage("common.button.regist")</a> <!-- 등록 -->
+					<a href="javascript:void(0)" id="platSave" disabled="disabled" onclick="fn_platSave()" class="btn2">#springMessage("common.button.save")</a>  <!-- 저장 -->
+					<a href="javascript:void(0)" id="platUpdate" disabled="disabled" onclick="fn_platUpdate()" class="btn2">#springMessage("common.button.modify")</a>	<!-- 수정 -->
+					<a href="javascript:void(0)" id="platDelete" disabled="disabled" onclick="fn_platDelete()" class="btn2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+				</div>
+			</td>
+			<td></td>
+			<td class="btn-wrap txtCenter" >
+				<div id="rbtns">
+					<a href="javascript:void(0)" id="verInsert" onclick="fn_verInsert()" class="btn2">#springMessage("common.button.regist")</a> <!-- 등록 -->
+					<a href="javascript:void(0)" id="verSave" disabled="disabled" onclick="fn_verSave()" class="btn2">#springMessage("common.button.save")</a>  <!-- 저장 -->
+					<a href="javascript:void(0)" id="verUpdate" disabled="disabled" onclick="fn_verUpdate()" class="btn2">#springMessage("common.button.modify")</a>	<!-- 수정 -->
+					<a href="javascript:void(0)" id="verDelete" disabled="disabled" onclick="fn_verDelete()" class="btn2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+				</div>
+				
+				
+			</td>
+		</tr>
+	</table>
+	
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:void(0)" id="platCancel" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+	</div>

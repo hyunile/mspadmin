@@ -1,0 +1,97 @@
+<table class="tbl-nb" >
+	<colgroup>
+		<col width="8%"></col>
+		<col width="18%"></col>
+		<col width="18%"></col>
+		<col width="15%"></col>
+		<col width="15%"></col>
+		<col width="18%"></col>
+	</colgroup>
+	
+	<thead>
+		<tr>
+    		<th>
+    			NO
+	     	</th>
+	        <th class="sort" fname="DEVC_ID">
+	           	#springMessage("menu.store.appManage.modelName") <a class="mark" /> <!-- 모델명 -->
+    		</th>
+    		<th class="sort" fname="BRD_NM">
+    			#springMessage("menu.store.appManage.brandName")<a class="mark" /> <!-- 브랜드명 -->
+	       	</th>
+	       	<th class="sort" fname="MFG_NM">
+	           	#springMessage("menu.store.appManage.makeName")<a class="mark" /> <!-- 제조사명 -->
+    		</th>
+	       	<th class="sort" fname="REG_DTTM">
+	           	#springMessage("menu.push.appManage.insertDate")<a class="mark" /> <!-- 등록일자 -->
+    		</th>
+    		<!-- 
+	       	<th>
+	           	이미지
+    		</th>
+    		 -->
+    		<th class="sort" fname="USE_YN">
+    			#springMessage("common.header.useYN")<a class="mark" /> <!-- 사용여부 -->
+	    	</th>
+	     
+ 		</tr>
+	</thead>
+	<tbody>
+    	#foreach( $device in $deviceList )
+       		#set($j_tot = $device.TOT_CNT)
+            <tr class="deviceDiv">
+            	<td class="groupModify">
+            		<input type="hidden" id="DEVC_IDX" value="$device.DEVC_IDX"><!-- 단말일련번호 -->
+					$!device.RNUM
+            	</td>
+            	<td class="groupModify" style="text-align:center;" >
+            		$esc.xml($!device.DEVC_ID)<!-- 모델명 -->
+            	</td>
+            	<td class="groupModify" style="text-align:center;">
+            		$esc.xml($!device.BRD_NM)<!-- 브랜드명 -->
+            	</td>
+            	<td class="groupModify" style="text-align:center;">
+            		$!device.MFG_NM<!-- 제조사명 -->
+            	</td>
+            	<td class="groupModify">
+            		$!device.REG_DTTM<!-- 등록일자 -->
+            	</td>
+            	<!--  
+            	이미지 삭제
+            	<td >
+            		#if($device.IMG)<img class="fileview" fname="$!device.IMG" src="${RESOURCES_PATH}/images/it_attribute.gif" alt="image"/>#end
+            	</td>
+            	 -->
+            	<td >
+					<input type="radio" value="Y" id="Y_$device.DEVC_IDX" name="$device.DEVC_IDX" #if($!device.USE_YN == 'Y') checked="checked" #end onclick="javascript:fn_modifyUseYN('$device.DEVC_IDX', true);"/><label for="Y_$device.DEVC_IDX">#springMessage("common.header.use_Y")</label> <!-- 사용 -->
+					<input type="radio" value="N" id="N_$device.DEVC_IDX" name="$!device.DEVC_IDX"  #if($!device.USE_YN == 'N') checked="checked" #end onclick="javascript:fn_modifyUseYN('$device.DEVC_IDX', false);"/><label for="N_$device.DEVC_IDX">#springMessage("menu.mobile.deploy.stop")</label> <!-- 중지 -->
+            	</td>
+         	</tr>
+		#end
+		#if(!$j_tot)
+	   		<tr >
+	   			<td align="center" colspan="6">
+	   				#springMessage("menu.store.appManage.alert.noSearchDevice") <!-- 검색된 단말기가 없습니다. -->
+	           	</td>
+	       	</tr>
+	   	#end
+	</tbody>
+</table>
+<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot" />
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_deviceList" />
+</div>
+	
+	<script type="text/javascript">
+		fn_mp_bindEvent_sortHeader("frmSearch", fn_deviceList, "$!{ORDER_FIELD}", "$!{ORDER_TYPE}");
+	</script>
+	<br/>

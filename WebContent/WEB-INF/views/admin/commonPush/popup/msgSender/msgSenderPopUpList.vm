@@ -1,0 +1,54 @@
+<table class="tbl-nb"  id="tbList" summary="항목선택,리소스ID,파일명,확장자,크기">
+	<colgroup >
+<!--	<col  width="5%"/> -->
+		<col  width="20%"/>
+		<col  width="AUTO"/>
+		<col  width="AUTO"/>
+		<col  width="AUTO"/>
+	</colgroup>
+	<thead>
+		<tr>
+<!--		<th><input type="checkbox" id="checkAllPopup"/></th> -->
+			<th>No</th>
+			<th>#springMessage("menu.push.setting.senderName2")</th> <!-- 발송자명 -->
+			<th>#springMessage("menu.push.setting.senderDesc")</th> <!-- 발송자설명 -->
+			<th>#springMessage("common.header.author")</th> <!-- 작성자 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $msgSender in $listMsgSender )
+		#set($j_tot = $!msgSender.TOT_CNT)
+		<tr>
+<!--		
+			<td>
+				<input type="checkbox" class="checkListPopup" />
+				<input type="hidden" id="msgId" value="$msgSender.SENDERSEQ"/>
+			</td>
+-->			
+			<td>$!msgSender.SENDERSEQ</td>
+			<td style="cursor : pointer;" onClick="fn_setSender('$!msgSender.SENDERNAME','$!msgSender.SENDERCODE')"><a>$!msgSender.SENDERNAME</a></td>
+			<td>$!msgSender.SENDERDESC</td>
+			<td>$!msgSender.REGID</td>
+		</tr>	
+		#end	
+		
+		#if(!$j_tot)
+		<tr>
+			<td colspan="4" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+		#end
+	</tbody>
+</table>
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_getMsgSenderList"/>
+</div>
+	

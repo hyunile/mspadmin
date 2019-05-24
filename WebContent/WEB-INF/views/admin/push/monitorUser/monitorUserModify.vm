@@ -1,0 +1,37 @@
+<form name="frmMonitorUserInfo" method="POST">
+	<div class="popup_content">
+		<table class="tbType1">
+			<colgroup><!--  4cell  -->
+				<col width="35%" /><col width="auto" />
+			</colgroup>
+			<tr>
+				<th scope="row">
+					* #springMessage("common.text.name") <!-- 이름 -->
+				</th>
+				<td>
+					<input type="text" name="NAME" value="$!monitorUserOne.NAME">
+					<input type="hidden" name="SUPERVISORSEQ" value="$!monitorUserOne.SUPERVISORSEQ">
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					* #springMessage("menu.stats.push.sender") #springMessage("common.header.phoneNumber") <!-- 발송자 연락처 -->
+				</th>
+				<td>
+					<input type="text" onkeydown="return onlyNumber();" name="PHONENO" value="$!monitorUserOne.PHONENO">
+				</td>
+			</tr>
+		</table>
+	</div>
+	
+	<div class="btnArea ta_r">
+		#if(!$monitorUserOne)
+			<button type="button" onclick="fn_monitorUserWrite();" class="btn_style1"><strong>#springMessage("common.button.save")</strong></button> <!-- 저장 -->
+		#else
+			<button type="button" onclick="fn_monitorUserModify();" class="btn_style1"><strong>#springMessage("common.button.modify")</strong></button> <!-- 수정 -->
+			<button type="button" onclick="fn_monitorUserDelete();" class="btn_style1"><strong>#springMessage("common.button.delete")</strong></button> <!-- 삭제 -->
+		#end
+		<button type="button" onclick="fn_closePopup();" class="btn_style1"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+	</div>
+</form>

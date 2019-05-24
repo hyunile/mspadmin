@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.campaign.approval.mapper.ApprovalDao">
+
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((${PAGE_NUM} - 1) *  ${PAGE_SIZE}) + 1 AND (${PAGE_NUM} *  ${PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	<!--리스트 조회 -->
+	<select id="selectCmpApprovalList" parameterType="hashmap" resultType="kr.msp.admin.campaign.approval.dto.ApprovalDTO" >
+		<include refid="head"/>
+			SELECT * FROM TB_CMP_APPROVAL
+			
+			<where>
+	            <if test="START_DT != null and START_DT != '' and END_DT != null and END_DT != ''">
+	                REGDATE BETWEEN TO_DATE(#{START_DT}, '%Y-%m-%d') AND TO_DATE(#{END_DT}, '%Y-%m-%d')
+	            </if>
+	            <if test="APP_ID != null and APP_ID != ''">
+	                AND APP_ID = #{APP_ID}
+	            </if>
+	            <if test="SENDER_CODE != null and SENDER_CODE != ''">
+	                AND SENDERCODE = #{SENDER_CODE}
+	            </if>
+	            <if test="CMP_TYPE != null and CMP_TYPE != ''">
+	                AND CMP_TYPE = #{CMP_TYPE}
+	            </if>
+	            <if test="APPROVAL_FLAG != null and APPROVAL_FLAG != ''">
+	                AND APPROVAL_FLAG = #{APPROVAL_FLAG}
+	            </if>
+	        </where>
+			
+			ORDER BY APPROVAL_SEQNO DESC
+		<include refid="bottom"/>
+	</select>
+    
+    <update id="updateCmpApprovalFlag"  parameterType="hashmap">
+    	UPDATE TB_CMP_APPROVAL SET APPROVAL_FLAG = #{APPROVAL_FLAG}, APPROVAL_SENDERCODE = #{APPROVAL_SENDERCODE}
+    	WHERE APPROVAL_SEQNO = #{APPROVAL_SEQNO}
+    	AND APPROVAL_FLAG = 'S'
+    </update>
+    
+    <insert id="insertCmpApproval" parameterType="kr.msp.admin.campaign.approval.dto.ApprovalDTO">
+		INSERT INTO TB_CMP_APPROVAL(TYPE, PSID, CUID, GROUPSEQ, MESSAGE, PRIORITY, BADGENO, RESERVEDATE, SERVICECODE, SOUNDFILE, EXT, SENDERCODE, APP_ID, ATTACHFILE, DB_IN, CMP_TYPE, TEXT_TYPE, REGDATE, RESERVE_FLAG, APPROVAL_FLAG) 
+		VALUES (#{TYPE}, #{PSID}, #{CUID}, #{GROUPSEQ}, #{MESSAGE}, #{PRIORITY}, #{BADGENO}, TO_DATE(#{RESERVEDATE}, '%Y%m%d %H%M%S'), #{SERVICECODE}, #{SOUNDFILE}, #{EXT}, #{SENDERCODE}, #{APP_ID} ,#{ATTACHFILE} ,#{DB_IN} ,#{CMP_TYPE} ,#{TEXT_TYPE} ,CURRENT ,#{RESERVE_FLAG} ,'S')
+	</insert>
+	
+	<select id="selectCmpApproval" parameterType="hashmap" resultType="kr.msp.admin.campaign.approval.dto.ApprovalDTO" >
+		SELECT * FROM TB_CMP_APPROVAL WHERE APPROVAL_SEQNO = #{APPROVAL_SEQNO}
+	</select>
+</mapper>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.common.mapper.BaseDao">
+
+		<resultMap type="kr.msp.admin.common.dto.UsersDto" id="UsersDto">
+		<result property="ID_USER" 		column="user_id"/>
+		<result property="NM_USER" 		column="user_nm"/>
+		<result property="PASSWORD" 	column="user_pw"/>
+		<result property="YN_USE" 		column="use_yn"/>
+		<result property="ID_INSERT" 	column="reg_id"/>
+		<result property="DT_INSERT" 	column="reg_dttm"/>
+		<result property="ID_UPDATE" 	column="mod_id"/>
+		<result property="DT_UPDATE" 	column="mod_dttm"/>
+		<result property="EMAIL" 		column="email"/>
+		<result property="NO_TP" 		column="user_tp"/>
+		<result property="NO_EP" 		column="user_ep"/>
+	</resultMap>    
+	
+	<resultMap type="kr.msp.admin.common.dto.LoginCheckParamDto" id="LoginCheckParamDto">
+		<result property="LOGIN_CHECK" column="login_check"/>
+		<result property="NM_USER" column="user_nm"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.common.dto.MenuDto" id="MenuDto">
+		<result property="ID_MENU" column="menu_id"/>
+		<result property="NM_MENU" column="menu_nm"/>
+		<result property="MENU_URL" column="menu_url"/>
+		<result property="YN_POPUP" column="popup_yn"/>
+		<result property="NO_WIDTH" column="popup_w"/>
+		<result property="NO_HEIGHT" column="popup_h"/>
+		<result property="YN_USE" column="sts_cd"/>
+		<result property="ID_INSERT" column="reg_id"/>
+		<result property="DT_INSERT" column="reg_dttm"/>
+		<result property="ID_UPDATE" column="mod_id"/>
+		<result property="DT_UPDATE" column="mod_dttm"/>
+		<result property="DESC_MENU" column="menu_desc"/>
+		<result property="NO_ORDER" column="sort_no"/>
+		<result property="ID_MENU_PARENT" column="up_menu_id"/>
+		<result property="MENU_LEVEL" column="menu_level"/>
+		<result property="SORT_ORDER" column="sort_order"/>
+		<result property="MENU_TYPE" column="menu_type"/>
+	</resultMap> 
+	
+	<resultMap type="kr.msp.admin.system.menuAuth.dto.MenuAuthDto" id="MenuAuthDto">
+		<result property="YN_SELECT" column="select_yn"/>
+		<result property="YN_INSERT" column="insert_yn"/>
+		<result property="YN_UPDATE" column="update_yn"/>
+		<result property="YN_DELETE" column="delete_yn"/>
+		<result property="ID_INSERT" column="reg_id"/>
+		<result property="DT_INSERT" column="reg_dttm"/>
+		<result property="ID_UPDATE" column="mod_id"/>
+		<result property="DT_UPDATE" column="mod_dttm"/>
+		<result property="YN_EXCEL" column="excel_yn"/>
+		<result property="ID_GROUP" column="auth_grp_id"/>
+		<result property="ID_MENU" column="menu_id"/>
+		<result property="ID_MENU_PARENT" column="up_menu_id"/>
+		<result property="NM_MENU" column="menu_nm"/>
+		<result property="MENU_LEVEL" column="menu_level"/>
+		<result property="ROWSU" column="rowsu"/>
+		<result property="MENU_URL" column="menu_url"/>
+	</resultMap>
+
+    <select id="SelNewLoginChk" parameterType="kr.msp.admin.common.dto.UsersDto" resultType="hashmap">
+		SELECT FIRST 1 A.USER_ID  AS "USER_ID", A.USER_NM AS "USER_NM", A.LOGIN_LOCK AS "LOGIN_LOCK", A.LOCK_TIME AS "LOCK_TIME", A.LOGIN_STATUS AS "LOGIN_STATUS",A.LOGIN_FAIL_CNT AS "LOGIN_FAIL_CNT", A.USER_PW AS "USER_PW", 
+			 CAST(A.REG_DTTM AS DATE) AS "REG_DTTM"	, CAST(A.MOD_DTTM AS DATE) AS "MOD_DTTM", C.AUTH_GRP_ID AS "AUTH_GRP_ID", C.AUTH_GRP_NM AS "AUTH_GRP_NM"
+        from TB_SYS_USER A, TB_SYS_USER_AUTH_GRP B, TB_SYS_AUTH_GRP C
+        where A.USER_ID = B.USER_ID
+        and B.AUTH_GRP_ID = C.AUTH_GRP_ID
+        and A.USER_ID = #{ID_USER}
+        and A.USE_YN = 'Y'
+    </select>
+
+    <update id="upLoginFailStatus" parameterType="hashmap">
+        update TB_SYS_USER set LOGIN_LOCK=#{LOGIN_LOCK},LOCK_TIME=CURRENT ,LOGIN_FAIL_CNT=LOGIN_FAIL_CNT+1 where USER_ID=#{USER_ID}
+    </update>
+
+    <update id="upLoginSuccStatus" parameterType="hashmap">
+        update TB_SYS_USER set LOGIN_LOCK='N',LOCK_TIME=CURRENT ,LOGIN_FAIL_CNT='0' where USER_ID=#{USER_ID}
+    </update>
+
+
+	<select id="SelectLoginCheck" parameterType="kr.msp.admin.common.dto.UsersDto" resultMap="LoginCheckParamDto" >
+		SELECT 
+		     MAX(LOGIN_CHECK) AS LOGIN_CHECK
+		    ,MAX(USER_NM)     AS USER_NM
+		FROM(
+		    SELECT
+		         CASE WHEN COUNT(*) <![CDATA[<=]]>0 OR SUM(CASE WHEN USER_ID = #{ID_USER} THEN 1 ELSE 0 END)        <![CDATA[<=]]> 0 THEN 'ID_ERROR'
+		              WHEN SUM(CASE WHEN USER_ID = #{ID_USER} AND USER_PW = #{PASSWORD} THEN 1 ELSE 0 END) <![CDATA[<=]]> 0 THEN 'PW_ERROR'
+		              ELSE 'LOGIN_SUCCESS'
+		         END AS LOGIN_CHECK
+		        ,'' AS USER_NM
+		    FROM TB_SYS_USER A
+		    WHERE USE_YN = 'Y'
+		    UNION ALL
+		    SELECT
+		         '' AS LOGIN_CHECK
+		        ,USER_NM
+		    FROM TB_SYS_USER
+		    WHERE USE_YN   = 'Y'
+		      AND USER_ID  = #{ID_USER}
+		      AND USER_PW = #{PASSWORD}
+		) A
+	</select><!-- 완료 -->
+	
+	
+	<insert id="InsertLoginHistory" parameterType="kr.msp.admin.common.dto.LoginHistoryParamDto" >
+		INSERT INTO TB_SYS_LOGIN_HIST(
+	             USER_ID
+	            ,LOGIN_DTTM
+	            ,REMOTE_IP
+	        )VALUES(
+	             #{ID_USER}
+	            ,CURRENT
+	            ,#{REMOTE_IP}
+	        )
+	</insert><!-- 완료 -->
+	
+	<select id="SelectIdFirstMenu" parameterType="kr.msp.admin.common.dto.UsersDto" resultType="java.lang.String">
+		 SELECT
+            MAX(A.INTRO_MENU_ID) AS ID_FIRST_MENU
+        FROM TB_SYS_AUTH_GRP A
+        INNER JOIN TB_SYS_USER_AUTH_GRP B ON (A.AUTH_GRP_ID = B.AUTH_GRP_ID)
+        INNER JOIN TB_SYS_MENU C ON (A.INTRO_MENU_ID = C.MENU_ID)
+        WHERE B.USER_ID = #{ID_USER}
+          AND C.STS_CD = 'Y'
+	</select><!-- 완료 -->
+
+	<select id="SelectMenuAuth" parameterType="hashmap" resultType="hashmap">
+	  select A.MENU_ID MENU_ID,  A.SELECT_YN SELECT_YN,  
+	       A.INSERT_YN INSERT_YN, A.UPDATE_YN UPDATE_YN, 
+	      A.DELETE_YN DELETE_YN, M.MENU_URL MENU_URL
+			from TB_SYS_MENU_AUTH A, TB_SYS_MENU M 
+			where A.AUTH_GRP_ID=#{AUTH_GRP_ID}
+			 and A.MENU_ID = M.MENU_ID
+	
+	<!-- select MENU_ID,SELECT_YN,INSERT_YN,UPDATE_YN,DELETE_YN from TB_SYS_MENU_AUTH where AUTH_GRP_ID=#{AUTH_GRP_ID} -->
+	</select>
+</mapper>

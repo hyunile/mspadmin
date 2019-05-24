@@ -1,0 +1,145 @@
+<table class="full-width">
+	<caption></caption>
+	<colgroup>
+		<col>
+		<col style="width:120px">
+		<col>
+	</colgroup>
+	<tr>
+		<td class="tbl-wrap valignTop">
+		
+			<h2 class="tbl-title">#springMessage("menu.system.noRightMenuAuth")</h2>	### 권한이 없는 메뉴 ###
+			<table class="tbl full-width">
+    			<colgroup>
+    				<col width="19%"/>
+    				<col width="auto"/>
+    			</colgroup>		
+    			<thead>
+    				<tr>
+    					<th>
+    						<input type="checkbox" id="menuAllCheck"/><label for="menuAllCheck"></label>
+    					</th>
+    					<th>
+    						#springMessage("common.header.menuName")				### 메뉴명 ###
+    					</th>
+    				</tr>
+    			</thead>
+    			<tbody>
+    				<tr>
+    					<td colspan="2">
+    						<div class="dutyMenu">
+    							<table class="tbl" style="width:100%" id="menuTable">
+    								<colgroup>
+    									<col />
+    								</colgroup>			
+    								#foreach( $menuAuth in $menuAuthList )
+    									#if(!$menuAuth.YN_SELECT)
+    										<tr id="tr_$!menuAuth.ID_MENU">
+    										#if($menuAuth.MENU_LEVEL == 1)
+    											<td style="padding-left:10px;" id="td_$!menuAuth.ID_MENU">
+    										#elseif($menuAuth.MENU_LEVEL == 2)
+    											<td style="padding-left:30px;" id="td_$!menuAuth.ID_MENU">
+    										#elseif($menuAuth.MENU_LEVEL == 3)
+    											<td style="padding-left:50px;" id="td_$!menuAuth.ID_MENU">
+    										#end
+    										
+    												<input type="checkbox" class="outCheckTr" id="chk_$!menuAuth.ID_MENU"/>
+    												<label for="chk_$!menuAuth.ID_MENU" id="label_$!menuAuth.ID_MENU"></label>
+    											
+    										#if($menuAuth.MENU_LEVEL == 1)
+    											<b>$!menuAuth.NM_MENU</b>
+    										#elseif($menuAuth.MENU_LEVEL == 2)
+    											<img src="$!{CONTEXT_PATH}/resources/images/common/icon_menu2.gif" alt=""/>
+    											$!menuAuth.NM_MENU
+    										#elseif($menuAuth.MENU_LEVEL == 3)
+    											<img src="$!{CONTEXT_PATH}/resources/images/common/icon_menu_dot2.gif" alt="" />
+    											$!menuAuth.NM_MENU
+    										#end
+    												
+    												<input type="hidden" class="LEFT_ID_MENU" value="$!menuAuth.ID_MENU"/>
+    												<input type="hidden" class="ROWSU" value="$!menuAuth.ROWSU"/>
+    											</td>
+    										</tr>
+    									#end
+    								#end
+    							</table>
+    						</div>
+    					</td>
+    				</tr>
+    			</tbody>
+    		</table>
+			
+		</td> #### E:Left 영역 ####
+		
+		<td class="txtCenter">
+			<a id="btn_add" class="btn-arrow" style="cursor:pointer">#springMessage("common.button.add")</a>		### 추가 ###
+			<br />
+			<br />
+			<a id="btn_del" class="btn-arrow reverse" style="cursor:pointer">#springMessage("common.button.delete")</a>	### 삭제 ###
+		</td>
+		
+		<td class="tbl-wrap valignTop">
+		
+			<h2 class="tbl-title">#springMessage("menu.system.hadRightMenuAuth")</h2>	### 권한이 있는 메뉴 ###
+			<table class="tbl full-width">
+    			<colgroup>
+    				<col width="19%"/>
+    				<col width="auto"/>
+    			</colgroup>
+    			<thead>
+    				<tr>
+    					<th>
+    						<input type="checkbox" id="menuAuthAllCheck"/><label for="menuAuthAllCheck" ></label>
+    					</th>
+    					<th>
+    						#springMessage("common.header.menuName")				### 메뉴명 ###
+    					</th>
+    				</tr>
+    			</thead>
+    			<tbody>
+    				<tr>
+    					<td colspan="2">
+    						<div class="dutyMenu">
+    							<table class="tbl" style="width:100%;" id="menuAuthTable">
+    								<colgroup>
+    									<col />
+    								</colgroup>
+    								#foreach( $menuAuth in $menuAuthList )
+    									#if($menuAuth.YN_SELECT)
+    										<tr id="tr_$!menuAuth.ID_MENU">
+    										#if($menuAuth.MENU_LEVEL == 1)
+    											<td style="padding-left:10px;" id="td_$!menuAuth.ID_MENU">
+    										#elseif($menuAuth.MENU_LEVEL == 2)
+    											<td style="padding-left:30px;" id="td_$!menuAuth.ID_MENU">
+    										#elseif($menuAuth.MENU_LEVEL == 3)
+    											<td style="padding-left:50px;" id="td_$!menuAuth.ID_MENU">
+    										#end
+    										
+    												<input type="checkbox" class="outCheckAuthTr" id="chk_$!menuAuth.ID_MENU"/><label for="chk_$!menuAuth.ID_MENU" ></label>
+    										
+    										#if($menuAuth.MENU_LEVEL == 1)
+    											<b>$!menuAuth.NM_MENU</b>
+    										#elseif($menuAuth.MENU_LEVEL == 2)
+    											<img src="$!{CONTEXT_PATH}/resources/images/common/icon_menu2.gif" alt=""/>
+    											$!menuAuth.NM_MENU
+    										#elseif($menuAuth.MENU_LEVEL == 3)
+    											<img src="$!{CONTEXT_PATH}/resources/images/common/icon_menu_dot2.gif" alt="" />
+    											$!menuAuth.NM_MENU
+    										#end
+    												
+    												<input type="hidden" class="RIGHT_ID_MENU" value="$!menuAuth.ID_MENU"/>
+    												<input type="hidden" class="ROWSU" value="$!menuAuth.ROWSU"/>
+    											</td>
+    										</tr>
+    									#end
+    								#end
+    							</table>
+    						</div>
+    					</td>
+    				</tr>
+    			</tbody>
+    		</table>
+			
+		</td>  #### E: Right 영역 ####
+	</tr>
+</table>

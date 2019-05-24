@@ -1,0 +1,500 @@
+## multipart-form Ajax 전송
+<script type="text/javascript" src="${RESOURCES_PATH}/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function(){
+	$("#divExtraTitle").html("<h3>"+'#springMessage("menu.store.device.applyAppIn")'+"</h3>"); //지원 App 등록
+});
+
+
+jQuery(function(){
+	//달력 구현
+	var defaultDate = jQuery.datepicker.formatDate("yy.mm.dd", new Date());
+
+	/*
+	jQuery("#MFG_YYYYMM").datepicker({
+		showOn: "button",
+		buttonImage: "${CONTEXT_PATH}/resources/css/4.0/img/icon_calen.gif",
+		buttonImageOnly: true,
+		dateFormat: "yy.mm.dd"
+	});
+	*/
+	
+	jQuery("#MFG_YYYYMM").val(defaultDate);
+	
+	
+	//플랫폼(select) 선택시 버전 db에서 가져와서 버전(select)만들기
+    jQuery('select[name=PLAT_IDX]').change(function(){
+    	var plat_idx = jQuery(this).val();
+    	jQuery.ajax({
+    		url     : 'json/getPlatver',
+    		type    : 'post',
+    		dataType: "json" ,
+    		data    : { PLAT_IDX : plat_idx } ,
+    		success : function(json){
+    			var txt = '<option value="">'+'#springMessage("common.select.choose")'+'</option>'; //선택
+    			for(var i=0;i<json.ver.length;i++){
+    				txt += '<option value="'+json.ver[i].PLAT_VER_IDX+'">'+json.ver[i].PLAT_VER_CD+' '+json.ver[i].PLAT_VER_NM+'</option>';
+    			}
+    			jQuery('select[name=PLAT_VER_IDX]').html(txt);
+    		}
+    	});
+    });
+	//제조사선택시 제조사명 설정
+    jQuery('select[name=MFG_CD]').change(function(){
+		jQuery('#MFG_NM').val(jQuery('option:selected',this).text());
+	});
+    // 단말기 등록 및 수정
+    jQuery('#deviceSave,#deviceUpdate').click(function(){
+		var confirmMsg = '#springMessage("menu.store.device.alert.deviceInfoIn")';//"단말기 정보를 등록하시겠습니까?";
+		if(jQuery('input[name="DEVC_IDX"]','#frmTable').val().length>0){
+			confirmMsg = '#springMessage("menu.store.device.alert.deviceInfoModify")';//"단말기 정보를 수정하시겠습니까?";
+		}
+		
+    	if(validFiedl() && confirm(confirmMsg)){
+			saveDevice();
+		}
+	});
+	//폼전송전에 우측테이블의 모든IDX를 넘긴다.
+	function makeArr(){
+		var txt  = '';
+		var rows = jQuery('#add_rightListTable tr.appDiv');
+		jQuery.each(rows, function(){
+			txt += jQuery(this).attr('app_plat_idx') + ',';
+		});
+		return (txt.length > 0 ? txt.substring(0, txt.length-1) : txt);
+	}
+	function saveDevice_new(){
+		var res = jQuery.ajax({
+			url: jQuery('input[name="DEVC_IDX"]','#frmTable').val().length>0?'updateDevice':'saveDevice',
+			type    : 'post',
+        	dataType: "json" ,
+			data: {
+				PLAT_IDX     : jQuery('select[name="PLAT_IDX"] option:selected','#frmTable').val(),
+				PLAT_VER_IDX : jQuery('select[name="PLAT_VER_IDX"] option:selected','#frmTable').val(),
+				DEVC_IDX	 : jQuery('input[name="DEVC_IDX"]','#frmTable').val(),
+				DEVC_ID      : jQuery('input[name="DEVC_ID"]','#frmTable').val(),
+				BRD_NM       : jQuery('input[name="BRD_NM"]','#frmTable').val(),
+				MFG_CD       : jQuery('select[name="MFG_CD"] option:selected','#frmTable').val(),
+				MFG_NM       : jQuery('input[name="MFG_NM"]','#frmTable').val(),
+				DISP_WIDTH   : jQuery('input[name="DISP_WIDTH"]','#frmTable').val(),
+				DISP_HEIGHT  : jQuery('input[name="DISP_HEIGHT"]','#frmTable').val(),
+				PRD_INFO     : jQuery('input[name="PRD_INFO"]','#frmTable').val(),
+				PRD_DESC     : jQuery('#PRD_DESC','#frmTable').val(),
+				MFG_YYYYMM   : jQuery('input[name="MFG_YYYYMM"]','#frmTable').val(),
+				USE_YN       : jQuery('select[name="USE_YN"] option:selected','#frmTable').val(),
+				ARR_IDX      : makeArr()
+			} ,
+			success: function (json) {
+				alert(json);
+				if(json.count>0){
+					alert('#springMessage("menu.store.device.alert.save")'); //저장되었습니다.
+					document.location.href='$!{CONTEXT_PATH}/admin/store/device';
+				}else{
+					alert('#springMessage("menu.store.device.alert.saveError")'); //저장중 장애가 발생하였습니다
+				}
+			}
+		});
+		
+		if(jQuery('input[name="DEVC_IDX"]','#frmTable').val().length>0)
+			alert('#springMessage("menu.store.device.alert.updateComplete")'); //수정을 완료 했습니다.
+		else
+			alert('#springMessage("menu.store.device.alert.saveComplete")'); //저장을 완료 했습니다.
+
+	}
+	
+	function saveDevice(){
+		var res = jQuery.ajaxFileUpload({
+			url: jQuery('input[name="DEVC_IDX"]','#frmTable').val().length>0?'updateDevice':'saveDevice',
+			fileElementId:'FILE1',
+			data: {
+				PLAT_IDX     : jQuery('select[name="PLAT_IDX"] option:selected','#frmTable').val(),
+				PLAT_VER_IDX : jQuery('select[name="PLAT_VER_IDX"] option:selected','#frmTable').val(),
+				DEVC_IDX	 : jQuery('input[name="DEVC_IDX"]','#frmTable').val(),
+				DEVC_ID      : jQuery('input[name="DEVC_ID"]','#frmTable').val(),
+				BRD_NM       : jQuery('input[name="BRD_NM"]','#frmTable').val(),
+				MFG_CD       : jQuery('select[name="MFG_CD"] option:selected','#frmTable').val(),
+				MFG_NM       : jQuery('input[name="MFG_NM"]','#frmTable').val(),
+				DISP_WIDTH   : jQuery('input[name="DISP_WIDTH"]','#frmTable').val(),
+				DISP_HEIGHT  : jQuery('input[name="DISP_HEIGHT"]','#frmTable').val(),
+				PRD_INFO     : jQuery('input[name="PRD_INFO"]','#frmTable').val(),
+				PRD_DESC     : jQuery('#PRD_DESC','#frmTable').val(),
+				MFG_YYYYMM   : jQuery('input[name="MFG_YYYYMM"]','#frmTable').val(),
+				USE_YN       : jQuery('select[name="USE_YN"] option:selected','#frmTable').val(),
+				ARR_IDX      : makeArr()
+			} ,
+			dataType: 'json',
+			contentType : 'multipart/form-data',
+			success: function (json) {
+				//alert(json);
+				if(json.count>0){
+					if(jQuery('input[name="DEVC_IDX"]','#frmTable').val().length>0){
+            			alert('#springMessage("menu.mobile.common.successUpdate")'); //수정되었습니다.
+            		}else{
+            			alert('#springMessage("menu.mobile.common.successInsert")'); //등록되었습니다.
+					}
+					document.location.href='$!{CONTEXT_PATH}/admin/store/device';
+				}else{
+					alert('#springMessage("menu.store.device.alert.saveError")'); //"저장중 장애가 발생하였습니다"
+				}
+			}
+		});
+	}
+	
+    // 단말기 삭제
+	jQuery(document).on('click', '#deviceDelete', function(){
+		if(jQuery("#add_rightListTable").find(".appDiv").length>0)
+		{
+			alert('#springMessage("menu.store.device.alert.applyAppRemove")'); //지원되는 App 정보를 먼저 삭제 하세요.
+		}
+		else if(confirm('#springMessage("common.alert.doDelete")')){ //삭제 하시겠습니까?
+        	jQuery.ajax({
+        		url     : 'deleteDevice',
+        		type    : 'post',
+        		dataType: "json" ,
+        		data    : { DEVC_IDX : jQuery('input[name="DEVC_IDX"]').val() } ,
+        		success : function(json){
+    				if(json.count>0){
+    					alert('#springMessage("menu.mobile.common.successDelete")'); //"삭제되었습니다."
+						document.location.href='device';
+    				}else{
+    					alert('#springMessage("menu.store.device.alert.saveError")'); //"저장중 장애가 발생하였습니다"
+    				}
+        		}
+        	});
+		}
+	});
+	//유효성검사
+	function validFiedl(){
+    	if( jQuery("select[name=PLAT_IDX] option:selected",'#frmTable').val() == ""){
+    		alert('#springMessage("menu.store.device.alert.platformType")'); //플랫폼구분을 선택해주세요.
+    		jQuery("select[name=PLAT_IDX]",'#frmTable').focus();
+    		return false;
+    	} else if( jQuery("select[name=PLAT_VER_IDX] option:selected",'#frmTable').val() == ""){
+    		alert('#springMessage("menu.store.device.alert.platformVersion")'); //플랫폼버전을 선택해주세요.
+    		jQuery("select[name=PLAT_VER_IDX]",'#frmTable').focus();
+    		return false;
+    	} else if( jQuery("input[name=DEVC_ID]",'#frmTable').val() == ""){
+    		alert('#springMessage("menu.store.device.alert.modelName")'); //모델명을 입력해주세요.
+    		jQuery("input[name=DEVC_ID]",'#frmTable').focus();
+    		return false;
+    	} else if( jQuery("input[name=BRD_NM]",'#frmTable').val() == ""){
+    		alert('#springMessage("menu.store.device.alert.brandName")'); //브랜드명을 입력해주세요.
+    		jQuery("input[name=BRD_NM]",'#frmTable').focus();
+    		return false;
+    	} else if( jQuery("select[name=MFG_CD] option:selected",'#frmTable').val() == ""){
+    		alert('#springMessage("menu.store.device.alert.makeName")'); //제조사를 선택해주세요.
+    		jQuery("select[name=MFG_CD]",'#frmTable').focus();
+    		return v;
+    	} else if( jQuery("input[name=PROD_INFO]",'#frmTable').val() == ""){
+    		alert('#springMessage("menu.store.device.alert.productSummary")'); //제품개요를 입력해주세요.
+    		jQuery("input[name=PROD_INFO]",'#frmTable').focus();
+    		return false;
+    	} else if( jQuery("input[name=PROD_DESC]",'#frmTable').val() == ""){
+    		alert('#springMessage("menu.store.device.alert.productDesc")'); //제품설명을 입력해주세요.
+    		jQuery("input[name=PROD_DESC]",'#frmTable').focus();
+    		return false;
+    	}
+		return true;
+	}
+	jQuery('#cancel').click(function(){
+		document.location.href='device';
+	});
+	
+	//플랫폼 관리 팝업
+	jQuery('#platMgmt').click(function(){
+		var url = CONTEXT_PATH + "/admin/store/platMgmt";
+    	var type = "GET";
+    	var data = "";
+    	var target = $("#windowPop");
+    	var whideh = 680;
+    	var title = '#springMessage("menu.store.device.platformManage")';//"플랫폼 관리";
+		fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	});
+	
+
+});
+</script>
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+    <div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>
+    #### E : 프로그램 위치 기술 부분  ####
+
+
+	<table class="tbl" summary="제목,내용" id="frmTable">
+		<colgroup>
+			<col width="20%"/><col width="30%"/><col width="20%"/><col width="auto"/>
+		</colgroup>
+		<tr>
+			<th scope="row">
+				<label for="subject" class="redNotice">#springMessage("menu.store.appManage.platformType")</label> <!-- 플랫폼구분 -->
+			</th>
+			<td>
+					<input type="hidden" id="DEVC_IDX" name="DEVC_IDX" #if($device) value="$!device.DEVC_IDX" #end/>
+                       <select name="PLAT_IDX">
+                           <option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+                           #foreach( $plat in $platList )
+                               #if(!$device)
+                           <option value="$!plat.PLAT_IDX" >$!plat.PLAT_NM</option>
+                               #else 
+                           <option value="$!plat.PLAT_IDX" #if($!plat.PLAT_IDX==$!device.PLAT_IDX) selected="selected" #end>$!plat.PLAT_NM</option>
+                               #end
+                           #end
+                       </select>
+                       <a href="javascript:void(0)" id="platMgmt" class="tbl-btn1">#springMessage("menu.store.device.platformManage")</a>	<!-- 플랫폼관리 -->
+
+			</td>	
+
+			<th scope="row">
+				<label for="subject"class="redNotice"> #springMessage("menu.store.appManage.platformVersion")</label> <!-- 플랫폼버전 -->
+			</th>
+			<td style="vertical-align:middle;">
+				<select name="PLAT_VER_IDX" style="vertical-align:middle;">
+					<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+					#if($ver)
+                       	#foreach( $v in $ver )
+					<option value="$!v.PLAT_VER_IDX" #if($!v.PLAT_VER_IDX==$!device.PLAT_VER_IDX) selected="selected" #end>$!v.PLAT_VER_CD $!v.PLAT_VER_NM</option>
+                   		#end
+					#end	
+                   </select>
+			</td>					
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="subject"class="redNotice"> #springMessage("menu.store.appManage.modelName")</label> <!-- 모델명 -->
+			</th>
+			<td>
+				<input type="text" class="input_txt" id="DEVC_ID"  name="DEVC_ID" #if($device)  maxlength="100"  value="$!device.DEVC_ID" #end/>
+			</td>
+			<th scope="row">
+				<label for="subject"class="redNotice"> #springMessage("menu.store.appManage.brandName")</label> <!-- 브랜드명 -->
+			</th>
+			<td>
+				<input type="text" class="input_txt" id="BRD_NM"  name="BRD_NM" #if($device) value="$!device.BRD_NM"  style="width:150px;"  maxlength="100" #end/>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="subject">#springMessage("menu.store.device")ID</label> <!-- 단말기 -->
+			</th>
+			<td>
+				<input type="text" class="input_txt" id="BRD_NM"  name="BRD_NM" #if($device) value="$!device.BRD_NM" #end/>
+			</td>
+			<th scope="row">
+				<label for="subject"class="redNotice"> #springMessage("menu.store.device.makeComp")</label> <!-- 제조사 -->
+			</th>
+			<td>
+				<select name="MFG_CD">
+					<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+					#foreach( $mfg in $mfgList )
+						#if(!$device)
+					<option value="$!mfg.CD_ID">$!mfg.CD_NM</option>
+						#else 
+					<option value="$!mfg.CD_ID" #if($!mfg.CD_ID==$!device.MFG_CD) selected="selected" #end>$!mfg.CD_NM</option>
+						#end
+					#end
+                   </select>
+				<input type="hidden" id="MFG_NM" name="MFG_NM" #if($device) value="$!device.MFG_NM" #end/>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="subject">#springMessage("menu.store.device.screenSize")</label> <!-- 화면사이즈(가로*세로) -->
+			</th>
+			<td>
+				<input type="text" class="input_txt" id="DISP_WIDTH"  name="DISP_WIDTH" style="width:70px;" #if($device) value="$!device.DISP_WIDTH" #end/> *
+				<input type="text" class="input_txt" id="DISP_HEIGHT"  name="DISP_HEIGHT" style="width:70px;" #if($device) value="$!device.DISP_HEIGHT" #end/>
+			</td>
+			<th scope="row">
+				<label for="subject">#springMessage("common.header.useYN")</label> <!-- 사용여부 -->
+			</th>
+			<td>
+				<select name="USE_YN">
+					<option value="Y" #if('Y'==$!device.USE_YN) selected="selected" #end>#springMessage("common.header.use_Y") </option> <!-- 사용 -->
+					<option value="N" #if('N'==$!device.USE_YN) selected="selected" #end>#springMessage("common.header.use_N") </option> <!-- 미사용 -->
+                   </select>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="subject">#springMessage("menu.store.device.productSummary")</label> <!-- 제품개요 -->
+			</th>
+			<td>
+				<input type="text" class="input_txt" id="PRD_INFO"  name="PRD_INFO" maxlength="500" #if($device) value="$!device.PRD_INFO" #end/>
+			</td>
+			<th scope="row">
+				<label for="subject">#springMessage("menu.store.device.makeYMD")</label> <!-- 제조년월일 -->
+			</th>
+			<td>
+				<input type="text" name="sDate" id="MFG_YYYYMM" name="MFG_YYYYMM" class="datepicker sDate" #if($device) value="$!device.MFG_YYYYMM" #end readonly placeholder="날짜선택">
+	        	<label for="MFG_YYYYMM"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+				
+				
+			</td>
+		</tr>
+		<tr>
+			<th>#springMessage("menu.store.device.productDesc")</th> <!-- 제품설명 -->
+			<td colspan="3">
+				<textarea class="input_txt" id="PRD_DESC"  name="PRD_DESC" cols="85">#if($device)$!device.PRD_DESC#end</textarea>
+			</td>
+		</tr>
+
+		<input type="file" name="FILE1" id="FILE1"  style="display: none;"/>
+	</table><br/>
+
+	
+    <!--  지원 App 등록 타이틀 -->   
+    <h2 class="page-title" id="divExtraTitle"></h2>
+    
+    <table class="full-width">
+		<caption></caption>
+		<colgroup>
+			<col>
+			<col style="width:120px">
+			<col>
+		</colgroup>
+		<tr>
+			<td class="tbl-wrap valignTop">
+				<h2 class="tbl-title">#springMessage("menu.mobile.manage.all") App</h2> <!-- 전체 -->
+				<table class="tbl-nb full-width" id="add_leftListTable">
+					<colgroup>
+		   				<col width="40px"/>
+		   				<col width="60%"/>
+		   				<col width="auto"/>
+		   			</colgroup>
+		   			<thead>
+		   			<tr>
+		   				<th><input class="ck_head_all" type="checkbox" /></th>
+		   				<th>#springMessage("common.text.appname")</th> <!-- App 명 -->
+		   				<th>App ID</th>
+		   			</tr>
+		               </thead>
+		   			<tbody>
+			       	#foreach( $app in $appList )
+			               <tr class="appDiv" app_plat_idx="$app.APP_PLAT_IDX">
+			   				<td><input class="ck_row_all" type="checkbox" /></td>
+			               	<td>$esc.xml($!app.APP_NM)</td>
+			               	<td>$!app.APP_PLAT_IDX</td>
+			            	</tr>
+			   		#end
+		   			</tbody>
+				</table>
+			</td>
+
+			<td class="txtCenter">
+				<a href="javascript:void(0)" id="appAdd" class="btn-arrow"></a>
+				<br />
+				<br />
+				<a href="javascript:void(0)" id="appDel" class="btn-arrow reverse"></a>
+			</td>
+
+			<td class="tbl-wrap valignTop">
+				<h2 class="tbl-title">#springMessage("menu.store.device.apply") App</h2>  <!-- 지원 -->
+				<table class="tbl-nb full-width" id="add_rightListTable">
+					<colgroup>
+	                   <col width="40px"/>
+	                   <col width="60%"/>
+	                   <col width="auto"/>
+	               </colgroup>
+	               <thead>
+	               <tr>
+	                   <th><input class="ck_head_reg" type="checkbox" /></th>
+	                   <th>#springMessage("common.text.appname")</th> <!-- App 명 -->
+	                   <th>App ID</th>
+		       		</tr>
+					</thead>
+					<tbody>
+					#foreach( $appdevc in $appDevcList )
+						<tr class="appDiv" app_plat_idx="$appdevc.APP_PLAT_IDX">
+							<td><input class="ck_row_reg"  type="checkbox" /></td>
+							<td>$esc.xml($!appdevc.APP_NM)</td>
+							<td>$!appdevc.APP_PLAT_IDX</td>
+						</tr>
+					#end
+	               </tbody>
+				</table>
+			</td>
+		</tr>
+	</table>
+
+	<!--  버튼 영역 -->
+	#if(!$device)
+		<a href="javascript:void(0)" id="deviceSave" class="btn1 fr">#springMessage("common.button.regist")</a>	 <!-- 등록 -->
+		
+	#else
+		<a href="javascript:void(0)" id="deviceUpdate" class="btn1 fr">#springMessage("common.button.modify")</a>	 <!-- 수정 -->
+		<a href="javascript:void(0)" id="deviceDelete" class="btn1 fr">#springMessage("common.button.delete")</a>	 <!-- 삭제 -->
+	#end
+	<a href="javascript:void(0)" id="cancel" class="btn1 fr">#springMessage("common.button.cancel")</a>	 <!-- 취소 -->	
+
+</div>
+
+	
+<script type="text/javascript">
+$(function(){
+	$(document).on('click', '#add_leftListTable tr.appDiv', function(){
+		if($(this).hasClass('selected')){
+			$(this).removeClass('selected');
+		}else{
+			$(this).addClass('selected');
+		}
+		$(this).find("input[type=checkbox]")[0].checked=$(this).hasClass('selected');
+		fn_mp_syncTableCheckbox("ck_head_all", "ck_row_all");
+	});
+	//오른쪽리스트 클릭
+	jQuery(document).on('click', '#add_rightListTable tr.appDiv', function(){
+		if(jQuery(this).hasClass('selected')){
+			jQuery(this).removeClass('selected');
+		}else{
+			jQuery(this).addClass('selected');
+		}
+		$(this).find("input[type=checkbox]")[0].checked=$(this).hasClass('selected');
+		fn_mp_syncTableCheckbox("ck_head_reg", "ck_row_reg");
+	});
+	
+	//오른쪽으로 이동하기
+	jQuery('#appAdd').click(function(){
+		var srow = jQuery('#add_leftListTable tr.selected');
+		if(srow.length>0){
+			jQuery('#add_rightListTable').append(srow);
+		}else{
+			alert('#springMessage("menu.store.device.alert.selectAdd")'); //선택된 앱이 없습니다. 추가할 앱을 선택하세요.
+		}
+	});
+	//왼쪽으로 제거하기
+	jQuery('#appDel').click(function(){
+		var srow = jQuery('#add_rightListTable tr.selected');
+		if(srow.length>0){
+			jQuery('#add_leftListTable').append(srow);
+		}else{
+			alert('#springMessage("menu.store.device.alert.selectRemove")'); //선택된 앱이 없습니다.삭제할 앱을 선택하세요.
+		}
+	});
+
+	fn_mp_bindEvent_listCheckbox("ck_head_all", "ck_row_all", function(onEa, offEa){
+		// 테이블에 선택된 checkbox들을 가지고..row의 style을 변경 시킴
+		$("#add_leftListTable tr.select>td>input[type=checkbox]:not(checked)").each(function(i){
+			$(this).parent().parent().removeClass('select');
+		});
+		$("#add_leftListTable tr[class!=select]>td>input[type=checkbox]:checked").each(function(i){
+			$(this).parent().parent().addClass('select');
+		});
+	});
+	fn_mp_bindEvent_listCheckbox("ck_head_reg", "ck_row_reg", function(onEa, offEa){
+			// 테이블에 선택된 checkbox들을 가지고..row의 style을 변경 시킴
+		$("#add_rightListTable tr.select>td>input[type=checkbox]:not(checked)").each(function(i){
+			$(this).parent().parent().removeClass('select');
+		});
+		$("#add_rightListTable tr[class!=select]>td>input[type=checkbox]:checked").each(function(i){
+			$(this).parent().parent().addClass('select');
+		});
+	});
+
+});
+</script>
+	

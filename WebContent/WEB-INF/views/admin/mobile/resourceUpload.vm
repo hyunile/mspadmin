@@ -1,0 +1,334 @@
+<!-- 
+화면 : 모바일관리 : 리소스 업로드
+url : admin/mobile/rsc/upload
+작성자 : 장문규
+ -->
+
+<link rel="stylesheet" type="text/css" href="/resources/jEasyUiTree/easyui.css" />
+
+<script type="text/javascript" src="/resources/jEasyUiTree/jquery.easyui.min.js"></script>
+
+<div class="contents-area">
+
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.mobile")</span>
+		<span>#springMessage("menu.mobile.manage")</span>
+		<span>#springMessage("menu.mobile.upload")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.mobile.upload")</h2>	
+	
+	<div class="headerBg">
+		<div class="innerNavi">
+			<a href="#"><img src="/resources/img/icon/icon_home.gif" alt="home"/></a> <span>#springMessage("menu.mobile")</span> <span>#springMessage("menu.mobile.manage")</span><strong>#springMessage("menu.mobile.upload")</strong> <!-- 모바일 관리   리소스 관리  리소스 업로드-->
+		</div>
+		<div class="tb_tit">
+			<h3>#springMessage("menu.mobile.upload")</h3> <!-- 리소스 업로드 -->
+		</div>
+	</div>
+	#### E : 프로그램 위치 기술 부분  ####
+
+
+	#### S : 조회 폼 부분  ####
+	<fieldset>
+		<legend>조회 폼</legend>
+		<!--  hidden rerurn -->
+		<input type="hidden" id="rtnCd" value="$!rtnCd" />
+		<input type="hidden" id="rtnMsg" value="$!rtnMsg" />
+		<input type="hidden" id="SVC_ID" value="$!SVC_ID" />
+
+		<div class="detail_searchBox">
+			<p>
+				<lable for="selectSvc">#springMessage("menu.mobile.record.appService")</label> <!-- 앱서비스명 -->
+				<select id="selectSvc">
+					#foreach($svc in $serviceList)
+					<option value="$svc.SVC_ID">$svc.SVC_NM</option>
+					#end
+				</select>
+				<button type="button" id="searchTempResource" class="btn_search" title="#springMessage('menu.mobile.upload.title.view')">#springMessage("common.button.view")</button> <!-- 조회 -->
+			</p>
+			<p>
+				<form name="frmMain" method="post"	enctype="multipart/form-data">
+					<input type="hidden"  name="COMMAND"     value="" />
+					<input type="hidden"  name="SVC_ID"     value="" />
+					<lable for="FILE1">#springMessage("menu.mobile.upload.uploadFile")</label> <!-- 업로드 파일 -->
+					<input type="file" id="FILE1" name="FILE1" title="#springMessage('menu.mobile.upload.fileText')"/> <!-- 리소스들을 압축한 ZIP파일을 선택하세요. -->
+					<button type="button" id="resUpload" class="btn_style1" title="#springMessage('menu.mobile.upload.uploadText')"/><span>#springMessage("menu.mobile.upload.button")</span></button> <!--선택한 ZIP파일을 업로드합니다. 업로드 -->
+				</form>
+			</p>
+		</div>
+	</fieldset>
+	#### E : 조회 폼 부분  ####
+
+	<div class="contents">
+		<div class="tbCon">
+
+			<h4 class="title">#springMessage("menu.mobile.record.uploadList")</h4> <!-- 업로드 목록 -->
+			##업로드한 신규파일들 영역
+			<div id="resourceUploadDetailDiv">
+				#parse("admin/mobile/ajax/resourceUploadDetail.vm")
+			</div>
+
+			##  지우려는 리소스들 영역
+			<h4 class="title">#springMessage("menu.mobile.upload.text.deleteList")</h4> <!-- 삭제 목록 -->
+			<table class="tbList1" id="deleteResources" summary="항목선택,ID,파일명,확장자,크기,등록일,삭제여부,상태">
+				<colgroup>
+					<col  width="5%"/><col  width="8%"/><col  width="25%"/><col  width="8%"/><col  width="10%"/>
+					<col  width="20%"/><col  width="8%"/><col  width="auto"/>
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col" title="+ 추가할 리소스 - 삭제할 리소스"></th>
+						<th scope="col">ID</th>
+						<th scope="col">#springMessage("menu.mobile.manage.fileName") </th> <!-- 파일명 -->
+						<th scope="col">#springMessage("menu.mobile.record.extension")</th> <!-- 확장자 -->
+						<th scope="col">#springMessage("menu.mobile.record.size")(byte)</th> <!-- 크기 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+						<th scope="col">#springMessage("menu.mobile.manage.deleteYN")</th> <!-- 삭제여부 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.status")</th> <!-- 상태 -->
+					</tr>
+				</thead>
+			</table>
+			<input type="hidden" id="notice_num" value="$!R_PAGE_NUM" />
+		</div>
+	</div>
+
+	<div class="btnArea ta_r"  id="deployDiv" >
+		<button type="button" class="btn_style1" id="clientResDelete" title="#springMessage('menu.mobile.upload.title.removeRsc')"><span>#springMessage("menu.mobile.upload.button.removeFind")</span></button> <!-- 클라이언트에 배포된 리소스를 지우는 명령을 수행합니다.  삭제 찾기 -->
+		<button type="button" class="btn_style1" id="clientResDeleteCancel" title="#springMessage('menu.mobile.upload.title.backList')"><span>#springMessage("menu.mobile.upload.button.removeBack")</span></button> <!-- 삭제할 리소스 목록을 초기화 합니다.  삭제 초기화-->
+		<button type="button" class="btn_style1" id="deploy" title="#springMessage('menu.mobile.upload.title.deployRsc')"><strong>#springMessage("menu.mobile.upload.button.deploy")</strong></button> <!-- 현재 보여지는 리소스들을 배포합니다.  배포하기 -->
+	</div>
+
+	<form name="frmDeploy" method="post"	 >
+		<input type="hidden"  name="SVC_NM"     value="" />
+		<input type="hidden"  name="SVC_ID"     value="" />
+		<input type="hidden"  name="DEPLOY_ADD_LIST"     value="" />
+		<input type="hidden"  name="DEPLOY_DEL_LIST"     value="" />
+	</form>
+</div>
+
+
+
+<script type="text/javascript">
+
+function	fn_noticeList(pageNum){
+
+	fn_searchList(pageNum);
+};
+
+function fn_searchList(pageNum){
+	var data = "SVC_ID="+$("#selectSvc option:selected").val();
+	data += "&PAGE_NUM=" + pageNum
+
+	var url = CONTEXT_PATH + "/admin/mobile/rsc/uploadNewResourceList";
+	var type = "post";
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false
+	}).responseText;
+
+	$('#resourceUploadDetailDiv').html(AjaxHTML);
+
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+}
+
+$(document).ready(function () {
+
+
+	//0. 응답값에 serviceid있으면 그거 선택
+	if($("#SVC_ID").val() != ""){
+		$("#selectSvc").val($("#SVC_ID").val());
+	}
+
+	//0. 리턴처리
+	if($("#rtnCd").val() == "999"){
+		alert($("#rtnMsg").val());
+	}else if($("#rtnCd").val() == "000"){
+		alert($("#rtnMsg").val());
+		fn_searchList(1);
+	}
+
+
+	//1. upload event
+	$("#resUpload").click(function(){
+		if($("#FILE1").val() == "" ){
+			alert('#springMessage("menu.mobile.upload.alert.selectFile")'); //선택된 파일이 없습니다.
+			$("#FILE1").focus();
+			return;
+		}else{
+			/*
+			$("form[name=frmMain]").serialize();
+			$("form[name=frmMain]").attr("action", "doprocess").submit();
+			*/
+			document.frmMain.SVC_ID.value  = $("#selectSvc option:selected").val() ;
+			document.frmMain.COMMAND.value  = "UPLOAD";
+            document.frmMain.action         = CONTEXT_PATH + "/admin/mobile/rsc/upload/doprocess";
+            document.frmMain.submit();
+		}
+	});
+
+	//2. client resource delete popup
+	$("#clientResDelete").click(function(){
+		var data = "SVC_ID="+$("#selectSvc option:selected").val() +"&COMMAND=DEL_POPUP";
+		var url = CONTEXT_PATH + "/admin/mobile/rsc/uploadPop";
+		var type = "post";
+		var whideh = 500;
+		var height = 700;
+		var target = $("#windowPop");
+		var title = "전체 리소스 목록";
+		fn_getCommonPopupDivY( url, type, data , target , whideh, height, title );
+	});
+
+	//3. 업로드한뒤 DB에 N(new)로 저장된 목록을 조회
+	$("#searchTempResource").click(function(){
+		fn_searchList(1);
+
+	});
+
+	//select box 변경시
+	 $('#selectSvc').change(function(){
+        //alert( $("#selectSvc option:selected").val() );
+		$('.resDeployAdd').remove();
+		$('.resDeployDel').remove();
+    });
+
+});
+
+// 마스크 및 파업창 닫기
+$(document).on("click","#maskClose",function( e ){
+	e.preventDefault();
+	fn_closePopup();
+});
+
+function isNumber(s) {
+  s += ''; // 문자열로 변환
+  s = s.replace(/^\s*|\s*$/g, ''); // 좌우 공백 제거
+  if (s == '' || isNaN(s)) return false;
+  return true;
+}
+
+$(document).on("click","#selectDelResource",function( e ){
+
+	//alert($(this).text());
+
+	var nodes = $('#resTree').tree('getChecked');	// get checked nodes
+
+	if(nodes.length == 0){
+		alert('#springMessage("common.alert.checkList")'); //"삭제할 리소스를 한 개 이상 체크하세요."
+		return false;
+	}
+
+	//팝업창 닫기
+	e.preventDefault();
+	fn_closePopup();
+
+	var folderNameText = "css img html etc js www wwwEtc";
+
+	for(x=0 ; x<nodes.length; x++) {											//선택한 chk만큼 loop
+		if(isNumber(nodes[x].id)){
+			var isExist = false;
+
+			jQuery.each($('.resDeployDel'), function(idx){					//삭제하려고 추가한 html태그만큼 loop
+				if(jQuery.trim($(this).find("td").eq(1).text()) == jQuery.trim(nodes[x].id)){		//추가한 html 에 선택한 chk가 있으면
+					isExist=true;
+					return false;
+				}
+			});
+
+			if(!isExist){		//추가한 html에 선택한 chk가 없을때는
+				
+				var appendHtml = "<tr class=\'resDeployDel\'> ";
+				appendHtml += "<td class=\'codeGrpClick\'>-</td>";
+				appendHtml += "<td class=\'codeGrpClick\'>" + nodes[x].attributes.res_seqno + "</td>";
+				// appendHtml += "<td class=\'codeGrpClick\'>" + nodes[x].id + "</td>";
+				appendHtml += "<td class=\'codeGrpClick\'>" + nodes[x].text + "</td>";
+				appendHtml += "<td class=\'codeGrpClick\'>" + nodes[x].attributes.file_ext + "</td>";
+				appendHtml += "<td class=\'codeGrpClick\'>" + nodes[x].attributes.file_size + "</td>";
+				appendHtml += "<td class=\'codeGrpClick\'>" + nodes[x].attributes.reg_date + "</td>";
+				appendHtml += "<td class=\'codeGrpClick\'> Y </td>";
+				var status = nodes[x].attributes.status;
+				var statusKor = "";
+				if(status == "W") statusKor = '#springMessage("menu.mobile.manage.new")';  //신규
+				else statusKor = '#springMessage("menu.mobile.manage.original")';  //기존
+
+				appendHtml += "<td class=\'codeGrpClick\'>" + statusKor + "</td>";
+				appendHtml += "</tr>";
+
+				//$('#deleteResources').append('<tr class=\'idSubject\'><td>'+nodes[x].attributes.res_seqno+'</td> <td>'+nodes[x].id+'</td><td>'+nodes[x].text+'</td><td>'+nodes[x].attributes.file_ext+'</td><td>크기</td><td>등록일</td><td>Y</yd><td>상태</td> </tr>');
+				$('#deleteResources').append(appendHtml);
+
+			}
+		}//end if
+	}//end for
+
+	return;
+});
+
+$(document).on("click","#clientResDeleteCancel",function( e ){
+	$('.resDeployDel').remove();
+});
+
+//배포하기
+$(document).on("click","#deploy",function( e ){
+	var deployAddList = new Array();
+	var deployDelList = new Array();
+
+	jQuery.each($('.resDeployAdd'), function(idx){					//추가한 리소스들
+		var res_seq = $(this).find("td:eq(1)").text();
+		//var res_id = $(this).find("td:eq(2)").text();
+		deployAddList.push(res_seq)
+	});
+
+	jQuery.each($('.resDeployDel'), function(idx){					//삭제명령 리소스들
+		var res_seq = $(this).find("td:eq(1)").text();
+		//var res_id = $(this).find("td:eq(2)").text();
+		deployDelList.push(res_seq)
+	});
+
+	if(deployAddList.length == 0 && deployDelList.length == 0 ){
+		alert('#springMessage("menu.mobile.common.noResource")');  //"배포할 리소스 파일이 하나도 없습니다."
+		return false;
+	}
+
+	var tempDeployAddList = deployAddList;
+	var tempDeployDelList = deployDelList;
+
+	var isSame = false;
+	for(var x=0 ; x<tempDeployAddList.length ; x++) {
+    	for(var y=0 ; y<tempDeployDelList.length ; y++) {
+        	if(deployAddList[x] ==  deployDelList[y]) {
+				isSame = true;
+
+				break;
+			}
+		}//for y
+
+		if(isSame) break;
+    }//for x
+
+	if(isSame){
+		if(!confirm('#springMessage("menu.mobile.upload.alert.continue")')){  //배포하려는 파일목록과 삭제하려고 하는 파일목록중 중복된 결과가 있습니다. 이 경우 삭제진행됩니다. 계속하시겠습니까?
+			return false;
+		}
+	}
+
+	document.frmDeploy.SVC_NM.value  = $("#selectSvc option:selected").text() ;
+	document.frmDeploy.SVC_ID.value  = $("#selectSvc option:selected").val() ;
+	document.frmDeploy.DEPLOY_ADD_LIST.value  = deployAddList;
+	document.frmDeploy.DEPLOY_DEL_LIST.value  = deployDelList;
+    document.frmDeploy.action         = CONTEXT_PATH + "/admin/mobile/rsc/deploy";
+    document.frmDeploy.submit();
+
+});
+
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from < 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
+
+</script>

@@ -1,0 +1,59 @@
+<form name="frmMoniterInfo" method="POST">
+	<div class="popup_content">
+		<table class="tbType1">
+			<colgroup>
+				<col width="15%"/><col width="auto"/><col width="15%"/><col width="auto"/>
+			</colgroup>
+			<tr>
+				<th scope="row">
+					#springMessage("menu.push.serverType") <!-- 서버 종류 -->
+				</th>
+				<td colspan="3">
+					<input type="radio" name="SERVERTYPE" value="UPNS" checked="checked">UPNS &nbsp;&nbsp;
+					<input type="radio" name="SERVERTYPE" value="RECV">RECEIVER &nbsp;&nbsp;
+					<input type="radio" name="SERVERTYPE" value="PRVD">PROVIDER &nbsp;&nbsp;
+					<input type="radio" name="SERVERTYPE" value="MEDI">MEDIATOR
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					#springMessage("menu.push.serverName") <!-- 서버 이름 -->
+				</th>
+				<td colspan="3">
+					<input type="text" name="SERVERNAME">
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					* IP
+				</th>
+				<td>
+					<input type="text" name="IPADDRESS" onchange="fn_moniter_change()">
+				</td>
+				<th scope="row">
+					* PORT
+				</th>
+				<td>
+						<input type="text" name="PORT" onchange="fn_moniter_change()" style="width:100px;">
+					<input type="hidden" id="CHECK_CODE" value="0">
+					<input type="button" onclick="fn_check_moniter()" value="#springMessage('menu.push.appManage.sameCheck')"> <!-- 중복체크 -->
+				</td>
+			</tr>
+			<tr>
+				<th>
+					URL
+				</th>
+				<td colspan="3">
+					<input type="text" name="URL" >
+				</td>
+			</tr>
+		</table>
+	</div>
+	
+	<div class="btnArea ta_r">
+		<button type="button" onclick="fn_senderWrite();" class="btn_style1"><strong>#springMessage("common.button.save")</strong></button> <!-- 저장 -->
+		<button type="button" onclick="fn_closePopup();" class="btn_style1"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+	</div>
+</form>

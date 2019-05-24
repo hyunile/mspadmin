@@ -1,0 +1,509 @@
+#set($contextPath = $request.getContextPath())
+## multipart-form Ajax 전송
+<script type="text/javascript" src="${contextPath}/resources/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function ch_search(){
+	var sfrm=document.frmSearch.accesskey;
+	if(sfrm.value.length>0&&sfrm.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")'); // 검색어를 2글자 이상 입력해 주세요.
+			
+			sfrm.value="";
+			sfrm.focus();
+	}
+	fn_apiAccessList(1);
+}
+
+//모바일 서비스 리스트 호출
+function fn_apiAccessList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/system/apiAccess";
+	var type = "POST";
+	var data = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = jQuery("#apiAccessListDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	fn_restApiNullList();
+}
+
+//모바일 서비스 리스트 호출
+function fn_restApiList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/restApi";
+	var type = "POST";
+	var AUTH_IDX = jQuery(".select").find(".AUTH_IDX").val();
+	var data = "AUTH_IDX=" + AUTH_IDX + "&PAGE_NUM=" + PAGE_NUM;
+	var target = jQuery("#restApiListDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//모바일 서비스 리스트 호출
+function fn_restApiNullList(){
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/restApi";
+	var type = "GET";
+	var data = "";
+	var target = jQuery("#restApiListDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//모바일 업데이트 등록 팝업 열기
+jQuery(document).on("click","#authAccessInsert",function(){
+	
+	jQuery( "#dialogPop" ).dialog({
+		autoOpen: false,
+		modal   : true,
+		width   : 630,
+		height  : 'auto', // 'auto' 가능
+		title   : '#springMessage("menu.system.authAccessTitle")', // AUTH ACCESS 등록
+		open    : function(){ fn_dialogDesign('dialogPop'); }//타이틀 및 닫기버튼디자인적용(ID전달 필요)
+	});
+	
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/regist";
+	var data = "";
+	fn_getCommonList( url , "GET", data, jQuery('#dialogPop') );
+	//열기
+	jQuery("#dialogPop").dialog('open');
+});
+
+//모바일 업데이트 등록 팝업 열기
+jQuery(document).on("click","#authAccessModify",function(){
+	
+	jQuery( "#dialogPop" ).dialog({
+		autoOpen: false,
+		modal   : true,
+		width   : 630,
+		height  : 'auto', // 'auto' 가능
+		title   : '#springMessage("menu.system.authAccessModify")', // AUTH ACCESS 수정
+		open    : function(){ fn_dialogDesign('dialogPop'); }//타이틀 및 닫기버튼디자인적용(ID전달 필요)
+	});
+	
+	var AUTH_IDX = jQuery(this).parent().parent().find(".AUTH_IDX").val();
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/edit";
+	var data = "AUTH_IDX=" + AUTH_IDX;
+	fn_getCommonList( url , "GET", data, jQuery('#dialogPop') );
+	//열기
+	jQuery("#dialogPop").dialog('open');
+});
+
+//모바일 업데이트 등록 팝업 열기
+jQuery(document).on("click","#restApiInsert",function(){
+	
+	jQuery( "#dialogPop" ).dialog({
+		autoOpen: false,
+		modal   : true,
+		width   : 630,
+		height  : 'auto', // 'auto' 가능
+		title   : '#springMessage("menu.system.restApiInsert")', // REST API 등록 
+		open    : function(){ fn_dialogDesign('dialogPop'); }//타이틀 및 닫기버튼디자인적용(ID전달 필요)
+	});
+	
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/restApi/regist";
+	var data = "";
+	
+	fn_getCommonList( url , "GET", data, jQuery('#dialogPop') );
+	//열기
+	jQuery("#dialogPop").dialog('open');
+});
+
+//모바일 업데이트 등록 팝업 열기
+jQuery(document).on("click","#restApiModify",function(){
+	
+	jQuery( "#dialogPop" ).dialog({
+		autoOpen: false,
+		modal   : true,
+		width   : 630,
+		height  : 'auto', // 'auto' 가능
+		title   : '#springMessage("menu.system.restApiModify")', // REST API 수정,
+		open    : function(){ fn_dialogDesign('dialogPop'); }//타이틀 및 닫기버튼디자인적용(ID전달 필요)
+	});
+	
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/restApi/edit";
+	
+	var API_IDX = jQuery(this).parent().parent().find(".API_IDX").val();
+	var data = "API_IDX=" + API_IDX;
+	fn_getCommonList( url , "GET", data, jQuery('#dialogPop') );
+	//열기
+	jQuery("#dialogPop").dialog('open');
+});
+
+
+
+//모바일 업데이트 등록
+function fn_apiAccessWrite(){
+	
+	if( jQuery("form[name=apiAccessform]").find("input[name=CONSUMER_KEY]").val() == ""){
+		alert('#springMessage("menu.system.alert.consumerKey")'); // 사용자 식별코드를 입력해주세요
+		return;
+	} 
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){ // 등록하시겠습니까?
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/regist";
+	var data = $("form[name=apiAccessform]").serialize() ;
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_apiAccessList(1);
+				jQuery( "#dialogPop" ).dialog('close');
+			}
+		}
+	});
+}
+
+//모바일 업데이트 등록
+function fn_apiAccessModify(){
+	
+	if( jQuery("form[name=apiAccessform]").find("input[name=CONSUMER_KEY]").val() == ""){
+		alert('#springMessage("menu.system.alert.consumerKey")'); // 사용자 식별코드를 입력해주세요
+		return;
+	} 
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ // 수정하시겠습니까?
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/edit";
+	var data = $("form[name=apiAccessform]").serialize() ;
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_apiAccessList(1);
+				jQuery( "#dialogPop" ).dialog('close');
+			}
+		}
+	});
+}
+
+//모바일 업데이트 등록
+function fn_apiAccessDelete(){
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ // 삭제하시겠습니까?
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/delete";
+	var data = $("form[name=apiAccessform]").serialize() ;
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_apiAccessList(1);
+				jQuery( "#dialogPop" ).dialog('close');
+			}
+		}
+	});
+}
+
+//모바일 업데이트 등록
+function fn_restApiWrite(){
+	
+	if( jQuery("form[name=apiAccessform]").find("input[name=URL_PATH]").val() == ""){
+		alert('#springMessage("menu.system.alert.apiURL")'); // API URL을 입력해주세요
+		return;
+	} else if( jQuery("form[name=apiAccessform]").find("input[name=CONTENTS]").val() == ""){
+		alert('#springMessage("menu.system.alert.contents")'); // 설명을 입력해주세요
+		return;
+	}  
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){ // 등록하시겠습니까?
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/restApi/regist";
+	var data = $("form[name=apiAccessform]").serialize() ;
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_restApiList(1);
+				jQuery( "#dialogPop" ).dialog('close');
+			}
+		}
+	});
+}
+
+//모바일 업데이트 등록
+function fn_restApiModify(){
+	
+	if( jQuery("form[name=apiAccessform]").find("input[name=URL_PATH]").val() == ""){
+		alert('#springMessage("menu.system.alert.apiURL")'); // API URL을 입력해주세요
+		return;
+	} else if( jQuery("form[name=apiAccessform]").find("input[name=CONTENTS]").val() == ""){
+		alert('#springMessage("menu.system.alert.contents")'); // 설명을 입력해주세요
+		return;
+	} 
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ // 수정하시겠습니까?
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/restApi/edit";
+	var data = $("form[name=apiAccessform]").serialize() ;
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_restApiList(1);
+				jQuery( "#dialogPop" ).dialog('close');
+			}
+		}
+	});
+}
+
+//모바일 업데이트 등록
+function fn_restApiDelete(){
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ // 삭제하시겠습니까?
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/system/apiAccess/restApi/delete";
+	var data = $("form[name=apiAccessform]").serialize() ;
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_restApiList(1);
+				jQuery( "#dialogPop" ).dialog('close');
+			}
+		}
+	});
+}
+
+//팝업 권한 정보 수정 삭제
+jQuery(document).on("click","#ch_api",function(){
+	var API_IDX = $(this).val();
+	var AUTH_IDX = jQuery(".select").find(".AUTH_IDX").val();
+	var url = "";
+	
+	if($(this).is(":checked")){
+		if(! confirm('#springMessage("common.alert.doRegist")')){ // 등록하시겠습니까?
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+			return;
+		}
+		url = CONTEXT_PATH + "/admin/system/apiAccess/authAccess/regist"
+	} else {
+		if(! confirm('#springMessage("common.alert.doUnRegist")')){ // 해제하시겠습니까?
+		var selectBox = $(this)[0];
+			selectBox.checked = true;
+			return;
+		}
+		url = CONTEXT_PATH + "/admin/system/apiAccess/authAccess/delete"
+	}
+	var data = "API_IDX=" + API_IDX + "&AUTH_IDX=" + AUTH_IDX;
+
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+			
+			}
+		}
+	});
+});
+
+//모바일 서비스 선택
+jQuery(document).on("click","#click_AccessTr",function(){
+	jQuery(".select").removeClass();
+	jQuery(this).parent().removeClass().addClass("select");
+	fn_restApiList(1);
+});
+
+
+//다이얼로그 닫기(button.#id 로 지정한다.)
+jQuery(document).on('click','button.dialogPop',function(){
+	jQuery( "#dialogPop" ).dialog('close');
+});
+
+jQuery(document).on('click','button#dialogPop',function(){
+	jQuery( "#dialogPop" ).dialog('close');
+});
+
+jQuery(document).on("click","#ch_access",function(){
+	if($(this).is(":checked")){
+		jQuery("#auth_idx_input").attr("disabled",false);
+		jQuery("#auth_idx_input").attr("name","ACCESS_KEY");
+		jQuery("#auth_idx_input").val("");
+	} else {
+		jQuery("#auth_idx_input").attr("disabled",true);
+		jQuery("#auth_idx_input").attr("name","");
+		jQuery("#auth_idx_input").val("자동생성");
+	}
+});
+
+
+
+
+
+</script>
+<div id="dialogPop" title="팝업" style="display:none;"></div>
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="headerBg">
+		<div class="innerNavi">
+			<a href="#"><img src="/resources/img/icon/icon_home.gif" alt="home"/></a> <span>#springMessage("common.text.mobile")</span><!--모바일--> <span>#springMessage("menu.mobile.manage")</span><!--리소스 관리--> <span>#springMessage("menu.mobile.deploy")</span><!--배포관리--> <strong>#springMessage("common.text.list")</strong><!--목록-->
+		</div>
+		<div class="tb_tit">
+			<h3>#springMessage("menu.system.apiKeyManage")</h3> <!-- API 키/등록 관리 -->
+		</div>
+	</div>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		<fieldset>
+			<legend>#springMessage("menu.system.searchForm")</legend> <!--조회 폼-->
+			<div class="detail_searchBox">
+				<p>
+					<label for="GROUPSEQ">ACCESS KEY</label>
+					 : 
+					<input type="text" id="accesskey" name="ACCESS_KEY" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}">
+				</p>
+				<p class="btn_detail">
+					<button type="button" onclick="ch_search()" class="btn_search">#springMessage("common.button.view")</button><!--조회-->
+				</p>
+			</div>
+		</fieldset>
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+		<div class="contents">
+			<div class="tbCon">
+				<div class="left_area" style="width:48%;">
+				<div class="btnArea2 ta_r" style="width:48%;">
+					<button type="button" class="btn_style1" id="authAccessInsert"><span>#springMessage("common.button.regist")</span></button><!--등록-->
+				</div>
+					<div id="apiAccessListDiv">
+						
+						<h4 class="title">#springMessage("menu.system.authAccessTitle")</h4> <!-- AUTH ACCESS 목록 -->
+						<table class="tbList1" summary="항목선택,CUID,이름,전화번호">
+							<colgroup><!--  4cell  -->
+								<col width="auto"/><col width="15%"/><col width="20%"/><col width="70px"/>
+							</colgroup>
+							<thead>
+								<tr>
+									<th scope="col">#springMessage("menu.system.accessKey")</th> <!-- ACCESS KEY -->
+									<th scope="col">#springMessage("menu.system.useYN")</th> <!-- 사용 여부 -->
+									<th scope="col">#springMessage("menu.system.date")</th> <!-- 등록일 -->
+									<th scope="col"> </th>
+								</tr>
+							</thead>
+							<tbody>
+								#foreach( $authAccess in $authAccessList )
+						        	#set($j_tot = $!authAccess.TOT_CNT)
+							       	<tr>
+							       		<td id="click_AccessTr" style="text-align:left;">
+							       			$esc.xml($!authAccess.ACCESS_KEY)
+							       			<input type="hidden" class="AUTH_IDX" value="$!authAccess.AUTH_IDX">
+						       			</td>
+						       			<td id="click_AccessTr">
+							       			$!authAccess.USE_YN
+							       		</td>
+							       		<td id="click_AccessTr">
+							       			$!authAccess.REG_DTTM
+							       		</td>
+						       			<td>
+							       			<button type="button" id="authAccessModify" class="btn_style2"><span>#springMessage("common.button.modify")</span></button><!-- 수정 -->
+						       			</td>
+						        	</tr>
+						       	#end
+						       	#if(!$j_tot)
+									<tr>
+										<td colspan="4">
+											#springMessage("common.alert.nodata")<!-- 데이터가 없습니다. -->
+										</td>
+									</tr>
+								#end
+							</tbody>
+						</table>
+						<input type="hidden" id="MOBILE_NUM" value="$!R_PAGE_NUM">
+				      	<div class="j_page_div">
+				         	##현재 페이지
+				         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+				            ##총 개수
+				            <input type="hidden" name="J_tot" value="$!j_tot">
+				            ##한페이지의 로우수
+				            <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+				            ##한페이지수
+				            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+				            ##이밴트
+				            <input type="hidden" name="j_event" value="fn_apiAccessList">
+				    	</div>
+					</div>
+				</div>
+
+				<div class="right_area" style="width:48%;">
+					<div class="btnArea2 ta_r" style="width:48%;">
+						<button type="button" class="btn_style1" id="restApiInsert"><span>#springMessage("common.button.regist")</span></button><!--등록-->
+					</div>
+					<div id="restApiListDiv">
+						<h4 class="title">#springMessage("menu.system.restApiList")</h4> <!--REST API 목록-->
+						<table class="tbList1" summary="항목선택,CUID,이름,전화번호">
+							<colgroup><!--  4cell  -->
+								<col width="10%"/><col width="auto"/><col width="20%"/><col width="70px"/>
+							</colgroup>
+							<thead>
+								<tr>
+									<th scope="col">#springMessage("common.header.apply")</th><!--적용-->
+									<th scope="col">#springMessage("menu.system.apiURL")</th><!--API URL-->
+									<th scope="col">#springMessage("menu.push.appManage.insertDate")</th><!--등록일자-->
+									<th scope="col">#springMessage("common.header.detail")</th><!--상세-->
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td colspan="4" class="ta_c">#springMessage("menu.system.selectAuthAccess")</td> <!-- AUTH ACCESS를 선택해 주세요. -->
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+

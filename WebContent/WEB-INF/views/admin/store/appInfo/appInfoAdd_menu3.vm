@@ -1,0 +1,370 @@
+<!--  01. 기본정보입력  -->
+<table class="tbl" summary="제목,내용" >
+    <colgroup>
+    	<col width="18%"/><col width="32%"/><col width="18%"/><col width="32%"/>
+    </colgroup>
+    
+    <tr>
+        <th scope="row">
+        	<label for="subject">* #springMessage("common.text.serviceName")</label> <!-- 서비스명 -->
+        </th>
+        <td>
+            ${scval.SVC_NM}
+        </td>
+        <th scope="row">
+        	<label for="subject">* #springMessage("menu.store.appManage.showYN")</label> <!-- 공개여부 -->
+        </th>
+        <td>
+            #if(${scval.PUB_YN}=='Y') 
+				#springMessage("menu.store.appManage.show_Y")  <!-- 공개 -->
+            #else
+				#springMessage("menu.store.appManage.show_N")<!-- 비공개 -->
+			#end
+				
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">
+        	<label for="subject">* App #springMessage("menu.store.userGroup.category")</label> <!-- 카테고리 -->
+        </th>
+        <td style="position:relative;">
+            ${scval.CATG_NM}
+        </td>
+        <th scope="row">
+        	<label for="subject">* App #springMessage("common.text.classify")</label> <!-- 분류 -->
+        </th>
+        <td>
+            #if(${scval.APP_TYPE} == "10") #springMessage("common.text.must") #end <!-- 필수 -->
+            #if(${scval.APP_TYPE} == "20") #springMessage("menu.push.approve.general") #end <!-- 일반 -->
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">
+        	<label for="subject">* #springMessage("common.text.appname")</label> <!-- App 명 -->
+        </th>
+        <td colspan="3" style="position:relative;">$esc.xml(${scval.APP_NM})</td>               
+    </tr>
+    <tr>
+        <th scope="row">
+        	<label for="subject">* #springMessage("menu.store.appManage.platformType")</label> <!-- 플랫폼 구분 -->
+        </th>
+        <td style="position:relative;" >
+            
+            #foreach( ${plat} in ${platList} )
+            <input type="checkbox" id="$!{plat.PLAT_IDX}" value="$!{plat.PLAT_IDX}" platCd="$!{plat.PLAT_CD}" #if($!{plat.PLAT_IDX}==$!{scval.android_val} && ${scval.android_chk}=='true') checked="checked" #end  #if($!{plat.PLAT_IDX}==$!{scval.apple_val} && ${scval.apple_chk}=='true') checked="checked" #end>
+            <label for="$!{plat.PLAT_IDX}">$!{plat.PLAT_NM}</label>     
+            
+             #if( $velocityCount > 1)
+					## 플랫폼 종류는 2종류 까지만 보이도록 한다.
+					## UI 구성이 다 안되어 있을 경우, 이미지 업로드 시에 file element 갯수가 맞지 않아서 오류가 발생한다.
+					## 플랫폼 구성은 해 놓고 하도록 한다.
+                    #break
+			#end
+			#end
+        </td>      
+        <th scope="row">
+    		<label for="subject">* #springMessage("menu.store.appManage.range")</label> <!-- 정렬순서 -->
+        </th>
+        <td style="position:relative;">$!{scval.SORT_NO}</td> 
+    
+    </tr>
+
+</table><br/>
+
+<div id="tabs_view">  
+    <ul>   
+        #set(${j_tot}=1)
+            #foreach( ${plat} in ${platList} )
+        <li><a href="#tabsView_$!{plat.PLAT_CD}">$!{plat.PLAT_NM}</a></li>    
+            #set(${j_tot}=${j_tot} + 1)
+             #if( $velocityCount > 1)
+					## 플랫폼 종류는 2종류 까지만 보이도록 한다.
+					## UI 구성이 다 안되어 있을 경우, 이미지 업로드 시에 file element 갯수가 맞지 않아서 오류가 발생한다.
+					## 플랫폼 구성은 해 놓고 하도록 한다.
+                    #break
+			#end			
+        #end
+    </ul>  
+    
+    
+    <!--  안드로이드   -->
+    <div id="tabsView_10">   
+        <p>
+        <table class="tbl" summary="제목,내용" >
+            <colgroup>
+            	<col width="22%"/><col width="28%"/><col width="22%"/><col width="28%"/>
+            </colgroup>
+            <tr>
+                <th scope="row">
+                	<label for="subject">* #springMessage("menu.store.appManage.packageName")</label> <!-- 패키지명 -->
+                </th>
+                <td colspan="3" style="position:relative;">
+						$!{scval.PAKG_ID_10}
+                </td>          
+            </tr>			
+            <tr>
+                <th scope="row">
+                	<label for="subject">* #springMessage("menu.store.appManage.platformVersion")  </label> <!-- 플랫폼 버전 -->
+                </th>
+                <td>
+                    	#if(${verList10})
+                    		#foreach( ${v} in ${verList10} )
+								#if($!{v.PLAT_VER_IDX}==$!{scval.PLAT_VER_IDX_10}) ${v.PLAT_VER_CD} ${v.PLAT_VER_NM} #end
+                    		#end
+                    	#end    
+                </td>
+                <th scope="row">
+                	<label for="subject">* App #springMessage("menu.store.appManage.binaryVersion")</label> <!-- 바이너리 버전 -->
+                </th>
+                <td>${scval.BIN_VER1_10}.${scval.BIN_VER2_10}.${scval.BIN_VER3_10}</td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject">* #springMessage("menu.store.appManage.binaryFile")</label> <!-- 바이너리 파일 -->
+                </th>
+                <td colspan="3">
+                    ${scval.binaryFile_10_text}
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject">#springMessage("menu.store.appManage.changeContent")</label> <!-- 변경내역 -->
+                </th>
+                <td style="position:relative;" colspan="3">
+                	$esc.xml($!{scval.UPDATE_DESC_10})
+                </td>                   
+            </tr>		     			
+        </table>
+    </div>  
+    
+    <!--  애플   -->
+    <div id="tabsView_20">   
+        <p>
+        <table class="tbl" summary="제목,내용" >
+            <colgroup>
+				<col width="22%"/><col width="28%"/><col width="22%"/><col width="28%"/>
+            </colgroup>
+            <tr>
+                <th scope="row">
+                	<label for="subject">* Bundle ID</label>
+                </th>
+                <td colspan="3" style="position:relative;">
+						$!{scval.PAKG_ID_20}
+                </td>          
+            </tr>					
+            <tr>
+                <th scope="row">
+                	<label for="subject">* #springMessage("menu.store.appManage.platformVersion") </label> <!-- 플랫폼 버전 -->
+                </th>
+                <td>
+                    #if(${verList20})
+                        #foreach( ${v} in ${verList20} )
+                    #if($!{v.PLAT_VER_IDX}==$!{scval.PLAT_VER_IDX_20}) $!{v.PLAT_VER_CD} $!{v.PLAT_VER_NM} #end
+                        #end
+                    #end    
+                </td>
+                <th scope="row">
+                	<label for="subject">* App #springMessage("menu.store.appManage.binaryVersion")</label> <!-- 바이너리 버전 -->
+                </th>
+                <td>${scval.BIN_VER1_20}.${scval.BIN_VER2_20}.${scval.BIN_VER3_20}</td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject">* iOS URL SCHEME</label>
+                </th>
+                
+                <td colspan="3" style="position:relative;">${scval.CALL_URL}</td>               
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject">* iOS #springMessage("menu.store.appManage.deployType") </label> <!-- 배포타입 -->
+                </th>
+                <td style="position:relative;" colspan="3">
+                        #if(${distList})
+                            #foreach( ${dist} in ${distList} )
+                            	#if($!{dist.CD_ID}==$!{scval.DIST_TYPE}) $!{dist.CD_NM} #end
+                            #end
+                        #end    
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject">* #springMessage("menu.store.appManage.binaryFile")</label> <!-- 바이너리 파일 -->
+                </th>
+                <td colspan="3">
+                    ${scval.binaryFile_20_text}
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject">#springMessage("menu.store.appManage.changeContent")</label> <!-- 변경내역 -->
+                </th>
+                <td style="position:relative;" colspan="3">
+                	$esc.xml($!{scval.UPDATE_DESC_20})
+                </td>                   
+            </tr>			
+        </table>
+    </div>  <!-- div  -->
+
+</div><!-- div  -->  
+
+
+
+
+
+<!--  02. 상세정보 입력  -->
+
+<div  style="float:left;padding-top:10px;padding-bottom:15px;">
+	<h4 class="title"> App #springMessage("common.header.desc")</h4> <!-- 설명 -->
+</div>
+
+<div>
+    <table class="tbl" summary="제목,내용">
+        <colgroup>
+        	<col width="25%"/><col width="75%"/>
+        </colgroup>
+        
+        <tr>
+            <th scope="row">
+            	<label for="subject">#springMessage("common.text.summary")</label> <!-- 개요 -->
+            </th>
+            <td style="position:relative;" colspan="2">
+            	$!{scval.APP_INFO}
+            </td>                   
+        </tr>
+        <tr>
+            <th scope="row">
+            	<label for="subject">#springMessage("common.text.introduce")</label> <!-- 소개 -->
+            </th>
+            <td style="position:relative;" colspan="2">
+            	$!{scval.APP_DESC}
+            </td>                   
+        </tr>
+    </table><br/>
+</div>
+
+<div style="float:left;padding-top:10px;padding-bottom:15px;">
+    <h4 class="title" > App Icon #springMessage("common.text.image")</h4> <!-- 이미지 -->
+</div>
+<div >
+    <table class="tbl"  >
+    
+        <colgroup>
+            <col width="150px">
+            <col width="150px">
+            <col width="150px">
+        </colgroup>
+        <tr>
+            <td style="text-align:center;">#springMessage("menu.store.appManage.mobileDashboard")(120x120)</td> <!-- 모바일 대시보드 -->
+            <td style="text-align:center;">#springMessage("menu.store.appManage.mobileList")(75x75)</td> <!-- 모바일 리스트 -->
+            <td style="text-align:center;">#springMessage("menu.store.appManage.managerList")(30x30)</td> <!-- 관리자 리스트 -->
+        </tr>
+        <tr>
+            <td height="150px" >
+                <center>
+                    <div id='thumbNailId1_mn3'  style='width: 120px; height: 120px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                        <img src="#if(${appImageInfo})${CONTEXT_PATH}/admin/store/download?dispName=thumb3&fileName=$!{appImageInfo.IMG_PATH_1}/$!{appImageInfo.FILE_NM_1}#end" width="120px" height="120px" />
+                    </div>
+                </center>
+            </td>
+            <td height="150px">
+                <center>
+                    <div id='thumbNailId2_mn3' style='width: 75px; height: 75px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                        <img src="#if(${appImageInfo})${CONTEXT_PATH}/admin/store/download?dispName=thumb2&fileName=$!{appImageInfo.IMG_PATH_2}/$!{appImageInfo.FILE_NM_2}#end" width="75px" height="75px" />
+                    </div>
+                </center>
+            </td>
+            <td height="150px">
+                <center>
+                    <div id='thumbNailId3_mn3' style='width: 30px; height: 30px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                        <img src="#if(${appImageInfo})${CONTEXT_PATH}/admin/store/download?dispName=thumb1&fileName=$!{appImageInfo.IMG_PATH_3}/$!{appImageInfo.FILE_NM_3}#end" width="30px" height="30px" />
+                    </div>
+                </center>
+            </td>
+        
+        </tr>
+		<script type="text/javascript">
+		if(jQuery('input[id=imgFile1]').val() != '')	previewImage(jQuery('input[id=imgFile1]')[0],'thumbNailId1_mn3', '120','120');
+		if(jQuery('input[id=imgFile2]').val() != '')	previewImage(jQuery('input[id=imgFile2]')[0],'thumbNailId2_mn3', '75','75');
+		if(jQuery('input[id=imgFile3]').val() != '')	previewImage(jQuery('input[id=imgFile3]')[0],'thumbNailId3_mn3', '30','30');
+		</script>
+		<!-- 
+        <tr>
+            <td>
+                <center>
+                    <button type="button" class="btn_style2" imgIdx="$!{appImageInfo.IMG_IDX_1}" imgIdxS="IMG_IDXS1" delImgId="thumbImg1" fileNm="$!{appImageInfo.FILE_NM_1}"><span>삭제</span></button>
+                    <input name="files[2]" type="file" onchange="previewImage(this,'thumbNailId1', '120','120')"   />
+                </center>
+            </td>
+            <td>
+                <center>
+                    <button type="button" class="btn_style2" imgIdx="$!{appImageInfo.IMG_IDX_2}" imgIdxS="IMG_IDXS2"  delImgId="thumbImg2" fileNm="$!{appImageInfo.FILE_NM_2}"><span>삭제</span></button>
+                    <input name="files[3]" type="file" onchange="previewImage(this,'thumbNailId2', '75','75')"  />
+                </center>
+            </td>
+            <td><center><button type="button" class="btn_style2"  imgIdx="$!{appImageInfo.IMG_IDX_3}" imgIdxS="IMG_IDXS3"  delImgId="thumbImg3" fileNm="$!{appImageInfo.FILE_NM_3}"><span>삭제</span></button>
+                <input name="files[4]" type="file" onchange="previewImage(this,'thumbNailId3', '30','30')"  /></center>
+            </td>
+        </tr>
+		 -->
+    </table>
+</div>
+<div style="float:left;padding-top:10px;padding-bottom:15px;">
+	<h4 class="title"> #springMessage("menu.push.sendManage.preview") #springMessage("common.text.image")</h4> <!-- 미리보기 이미지 -->
+</div>
+
+
+<div>
+    <table  class="tbl"  >
+        <colgroup>
+            <col width="auto">
+            <col width="auto">
+            <col width="auto">
+            <col width="auto">
+        </colgroup>
+        <tr>
+        	<td style="text-align:center;" colspan=4>#springMessage("menu.push.sendManage.preview") #springMessage("common.text.image") (120 X 240)</td> <!-- 미리보기 이미지 -->
+        </tr>
+        <tr>
+            <td height="240px">
+                <center>
+                    <div id='preview1_mn3' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                    	<img src="#if(${appImageInfo})${CONTEXT_PATH}/admin/store/download?dispName=preview1&fileName=$!{appImageInfo.IMG_PATH_4}/$!{appImageInfo.FILE_NM_4}#end" width="120px" height="240px" />
+                    </div>
+                </center>
+            </td>
+            <td height="240px">
+                <center>
+                    <div id='preview2_mn3' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                    	<img src="#if(${appImageInfo})${CONTEXT_PATH}/admin/store/download?dispName=preview2&fileName=$!{appImageInfo.IMG_PATH_5}/$!{appImageInfo.FILE_NM_5}#end" width="120px" height="240px" />
+                    </div>
+                </center>
+            </td>
+            <td height="240px">
+                <center>
+                    <div id='preview3_mn3' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                    	<img src="#if(${appImageInfo})${CONTEXT_PATH}/admin/store/download?dispName=preview3&fileName=$!{appImageInfo.IMG_PATH_6}/$!{appImageInfo.FILE_NM_6}#end" width="120px" height="240px"/>
+                    </div>
+                </center>
+            </td>
+            <td height="240px">
+                <center>
+                    <div id='preview4_mn3' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 0px solid black; '>
+                    	<img src="#if(${appImageInfo})${CONTEXT_PATH}/admin/store/download?dispName=preview4&fileName=$!{appImageInfo.IMG_PATH_7}/$!{appImageInfo.FILE_NM_7}#end" width="120px" height="240px" />
+                    </div>
+                </center>
+            </td>
+        </tr>
+		<script type="text/javascript">
+		if(jQuery('input[id=imgFile4]').val() != '')	previewImage(jQuery('input[id=imgFile4]')[0],'preview1_mn3', '120','240');
+		if(jQuery('input[id=imgFile5]').val() != '')	previewImage(jQuery('input[id=imgFile5]')[0],'preview2_mn3', '120','240');
+		if(jQuery('input[id=imgFile6]').val() != '')	previewImage(jQuery('input[id=imgFile6]')[0],'preview3_mn3', '120','240');
+		if(jQuery('input[id=imgFile6]').val() != '')	previewImage(jQuery('input[id=imgFile7]')[0],'preview4_mn3', '120','240');
+		</script>		
+    </table>
+</div>
+
+	
+<script type="text/javascript">
+    jQuery( "#tabs_view" ).tabs({}); 
+</script>

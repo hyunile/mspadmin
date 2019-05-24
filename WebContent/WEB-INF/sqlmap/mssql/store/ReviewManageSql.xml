@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.msp.admin.store.review.mapper.StoreReviewDao">
+
+    	    
+
+	
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (<choose>
+					<when  test="ORDER_FIELD != null and ORDER_FIELD != ''">
+					    <if test="ORDER_TYPE == 'DESC' ">
+					        <if test="ORDER_FIELD == 'RV_NO' ">
+							   ORDER BY  RV_NO DESC
+							</if>
+							<if test="ORDER_FIELD == 'APP_PLAT_IDX' ">
+							   ORDER BY  APP_PLAT_IDX DESC
+							</if>
+							<if test="ORDER_FIELD == 'TITLE' ">
+							   ORDER BY  TITLE DESC
+							</if>
+					        <if test="ORDER_FIELD == 'APP_IDX' ">
+							   ORDER BY  APP_IDX DESC
+							</if>
+						    <if test="ORDER_FIELD == 'APP_NM' ">
+							   ORDER BY  APP_NM DESC
+							</if>	
+						    <if test="ORDER_FIELD == 'PLATFORM' ">
+							   ORDER BY  PLATFORM DESC
+							</if>
+						    <if test="ORDER_FIELD == 'SVC_ID' ">
+							   ORDER BY  SVC_ID DESC
+							</if>
+						     <if test="ORDER_FIELD == 'CATG_CD' ">
+							   ORDER BY  CATG_CD DESC
+							</if>
+						     <if test="ORDER_FIELD == 'STS_CD' ">
+							   ORDER BY  STS_CD DESC
+							</if> 
+						
+						    <if test="ORDER_FIELD == 'GRP_ID' ">
+							   ORDER BY  GRP_ID DESC
+							</if>
+						    <if test="ORDER_FIELD == 'GRP_NM' ">
+							   ORDER BY  GRP_NM DESC
+							</if>
+						    <if test="ORDER_FIELD == 'USE_YN' ">
+							   ORDER BY  USE_YN DESC
+							</if>
+							<if test="ORDER_FIELD == 'REG_DT' ">
+							   ORDER BY  REG_DT DESC
+							</if>
+							<if test="ORDER_FIELD == 'REG_ID' ">
+							   ORDER BY  REG_ID DESC
+							</if>
+							<if test="ORDER_FIELD == 'PLAT_IDX' ">
+							   ORDER BY  PLAT_IDX DESC
+							</if>
+							<if test="ORDER_FIELD == 'BIN_VER' ">
+							    ORDER BY  BIN_VER DESC
+							</if>
+							<if test="ORDER_FIELD == 'RSC_ID' ">
+						    		ORDER BY  RSC_ID DESC
+							</if>
+							<if test="ORDER_FIELD == 'FILE_NM' ">
+						    		ORDER BY  FILE_NM DESC
+							</if>
+							<if test="ORDER_FIELD == 'DPLY_VER' ">
+								ORDER BY  DPLY_VER DESC
+							</if>
+							<if test="ORDER_FIELD == 'DPLY_IDX' ">
+								ORDER BY  DPLY_IDX DESC
+							</if>
+							<if test="ORDER_FIELD == 'DPLY_NM' ">
+							    ORDER BY  DPLY_NM DESC
+							</if>
+							<if test="ORDER_FIELD == 'REG_DTTM' ">
+							    ORDER BY  REG_DTTM DESC
+							</if>	
+							<if test="ORDER_FIELD == 'MOD_DTTM' ">
+							    ORDER BY  MOD_DTTM DESC
+							</if>	
+							<if test="ORDER_FIELD == 'DPLY_TP' ">
+							    ORDER BY  DPLY_TP DESC
+							</if>
+							<if test="ORDER_FIELD == 'USE_YN' ">
+							    ORDER BY  USE_YN DESC
+							</if>
+							<if test="ORDER_FIELD == 'FILE_EXT' ">
+							    ORDER BY  FILE_EXT DESC
+							</if>
+							<if test="ORDER_FIELD == 'FILE_SIZE' ">
+							    ORDER BY  FILE_SIZE DESC
+							</if>
+						</if>
+						<if test="ORDER_TYPE == 'ASC' ">
+						    <if test="ORDER_FIELD == 'RV_NO' ">
+							   ORDER BY  RV_NO ASC
+							</if>
+							<if test="ORDER_FIELD == 'APP_PLAT_IDX' ">
+							   ORDER BY  APP_PLAT_IDX ASC
+							</if>
+							<if test="ORDER_FIELD == 'TITLE' ">
+							   ORDER BY  TITLE ASC
+							</if>
+							<if test="ORDER_FIELD == 'APP_IDX' ">
+							   ORDER BY  APP_IDX ASC
+							</if>
+						    <if test="ORDER_FIELD == 'APP_NM' ">
+							   ORDER BY  APP_NM ASC
+							</if>	
+						    <if test="ORDER_FIELD == 'PLATFORM' ">
+							   ORDER BY  PLATFORM ASC
+							</if>
+						    <if test="ORDER_FIELD == 'SVC_ID' ">
+							   ORDER BY  SVC_ID ASC
+							</if>
+						     <if test="ORDER_FIELD == 'CATG_CD' ">
+							   ORDER BY  CATG_CD ASC
+							</if>
+						     <if test="ORDER_FIELD == 'STS_CD' ">
+							   ORDER BY  STS_CD ASC
+							</if> 
+						
+						    <if test="ORDER_FIELD == 'GRP_ID' ">
+							   ORDER BY  GRP_ID ASC
+							</if>
+						    <if test="ORDER_FIELD == 'GRP_NM' ">
+							   ORDER BY  GRP_NM ASC
+							</if>
+						    <if test="ORDER_FIELD == 'USE_YN' ">
+							   ORDER BY  USE_YN ASC
+							</if>
+							<if test="ORDER_FIELD == 'REG_DT' ">
+							   ORDER BY  REG_DT ASC
+							</if>
+							<if test="ORDER_FIELD == 'REG_ID' ">
+							   ORDER BY  REG_ID ASC
+							</if>
+							<if test="ORDER_FIELD == 'PLAT_IDX' ">
+							   ORDER BY  PLAT_IDX ASC
+							</if>
+							<if test="ORDER_FIELD == 'BIN_VER' ">
+							    ORDER BY  BIN_VER ASC
+							</if>
+							<if test="ORDER_FIELD == 'RSC_ID' ">
+						    		ORDER BY  RSC_ID ASC
+							</if>
+							<if test="ORDER_FIELD == 'FILE_NM' ">
+						    		ORDER BY  FILE_NM ASC
+							</if>
+							<if test="ORDER_FIELD == 'DPLY_VER' ">
+								ORDER BY  DPLY_VER ASC
+							</if>
+							<if test="ORDER_FIELD == 'DPLY_IDX' ">
+								ORDER BY  DPLY_IDX ASC
+							</if>
+							<if test="ORDER_FIELD == 'DPLY_NM' ">
+							    ORDER BY  DPLY_NM ASC
+							</if>
+							<if test="ORDER_FIELD == 'REG_DTTM' ">
+							    ORDER BY  REG_DTTM ASC
+							</if>	
+							<if test="ORDER_FIELD == 'MOD_DTTM' ">
+							    ORDER BY  MOD_DTTM ASC
+							</if>	
+							<if test="ORDER_FIELD == 'DPLY_TP' ">
+							    ORDER BY  DPLY_TP ASC
+							</if>
+							<if test="ORDER_FIELD == 'USE_YN' ">
+							    ORDER BY  USE_YN ASC
+							</if>
+							<if test="ORDER_FIELD == 'FILE_EXT' ">
+							    ORDER BY  FILE_EXT ASC
+							</if>
+							<if test="ORDER_FIELD == 'FILE_SIZE' ">
+							    ORDER BY  FILE_SIZE ASC
+							</if>
+						</if>
+					</when >
+					<otherwise>ORDER BY PAGE_KEY</otherwise >
+					</choose>) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	
+	
+	
+	
+    <select id="selectReviewList" parameterType="kr.msp.admin.store.review.dto.StoreReviewParamDto" resultType="kr.msp.admin.store.review.dto.StoreReviewDto">
+        <include refid="head"/><!--  include head of paging query -->
+			SELECT  REVIEW.RV_NO,      REVIEW.APP_PLAT_IDX,   APP.APP_NM,	REVIEW.TITLE,      REVIEW.CONTENT,    REVIEW.HIT,    REVIEW.USE_YN
+			,             REVIEW.REG_ID,     CONVERT(VARCHAR(10), REVIEW.REG_DT, 102) REG_DT
+			,             REVIEW.MOD_ID,    CONVERT(VARCHAR(10), REVIEW.MOD_DT, 102) MOD_DT
+			,			ROW_NUMBER() OVER(ORDER BY REVIEW.RV_NO) PAGE_KEY
+			FROM    TB_STO_APP_REVIEW REVIEW
+							INNER JOIN TB_STO_APP_PLAT APP_PLAT
+								ON REVIEW.APP_PLAT_IDX = APP_PLAT.APP_PLAT_IDX
+							INNER JOIN TB_STO_APP APP
+								ON APP.APP_IDX = APP_PLAT.APP_IDX
+			WHERE   REVIEW.USE_YN = 'Y'
+					<if test="USERID != null and USERID != ''">   
+					AND REVIEW.REG_ID = #{USERID}
+					</if>
+					<if test="SC_ALL != null and SC_ALL != ''">   
+					AND    ( (APP.APP_NM   LIKE '%' + #{SC_ALL} + '%') OR (REVIEW.CONTENT LIKE '%' + #{SC_ALL} + '%') )
+					</if>
+					<if test="SC_APP != null and SC_APP != ''">   
+					AND    ( APP.APP_NM   LIKE '%' + #{SC_APP} + '%' )
+					</if>
+					<if test="SC_CONTENT != null and SC_CONTENT != ''">   
+					AND    ( REVIEW.CONTENT LIKE '%' + #{SC_CONTENT} + '%' )
+					</if>
+					
+
+        <include refid="bottom"/><!--  include tail of paging query -->
+    </select>
+
+	
+
+	
+	<update id="deleteReviewInfo"  parameterType="java.util.HashMap" >
+		UPDATE TB_STO_APP_REVIEW
+		SET   
+		        USE_YN       = 'N'
+		,       MOD_ID       = #{USERID}
+		,       MOD_DT      = GETDATE()
+		<trim prefix="WHERE"  prefixOverrides="AND|OR" >
+			<foreach collection="PARAM_BEAN" item="array" index="index" >
+				OR RV_NO = ${PARAM_BEAN[index].getRV_NO()}
+			</foreach>
+		</trim>
+	</update>
+	
+	<select id="selectReviewInfo" parameterType="kr.msp.admin.store.review.dto.StoreReviewDto" resultType="kr.msp.admin.store.review.dto.StoreReviewDto">
+	    SELECT 
+	    	REVIEW.RV_NO
+	    	, REVIEW.APP_PLAT_IDX
+	    	, APP.APP_NM
+	    	, REVIEW.TITLE
+	    	, REVIEW.CONTENT
+	    	, REVIEW.HIT
+	    	, REVIEW.USE_YN
+		    , REVIEW.REG_ID
+		    , CONVERT(VARCHAR(10), REVIEW.REG_DT, 102) REG_DT
+		    , REVIEW.MOD_ID,    CONVERT(VARCHAR(10), REVIEW.MOD_DT, 102) MOD_DT
+		FROM 
+			TB_STO_APP_REVIEW REVIEW
+		    INNER JOIN TB_STO_APP_PLAT APP_PLAT
+		ON REVIEW.APP_PLAT_IDX = APP_PLAT.APP_PLAT_IDX
+		    INNER JOIN TB_STO_APP APP
+		ON APP.APP_IDX = APP_PLAT.APP_IDX
+		WHERE 
+			REVIEW.USE_YN = 'Y'
+			AND REVIEW.RV_NO = #{RV_NO}
+	</select>	
+</mapper>

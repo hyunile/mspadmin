@@ -1,0 +1,75 @@
+ <script type="text/javascript">
+	$(document).ready(function () {
+	    // order by 관련 화면 그리기
+	    var target = $("#ORDER_TARGET").val();
+	    var type = $("#ORDER_TYPE").val();
+	    	    
+		if(type == "DESC"){
+	 		$("#OR_" + target).text( $("#OR_" + target).text() + " ▽");
+	  	}else{
+	  		$("#OR_" + target).text( $("#OR_" + target).text() + " △");
+	   	}
+	});
+</script>
+
+<table class="tbl-nb full-width" summary="항목선택,CUID,이름,전화번호">
+	<colgroup><!--  4cell  -->
+		<col width="auto"/><col width="auto"/><col width="20%"/><col width="70px"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col" class="order_th" id="OR_CURRENT_APP_VERSION">#springMessage("menu.mobile.version.mustApp")</th> <!-- 필수앱버전 -->
+			<th scope="col" class="order_th" id="OR_DEVICE_TYPE">#springMessage("menu.mobile.version.deviceType")</th> <!-- 디바이스유형 -->
+			<th scope="col" class="order_th" id="OR_USE_YN">#springMessage("common.header.useYN")</th> <!-- 사용여부 -->
+			<th scope="col"> </th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $mobileServiceUpdate in $mobileServiceUpdateList )
+        	#set($j_tot = $!mobileServiceUpdate.TOT_CNT)
+	       	<tr>
+	       		<td>
+	       			$!mobileServiceUpdate.CURRENT_APP_VERSION
+	       			<input type="hidden" class="APP_UP_IDX" value="$!mobileServiceUpdate.APP_UP_IDX">
+       			</td>
+       			<td>
+	       			#if($!mobileServiceUpdate.DEVICE_TYPE == "A")
+	       				#springMessage("common.text.android") <!-- 안드로이드-->
+			       	#else
+			       		iOS
+			       	#end
+	       		</td>
+	       		<td>
+	       			#if($!mobileServiceUpdate.USE_YN == "Y")
+	       				#springMessage("common.header.use_Y") <!-- 사용-->
+			       	#else
+			       		#springMessage("common.header.use_N") <!-- 미사용--> 
+			       	#end
+	       		</td>
+       			<td>
+       				<a href="javascript:void(0)" class="btn2" id="mobileServiceUpdateModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+       			</td>
+        	</tr>
+       	#end
+       	#if(!$j_tot)
+			<tr>
+				<td colspan="4">
+					#springMessage("common.alert.nodata") <!-- 데이터가 없습니다.-->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+<input type="hidden" id="SVC_UP_NUM" value="$!R_PAGE_NUM">
+<div class="j_page_div">
+ 	##현재 페이지
+ 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot">
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_mobileUpdateList">
+</div>

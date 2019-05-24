@@ -1,0 +1,348 @@
+<script type="text/javascript">
+
+var in_user_array = new Array();
+var del_user_array = new Array();
+var or_user_array = new Array();
+var userIdObj;
+var userNameObj;
+var userRoleObj;
+$(document).ready(function(){
+	
+});
+
+$(document).on("click","#CH_GRP_TR",function(){
+	$(".grpList_div").find(".selected").removeClass();
+	$(this).removeClass().addClass("selected");
+	
+
+	fn_getUserList();
+});
+
+function fn_getUserList(){
+	in_user_array = new Array();
+	del_user_array = new Array();
+	or_user_array = new Array();
+	
+	var GRP_ID = $(".grpList_div").find(".selected").find(".GRP_ID").val();
+
+	
+
+	var url = CONTEXT_PATH + "/admin/store/userAuth/userList";
+	var type = "GET";
+	var data = "GRP_ID=" + GRP_ID;
+	var target = $(".userList_div");
+	fn_getCommonList( url, type, data , target );
+}
+
+$(document).on("click","#ch_UserAll",function(){
+	if($(this).is(":checked")){
+		$(".CH_BO_USER").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+			$(this).parent().parent().removeClass().addClass("selected");
+		});
+	} else {
+		$(".CH_BO_USER").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+			$(this).parent().parent().removeClass();
+		});
+	}
+});
+
+$(document).on("click",".CH_BO_USER",function(){
+	if($(this).is(":checked")){
+		$(this).parent().parent().removeClass().addClass("selected");
+	} else {
+		$(this).parent().parent().removeClass();
+	}
+});
+
+function fn_deleteUser(){
+	
+	var con = 0;
+	
+	$(".CH_BO_USER").each(function(){
+		if($(this).is(":checked")){
+			con = 1;
+		}
+	});
+	
+	if(con != 1){
+		alert('#springMessage("menu.store.userGroup.alert.checkRemove")'); //"제거 할 사용자를 체크해 주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("menu.store.userGroup.alert.doRemove")')){ //"제거 하시겠습니까?"
+		return;
+	}
+	
+	$(".CH_BO_USER").each(function(){
+		if($(this).is(":checked")){
+			if(jQuery.inArray( $(this).parent().parent().find(".EMP_NO").val() , or_user_array) > -1){
+				del_user_array[del_user_array.length] = $(this).parent().parent().find(".EMP_NO").val();
+			}
+			
+			if(jQuery.inArray( $(this).parent().parent().find(".EMP_NO").val() , in_user_array) > -1){
+				in_user_array.splice(jQuery.inArray( $(this).parent().parent().find(".EMP_NO").val() , in_user_array),1);
+			}
+			
+			$(this).parent().parent().remove();
+		}
+	});
+};
+
+function fn_addUser(){
+	if($(".grpList_div").find(".selected").length < 1){
+		alert('#springMessage("menu.store.userGroup.alert.chooseGroup")'); //"그룹을 선택해 주세요."
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/store/userAuth/addUser";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var width = 500;
+	var title = '#springMessage("common.text.user")'+' '+'#springMessage("common.button.add")';//"사용자 추가";
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+}
+
+function fn_addWriterUser(){
+	//var nodes = $('#resTree').tree('getChecked');
+	var nodes = $("#selectKeys").val();
+
+	nodes = userIdObj;
+	
+	if(nodes == ''){
+		alert('#springMessage("menu.store.userGroup.alert.checkAdd")'); //"추가할 사용자/그룹을 선택해 주세요."
+		return false;
+	}
+	
+	if(! confirm('#springMessage("menu.store.userGroup.alert.doAdd")')){ //"추가 하시겠습니까?"
+		return;
+	}
+	
+	$("#user_null").remove();
+	
+	var user_array = new Array();
+	
+	$(".EMP_NO").each(function(){
+		user_array[user_array.length] = $(this).val(); 
+	});
+	
+	var html_Str = "";
+	//CD_NM : 직책, CH_BO_USER : 사번, 이름
+	//for(x=0 ; x<nodes.length; x++) {
+	for(x=0 ; x < nodes.length ; x++) {
+		
+		if( jQuery.inArray( nodes[x] , user_array) < 0 ){
+			var str_cd_nm = userRoleObj[x];
+			var str_name = userNameObj[x];
+			
+			html_Str += "<tr>";
+			html_Str += "<td>";
+			html_Str += "<input type='checkbox' class='CH_BO_USER' value=" + nodes[x] + " >";
+			html_Str += "<input type='hidden' class='EMP_NO' name='EMP_NO' value=" + nodes[x] + " >";
+			html_Str += "</td>";
+			html_Str += "<td>";
+			html_Str += str_cd_nm;
+			html_Str += "</td>";
+			html_Str += "<td>";
+			html_Str += str_name;
+			html_Str += "</td>";
+			html_Str += "<td>";
+			html_Str += nodes[x]
+			html_Str += "</td>";
+			html_Str += "</tr>";
+			
+			//삭제목록에 추가할 사용자가 포함되어 있다면 삭제목록에서 해당 사용자를 제거하여 삭제하지 않도록 한다.
+			if(jQuery.inArray( nodes[x] , del_user_array) > -1){
+				del_user_array.splice(jQuery.inArray( nodes[x] , del_user_array),1);
+			}
+			if(jQuery.inArray( nodes[x] , or_user_array) < 0){
+				in_user_array[in_user_array.length] = nodes[x];
+			}
+		}
+	}
+	
+	$("#addUserTable").append( html_Str );	
+	
+	
+	
+
+
+	fn_closePopup();
+}
+
+function fn_userAuthRegist(){
+	
+	if($(".grpList_div").find(".selected").length < 1){
+		alert('#springMessage("menu.store.userGroup.alert.chooseSaveGroup")'); //"저장할 그룹을 선택해주세요."
+		return;
+	}
+	
+	if(del_user_array.length < 1 && in_user_array.length < 1 ){
+		alert('#springMessage("menu.store.userGroup.alert.noChange")'); //"변경 내용이 없습니다."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doSave")')){ //"저장하시겠습니까?"
+		return;
+	}
+	
+	$("#DELETE_USER_LIST").val(del_user_array);
+	$("#INSERT_USER_LIST").val(in_user_array);
+	      
+	
+	$("#GRP_ID").val($(".grpList_div").find(".selected").find(".GRP_ID").val());
+	
+	var url = CONTEXT_PATH + "/admin/store/userAuth/regist";
+	var data = $("form[name=value_List]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				$(".grpList_div").find(".selected").find("td:eq(1)").text(or_user_array.length - del_user_array.length + in_user_array.length);
+				fn_getUserList();
+			}
+		}
+	});
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>	
+	#### E : 프로그램 위치 기술 부분  ####
+	
+	<form name="value_List" method="post">
+		<input type="hidden" id="DELETE_USER_LIST" name="DELETE_USER_LIST" value="">
+		<input type="hidden" id="INSERT_USER_LIST" name="INSERT_USER_LIST" value="">
+		<input type="hidden" id="GRP_ID" name="GRP_ID" value="">
+	</form>
+	
+	#### S : 조회 폼 부분  ####
+	<form name="AuthList" method="get">
+		#### S : 리스트  폼 부분  ####
+		<div class="scroll-area">
+
+			<table class="full-width">
+				
+				<colgroup>
+					<col>
+					<col style="width:10px">
+					<col>
+				</colgroup>
+					
+				<tr>
+					<td class="tbl-wrap valignTop">
+						<div class="grpList_div">
+							<h2 class="tbl-title">#springMessage("menu.store.userGroup.authGroup")</h2> <!-- 권한 그룹 -->
+							<div style="overflow: auto;width: 100%;height: 450px;border-top: 1px solid #818181;border-bottom: 1px solid #818181;">
+							<table class="tbl-nb full-width">
+								<colgroup>
+									<col width="auto"/>
+									<col width="17%"/>
+									<col width="20%"/>
+								</colgroup>
+								<thead>
+									<tr>
+										<th>
+											#springMessage("menu.store.userGroup.category") <!-- 카테고리 -->
+										</th>
+										<th>
+											#springMessage("menu.store.userGroup.memberNum") <!-- 멤버수 -->
+										</th>
+										<th>
+											#springMessage("common.text.registDate") <!-- 등록일시 -->
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									#foreach( $groupOne in $groupList )
+										<tr id="CH_GRP_TR">
+											<td style="text-align:center;cursor:pointer;" >
+												$groupOne.GRP_NM
+												<input type="hidden" class="GRP_ID" value="$groupOne.GRP_ID">
+											</td>
+											<td >
+												$!groupOne.USER_CNT
+											</td>
+											<td>
+												$!groupOne.REG_DT
+											</td>
+										</tr>
+									#end
+								</tbody>
+							</table>
+							</div>
+						</div>
+						
+					</td>
+					
+					<td></td>
+					
+					<td class="tbl-wrap valignTop">
+						<div class="userList_div">
+							<h2 class="tbl-title">#springMessage("common.text.user")</h2>	<!-- 사용자 -->
+							<div style="overflow: auto;width: 100%;height: 450px;border-top: 1px solid #818181;border-bottom: 1px solid #818181;">
+							<table class="tbl-nb full-width">
+								<colgroup>
+									<col width="17%"/>
+									<col width="26%"/>
+									<col width="26%"/>
+									<col width="31%"/>
+								</colgroup>
+								<thead>
+									<tr >
+										<th>
+											<input type="checkbox" id="ch_UserAll"/><label for="ch_UserAll"></label>
+										</th>
+										<th>
+											#springMessage("menu.store.user.position") <!-- 직위 -->
+										</th>
+										<th>
+											#springMessage("common.text.name")<!-- 이름 -->
+										</th>
+										<th>
+											#springMessage("menu.store.user.number") <!-- 사번 -->
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr id="user_null">
+										<td colspan="4" >
+											#springMessage("menu.store.userGroup.alert.chooseGroup") <!-- 그룹을 선택해 주세요. -->
+										</td>			
+									</tr>
+								</tbody>
+							</table>
+							</div>
+						</div>
+						
+					</td>
+				</tr>
+				
+			</table>
+
+			<div class="btn-wrap txtRight">
+				<a href="javascript:void(0)" class="btn1" id="BTN_REMOVE" name="BTN_REMOVE" onclick="fn_deleteUser();">#springMessage("common.button.remove")</a>	<!-- 제거 -->
+				<a href="javascript:void(0)" class="btn1 type2" id="BTN_ADD"    name="BTN_ADD"    onclick="fn_addUser();">#springMessage("common.button.add")</a>	<!-- 추가 -->
+				<a href="javascript:void(0)" class="btn1 type2" id="BTN_SAVE"   name="BTN_SAVE"   onclick="fn_userAuthRegist();">#springMessage("common.button.save")</a>	<!-- 저장 -->
+			</div>
+
+		</div>
+		
+		#### E : 리스트  폼 부분  ####
+	</form>
+</div>
+

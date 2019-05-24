@@ -1,0 +1,24 @@
+
+<h2>[App] #springMessage("menu.stats.store.downStat") <small>$strPeriodParam</small></h2> <!-- 다운로드 현황 -->
+
+<table class="tbl-nb">
+	<caption>App: 다운로드 현황</caption>
+	<colgroup>
+		<col style="width:auto">
+		<col style="width:38%">
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("common.text.appname")</th> <!-- App명 -->
+			<th scope="col" class="last">#springMessage("menu.stats.store.downNum")</th> <!-- 다운로드 수 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $dto in $listDto)
+		<tr class="last">
+			<td class="first">Push app</td>
+			<td class="last">10</td>
+		</tr>
+		#end
+	</tbody>
+</table>

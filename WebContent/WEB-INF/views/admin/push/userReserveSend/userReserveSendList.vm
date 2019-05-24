@@ -1,0 +1,76 @@
+
+<table class="tbList1">
+	<colgroup><!--  7cell  -->
+		<col width="50px"/><col width="150px"/><col width="auto"/><col width="auto"/>
+		<col width="150px"/><col width="70px"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">
+				<input type="checkbox" id="all_check" />
+			</th>
+			<th scope="col">
+				#springMessage("menu.push.reserveDate") <!-- 예약일시 -->
+			</th>
+			<th scope="col">
+				CUID
+			</th>
+			<th scope="col">
+				#springMessage("menu.stats.push.sender")ID <!-- 발송자 -->
+			</th>
+			<th scope="col">
+				#springMessage("common.text.registDate") <!-- 등록일시 -->
+			</th>
+			<th scope="col">
+				 
+			</th>
+		</tr>
+    </thead>
+    <tbody>
+		#foreach( $userReserveSend in $userReserveSendList )
+       		#set($j_tot = $userReserveSend.TOT_CNT)
+           	<tr class="no_select">
+           		<td>
+           			<input type="checkbox" class="check_row">
+           			<input type="hidden" class="SEQNO" value="$userReserveSend.SEQNO">
+           			<input type="hidden" class="CUID" value="$userReserveSend.CUID">
+           		</td>
+           		<td id="check_td">
+           			$esc.xml($userReserveSend.RESERVEDATE)
+   				</td>
+   				<td id="check_td" style="text-align:left;">
+           			$esc.xml($userReserveSend.CUID)
+   				</td>
+   				<td id="check_td" style="text-align:left;">
+           			$esc.xml($userReserveSend.SENDERCODE)
+   				</td>
+   				<td id="check_td">
+   					$esc.xml($userReserveSend.REGDATE)
+           		</td>
+   				<td>
+           			<button type="button" id="reserveSendInfo" class="btn_style2">#springMessage("common.header.detail")</button> <!-- 상세 -->
+   				</td>
+       		</tr>
+   		#end
+   		#if(!$j_tot)
+			<tr>
+				<td colspan="6">
+					#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+<input type="hidden" id="SEND_NUM" value="$!R_PAGE_NUM">
+<div class="j_page_div">
+ 	##현재 페이지
+ 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot">
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_RserveList">
+</div>

@@ -1,0 +1,328 @@
+#set($contextPath = $request.getContextPath())
+## multipart-form Ajax 전송
+<script type="text/javascript" src="${contextPath}/resources/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function ch_search(){
+	var sfrm=document.frmSearch.svcnm;
+	if(sfrm.value.length>0&&sfrm.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.value="";
+			sfrm.focus();
+		}
+	fn_mobileList(1);
+}
+
+//모바일 서비스 리스트 호출
+function fn_mobileList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/mobile/appVersion";
+	var type = "POST";
+	var data = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = jQuery("#mobileServiceListDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+jQuery(document).on("click","#click_mobileServiceTr",function(){
+	$(".selected").removeClass();
+	$(this).parent().removeClass().addClass("selected");
+	//var radioBox = $(this).parent().find("#ch_radio")[0];
+	//radioBox.checked = true;
+	$("#ORDER_TYPE").val("DESC");
+	$("#ORDER_TARGET").val("BIN_VER");
+	fn_appVersionList(1);
+});
+
+function fn_appVersionList(PAGE_NUM){
+	var SVC_ID = $(".selected").find(".SVC_ID").val();
+	var url = CONTEXT_PATH + "/admin/mobile/appVersion/list";
+	var type = "POST";
+	var data = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM +"&SVC_ID=" + SVC_ID;
+	var target = jQuery("#appVersionDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+jQuery(document).on("click","#appVerWrite",function(){
+	
+	if($(".selected").length < 1){
+		alert('#springMessage("menu.mobile.version.alert.selectApp")'); //"모바일 서비스 목록의 App를 선택하여 주십시오."
+		return;
+	}
+	
+	var SVC_ID = $(".selected").find(".SVC_ID").val();
+	var SVC_NM = $(".selected").find("td:eq(1)").text();
+	
+	var url = CONTEXT_PATH + "/admin/mobile/appVersion/regist";
+	var data = "SVC_ID=" + SVC_ID + "&SVC_NM=" + SVC_NM;
+	var title = '#springMessage("menu.mobile.version.binaryVersionIn")';//"바이너리 버전 등록";
+	var target =  $("#windowPop");
+	var type = "GET";
+	var width = 630;
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+function fn_goWrite(){
+	var BIN_VER_1 = $("#BIN_VER_1").val();
+	var BIN_VER_2 = $("#BIN_VER_2").val();
+	var BIN_VER_3 = $("#BIN_VER_3").val();
+	
+	if( BIN_VER_1 == '' || BIN_VER_2 == '' || BIN_VER_3 == ''){
+		alert('#springMessage("menu.mobile.version.alert.inputBinary")'); //"바이너리 버전을 입력해 주세요."
+		return;
+	}
+	
+	var cnt_plat = $("#val_"+ $("#PLAT_IDX").val()).length;
+	
+	var max_plat =  $("#val_"+ $("#PLAT_IDX").val()).val();
+	var su_plat;
+	if(cnt_plat < 1){
+		su_plat = -1;
+	} else {
+		var str = max_plat.split(".");
+		var str_su = "";
+		for(var i = 0 ; i< str.length  ; i ++ ){
+			str_su += "" + SetZeros(str[i],2 );
+		}
+		su_plat = Number(str_su);
+	}
+	
+	if( str_su >= Number(SetZeros(BIN_VER_1,2 ) + "" + SetZeros(BIN_VER_2,2 ) + "" + SetZeros(BIN_VER_3,2 ) ) ){
+		alert('#springMessage("menu.mobile.version.alert.versionCheck")'); //"입력한 바이너리 버전이 마지막 버전보다 작거나 같습니다."
+		return;
+	}
+	
+	
+	if(! confirm('#springMessage("common.alert.doSave")')){  // "저장하시겠습니까?"
+		return;
+	}
+	
+	$("#BIN_VER").val( SetZeros(BIN_VER_1,2 ) + "." + SetZeros(BIN_VER_2,2 ) + "." + SetZeros(BIN_VER_3,2 ) );
+	
+	var SVC_ID = $(".selected").find(".SVC_ID").val();
+	
+	var url = CONTEXT_PATH + "/admin/mobile/appVersion/regist";
+	
+	var data = jQuery("form[name=frmAppVerInfo]").serialize() + "&SVC_ID=" + SVC_ID;
+
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_appVersionList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+
+
+jQuery(document).on("click","#fn_appVerDelete",function(){
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //  "삭제하시겠습니까?"
+		return;
+	}
+	
+	var APP_VER_ID = $(this).parent().parent().find(".APP_VER_ID").val();
+		
+	var data = "APP_VER_ID=" + APP_VER_ID;
+	
+	var url = CONTEXT_PATH + "/admin/mobile/appVersion/delete";
+
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_appVersionList(1);
+				fn_closePopup();
+			}
+		}
+	});
+});
+
+function SetZeros(num, digits) {
+	var Zeros = '';
+   	num = num.toString();
+   	if (num.length < digits) {
+     	for (i = 0; i < digits - num.length; i++)
+      	Zeros += '0';
+    }
+  	return Zeros + num;
+}
+
+jQuery(document).on("click",".order_th",function(){
+	var orderTarget = $(this).attr("id");
+	var order = orderTarget.split("OR_");
+	if($("#ORDER_TARGET").val() == order[1]){
+	 	if( $("#ORDER_TYPE").val() == "DESC") {
+	 		$("#ORDER_TYPE").val("ASC");
+	 	} else {
+	 		$("#ORDER_TYPE").val("DESC");
+	 	}
+	} else {
+		$("#ORDER_TARGET").val(order[1]);
+		$("#ORDER_TYPE").val("DESC");
+	}
+	fn_appVersionList($("#VER_NUM").val());
+});
+
+</script>
+
+<div id="dialogPop" title="모바일 업데이트 등록" style="display:none;"></div>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.mobile")</span>
+		<span>#springMessage("menu.system.appUpdateManage")</span>		<!--  앱 업데이트 관리 -->
+		<span>#springMessage("menu.system.appBinaryManage")</span>		<!-- 앱 바이너리 버전 관리 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.appBinaryManage")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:80px">
+				<col style="width:260px">
+				<col>
+			</colgroup>
+			<thead>
+				<tr>
+	                <th>#springMessage("common.text.appname")</th> <!-- App. 명 -->
+					<td class="par_30">
+						<input type="text" id="svcnm" name="SVC_NM" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}">
+					</td>
+					<td><a href="javascript:void(0)" onclick="ch_search();" class="tbl-btn2">#springMessage("common.button.view")</a></td>	<!-- 조회 -->
+				</tr>
+			</thead>
+		</table>
+		
+		<input type="hidden" id="ORDER_TYPE" name="ORDER_TYPE">
+		<input type="hidden" id="ORDER_TARGET" name="ORDER_TARGET">
+		
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+		##HIDDEN##
+		<input type="hidden" id="CLICK_ID_MENU" value="" />
+		##HIDDEN##
+
+		<table class="full-width">
+			<caption></caption>
+			<colgroup>
+				<col>
+				<col style="width:10px">
+				<col>
+			</colgroup>
+			<tr>
+				<td class="tbl-wrap">
+					<h2 class="tbl-title">#springMessage("menu.mobile.version.mobileServiceList")</h2>	<!-- 모바일 서비스 목록 -->
+					
+					<div id="mobileServiceListDiv">
+    					<table class="tbl-nb full-width" summary="항목선택,CUID,이름,전화번호">
+    						<colgroup><!--  4cell  -->
+     							<col width="auto"/>
+    							<col width="40%" >
+    							<col width="20%"/>
+    						</colgroup>
+    						<thead>
+    							<tr>
+      								<th scope="col">#springMessage("common.text.appname")</th> <!-- App. 명 -->
+    								<th scope="col">App ID</th>
+    								<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+    							</tr>
+    						</thead>
+    						<tbody>
+    							#foreach( $mobileService in $mobileServiceList )
+    					        	#set($j_tot = $!mobileService.TOT_CNT)
+    						       	<tr style="cursor: pointer">
+    						       		<td id="click_mobileServiceTr"  style="text-align:left;">
+    						       			$!mobileService.SVC_NM
+    						       			<input type="hidden" class="SVC_ID" value="$!mobileService.SVC_ID">
+    					       			</td>
+    						       		<td id="click_mobileServiceTr"  style="text-align:left;">
+    						       			$!mobileService.APP_ID
+    					       			</td>
+    						       		<td>
+    						       			$!mobileService.REG_DTTM
+    						       		</td>
+    					        	</tr>
+    					       	#end
+    					       	#if(!$j_tot)
+    								<tr>
+    									<td colspan="4">
+    										#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+    									</td>
+    								</tr>
+    							#end
+    						</tbody>
+    					</table>
+    					<input type="hidden" id="MOBILE_NUM" value="$!R_PAGE_NUM" />
+    			      	<div class="j_page_div">
+    			         	##현재 페이지
+    			         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    			            ##총 개수
+    			            <input type="hidden" name="J_tot" value="$!j_tot" />
+    			            ##한페이지의 로우수
+    			            <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    			            ##한페이지수
+    			            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    			            ##이밴트
+    			            <input type="hidden" name="j_event" value="fn_mobileList" />
+    			    	</div>
+                    </div>	
+                    
+				</td> <!--  left end -->
+				
+				<td></td>
+				
+				<td class="tbl-wrap" valign="top">
+					<h2 class="tbl-title">#springMessage("menu.mobile.version.versionList")		<!-- 버전 목록 -->
+						<a href="javascript:void(0)" id="appVerWrite" class="btn2 fr">#springMessage("menu.mobile.version.button.versionIn")</a>	<!--  버전 등록 -->
+					</h2> 
+					<div id="appVersionDiv" >
+    					<table class="tbl-nb full-width" summary="항목선택,CUID,이름,전화번호">
+    						<colgroup><!--  4cell  -->
+    							<col width="auto"/><col width="23%"/><col width="27%"/><col width="16%"/>
+    						</colgroup>
+    						<thead>
+    							<tr>
+    								<th scope="col">#springMessage("menu.mobile.version.platform")</th> <!-- 플랫폼유형 -->
+    								<th scope="col">#springMessage("menu.mobile.deploy.version")</th> <!-- 버전 -->
+    								<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+    								<th scope="col"> </th>
+    							</tr>
+    						</thead>
+    						<tbody>
+    							<tr>
+    								<td colspan="4" class="ta_c">#springMessage("menu.mobile.version.alert.selectMobile")</td><!-- 모바일 서비스을 선택해 주세요. -->
+    							</tr>
+    						</tbody>
+    					</table>
+                    </div>	
+					 
+				</td>
+			</tr>
+		</table>
+		
+	</form>
+
+</div>
+

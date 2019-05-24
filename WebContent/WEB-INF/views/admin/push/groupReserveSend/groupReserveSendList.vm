@@ -1,0 +1,93 @@
+<table class="tbList1">
+	<colgroup><!--  9cell  -->
+		<col width="50px"/><col width="120px"/><col width="auto"/><col width="auto"/>
+		<col width="120px"/><col width="60px"/><col width="70px"/><col width="70px"/>
+	</colgroup>
+	<thead>
+   		<tr>
+   			<th>
+   				<input type="checkbox" id="all_check">
+			</th>
+   			<th>
+   				#springMessage("menu.push.reserveDate") <!-- 예약일시 -->
+   			</th>
+			<th>
+				#springMessage("menu.push.user.groupName") <!-- 그룹명 -->
+			</th>
+			<th>
+				#springMessage("menu.stats.push.sender")ID <!-- 발송자 -->
+			</th>
+			<th>
+				#springMessage("common.text.registDate") <!-- 등록일시 -->
+			</th>
+			<th>
+				#springMessage("menu.mobile.deploy.status") <!-- 상태 -->
+			</th>
+			<th>
+				 
+			</th>
+			<th>
+				
+			</th>
+       	</tr>
+    </thead>
+    <tbody>
+		#foreach( $groupReserveSend in $groupReserveSendList )
+       		#set($j_tot = $groupReserveSend.TOT_CNT)
+           	<tr class="no_select">
+           		<td>
+           			<input type="checkbox" class="check_row">
+           			<input type="hidden" class="MSGGRPSEQNO" value="$groupReserveSend.MSGGRPSEQNO">
+           			<input type="hidden" class="SEQNO" value="$!{groupReserveSend.SEQNO}">
+           		</td>
+           		<td id="check_td">
+           			$esc.xml($!groupReserveSend.RESERVEDATE)
+   				</td>
+   				<td id="check_td" style="text-align:left;">
+           			$esc.xml($!groupReserveSend.GROUPSEQ)
+   				</td>
+   				<td id="check_td" style="text-align:left;">
+           			$esc.xml($!groupReserveSend.SENDERCODE)
+   				</td>
+   				<td id="check_td">
+   					$esc.xml($!groupReserveSend.REGDATE)
+           		</td>
+           		<td id="check_td">
+   					#if($groupReserveSend.STATE == "N")
+   						#springMessage("common.text.noProcess") <!-- 미처리 -->
+					#elseif($groupReserveSend.STATE == "P")
+						#springMessage("common.text.complete") <!-- 완료 -->
+					#elseif($groupReserveSend.STATE == "W")
+						#springMessage("common.text.process") <!-- 작업중 -->
+					#end
+           		</td>
+           		<td>
+           			<button type="button" id="reserveSendInfoList" class="btn_style2">#springMessage("common.text.content")</button> <!-- 내역 -->
+		      	</td>
+   				<td>
+           			<button type="button" id="reserveSendInfo" class="btn_style2">#springMessage("common.header.detail")</button> <!-- 상세 -->
+   				</td>
+       		</tr>
+   		#end
+   		#if(!$j_tot)
+			<tr>
+				<td colspan="8">
+					#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+<input type="hidden" id="SEND_NUM" value="$!R_PAGE_NUM">
+<div class="j_page_div">
+ 	##현재 페이지
+ 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot">
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_RserveList">
+</div>

@@ -1,0 +1,75 @@
+<h4 class="title">#springMessage("menu.system.notice")</h4> <!-- 공지사항 -->
+<table class="tbList1" >
+	<colgroup>
+		<col width="7%"></col>
+		<col width="15%"></col>
+		<col width="38%"></col>
+		<col width="20%"></col>
+		<col width="20%"></col>
+	</colgroup>
+	
+	<thead>
+		<tr>
+    		<th>
+    			NO
+	     	</th>
+	           <th>
+	           	#springMessage("menu.stats.mobile.type") <!-- 구분 -->
+    		</th>
+    		<th>
+    			#springMessage("common.header.title") <!-- 제목 -->
+	       	</th>
+	       	<th>
+	           	#springMessage("menu.store.notice.seeNum") <!-- 조회수 -->
+    		</th>
+    		<th>
+    			#springMessage("menu.mobile.deploy.date") <!-- 등록일 -->
+	    	</th>
+	     
+ 		</tr>
+	</thead>
+	<tbody>
+    	#foreach( $notice in $noticeList )
+       		#set($j_tot = $notice.TOT_CNT)
+            <tr class="noticeDiv">
+            	<td>
+            		<input type="hidden" id="BOARD_IDX" value="$notice.BOARD_IDX">
+					<input type="hidden" id="SVC_ID" value="$notice.SVC_ID">
+					$!notice.RNUM
+            	</td>
+            	<td>
+            		$!notice.BOARD_DETAIL_TYPE_NM
+            	</td>
+            	<td>
+            		<a id="groupModify">$!notice.BOARD_TITLE</a>
+            	</td>
+            	<td>
+            		$!notice.HIT
+            	</td>
+            	<td>
+            		$!notice.REG_DT
+            	</td>
+         	</tr>
+		#end
+		#if(!$j_tot)
+	   		<tr >
+	   			<td align="center" colspan="5">
+	   				#springMessage("menu.store.notice.alert.noNotice") <!-- 검색된 공지사항이 없습니다.  -->
+	           	</td>
+	       	</tr>
+	   	#end
+	</tbody>
+</table>
+<input type="hidden" id="notice_num" value="$!R_PAGE_NUM">
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot">
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_noticeList">
+</div>

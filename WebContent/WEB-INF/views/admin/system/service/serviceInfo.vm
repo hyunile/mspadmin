@@ -1,0 +1,61 @@
+<form name="frmServiceInfo">
+	<div >
+			
+		<table class="tbl" >
+			<colgroup><!--  2cell  -->
+				<col width="30%"/><col width="70%"/>
+			</colgroup>
+			<tr>
+				<th scope="row">
+					<label for="APP_ID" class="redNotice">
+						#springMessage("common.header.appId") 			#### 앱아이디 ####
+					</label>
+				</th>
+				<td>
+				#if(!$serviceOne)
+					
+					<select onchange="fn_appIdChange();" id="APP_ID" name="APP_ID" class="tbl-select" style="width:270px;">
+						#foreach($appId in $LICENSE_APP_IDS)
+						<option value="$!{appId}">$!{appId}</option>
+						#end
+                          </select>
+							
+					<a href="javascript:fn_appIdCheck();void(0)" class="tbl-btn1">#springMessage("common.button.duplicateCheck")</a>		### 중복체크 ###
+					
+					<input type="hidden" id="appId_ch_con" value="X" />
+				#else
+					$esc.xml($!serviceOne.APP_ID)
+					<input type="hidden" id="APP_ID" name="APP_ID" value="$!serviceOne.APP_ID" />
+				#end
+				</td>
+			</tr>
+			<tr>
+				<th scope="row">
+					<label for="SVC_NM" class="redNotice">#springMessage("common.header.serviceName")</label>		### 서비스 명 ###
+				</th>
+				<td>
+					<input type="text" class="width95" id="SVC_NM" name="SVC_NM" value="$!serviceOne.SVC_NM" />
+					<input type="hidden" name="SVC_ID" value="$!serviceOne.SVC_ID" />
+				</td>
+			</tr>
+			<tr>
+				<th scope="row">
+					<label for="SVC_DTL">#springMessage("common.header.serviceDesc")</label>		### 서비스 설명 ###
+				</th>
+				<td>
+					<textarea id="SVC_DTL" name="SVC_DTL" style="width:350px;height:100px;">$!serviceOne.SVC_DTL</textarea>
+				</td>
+			</tr>
+		</table>
+
+		<div class="btn-wrap txtCenter">
+			#if(!$serviceOne)
+				<a href="javascript:fn_serviceWrite();void(0);" class="btn1"><strong>#springMessage("common.button.save")</strong></a> <!-- 저장 -->
+			#else
+				<a href="javascript:fn_serviceModify();void(0);" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+			#end
+				<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a>
+		</div>
+			
+	</div>
+</form>

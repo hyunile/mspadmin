@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.pnsid.mapper.PushPnsidManageDao">
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT CONVERT(integer, #{PAGE_SIZE}) PAGE_SIZE
+	, CONVERT(integer, #{PAGE_NUM}) PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	
+	<!--  PNSID 리스트 조회  -->
+    <select id="SelectPnsidList" parameterType="kr.msp.admin.push.pnsid.dto.PushPnsidDto" resultType="kr.msp.admin.push.pnsid.dto.PushPnsidDto" >
+        <include refid="head"/>
+	        SELECT VNAME, VVALUE
+	        ,		ROW_NUMBER() OVER(ORDER BY VNAME) PAGE_KEY
+			FROM T_PUSH_VARIABLES
+			WHERE VGROUP = 'PNSIDS'
+        <include refid="bottom"/>
+    </select>
+    
+    <!--  PNSID 조회  -->
+    <select id="SelectPnsidOne" parameterType="kr.msp.admin.push.pnsid.dto.PushPnsidDto" resultType="kr.msp.admin.push.pnsid.dto.PushPnsidDto" >
+		SELECT VNAME, VVALUE
+		FROM T_PUSH_VARIABLES
+		WHERE VGROUP = 'PNSIDS'
+		AND VNAME = #{VNAME}
+    </select>
+    
+    <!--  PNSID 키 중복 조회  -->
+    <select id="SelectPnsidDupCheck"  parameterType="kr.msp.admin.push.pnsid.dto.PushPnsidDto" resultType="java.lang.Integer" >
+        SELECT COUNT(*) AS COUNT
+		FROM T_PUSH_VARIABLES
+		WHERE VGROUP = 'PNSIDS' AND VNAME = #{VNAME}
+    </select>
+    
+    <!--  PNSID 등록  -->
+    <insert id="InsertPnsid"  parameterType="kr.msp.admin.push.pnsid.dto.PushPnsidDto">
+        INSERT INTO T_PUSH_VARIABLES (
+                                VGROUP
+                               ,VNAME
+                               ,VVALUE
+                             ) VALUES (
+                                'PNSIDS'
+                               ,#{VNAME}
+                               ,#{VVALUE}
+                             )
+    </insert>
+    
+    <!--  PNSID 수정  -->
+    <update id="UpdatePnsid"  parameterType="kr.msp.admin.push.pnsid.dto.PushPnsidDto">
+        UPDATE T_PUSH_VARIABLES
+		   SET VVALUE = #{VVALUE}
+		WHERE VGROUP = 'PNSIDS' AND VNAME = #{VNAME}
+    </update>
+    
+    <!--  PNSID 삭제 -->
+    <delete id="DeletePnsid"  parameterType="kr.msp.admin.push.pnsid.dto.PushPnsidDto">
+       DELETE FROM T_PUSH_VARIABLES
+       WHERE VGROUP = 'PNSIDS' AND VNAME = #{VNAME}
+    </delete>
+	
+</mapper>

@@ -1,0 +1,57 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	if($("#groupType").val() != ''){
+		$("#GROUPTYPE").val($("#groupType").val());
+	}
+});
+</script>
+<form name="frmGroupInfo" method="POST">
+	
+			<table class="tbl" summary="그룹명">
+				<colgroup><!--  2cell  -->
+					<col width="25%"/><col width="75%"/>
+				</colgroup>
+				<tr>
+					<th scope="row">
+						<label for="GROUPNAME" class="required">#springMessage("menu.push.user.groupName")</label> <!-- 그룹명 -->
+					</th>
+					<td>
+					#if($pushUserGroupOne)
+						<input type="hidden" name="GROUPSEQ" value="$!pushUserGroupOne.GROUPSEQ" />
+					#end
+						<input type="text" class="width95" id="GROUPNAME" name="GROUPNAME" value="$!pushUserGroupOne.GROUPNAME" />
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="GROUPNAME">#springMessage("menu.push.user.groupDesc")</label> <!-- 그룹설명 -->
+					</th>
+					<td>
+						<input type="text" class="width95" id="GROUPDESC" name="GROUPDESC" value="$!pushUserGroupOne.GROUPDESC" />
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="GROUPNAME">#springMessage("menu.push.user.groupType")</label> <!-- 그룹타입 -->
+					</th>
+					<td>
+						<select name="GROUPTYPE" id="GROUPTYPE">
+							<option value="N">#springMessage("menu.push.user.generalGroup")</option> <!-- 일반그룹 -->
+							<option value="T">#springMessage("menu.push.user.testSendGroup")</option> <!-- 테스트발송그룹 -->
+						</select>
+						<input type="hidden" id="groupType" value="$!pushUserGroupOne.GROUPTYPE"/>
+					</td>
+				</tr>
+			</table>
+		
+
+	<div class="btn-wrap txtCenter">
+	#if(!$pushUserGroupOne)
+		<a href="javascript:void(0)" onclick="fn_groupWrite();" class="btn1">#springMessage("common.button.save")</a>	<!-- 저장 -->
+	#else
+		<a href="javascript:void(0)" onclick="fn_groupModify();" class="btn1">#springMessage("common.button.modify")</a>	<!--수정  -->
+		<a href="javascript:void(0)" onclick="fn_groupDelete();" class="btn1 type2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+	#end
+		<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div> 
+</form>

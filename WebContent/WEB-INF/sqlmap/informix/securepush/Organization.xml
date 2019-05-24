@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.securepush.organization.mapper.OrganizationDao">
+
+	<resultMap type="kr.msp.admin.securepush.organization.dto.DeptDto" id="DeptDto">
+		<result property="DEPT_CD"	column="dept_cd"/>
+		<result property="DEPT_NM"	column="dept_nm"/>
+		<result property="FULL_NM"	column="full_nm"/>
+		<result property="UP_DEPT_CD"	column="up_dept_cd"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.securepush.organization.dto.EmpDto" id="EmpDto">
+		<result property="USER_ID"	column="user_id"/>
+		<result property="EMP_NO"	column="emp_no"/>
+		<result property="USER_NM"	column="user_nm"/>
+		<result property="DEPT_CD"	column="dept_cd"/>
+		<result property="DEPT_NM"	column="dept_nm"/>
+		<result property="POS_CD"	column="pos_cd"/>
+		<result property="POS_NM"	column="pos_nm"/>
+		<result property="FULL_NM"	column="full_nm"/>
+		<result property="TEL_NO"	column="tel_no"/>
+		<result property="CELL_NO"	column="cell_no"/>
+		<result property="EMAIL"	column="email"/>
+		<result property="PHOTO_PATH"	column="photo_path"/>
+		<result property="RESP_CD"	column="resp_cd"/>
+		<result property="RESP_NM"	column="resp_nm"/>
+		<result property="WORK_YN"	column="work_yn"/>
+		<result property="REG_DT"	column="reg_dt"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.securepush.organization.dto.UserDto" id="UserDto">
+		<result property="USER_ID"	column="user_id"/>
+		<result property="EMP_NO"	column="emp_no"/>
+		<result property="USER_NM"	column="user_nm"/>
+		<result property="DEPT_CD"	column="dept_cd"/>
+		<result property="DEPT_NM"	column="dept_nm"/>
+		<result property="ADMIN_CD"	column="admin_cd"/>
+		<result property="USE_YN"	column="use_yn"/>
+		<result property="REG_DT"	column="reg_dt"/>
+		<result property="MOD_DT"	column="mod_dt"/>
+	</resultMap>
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+	<!-- 부서 목록 조회 -->
+	<select id="selectDeptList" parameterType="kr.msp.admin.securepush.organization.dto.OrgParamDto" resultMap="DeptDto">
+		SELECT
+			DEPT_CD
+			,DEPT_NM
+			,FULL_NM
+			,UP_DEPT_CD
+        FROM TB_SPUSH_DEPT 
+        <where>
+	        <if test="DEPT_NM != null and DEPT_NM != ''">
+	        	DEPT_NM LIKE '%' || #{DEPT_NM} || '%' 
+	        </if>
+	        <if test="UP_DEPT_CD != null and UP_DEPT_CD != ''">
+	        	AND UP_DEPT_CD = #{UP_DEPT_CD}
+	 		</if>
+	        <if test="DEPT_CD_LIST != null">
+	        	AND DEPT_CD IN
+		        <foreach item="item" index="index" collection="DEPT_CD_LIST" open="(" separator="," close=")">
+		 		 	#{item} 
+		 		</foreach>
+	 		</if>
+	    </where>
+        ORDER BY DEPT_CD 
+    </select>
+    
+    <!-- 부서 정보 조회 -->
+	<select id="getDeptInfo" parameterType="String" resultMap="DeptDto">
+		SELECT FIRST 1 
+			DEPT_CD
+			,DEPT_NM
+			,FULL_NM
+			,UP_DEPT_CD
+        FROM TB_SPUSH_DEPT 
+        WHERE 
+        	DEPT_CD = #{DEPT_CD}
+    </select>
+    
+    <!-- 사용자 목록 조회 -->
+    <select id="selectEmpUserList" parameterType="kr.msp.admin.securepush.organization.dto.OrgParamDto" resultMap="EmpDto">
+		SELECT
+			T1.EMP_NO
+			,T1.USER_NM
+			,T5.USER_ID
+			,T1.DEPT_CD
+			,T2.DEPT_NM
+			,T1.POS_CD
+			,T3.POS_NM
+			,T2.FULL_NM
+			,T1.TEL_NO
+			,T1.CELL_NO
+			,T1.EMAIL
+			,T1.PHOTO_PATH
+			,T1.RESP_CD
+			,T4.RESP_NM
+			,T1.WORK_YN
+			,TO_CHAR(T1.REG_DT, '%Y.%m.%d %H:%M:%S') AS REG_DT
+        FROM TB_SPUSH_EMPLOYEE T1 
+        LEFT OUTER JOIN TB_SPUSH_DEPT T2
+        ON T1.DEPT_CD = T2.DEPT_CD
+        LEFT OUTER JOIN TB_SPUSH_POS T3
+        ON T1.POS_CD = T3.POS_CD
+        LEFT OUTER JOIN TB_SPUSH_RESP T4
+        ON T1.RESP_CD = T4.RESP_CD
+        LEFT OUTER JOIN TB_SPUSH_USER T5
+        ON T1.EMP_NO = T5.EMP_NO AND T5.USE_YN = 'Y'
+        <where>
+        	T1.WORK_YN = 'Y'
+	        <if test="USER_NM != null and USER_NM != ''">
+	        	AND T1.USER_NM LIKE '%' || #{USER_NM} || '%' 
+	        </if>
+	        <if test="DEPT_CD != null and DEPT_CD != ''">
+	        	AND T1.DEPT_CD = #{DEPT_CD}
+	 		</if>
+	 		<if test="DEPT_CD_LIST != null">
+	        	AND T1.DEPT_CD IN
+		        <foreach item="item" index="index" collection="DEPT_CD_LIST" open="(" separator="," close=")">
+		 		 	#{item} 
+		 		</foreach>
+	 		</if>
+	 		<if test="EMP_NO_LIST != null">
+	        	AND T1.EMP_NO IN
+		        <foreach item="item" index="index" collection="EMP_NO_LIST" open="(" separator="," close=")">
+		 		 	#{item} 
+		 		</foreach>
+	 		</if>
+	    </where>
+        ORDER BY T1.POS_CD, T1.RESP_CD 
+    </select>
+    
+    <!-- 사용자 정보 조회 -->
+    <select id="getEmpUserInfo" parameterType="String" resultMap="EmpDto">
+		SELECT FIRST 1 
+			T1.EMP_NO
+			,T1.USER_NM
+			,T5.USER_ID
+			,T1.DEPT_CD
+			,T2.DEPT_NM
+			,T1.POS_CD
+			,T3.POS_NM
+			,T2.FULL_NM
+			,T1.TEL_NO
+			,T1.CELL_NO
+			,T1.EMAIL
+			,T1.PHOTO_PATH
+			,T1.RESP_CD
+			,T4.RESP_NM
+			,T1.WORK_YN
+			,TO_CHAR(T1.REG_DT, '%Y.%m.%d %H:%M:%S') AS REG_DT
+        FROM TB_SPUSH_EMPLOYEE T1 
+        LEFT OUTER JOIN TB_SPUSH_DEPT T2
+        ON T1.DEPT_CD = T2.DEPT_CD
+        LEFT OUTER JOIN TB_SPUSH_POS T3
+        ON T1.POS_CD = T3.POS_CD
+        LEFT OUTER JOIN TB_SPUSH_RESP T4
+        ON T1.RESP_CD = T4.RESP_CD
+        LEFT OUTER JOIN TB_SPUSH_USER T5
+        ON T1.EMP_NO = T5.EMP_NO AND T5.USE_YN = 'Y'
+        WHERE
+        	T1.WORK_YN = 'Y'
+	        AND T5.USER_ID = #{USER_ID}
+    </select>
+    
+    <select id="selectUserList" parameterType="hashmap" resultMap="UserDto">
+		SELECT
+			USER_ID
+            ,EMP_NO
+            ,USER_NM
+            ,DEPT_CD
+            ,DEPT_NM
+            ,ADMIN_CD
+            ,USE_YN
+            ,TO_CHAR(REG_DT, '%Y%m%d%H%M%S') AS REG_DT
+            ,TO_CHAR(MOD_DT, '%Y%m%d%H%M%S') AS MOD_DT
+        FROM TB_SPUSH_USER
+        <where>
+        	<if test="USE_YN != null and USE_YN != ''">
+        		USE_YN = #{USE_YN}
+        	</if>
+	        <if test="USER_IDS != null">
+	        	AND USER_ID IN
+		        <foreach item="item" index="index" collection="USER_IDS" open="(" separator="," close=")">
+		 		 	#{item} 
+		 		</foreach>
+	 		</if>
+	    </where>
+        ORDER BY REG_DT 
+    </select>
+	
+</mapper>

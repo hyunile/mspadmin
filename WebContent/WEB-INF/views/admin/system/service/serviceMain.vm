@@ -1,0 +1,430 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+});
+
+//검색
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+//조회 검색
+function ch_search(){
+	var sfrm=document.frmSearch.SE_SVC_NM;
+	if(sfrm.value.length>0&&sfrm.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');	//검색어를 2글자 이상 입력해 주세요.
+			sfrm.value="";
+			sfrm.focus();
+		}
+	fn_serviceList(1);
+}
+
+//페이징 처리
+function fn_serviceList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var SVC_NM = $("#SE_SVC_NM").val();
+	var url = CONTEXT_PATH + "/admin/system/service";
+	var type = "POST";
+	var data ="SVC_NM=" + SVC_NM + "&PAGE_NUM=" + PAGE_NUM +"&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+	var target = $("#serviceTableDiv");
+	fn_getList( url, type, data , target );
+
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//서비스 등록 화면
+$(document).on("click","#groupWrite",function(){
+	var url = CONTEXT_PATH + "/admin/system/service/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var width = 600;
+	var title = '#springMessage("menu.system.serviceReg")'; // 서비스 등록
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//서비스 상세 화면
+$(document).on("click","#serviceModify",function(){
+	var SVC_ID = $(this).parent().parent().find(".SVC_ID").val();
+	var url = CONTEXT_PATH + "/admin/system/service/edit";
+	var type = "GET";
+	var data = "SVC_ID=" + SVC_ID;
+	var target = $("#windowPop");
+	var width = 600;
+	var title = '#springMessage("menu.system.serviceModify")';	//서비스 수정
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//모바일서비스 등록 화면
+$(document).on("click","#SvcMobWrite",function(){
+	var SVC_ID = $(this).parent().parent().find(".SVC_ID").val();
+	var url = CONTEXT_PATH + "/admin/system/service/mob/regist";
+	var type = "GET";
+	var data = "SVC_ID=" + SVC_ID;
+	var target = $("#windowPop");
+	var width = 600;
+	var title = '#springMessage("menu.system.mobileServiceRegist")';	//모바일 서비스 등록
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//PUSH서비스 등록 화면
+$(document).on("click","#SvcPushWrite",function(){
+	var SVC_ID = $(this).parent().parent().find(".SVC_ID").val();
+	var url = CONTEXT_PATH + "/admin/system/service/push/regist";
+	var type = "GET";
+	var data = "SVC_ID=" + SVC_ID;
+	var target = $("#windowPop");
+	var width = 600;
+	var title = '#springMessage("menu.system.pushServiceRegist")';	//PUSH 서비스 등록
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//앱스토어서비스 등록 화면
+$(document).on("click","#SvcStoWrite",function(){
+
+
+	var SVC_ID = $(this).parent().parent().find(".SVC_ID").val();
+	var url = CONTEXT_PATH + "/admin/system/service/sto/regist";
+	var type = "GET";
+	var data = "SVC_ID=" + SVC_ID;
+	var target = $("#windowPop");
+	var width = 600;
+	var title = '#springMessage("menu.system.storeServiceRegist")';	//Store 서비스 등록
+	fn_getCommonPopupDiv( url, type, data , target , width, title );;
+});
+
+//서비스 등록
+function fn_serviceWrite(){
+	if($("#appId_ch_con").val() == "X"){
+		alert('#springMessage("menu.system.alert.checkDuplicateForAppId")');	//앱아이디 중복체크를 해주세요.
+		return;
+	} else if($("form[name=frmServiceInfo]").find("input[name=SVC_NM]").val() == "") {
+		alert('#springMessage("menu.system.alert.noServiceName")');	//서비스명을 입력해 주세요.
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doRegist")')){		//등록하시겠습니까?
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/system/service/regist";
+	var data = $("form[name=frmServiceInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_serviceList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+function fn_serviceSubWrite(serviceName){
+
+	if(serviceName == "PUSH_SVC"){
+		if($("form[name=frmServiceWrite]").find("input[name=APPNAME]").val() == "") {
+			alert('#springMessage("menu.system.alert.noPushServiceName")');	//PUSH 서비스명을 입력해 주세요.
+			return;
+		}
+	}
+
+	if($("form[name=frmServiceWrite]").find("select[name=USE_YN]").val() == "") {
+		alert('#springMessage("menu.system.alert.selectServiceUseYN")');		//서비스 사용여부를 입력해주세요.
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doRegist")')){		//등록하시겠습니까?
+		return;
+	}
+
+
+	//if(serviceName == "MOB_SVC"){
+		
+	if(serviceName == "PUSH_SVC"){
+		//var url = CONTEXT_PATH + "/admin/system/service/sto/regist";
+		var url = CONTEXT_PATH + "/admin/system/service/push/regist";
+	} else if(serviceName == "MOB_SVC") {
+		var url = CONTEXT_PATH + "/admin/system/service/mob/regist";
+	} else if(serviceName == "STO_SVC"){
+		var url = CONTEXT_PATH + "/admin/system/service/sto/regist";
+	}
+	var data = $("form[name=frmServiceWrite]").serialize();
+
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_serviceList($("#SERVICE_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//모바일 서비스 사용여부 수정
+$(document).on("change","#SvcMobModify",function(){
+	var SVC_ID = $(this).parent().parent().find(".SVC_ID").val();
+	var MOB_YN = $(this).parent().find(".MOB_YN").val();
+ 	
+	if( confirm('#springMessage("menu.system.alert.doModifyForMobileService")') == false ){		//모바일 서비스 사용여부를 수정 하시겠습니까?
+		$(this).val(MOB_YN);
+		return false;
+	}
+
+	if(MOB_YN == 'Y'){
+		var USE_YN = 'N';
+	} else {
+		var USE_YN = 'Y';
+	}
+	var url = CONTEXT_PATH + "/admin/system/service/mob/edit";
+	var data = "SVC_ID=" + SVC_ID + "&USE_YN=" + USE_YN;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_serviceList($("#SERVICE_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+});
+
+//PUSH 서비스 사용여부 수정
+$(document).on("change","#SvcPushModify",function(){
+	var SVC_ID = $(this).parent().parent().find(".SVC_ID").val();
+	var PUSH_YN = $(this).parent().find(".PUSH_YN").val();
+
+	
+	if( confirm('#springMessage("menu.system.alert.doModifyForPushService")') == false ){	//PUSH 서비스 사용여부를 수정 하시겠습니까?
+		$(this).val(PUSH_YN);
+		return false;
+	}
+
+	if(PUSH_YN == 'Y'){
+		var USE_YN = 'N';
+	} else {
+		var USE_YN = 'Y';
+	}
+	var url = CONTEXT_PATH + "/admin/system/service/push/edit";
+	var data = "SVC_ID=" + SVC_ID + "&USE_YN=" + USE_YN;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_serviceList($("#SERVICE_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+});
+
+//STORE 서비스 사용여부 수정
+$(document).on("change","#SvcStoModify",function(){
+	var SVC_ID = $(this).parent().parent().find(".SVC_ID").val();
+	var STO_YN = $(this).parent().find(".STO_YN").val();
+
+	if( confirm('#springMessage("menu.system.alert.doModifyForStoreService")') == false ){	//"STORE 서비스 사용여부를 수정 하시겠습니까?"
+		$(this).val(STO_YN);
+		return false;
+	}
+
+	if(STO_YN == 'Y'){
+		var USE_YN = 'N';
+	} else {
+		var USE_YN = 'Y';
+	}
+	var url = CONTEXT_PATH + "/admin/system/service/sto/edit";
+	var data = "SVC_ID=" + SVC_ID + "&USE_YN=" + USE_YN;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_serviceList($("#SERVICE_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+});
+
+//앱아이디 중복체크
+function fn_appIdCheck(){
+	//var APP_ID = $("form[name=frmServiceInfo]").find("input[name=APP_ID]").val();
+	var APP_ID = $("form[name=frmServiceInfo]").find("select[name=APP_ID]").val();
+	if(APP_ID == ""){
+		alert('#springMessage("menu.system.alert.noAppId")');		//앱아이디를 입력해 주세요.
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/system/service/check";
+	var data ="APP_ID=" + APP_ID;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#appId_ch_con").val("O");
+			}
+		}
+	});
+}
+
+//앱아이디 체크 해제
+function fn_appIdChange(){
+	$("#appId_ch_con").val("X");
+}
+
+//서비스 수정
+function fn_serviceModify(){
+	if($("form[name=frmServiceInfo]").find("input[name=SVC_NM]").val() == "") {
+		alert('#springMessage("menu.system.alert.noServiceName")');	//서비스명을 입력해 주세요.
+		return;
+	}
+	if(! confirm('#springMessage("common.alert.doModify")')){		//수정하시겠습니까?
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/system/service/edit";
+	var data = $("form[name=frmServiceInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_serviceList($("#SERVICE_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//공통코드 화면 호출(공통)
+function fn_getList( url, type, data, target ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false ,
+		cache:false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_serviceList(1);
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.system")</span>
+		<span>#springMessage("menu.system.serviceManage")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.serviceManage")</h2>		### 서비스 관리 ###
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		
+		<table class="tbl-search">
+			<caption>#springMessage("menu.system.serviceManage")</caption>	### 서비스 관리 ###
+			<colgroup>
+				<col style="width:120px">
+				<col style="width:200px">
+				<col>
+			</colgroup>
+			
+			<thead>
+				<tr>
+					<td class="par_30">
+						<div class="tbl-select">
+							<label for="conSelect">#springMessage("common.header.serviceName")</label>		### 서비스명 ###
+							<select id="conSelect" class="w120">
+	    						<option value="0">#springMessage("common.header.serviceName")</option>		### 서비스명 ###
+	    					</select>
+	    				</div>
+					</td>
+					<td>
+						<input type="text" class="se_con" id="SE_SVC_NM" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+					</td>
+					<td>
+						<a href="javascript:ch_search();void(0)" class="tbl-btn2">#springMessage("common.button.view")</a>	### 조회 ###
+					</td>
+				</tr>
+			</thead>
+		</table>		
+		
+	</form>
+	
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+	
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="groupWrite">#springMessage("common.button.regist")</a> <!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+			
+		<div id="serviceTableDiv">
+			#parse ("/admin/system/service/serviceList.vm")
+		</div>
+			
+		
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

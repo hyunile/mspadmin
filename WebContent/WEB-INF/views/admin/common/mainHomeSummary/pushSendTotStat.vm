@@ -1,0 +1,93 @@
+<script language="javascript" type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/charJs/chartJs.js"></script> <!--  챠트관련  -->
+<script language="javascript" type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/charJs/mspCommonCharJs.js"></script> <!--  챠트관련  -->
+
+
+<script type="text/javascript">
+
+        $(document).ready(function(){
+    		setDataBarData();
+    		renderChart();
+    	});
+    	
+    	var data = "";
+    	function setDataBarData(){
+    		var dbData = "";
+    	    var chartLableList = [];
+    	    var chatrDataList= [];
+    	    #if($!{jSonGraphData})
+    	    	dbData = $!{jSonGraphData};
+    	    #end
+    	    if(dbData!=""){
+    	        for(var i=0; i<dbData.length; i++){
+    	            var chartLable = dbData[i].TITLE;
+    	            var chartData = dbData[i].CNT;
+    	
+    	            chartLableList.push(chartLable);
+    	            chatrDataList.push(chartData);
+    	        }
+    	    }else{
+    	    	chartLableList=["UPNS", "GCM", "APNS"];
+    	    	chatrDataList=[1,1,1];
+    	    }
+    	    
+    	    data = {
+    			    labels: chartLableList,
+    			    datasets: [
+    			        {
+    			            data: chatrDataList,
+    	//			            hoverBackgroundColor:getMspBackgroundColor(chatrDataList.length),
+    			            backgroundColor:getMspBorderColor(chatrDataList.length)
+    			        }
+    			    ]
+    			};
+    	}
+    	
+    	function renderChart(){
+    		var ctx = document.getElementById("cvsChartPie");
+    		ctx.innerHTML = '';
+    		var myRadarChart = new Chart(ctx, {
+    											type : "pie",
+    											data : data
+    											}
+    									);
+    	}
+</script>
+
+<style type="text/css"> 
+.divChart {
+	top :0px !important;
+	left:0px !important;
+	width: 170px !important;
+	height: 170px !important;
+}
+	
+.chart1{position:relative;padding-left:170px;}
+.chart1 div{position:absolute;top:12px;left:12px;width:130px;height:200px;}
+.chart1 em{display:block;padding:20px 0 15px 0;font-size:18px;}
+.chart1 em span{display:block;padding-top:5px;font-size:30px;}
+.chart1 dl{overflow:hidden;}
+.chart1 dl > *{float:left;margin-bottom:5px;font-size:14px;}
+.chart1 dt{width:45%;padding-left:13px;}
+     
+</style>
+
+<h2>[Push] #springMessage("menu.push.sendStat") <small>$strPeriodParam</small></h2> <!-- 발송통계 -->
+<a href="javascript:GO_MENU_URL_favori('0000000083','0000000013','/admin/push/sysSentStatus');" class="more">#springMessage("common.button.moreView")</a> <!-- 더보기 -->
+
+<div class="chart1">
+	<div id="blockDiv" style="margin-bottom: 10px;">
+	    <div id="content" class="scrollPane divChart" >
+	        <canvas id="cvsChartPie" width="150" height="130"></canvas>
+	    </div>
+    </div>
+    <em>#springMessage("menu.push.allSendNum")<span id="pushSendTotStatTotCnt">$gnr_tot_cnt #springMessage("common.text.gun")</span></em> <!--  총 발송건수    건 -->
+	<dl>
+		<dt class="bul2">UPNS</dt>
+		<dd>$upns_sent_cnt ($upns_tot_per %)</dd>
+		<dt class="bul1">GCM</dt>
+		<dd>$gcm_sent_cnt ($gcm_tot_per %)</dd>
+		<dt class="bul1">APNS</dt>
+		<dd>$apns_sent_cnt ($apns_tot_per %)</dd>
+	</dl>
+	
+</div>

@@ -1,0 +1,98 @@
+
+<table class="tbl-nb">
+    <colgroup><!--  7cell  -->
+        <col style="width:120px">
+		<col>
+		<col style="width:80px">
+		<col style="width:80px">
+		<col style="width:120px">
+		<col style="width:80px">
+		<col style="width:200px">
+
+    </colgroup>
+    <thead>
+    <tr>
+        <th>#springMessage("menu.stats.push.sendDate")</th> <!-- 발송일자 -->
+        <th>#springMessage("menu.stats.push.message")</th> <!-- 메세지 -->
+        <th>#springMessage("menu.stats.push.sendNum")</th> <!-- 발송수 -->
+        <th>#springMessage("menu.stats.push.failNum")</th> <!-- 실패수 -->
+        <th>#springMessage("menu.push.sendManage.seeCheck")(+APNS)</th> <!-- 수신확인 -->
+        <th>#springMessage("menu.push.sendManage.readCheck")</th> <!-- 읽음확인 -->
+        <th></th>
+    </tr>
+    </thead>
+
+    <tbody>
+        #foreach( $sendMsgStatusBean in $sendMsgStatusBeanList )
+            #set($j_tot = $sendMsgStatusBean.TOT_CNT)
+        <tr>
+            <td style="text-align:center;">
+                $!sendMsgStatusBean.REGDATE
+            </td>
+            <td style="text-align:left;">
+                $!sendMsgStatusBean.MESSAGE
+            </td>
+            <td style="text-align:center;">
+                <a href="javascript:sendDetailInfoPop('${sendMsgStatusBean.SEQNO}');"><font style="color: blue"> $!sendMsgStatusBean.TOTAL_SEND_CNT</font></a>
+            </td>
+            <td style="text-align:center;">
+                #if($!sendMsgStatusBean.FAIL_CNT!="0")
+                    <a href="javascript:failListPop('${sendMsgStatusBean.SEQNO}');">
+                        <font style="color: red">$!sendMsgStatusBean.FAIL_CNT</font>
+                    </a>
+                #else
+                    <font style="color: red">$!sendMsgStatusBean.FAIL_CNT</font>
+                #end
+            </td>
+            <td style="text-align:center;">
+                $!sendMsgStatusBean.REV_CNT (+$!{sendMsgStatusBean.APNS_CNT})
+            </td>
+            <td style="text-align:center;">
+                $!sendMsgStatusBean.READ_CNT
+            </td>
+            <td style="text-align:center;">
+             	#if($!sendMsgStatusBean.RETRY_TYPE_LIST.size()!=0)
+             		<select name="RETRY_TYPE_${sendMsgStatusBean.SEQNO}" id="RETRY_TYPE_${sendMsgStatusBean.SEQNO}">
+                 	<option value="">-- #springMessage("common.select.choose") --</option> <!-- 선택 -->
+                		#foreach( $RETRY_TYPE in $sendMsgStatusBean.RETRY_TYPE_LIST )
+                			<option value="$RETRY_TYPE">
+                			#if($!RETRY_TYPE=='CON_FAIL') #springMessage("menu.push.sendManage.connectError") 	#end <!-- 연결장애 -->
+                			#if($!RETRY_TYPE=='NOT_RECV') #springMessage("menu.push.sendManage.noSeeCheck") #end <!-- 미수신확인 -->
+                			#if($!RETRY_TYPE=='NOT_READ') #springMessage("menu.push.sendManage.noReadCheck") #end <!-- 미읽음확인 -->
+                			</option>	
+                		#end
+                	</select>
+                	
+                	<a href="javascript:void(0)" onclick="fn_resend('${sendMsgStatusBean.SEQNO}','RETRY_TYPE_${sendMsgStatusBean.SEQNO}','${sendMsgStatusBean.MESSAGE}');" class="tbl-btn1">#springMessage("menu.push.sendManage.reSend")</a>	<!-- 재발송 -->
+                	
+            	#else
+            		#springMessage("menu.push.sendManage.noTarget") <!-- 대상 없음 -->
+            	#end
+            </td>
+            <!--
+            <td style="text-align:right;">
+                <button type="button" class="sbtn" onClick="fn_getReSendPopUp()">재발송</button>
+            </td>
+            -->
+        </tr>
+        #end
+        #if(!$j_tot)
+        <tr>
+            <td colspan="7">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+        </tr>
+        #end
+    </tbody>
+</table>
+
+<div class="j_page_div">
+##현재 페이지
+    <input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot">
+##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+##이밴트
+    <input type="hidden" name="j_event" value="fn_goPage">
+</div>

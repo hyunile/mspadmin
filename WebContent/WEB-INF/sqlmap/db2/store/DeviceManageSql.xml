@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.device.mapper.DeviceManageDao">
+
+
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+	
+
+	<!--  ================================================================================================= -->
+	<!-- begin of sort Query -->
+	<!--  ================================================================================================= -->
+	<sql id="order">
+		<if test="ORDER_FIELD != null and ORDER_FIELD != ''">   
+			ORDER BY ${ORDER_FIELD} ${ORDER_TYPE} 
+		</if>
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of sort -->
+	<!--  ================================================================================================= -->
+
+	
+	
+	<select id="selectDeviceList"  parameterType="kr.msp.admin.store.device.dto.DeviceSearchDto" resultType="kr.msp.admin.store.device.dto.DeviceDto">
+	    <!--  단말기 리스트  -->
+		<include refid="head"/>
+		SELECT A.DEVC_IDX
+			 , A.DEVC_ID
+			 , A.DISP_WIDTH
+			 , A.BRD_NM
+			 , A.MFG_NM
+			 , A.DISP_HEIGHT
+			 , A.USE_YN
+			 , A.MFG_CD
+			 , A.PRD_INFO
+			 , A.PRD_DESC
+			 , A.MFG_YYYYMM
+			 , TO_CHAR(A.REG_DT,'YYYY.MM.DD') REG_DTTM
+			 , A.MGG_CD__853
+			 , A.PLAT_IDX
+			 , A.PLAT_VER_IDX
+			 , ( CASE WHEN B.DEVC_IMG_IDX IS NULL THEN '' ELSE (B.FILE_PATH || B.FILE_NM) END ) IMG
+			 , ROW_NUMBER() OVER (ORDER BY A.DEVC_IDX DESC) RK
+	  	FROM   TB_STO_DEVC A
+	  			LEFT JOIN TB_STO_DEVC_IMG B
+	  				ON A.DEVC_IDX = B.DEVC_IDX
+	  	<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="DEVC_ID != null and DEVC_ID != ''">   
+			AND    A.DEVC_ID LIKE '%'||#{DEVC_ID}||'%'
+			</if>
+			<if test="BRD_NM != null and BRD_NM != ''">   
+			AND    A.BRD_NM LIKE '%'||#{BRD_NM}||'%'
+			</if>
+			<if test="MFG_NM != null and MFG_NM != ''">   
+			AND    A.MFG_NM LIKE '%'||#{MFG_NM}||'%'
+			</if>
+		</trim>
+		<include refid="order"/>
+		<include refid="bottom"/>
+	</select><!-- 완료 -->
+  
+  
+  	<update id="updateUseYN" parameterType="kr.msp.admin.store.device.dto.DeviceSearchDto">
+	    <!--단말기별 지원앱 정보 삭제 -->
+	    UPDATE TB_STO_DEVC
+	    SET USE_YN = #{USE_YN}
+		WHERE  DEVC_IDX  = #{TMP_DEVC_ID}
+	</update>
+	
+  	<select id="selectPlatformList" resultType="kr.msp.admin.store.device.dto.PlatformDto">
+  	    <!-- 플랫폼의 목록 -->
+  	    SELECT PLAT_IDX, PLAT_CD
+  	    ,      (
+                   SELECT	CD_NM 
+                   FROM	TB_SYS_CD_INFO 
+                   WHERE	CD_GRP_ID = 'ST002'
+                       AND CD_ID=PLAT_CD
+               ) PLAT_CD_NM 
+  	    ,      PLAT_DESC, PLAT_NM, MFG_CD, MFG_NM
+		FROM   TB_STO_PLAT
+  	</select>
+
+  	<select id="selectPlatformVerList" parameterType="kr.msp.admin.store.device.dto.DeviceDto" resultType="kr.msp.admin.store.device.dto.PlatformDto">
+  	    <!-- 플랫폼코드별 버전 목록 -->
+  	    SELECT PLAT_VER_IDX, PLAT_VER_CD, PLAT_VER_NM 
+		FROM   TB_STO_PLAT_VER
+		WHERE  PLAT_IDX = #{PLAT_IDX}
+		ORDER  BY PLAT_VER_CD ASC
+  	</select>
+  	
+  	
+  	<select id="selectCommonCode" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+  	    <!-- 공통코드 목록 -->
+		SELECT CD_ID
+             , CD_NM
+             , CD_GRP_ID
+             , CD_DESC
+        FROM   TB_SYS_CD_INFO
+        WHERE  CD_GRP_ID  = #{CD_GRP_ID}
+        AND    LANG_CD    = #{LANG_CD}
+        AND    USE_YN     = 'Y'
+     	ORDER  BY SORT_NO
+	</select>
+
+  	<select id="selectDevice" parameterType="kr.msp.admin.store.device.dto.DeviceDto" resultType="kr.msp.admin.store.device.dto.DeviceDto">
+  	    <!-- 단말기 한건 정보 -->
+		SELECT A.DEVC_IDX, DEVC_ID, DISP_WIDTH, BRD_NM, MFG_NM, DISP_HEIGHT, USE_YN, MFG_CD, PRD_INFO, PRD_DESC, MFG_YYYYMM, REG_DT, PLAT_IDX, PLAT_VER_IDX
+		FROM   TB_STO_DEVC A
+		WHERE  DEVC_IDX = #{DEVC_IDX}
+  	</select>
+
+  	<select id="selectDeviceImg" parameterType="kr.msp.admin.store.device.dto.DeviceDto" resultType="kr.msp.admin.store.device.dto.DeviceDto">
+  	    <!-- 단말기 별 이미지 정보 -->
+		SELECT DEVC_IMG_IDX, FILE_SIZE, EXT_NM, FILE_PATH, DISP_NO, FILE_NM, REG_DTTM, WIDTH_SIZE, HEIGHT_SIZE, DEVC_IDX
+		FROM   TB_STO_DEVC_IMG
+		WHERE  DEVC_IDX = #{DEVC_IDX}
+  	</select>
+  	
+  	<insert id="saveDevice" parameterType="kr.msp.admin.store.device.dto.DeviceDto">
+  	    <selectKey keyProperty="DEVC_IDX" resultType="String" order="BEFORE">
+  	        SELECT SEQ_TB_STO_DEVC.NEXTVAL FROM SYSIBM.SYSDUMMY1
+  	    </selectKey>
+  	    <!-- 단말기 신규 추가 -->
+  	    INSERT INTO TB_STO_DEVC(
+  	    	  DEVC_IDX, DEVC_ID, DISP_WIDTH, BRD_NM, MFG_NM, DISP_HEIGHT, USE_YN, MFG_CD, PRD_INFO, PRD_DESC, MFG_YYYYMM, REG_DT, PLAT_IDX, PLAT_VER_IDX
+  	    ) VALUES (
+			  CASE WHEN '${DEVC_IDX}' = '' THEN NULL ELSE TO_NUMBER('${DEVC_IDX}') END
+			, '${DEVC_ID}'
+			, CASE WHEN '${DISP_WIDTH}' = '' THEN NULL ELSE TO_NUMBER('${DISP_WIDTH}') END
+			, '${BRD_NM}'
+			, '${MFG_NM}'
+			, CASE WHEN '${DISP_HEIGHT}' = '' THEN NULL ELSE TO_NUMBER('${DISP_HEIGHT}') END
+			, '${USE_YN}'
+			, '${MFG_CD}'
+			, '${PRD_INFO}'
+			, '${PRD_DESC}'
+			, REPLACE('${MFG_YYYYMM}','-', '')
+			, (CURRENT TIMESTAMP)
+			, TO_NUMBER('${PLAT_IDX}')
+			, CASE WHEN '${PLAT_VER_IDX}' = '' THEN NULL ELSE TO_NUMBER('${PLAT_VER_IDX}') END
+		)
+  	</insert>
+
+  	<select id="selectDeviceImgCount" parameterType="kr.msp.admin.store.device.dto.DeviceDto"  resultType="int">
+  	    SELECT COUNT(1) 
+  	    FROM TB_STO_DEVC_IMG
+  	    WHERE DEVC_IDX = #{DEVC_IDX} 
+  	</select>
+  	<insert id="insertDeviceImg" parameterType="kr.msp.admin.store.device.dto.DeviceDto">
+		INSERT INTO TB_STO_DEVC_IMG(
+			   DEVC_IMG_IDX, FILE_SIZE, EXT_NM, FILE_PATH, DISP_NO, FILE_NM, REG_DTTM, WIDTH_SIZE, HEIGHT_SIZE, DEVC_IDX
+		) VALUES (
+				SEQ_TB_STO_DEVC_IMG.NEXTVAL
+			 , #{FILE_SIZE}
+			 , #{EXT_NM}
+			 , #{FILE_PATH}
+			 , #{DISP_NO}
+			 , #{FILE_NM}
+			 , (CURRENT TIMESTAMP)
+			 , NULL
+			 , NULL
+			 , #{DEVC_IDX}
+		)
+  	</insert>
+  	<update id="updateDeviceImg" parameterType="kr.msp.admin.store.device.dto.DeviceDto">
+  	    UPDATE TB_STO_DEVC_IMG
+  	    SET
+			   FILE_SIZE = #{FILE_SIZE}
+			 , EXT_NM    = #{EXT_NM}
+			 , FILE_PATH = #{FILE_PATH}
+			 , DISP_NO   = #{DISP_NO}
+			 , FILE_NM   = #{FILE_NM}
+		WHERE DEVC_IDX = #{DEVC_IDX}
+  	</update>
+  	
+  	<update id="updateDevice" parameterType="kr.msp.admin.store.device.dto.DeviceDto">
+  	    <!-- 단말기 정보 갱신 -->
+  	    UPDATE TB_STO_DEVC SET
+			   DISP_WIDTH  = CASE WHEN '${DISP_WIDTH}' = '' THEN NULL ELSE TO_NUMBER('${DISP_WIDTH}') END
+			 , BRD_NM      = '${BRD_NM}'
+			 , MFG_NM      = '${MFG_NM}'
+			 , DISP_HEIGHT = CASE WHEN '${DISP_HEIGHT}' = '' THEN NULL ELSE TO_NUMBER('${DISP_HEIGHT}') END
+			 , USE_YN      = '${USE_YN}'
+			 , MFG_CD      = '${MFG_CD}'
+			 , PRD_INFO    = '${PRD_INFO}'
+			 , PRD_DESC    = '${PRD_DESC}'
+			 , MFG_YYYYMM  = '${MFG_YYYYMM}'
+			 , PLAT_IDX    = CASE WHEN '${PLAT_IDX}' = '' THEN NULL ELSE TO_NUMBER('${PLAT_IDX}') END
+			 , PLAT_VER_IDX= ${PLAT_VER_IDX}
+		WHERE  DEVC_IDX    = ${DEVC_IDX}
+	</update>
+	
+	<delete id="deleteDevice" parameterType="kr.msp.admin.store.device.dto.DeviceDto">
+	    <!-- 단말기 정보 삭제 -->
+	    DELETE FROM TB_STO_DEVC
+		WHERE  DEVC_IDX    = #{DEVC_IDX}
+	</delete>		
+
+	<insert id="platformSave" parameterType="kr.msp.admin.store.device.dto.PlatformDto">
+		<!-- 플랫폼 정보 추가 -->
+		INSERT INTO TB_STO_PLAT (
+			   PLAT_IDX, PLAT_CD, PLAT_DESC, PLAT_NM, MFG_CD, REG_DTTM, MFG_NM
+		) VALUES (
+			   SEQ_TB_STO_PLAT.NEXTVAL
+			 , #{PLAT_CD}
+			 , #{PLAT_DESC}
+			 , #{PLAT_NM}
+			 , #{PLAT_CD}
+			 , (CURRENT TIMESTAMP)
+			 , #{MFG_NM}
+		)	    
+	</insert>
+
+	<update id="platformUpdate" parameterType="kr.msp.admin.store.device.dto.PlatformDto">
+		<!-- 플랫폼 정보 갱신 -->
+		UPDATE TB_STO_PLAT SET
+			   PLAT_CD   = #{PLAT_CD}
+			 , PLAT_DESC = #{PLAT_DESC}
+			 , PLAT_NM   = #{PLAT_NM}
+			 , MFG_CD    = #{PLAT_CD}
+			 , MFG_NM    = #{MFG_NM}
+		WHERE  PLAT_IDX  = #{PLAT_IDX}
+	</update>
+
+	<delete id="platformDelete" parameterType="kr.msp.admin.store.device.dto.PlatformDto">
+	    <!-- 플랫폼 정보 삭제 -->
+	    DELETE FROM TB_STO_PLAT
+		WHERE  PLAT_IDX  = #{PLAT_IDX}
+	</delete>
+
+	<insert id="versionSave" parameterType="kr.msp.admin.store.device.dto.PlatformDto">
+		<!-- 플랫폼별 버전 정보 추가 -->
+		INSERT INTO TB_STO_PLAT_VER (
+			   PLAT_VER_IDX, PLAT_VER_CD, PLAT_VER_NM, REG_DTTM, PLAT_IDX
+		) VALUES (
+			   SEQ_TB_STO_PLAT_VER.NEXTVAL
+			 , #{PLAT_VER_CD}
+			 , #{PLAT_VER_NM}
+			 , (CURRENT TIMESTAMP)
+			 , #{PLAT_IDX}
+		)	    
+	</insert>
+
+	<update id="versionUpdate" parameterType="kr.msp.admin.store.device.dto.PlatformDto">
+		<!-- 플랫폼별 버전 정보 갱신 -->
+		UPDATE TB_STO_PLAT_VER SET
+			   PLAT_VER_CD   = #{PLAT_VER_CD}
+			 , PLAT_VER_NM   = #{PLAT_VER_NM}
+		WHERE  PLAT_VER_IDX  = #{PLAT_VER_IDX}
+	</update>
+
+	<delete id="versionDelete" parameterType="kr.msp.admin.store.device.dto.PlatformDto">
+	    <!-- 플랫폼별 버전 정보 삭제 -->
+	    DELETE FROM TB_STO_PLAT_VER
+		WHERE  PLAT_VER_IDX  = #{PLAT_VER_IDX}
+	</delete>
+
+  	<select id="appList" parameterType="kr.msp.admin.store.device.dto.DeviceDto" resultType="kr.msp.admin.store.device.dto.DeviceDto">
+  	    <!-- 전체 앱목록 -->
+
+		<!-- ///////////////////////////////////////////////////////////////////////////////// -->
+		<!-- 반드시 UI에서 TB_STO_APP 에서 TB_STO_APP_DEVC를 바라보도록 변경 할것..!! -->
+		<!-- ///////////////////////////////////////////////////////////////////////////////// -->
+		
+		SELECT APP_DEVC.APP_PLAT_IDX, APP.APP_NM
+		FROM    TB_STO_APP APP
+		            INNER JOIN TB_STO_APP_PLAT APP_DEVC
+		                ON APP.APP_IDX = APP_DEVC.APP_IDX
+		<if test="DEVC_IDX != null and DEVC_IDX != ''">  
+        WHERE APP_DEVC.APP_PLAT_IDX NOT IN (
+                                                    /* find app of the same platform  */
+                                                    SELECT  NVL(APP_PLAT_IDX, 0)
+                                                    FROM    TB_STO_APP_DEVC S1
+                                                                    INNER JOIN TB_STO_DEVC S2
+                                                                        ON S1.DEVC_IDX = S2.DEVC_IDX
+												<if test="DEVC_IDX != null and DEVC_IDX != ''">   
+												WHERE   S1.DEVC_IDX = #{DEVC_IDX}
+												</if>		
+                                                    GROUP BY NVL(APP_PLAT_IDX, 0)
+                                                )
+		</if>
+  	</select>
+	
+  	<select id="appDevcList" parameterType="kr.msp.admin.store.device.dto.DeviceDto" resultType="kr.msp.admin.store.device.dto.DeviceDto">
+  	    <!-- 단말기별 지원앱 정보 -->
+		<!-- ///////////////////////////////////////////////////////////////////////////////// -->
+		<!-- 반드시 UI에서 TB_STO_APP 에서 TB_STO_APP_DEVC를 바라보도록 변경 할것..!! -->
+		<!-- ///////////////////////////////////////////////////////////////////////////////// -->	
+	SELECT APP_DEVC.APP_PLAT_IDX, APP.APP_NM
+	FROM    TB_STO_APP APP
+	            INNER JOIN TB_STO_APP_PLAT APP_DEVC
+	                ON APP.APP_IDX = APP_DEVC.APP_IDX
+	            INNER JOIN (
+	                                    /* find app of the same platform  */
+	                                    SELECT  NVL(APP_PLAT_IDX, 0) APP_PLAT_IDX
+	                                    FROM    TB_STO_APP_DEVC S1
+	                                                    INNER JOIN TB_STO_DEVC S2
+	                                                        ON S1.DEVC_IDX = S2.DEVC_IDX
+										<if test="DEVC_IDX != null and DEVC_IDX != ''">   
+										WHERE   S1.DEVC_IDX = #{DEVC_IDX}
+										</if>		
+	                                    GROUP BY NVL(APP_PLAT_IDX, 0)
+	                            ) DEVC
+	                ON APP_DEVC.APP_PLAT_IDX = DEVC.APP_PLAT_IDX
+
+  	</select>
+
+	
+	<delete id="deleteAppdevc" parameterType="kr.msp.admin.store.device.dto.DeviceDto">
+	    <!--단말기별 지원앱 정보 삭제 -->
+	    DELETE FROM TB_STO_APP_DEVC
+		WHERE  DEVC_IDX  = #{DEVC_IDX}
+	</delete>
+
+	<insert id="insertAppdevc" parameterType="java.util.HashMap">
+		<!-- 단말기별 지원앱 정보 추가 -->
+		INSERT INTO TB_STO_APP_DEVC (
+			   DEVC_SPT_NO, REG_DTTM, DEVC_IDX, APP_PLAT_IDX
+		) VALUES (
+			   SEQ_TB_STO_APP_DEVC.NEXTVAL
+			 , (CURRENT TIMESTAMP)
+			 , #{DEVC_IDX}
+			 , #{APP_PLAT_IDX}
+		)
+	</insert>
+
+</mapper>

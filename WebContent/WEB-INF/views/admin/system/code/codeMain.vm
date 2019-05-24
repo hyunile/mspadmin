@@ -1,0 +1,535 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+
+});
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+
+function fn_codeGrpDelete(){
+	var PAGE_NUM = $("#CODE_NUM").val();
+
+	if($(".CD_GRP").size() == 1){
+		PAGE_NUM = PAGE_NUM - 1;
+	}
+
+	if(PAGE_NUM < 1){
+		PAGE_NUM = 1;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){  //삭제 하시겠습니까?
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/system/code/grp/delete";
+	var data = $("form[name=frmGrpInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_codeGrpList(PAGE_NUM);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//코드그룹 리스트 페이징
+function fn_codeGrpList(CODE_NUM){
+	var url = CONTEXT_PATH + "/admin/system/code/grp";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&CODE_NUM=" + CODE_NUM;
+	fn_getCodeGrpList( url, type, data );
+}
+
+//코드그룹 리스트 페이지 호출(공통)
+function fn_getCodeGrpList( url, type, data ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false ,
+		cache:false
+	}).responseText;
+
+	$("#noticeTableDiv").html(AjaxHTML);
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//코트그룹 리스트 조회
+function ch_search(){
+	var sfrm=document.frmSearch;
+	var sval=$("#conSelect").val();
+	if(sval==0){
+		if(sfrm.cd_search.value.length>0&&sfrm.cd_search.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //검색어를 2글자 이상 입력해 주세요.
+			sfrm.cd_search.value="";
+			sfrm.cd_search.focus();
+		}
+	}else if(sval==1){
+		if(sfrm.grp_search.value.length>0&&sfrm.grp_search.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //검색어를 2글자 이상 입력해 주세요.
+			sfrm.grp_search.value="";
+			sfrm.grp_search.focus();
+		}
+	}
+	fn_codeGrpList(1);
+}
+
+//코드그룹 수정
+$(document).on("click","#codeModify",function(){
+
+	var CODE_NUM = $("#CODE_NUM").val();
+	var CD_GRP = $(this).parent().parent().find(".CD_GRP").val();
+	var data = $("form[name=frmSearch]").serialize() + "&CODE_NUM=" + CODE_NUM + "&CD_GRP=" + CD_GRP;
+	var url = CONTEXT_PATH + "/admin/system/code/grp/edit";
+	var type = "GET";
+	var target = $("#windowPop");
+	var whideh = 500;
+	var title = "#springMessage("menu.system.codeGroupModify")";  //코드그룹 수정
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//코드그룹 등록
+$(document).on("click","#codeWrite",function(){
+	console.log(1111);
+	var data = "";
+	var url = CONTEXT_PATH + "/admin/system/code/grp/regist";
+	var type = "GET";
+	var target = $("#windowPop");
+	var width = 500;
+	var title = "#springMessage("menu.system.codeGroupRegist")"; //코드그룹 등록
+	
+	console.log(target);
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//코드그룹 등록
+function fn_codeGrpWrite(){
+	if( $("form[name=frmGrpInfo]").find("input[name=CD_GRP]").val() == ""){
+		alert('#springMessage("menu.system.alert.noCodeGroup")');  //코드그룹를 입력해주세요.
+		$("form[name=frmGrpInfo]").find("input[name=CD_GRP]").focus();
+		return;
+	} else if( $("form[name=frmGrpInfo]").find("input[name=NM_GRP]").val() == ""){
+		alert('#springMessage("menu.system.alert.noCodeGroupName")');   //코드그룹명을 입력해주세요.
+		$("form[name=frmGrpInfo]").find("input[name=NM_GRP]").focus();
+		return;
+	} else if( $("form[name=frmGrpInfo]").find("select[name=YN_UPDATE]").val() == ""){
+		alert('#springMessage("menu.system.alert.noUpdateYN")');  //변경구분을 입력해주세요.
+		$("form[name=frmGrpInfo]").find("select[name=YN_UPDATE]").focus();
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){  //등록 하시겠습니까?
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/system/code/grp/regist";
+	var data = $("form[name=frmGrpInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_codeGrpList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//코드그룹 수정
+function fn_codeGrpModify(){
+
+	if( $("form[name=frmGrpInfo]").find("input[name=NM_GRP]").val() == ""){
+		alert('#springMessage("menu.system.alert.noCodeGroupName")');   //그룹명을 입력해주세요.
+		$("form[name=frmGrpInfo]").find("input[name=NM_GRP]").focus();
+		return;
+	} else if( $("form[name=frmGrpInfo]").find("select[name=YN_UPDATE]").val() == ""){
+		alert('#springMessage("menu.system.alert.noUpdateYN")');   //변경구분을 입력해주세요.
+		$("form[name=frmGrpInfo]").find("select[name=YN_UPDATE]").focus();
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){   //수정 하시겠습니까?
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/system/code/grp/edit";
+	var data = $("form[name=frmGrpInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_codeGrpList($("#CODE_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//공통코드 호출
+$(document).on("click","#codeGrpClick",function(){
+	$("#CLICK_CD_GRP").val( $(this).parent().parent().find(".CD_GRP").val() );
+	fn_gocodelist();
+});
+
+function fn_gocodelist(){
+	var CD_GRP = $("#CLICK_CD_GRP").val();
+	var url = CONTEXT_PATH + "/admin/system/code/sub";
+	var type = "POST";
+	var data = "CD_GRP=" + CD_GRP;
+	var target = $("#windowPop");
+	var whideh = 900;
+	var title = "#springMessage("menu.system.codeGroupDetail")";   //코드그룹 상세
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+
+
+//코드 리스트 호출
+function fn_codeSubList(){
+	var CD_GRP = $("#CLICK_CD_GRP").val();
+
+	var url = CONTEXT_PATH + "/admin/system/code/sub";
+	var type = "POST";
+	var data = "CD_GRP=" + CD_GRP;
+	var target = $("#codeSubListTr");
+
+	fn_getCodeSupList( url, type, data, target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+
+//코드 등록
+$(document).on("click","#subWrite",function(){
+
+	var data = "";
+	var url = CONTEXT_PATH + "/admin/system/code/sub/regist";
+	var type = "GET";
+	var target = $("#windowPop");
+	var whideh = 500;
+	var title = "#springMessage("menu.system.codeRegist")";  //코드 등록
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//코드 수정 화면
+$(document).on("click","#codeSubModify",function(){
+
+	var CD_GRP = $("#CLICK_CD_GRP").val();
+	var NO_CD = $(this).parent().parent().find(".NO_CD").val();
+
+	var data = "CD_GRP=" + CD_GRP + "&NO_CD=" + NO_CD;
+	var url = CONTEXT_PATH + "/admin/system/code/sub/edit";
+	var type = "GET";
+	var target = $("#windowPop");
+	var whideh = 500;
+	var title = "#springMessage("menu.system.codeModify")";  //코드 수정
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//코트 등록
+function fn_codeSubWrite(){
+	if( $("form[name=frmSubInfo]").find("input[name=NO_CD]").val() == ""){
+		alert('#springMessage("menu.system.alert.noCodeGroup")');   //코드를 입력해주세요.
+		$("form[name=frmSubInfo]").find("input[name=NO_CD]").focus();
+		return;
+	} else if( $("form[name=frmSubInfo]").find("input[name=NM_CD]").val() == ""){
+		alert('#springMessage("menu.system.alert.noCodeName")');  //코드명를 입력해주세요.
+		$("form[name=frmSubInfo]").find("input[name=NM_CD]").focus();
+		return;
+	} else if( $("form[name=frmSubInfo]").find("input[name=NO_ORDER]").val() == ""){
+		alert('#springMessage("menu.system.alert.noRank")');  //우선순위를 입력해주세요.
+		$("form[name=frmSubInfo]").find("input[name=NO_ORDER]").focus();
+		return;
+	} else if( $("form[name=frmSubInfo]").find("select[name=YN_USE]").val() == ""){
+		alert('#springMessage("menu.system.alert.noUseYN")');   //사용여부를 입력해주세요.
+		$("form[name=frmSubInfo]").find("select[name=YN_USE]").focus();
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){  //등록 하시겠습니까?
+		return;
+	}
+
+	var CD_GRP = $("#CLICK_CD_GRP").val();
+
+	var url = CONTEXT_PATH + "/admin/system/code/sub/regist";
+	var data = $("form[name=frmSubInfo]").serialize() + "&CD_GRP=" + CD_GRP;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_codeSubList();
+				fn_gocodelist();
+			}
+		}
+	});
+}
+
+//코트 수정
+function fn_codeSubModify(){
+	if( $("form[name=frmSubInfo]").find("input[name=NM_CD]").val() == ""){
+		alert('#springMessage("menu.system.alert.noCodeName")');  //코드명를 입력해주세요.
+		$("form[name=frmSubInfo]").find("input[name=NM_CD]").focus();
+		return;
+	} else if( $("form[name=frmSubInfo]").find("input[name=NO_ORDER]").val() == ""){
+		alert('#springMessage("menu.system.alert.noRank")');  //우선순위를 입력해주세요.
+		$("form[name=frmSubInfo]").find("input[name=NO_ORDER]").focus();
+		return;
+	} else if( $("form[name=frmSubInfo]").find("select[name=YN_USE]").val() == ""){
+		alert('#springMessage("menu.system.alert.noUseYN")');   //사용여부를 입력해주세요.
+		$("form[name=frmSubInfo]").find("select[name=YN_USE]").focus();
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){   //수정 하시겠습니까?
+		return;
+	}
+	
+	var CD_GRP = $("#CLICK_CD_GRP").val();
+	var url = CONTEXT_PATH + "/admin/system/code/sub/edit";
+	var data = $("form[name=frmSubInfo]").serialize() + "&CD_GRP=" + CD_GRP;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_codeSubList();
+				fn_gocodelist();
+			}
+		}
+	});
+}
+//코드 삭제
+function fn_codeSubDelete(){
+	var CD_GRP = $("#CLICK_CD_GRP").val();
+	var url = CONTEXT_PATH + "/admin/system/code/sub/delete";
+	var data = $("form[name=frmSubInfo]").serialize() + "&CD_GRP=" + CD_GRP;
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){  //삭제 하시겠습니까?
+		return;
+	}
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_codeSubList();
+				fn_gocodelist();
+			}
+		}
+	});
+}
+
+//공통코드 리스트 페이지 호출(공통)
+function fn_getCodeSupList( url, type, data, target ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false,
+		cache:false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_codeGrpList(1);
+}
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####	
+	<div class="nav">
+		<span>#springMessage("menu.system")</span>
+		<span>#springMessage("menu.system.codeManage")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.codeManage")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+	
+		<table class="tbl-search">
+			<caption>#springMessage("menu.system.codeManage")</caption>
+			<colgroup>
+				<col style="width:480px">
+				<col>
+			</colgroup>
+			<thead>
+				<tr>
+					<td>
+						<div class="tbl-select">
+							<label for="conSelect">#springMessage("common.header.groupCode")</label>
+							<select name="conSelect" id="conSelect">
+								<option value="0">#springMessage("common.header.groupCode")</option>
+        						<option value="1">#springMessage("common.header.groupCodeName")</option>
+							</select>
+						</div>
+						<input  class="se_con" type="text" id="cd_search" name="SE_CD_GRP" value="" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+						<input  class="se_con" type="text" id="grp_search" name="SE_NM_GRP" value="" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+						<select class="se_con" name="SE_ID_GROUP" onchange="fn_userList(1)">
+        					<option value="">#springMessage("common.select.choose")</option>
+        					#foreach( $searchGroup in $searchGroupList )
+        					<option value="$!searchGroup.ID_GROUP" onkeydown="javascript:if(event.keyCode==13){fn_userList(1);return false;}">$!searchGroup.NM_GROUP</option>
+        					#end
+        				</select>
+					</td>
+					<td>
+						<a href="javascript:ch_search();" class="tbl-btn2">#springMessage("common.button.view")</a> <!-- 조회 -->
+						<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+						<input type="hidden" id="CLICK_CD_GRP" name="CLICK_CD_GRP"/>
+					</td>
+				</tr>
+			</thead>
+		</table>
+		
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="codeWrite">#springMessage("common.button.regist")</a> <!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+					
+		<div id="noticeTableDiv">
+			
+			<table class="tbl-nb" >
+				<colgroup><!--  8cell  -->
+					<col style="width:80px">
+					<col>
+					<col style="width:120px">
+					<col style="width:120px">
+					<col style="width:120px">
+					<col style="width:120px">
+					<col style="width:60px">
+					<col style="width:60px">
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("common.header.groupCode")</th> 			<!-- 그룹코드 -->
+						<th scope="col">#springMessage("common.header.groupCodeName")</th> 		<!-- 그룹코드명 -->
+						<th scope="col">#springMessage("common.header.author")</th> 			<!-- 작성자 -->
+						<th scope="col">#springMessage("common.header.registDate")</th> 		<!-- 작성일 -->
+						<th scope="col">#springMessage("common.header.modifyUser")</th> 		<!-- 수정자 -->
+						<th scope="col">#springMessage("common.header.modifyDate")</th>			<!-- 수정일 -->
+						<th scope="col"> </th>
+						<th scope="col"> </th>
+					</tr>
+				</thead>
+				<tbody>
+					#foreach( $codeGroup in $codeGroupList )
+						#set($j_tot = $codeGroup.TOT_CNT)
+						<tr>
+							<td >
+								$!codeGroup.CD_GRP
+								<input type="hidden" class="CD_GRP" value="$!codeGroup.CD_GRP"/>
+							</td>
+							<td >
+								$esc.xml($!codeGroup.NM_GRP)
+							</td>
+							<td >
+								$!codeGroup.ID_INSERT
+							</td>
+							<td >
+								$!codeGroup.DT_INSERT
+							</td>
+							<td >
+								$!codeGroup.ID_UPDATE
+							</td>
+							<td >
+								$!codeGroup.DT_UPDATE
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="btn2" id="codeModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="btn2" id="codeGrpClick">#springMessage("common.button.detail")</a> <!-- 상세 -->
+							</td>
+						</tr>
+					#end
+					#if(!$j_tot)
+						<tr>
+							<td colspan="8" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+						</tr>
+					#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="CODE_NUM" value="$!R_PAGE_NUM" />
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot" />
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_codeGrpList" />
+			</div>
+			
+		</div>
+
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

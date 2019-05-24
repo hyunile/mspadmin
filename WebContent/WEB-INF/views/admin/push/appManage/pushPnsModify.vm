@@ -1,0 +1,49 @@
+<form name="frmPnsService" method="POST" enctype="multipart/form-data" >
+	
+			<table class="tbl" summary="APP ID,PNS ID,KEYSTORE,PASSWORD,SENDER ID">
+				<colgroup><!--  2cell  -->
+					<col width="25%"/><col width="75%"/>
+				</colgroup>
+				<tr>
+					<th scope="row">APP ID</th>
+					<td>
+						$esc.xml($PNS_APPID)
+						<input type="hidden" name="APPID" id="MO_APPID" value="$PNS_APPID" />
+						<input type="hidden" id="check_con" value="0" />
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="PNSID" class="required">PNS ID</label>
+					</th>
+					<td>
+					#if($pushPnsOne)
+						$esc.xml($pushPnsOne.PNSID)
+						<input type="hidden" name="PNSID" id="MO_PNSID" value="$pushPnsOne.PNSID" />
+					#else
+						<select name="PNSID" id="PNSID">
+							<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							#foreach( $PnsSelectVar in $PnsSelectVarList )
+							<option value="$PnsSelectVar.VVALUE">$esc.xml($PnsSelectVar.VNAME)</option>
+							#end
+						</select>
+							<a href="javascript:void(0)" onclick="fn_checkPnsId()" class="btn2" >#springMessage("menu.push.appManage.sameCheck")</a> <!-- 중복체크 -->
+					#end
+					</td>
+				</tr>
+			</table>
+		
+
+		<div class="btn-wrap txtCenter">
+			#if($pushPnsOne)
+				<a href="javascript:void(0);" onclick="fn_pnsModify();" class="btn1">#springMessage("common.button.modify")</a>	<!-- 수정 -->
+				<a href="javascript:void(0);" onclick="fn_pnsDelete();" class="btn1 type2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+			#else
+				<a href="javascript:void(0);" onclick="fn_pnsInsert();" class="btn1">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+			#end
+
+				<a href="javascript:void(0)" onclick="fn_goPnsList()" class="btn1 type2">PNS #springMessage("common.text.list")</a> <!-- 목록 -->
+				<a href="javascript:void(0)" onclick="fn_closePopup()" class="btn1 type2 close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+		</div>
+
+</form>

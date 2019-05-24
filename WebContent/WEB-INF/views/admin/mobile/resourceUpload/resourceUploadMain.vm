@@ -1,0 +1,358 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/jEasyUiTree/easyui.css" >
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/jEasyUiTree/icon.css">
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript" src="$RESOURCES_PATH/jEasyUiTree/jquery.easyui.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+	//공통 페이징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	
+	if(${mobServiceList.size()} == 0){
+		alert('#springMessage("common.alert.noUpdate")'); //'업로드 가능한 App.이 없습니다'
+	}
+});
+
+function f_resUpload() {
+	if($('#RES_FILE').val() == '') {
+		alert('#springMessage("common.alert.inputFile")');  //파일을 입력해주세요.
+		return;
+	}
+	
+	var file_text = $('#RES_FILE').val();
+	var file_text = file_text.substring(file_text.length-3, file_text.length);
+	
+	if(file_text != "zip") {
+		alert('#springMessage("common.alert.onlyZip")'); //  "리소스를 압축한 zip 파일만 등록가능합니다."
+		return; 
+	}
+	
+	
+	var loading =($('#loading-indicator')).hide();
+	
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')) { //"등록 하시겠습니까?"
+		return;
+	}
+	
+	loading.show();
+	
+	var SVC_ID = $("#SVC_ID").val();
+	
+	jQuery.ajaxFileUpload( {
+		url           : CONTEXT_PATH + '/admin/mobile/resourceUpload/tempUpload',
+		secureuri     : false,
+		fileElementId :'RES_FILE',
+		data          : {"SVC_ID" : SVC_ID},
+		dataType      : 'html/text',
+		contentType   : 'multipart/form-data',
+		success       : function (data,status) {
+			loading.hide();
+			var delIdx = data.indexOf("<");
+			if(delIdx>0)
+			{
+				data = data.substring(0, delIdx);
+			}
+			//---------------------------------------------------------------------
+			var result = jQuery.parseJSON(data);
+			
+			if(result.msg != "") {
+				alert(result.msg);
+			}
+			if(result.result > 0) {
+				fn_goResourceTempPop(SVC_ID);
+			}
+		}
+	});
+}
+
+function fn_goResourceTempPop(SVC_ID) {
+	var url    = CONTEXT_PATH + "/admin/mobile/resourceUpload/tempShow";
+	var type   = "GET";
+	var data   = "SVC_ID=" + SVC_ID;
+	var target = $("#windowPop");
+	var whideh = 550;
+	var title  = '#springMessage("menu.mobile.upload.rscShortView")';//"리소스 요약 보기";
+	fn_getCommonPopupDiv(url, type, data , target , whideh, title);
+}
+
+$(document).on("click",".tabOutClass",function() {
+	$(".tabOverClass").removeClass().addClass("tabOutClass");
+	$(this).removeClass().addClass("tabOverClass");
+	
+	if($(this).attr("id") == "summaryList") {
+		fn_GotRseSummary();
+	} else {
+		fn_GoResTree();
+	}
+});
+
+$(document).on("click",".SummaryClickTd",function() {
+	var thistd = $(this).parent();
+	
+	if(thistd.attr("class") == "on"){
+		thistd.removeClass();
+		var selectBox = thistd.find("input[type=checkbox]")[0];
+		selectBox.checked = false;
+	} else {
+		thistd.removeClass().addClass("select");
+		var selectBox = thistd.find("input[type=checkbox]")[0];
+		selectBox.checked = true;
+	}	
+});
+
+$(document).on("click",".Check_box",function() {
+	var thistd = $(this).parent().parent();
+	
+	if($(this).is(":checked")) {
+		thistd.removeClass().addClass("on");
+		var selectBox = $(this)[0];
+		selectBox.checked = true;
+	} else {
+		thistd.removeClass();
+		var selectBox = $(this)[0];
+		selectBox.checked = false;
+	}
+
+});
+
+function fn_deleteSummaryList() {
+	if($(".tabOverClass").attr("id") == "summaryList"){
+		fn_deleteSummaryGo();
+	} else {
+		fn_deleteTreeGo();
+	}
+}
+
+function fn_deleteSummaryGo() {
+	var con = 0;
+	
+	$(".Check_box").each(function() {
+		if($(this).is(":checked")) {
+			con = 1;
+		}
+	});
+	
+	if( con == 0 ) {
+		alert('#springMessage("common.alert.checkList")'); //"삭제할 리소스를 한 개 이상 체크하세요." 
+		return false;
+	}
+
+	if(! confirm('#springMessage("common.alert.doDelete")')) { //"삭제 하시겠습니까?"
+		return;
+	}
+
+	var url  = CONTEXT_PATH + "/admin/mobile/resourceUpload/summaryDelete";
+	var data = $("form[name=frmTempResInfo]").serialize() + "&SVC_ID=" + $("#SVC_ID").val();
+	
+	jQuery.ajax( {
+		url      : url,
+		type     : "POST",
+		data     : data,
+		dataType : "json",
+		success  : function(data) {
+			alert(data.msg);
+			if(data.result > 0){
+				fn_GotRseSummary();
+			}
+		}
+	});
+}
+
+function fn_deleteTreeGo() {
+	var nodes = $('#resTree').tree('getChecked');
+
+	if(nodes.length == 0) {
+		alert('#springMessage("common.alert.checkList")'); //"삭제할 리소스를 한 개 이상 체크하세요." 
+		return false;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')) {  //"삭제 하시겠습니까?"
+		return;
+	}
+	
+	var data = "";
+	
+	for(x=0; x<nodes.length; x++) {
+	
+		if(isNumber(nodes[x].id)) {		
+			if(data == "") {
+				data += "RSC_FILE_IDX=" + nodes[x].id;
+			} else {
+				data += "&RSC_FILE_IDX=" + nodes[x].id;
+			}
+		}
+	}
+	
+	var url = CONTEXT_PATH + '/admin/mobile/resourceUpload/treeDelete';
+	
+	jQuery.ajax( {
+		url      : url,
+		type     : "POST",
+		data     : data,
+		dataType : "json",
+		success  : function(data) {
+			alert(data.msg);
+			if(data.result > 0){
+				fn_GoResTree();
+			}
+		}
+	});
+}
+
+function fn_reourceRegist() {
+	var loading =($('#loading-indicator2')).hide();
+	if(! confirm('#springMessage("common.alert.applyRsc")')) {  //"리소스 파일을 적용하시겠습니까?" 
+		return;
+	}
+	loading.show();
+	var SVC_ID = $("#SVC_ID").val();
+	var data   = "SVC_ID=" + SVC_ID;
+	var url    = CONTEXT_PATH + "/admin/mobile/resourceUpload/regist";
+	jQuery.ajax( {
+		url      : url,
+		type     : "POST",
+		data     : data,
+		dataType : "json",
+		success  : function(data) {
+			loading.hide();
+			alert(data.msg);
+			if(data.result > 0) {
+				fn_Go_url();
+			}
+		}
+	});
+}
+
+function fn_Go_url() {
+	document.frmSearch.action  = CONTEXT_PATH + "/admin/mobile/resourceManageMenu";
+	document.frmSearch.submit();
+}
+
+function fn_GotRseSummary() {
+	var url    = CONTEXT_PATH + "/admin/mobile/resourceUpload/rscSummary";
+	var type   = "GET";
+	var data   = "&SVC_ID=" + $("#SVC_ID").val();
+	var target = $("#image_list");
+	fn_getCommonList(url, type, data , target);
+}
+
+function fn_GoResTree() {
+	var url    = CONTEXT_PATH + "/admin/mobile/resourceUpload/rscTree";
+	var type   = "GET";
+	var data   = "&SVC_ID=" + $("#SVC_ID").val();
+	var target = $("#image_list");
+	fn_getCommonList(url, type, data , target);
+}
+
+$(document).on("click", "#RscConfigWrite", function() {
+	var url    = CONTEXT_PATH + "/admin/mobile/resourceConfig/regist";
+	var type   = "GET";
+	var data   = "";
+	var target = $("#windowPop");
+	var whideh = 550;
+	var title  = '#springMessage("menu.mobile.upload.extensionIn")';//"확장자 등록";
+	fn_getCommonPopupDiv(url, type, data , target , whideh, title);
+});
+
+function fn_RscExeWrite() {
+	if( $("#FILE_EXT").val() == "" ) {
+		alert('#springMessage("common.alert.extension")'); //"확장자를 입력해 주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')) { //"등록 하시겠습니까?"
+		return;
+	}
+	
+	var url  = CONTEXT_PATH + "/admin/mobile/resourceConfig/regist";
+	var data = $("form[name=frmSenderInfo]").serialize();
+	jQuery.ajax( {
+		url      : url,
+		type     : "POST",
+		data     : data,
+		dataType : "json",
+		success  : function(data) {
+			alert(data.msg);
+			if(data.result > 0) {
+				window.location.reload(true);
+			}
+		}
+	});
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.mobile")</span>
+		<span>#springMessage("menu.mobile.upload")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.mobile.upload")</h2>
+	
+	#### E : 프로그램 위치 기술 부분  ####
+	
+	#### S : 조회 폼 부분  ####
+	<div class="scroll-area">
+
+		<form name="frmSearch" method="post">
+		
+    		<table class="tbl-search">
+    			<colgroup>
+					<col style="width:80px">
+					<col style="width:220px">
+					<col style="width:80px">
+					<col style="width:300px">
+					<col>
+				</colgroup>
+				<thead>
+				
+					<tr>
+						<th>#springMessage("common.text.appname")</th>  <!-- App. 명 -->
+	    				<td>
+	    					<select id="SVC_ID" name="SVC_ID">
+							#foreach( $mobService in $mobServiceList )
+								<option value="$mobService.SVC_ID">$mobService.SVC_NM</option>
+							#end
+							</select>	
+	    				</td>
+						<th>#springMessage("menu.mobile.upload.uploadFile")</th><!-- 업로드파일 -->
+						<td>							
+							<input class="fileText" type="file" id="RES_FILE" name="RES_FILE" title="#springMessage('menu.mobile.upload.fileText')"/> <!-- 리소스들을 압축한 ZIP파일을 선택하세요. -->
+	                    </td>
+	                    <td><a href="javascript:f_resUpload();" class="tbl-btn2" title="#springMessage('menu.mobile.upload.uploadText')">#springMessage("menu.mobile.upload.button")</a></td> <!--선택한 ZIP파일을 업로드합니다. 업로드  -->
+	    			</tr>
+					<tr id="EXT_P">
+						<th></th>
+						<td colspan="4">
+							<input type="hidden" name="MENU_GO" value="0000000070" />
+							<a href="javascript:void(0);" id="RscConfigWrite" class="tbl-btn1" title="#springMessage('menu.mobile.upload.uploadText')">#springMessage("menu.mobile.upload.button.file")</a> <!-- 파일 형식 등록 / 선택한 ZIP파일을 업로드합니다.-->
+							(#springMessage("menu.mobile.upload.text")   <!-- 등록 가능한 리소스 형식 -->
+	    					#set($cont = 1)
+	    					#foreach( $resourceExt in $resourceExtList )
+	    						#if($cont == 1)
+	    							$resourceExt.FILE_EXT
+	    						#else 
+	    							 , $resourceExt.FILE_EXT
+	    						#end
+	    						#set($cont = $cont + 1)
+							#end
+							)
+						</td>
+	                </tr>
+	        	</thead>
+    		</table>
+		
+		</form>
+		
+		<div class="noticeBox">
+			<h2>#springMessage("menu.mobile.upload.advice1")</h2> 	<!-- 도움말  -->
+			<p>#springMessage("menu.mobile.upload.advice2")</p>		<!-- 파일 선택 버튼을 클릭하여 리소스 파일을 선택합니다. -->
+			<p>#springMessage("menu.mobile.upload.advice3")</p>		<!-- 업로드 버튼을 클릭하면 팝업 화면으로 선택한 리소스 파일 정보가 출력됩니다.  -->
+			<p>#springMessage("menu.mobile.upload.advice4")</p>		<!-- 출력된 리소스를 확인 후 확인버튼을 클릭하면 리소스 파일에 등록 됩니다.  -->
+		</div>
+	
+	</div>
+	
+</div>

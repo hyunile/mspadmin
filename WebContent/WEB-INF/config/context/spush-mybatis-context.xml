@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+    
+    <!-- secure-push configuration -->
+    <bean id="dataSource_securepush" class="org.springframework.jndi.JndiObjectFactoryBean">
+     	<property name="jndiName" value="${datasource.jndiname.msp.securepush}"/>
+     	<property name="resourceRef" value="true"/>
+  	</bean>
+  	
+    <bean id="sqlSessionFactory_securepush" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource_securepush" />
+        <property name="mapperLocations" value="${datasource.mybatis.msp.securepush.mapperLocation}"/>
+    </bean>
+    
+    <bean id="sqlSession_securepush" class="org.mybatis.spring.SqlSessionTemplate"> 
+  		<constructor-arg index="0" ref="sqlSessionFactory_securepush"></constructor-arg>
+  		<qualifier value="securepush"/>
+  	</bean>
+    
+	<bean id="transactionManager_securepush"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource_securepush" />
+        <qualifier value="securepush"/>
+    </bean>
+    
+    <!-- secure-push legacy HR configuration -->
+    <!-- 레거시 인사 DB 데이터 소스 세팅. 시큐어푸쉬 메뉴를 사용하지 않을 경우 디폴트 데이터 소스 세팅을 같이 사용하도록 설정. -->
+    <bean id="dataSource_securepushLegacyHR" class="org.springframework.jndi.JndiObjectFactoryBean">
+     	<property name="jndiName" value="${datasource.jndiname.msp.mobile}"/>
+     	<property name="resourceRef" value="true"/>
+  	</bean>
+  	
+    <!-- <bean id="dataSource_securepushLegacyHR" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+     	<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" />
+		<property name="url" value="jdbc:oracle:thin:@211.241.199.234:1521:KMS" />
+		<property name="username" value="system" />
+		<property name="password" value="oracle" />
+		<property name="validationQuery" value="select 1 from dual" />
+		<property name="testWhileIdle" value="true"/>
+  	</bean> -->
+  	
+    <bean id="sqlSessionFactory_securepushLegacyHR" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource_securepushLegacyHR" />
+        <property name="mapperLocations" value="WEB-INF/sqlmap/oracle/securepush/HRSyncLegacy.xml"/>
+    </bean>
+    
+    <bean id="sqlSession_securepushLegacyHR" class="org.mybatis.spring.SqlSessionTemplate"> 
+  		<constructor-arg index="0" ref="sqlSessionFactory_securepushLegacyHR"></constructor-arg>
+  		<qualifier value="securepushLegacyHR"/>
+  	</bean>
+    
+	<bean id="transactionManager_securepushLegacyHR"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource_securepushLegacyHR" />
+        <qualifier value="securepushLegacyHR"/>
+    </bean>
+    
+</beans>

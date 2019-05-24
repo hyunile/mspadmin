@@ -1,0 +1,180 @@
+<script type="text/javascript">
+	function fn_groupSearch(PAGE_NUM){
+		var searchKey;
+		var selData =  $("#selGroupSearchCondition").val();
+		if(selData == "0"){
+			searchKey = "GROUPNAME";
+		}else if(selData == "1"){
+			searchKey = "GROUPDESC";
+		}
+		var searchWord = $("#txtGroupConditionValue").val();
+	
+	
+		var url = CONTEXT_PATH + "/admin/commonPush/popup/targetSelection/group";
+    	var type = "POST";
+    	var data = "PAGE_NUM=" + PAGE_NUM + "&" + 
+				   "searchKey=" + searchKey + "&" +
+    			   "searchWord=" + encodeURIComponent(searchWord);
+    	var target = $("#divGroupOutList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    	
+    	group_list_incheck();
+	}
+
+	
+	function fn_addGroup(GROUPSEQ, GROUPNAME, GROUPDESC, GROUPCNT){
+		if(isDuplicatedGroup(GROUPSEQ) == 0){
+			$("#default_text_group").hide();
+			$("#tblInGroup").append("<tr class='trInGroup' id="+ GROUPSEQ +"> <td style='overflow:hidden;'> <input id='groupKey' type='hidden'  value='" + GROUPSEQ +"'/>" + GROUPNAME + "</td> <td style='overflow:hidden;'>" + GROUPDESC + "</td> <td style='overflow:hidden;'>" + GROUPCNT + "</td> </tr>");
+		}
+	}
+	
+	function isDuplicatedGroup(groupSeq){
+		var result = 0;
+		var inGroupArr = $("#tblInGroup").find($(".trInGroup"));
+		for(var i=0; i < inGroupArr.size(); i++){
+			if(inGroupArr[i].id == groupSeq){
+				result = 1;
+			}
+		}
+		return result;
+	}
+	
+	
+	
+	function fn_removeGroup(groupKey){
+		$("#tblInGroup").find("tr").each(function(){
+			if( $(this).attr("id") == groupKey){
+				$(this).remove();
+			}
+		});
+
+		if($("#tblInGroup").find("tr").size() <= 2){
+			$("#default_text_group").show();
+		}
+	}
+
+
+	function fn_tdOutGroupCheckOnClickHandler(tr){
+		if(tr.attr("class") == "selected"){
+			$(tr.removeClass().addClass("no_select"));
+			var selectBox = tr.find(".outGroupKey")[0];
+			selectBox.checked = false;
+			fn_removeGroup(tr.find(".outGroupKey").val() );
+		}else{
+			tr.removeClass().addClass("selected");
+			var selectBox = tr.find(".outGroupKey")[0];
+			selectBox.checked = true;
+	        fn_addGroup(tr.find(".outGroupKey").val(),tr.find("td:eq(1)").text() ,tr.find("td:eq(2)").text(), tr.find("td:eq(3)").text());
+		}
+	}
+
+	
+	function fn_checkAllOutGroup(chk){
+		if(chk.is(":checked")){
+			chk.parent().removeClass().addClass("selected");
+			$(".outGroupKey").each(function(){
+				$(this)[0].checked = true;
+				fn_addGroup( $(this).parent().find(".outGroupKey").val(), $(this).parent().parent().find(".tdOutGroupGROUPNAME").text(), $(this).parent().parent().find(".tdOutGroupGROUPDESC").text(), $(this).parent().parent().find(".tdOutGroupGROUPCNT").text());
+				
+			});
+		}else{
+			chk.removeClass().addClass("no_select");
+			$(".outGroupKey").each(function(){
+				$(this)[0].checked = false;
+				fn_removeGroup( $(this).parent().find(".outGroupKey").val() );
+			});
+		}
+	}
+
+	
+	function group_list_incheck(){
+		$(".outGroupKey").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+		
+			var groupKey = $(this).val();
+			var con = 0;
+			$("#tblInGroup").find("tr").each(function(){
+				if( $(this).attr("id") == groupKey){
+					con = 1;
+				}
+			});
+	
+			if(con == 1){
+				$(this).parent().parent().removeClass().addClass("selected");
+				var selectBox = $(this)[0];
+				selectBox.checked = true;
+			}
+		});
+	}
+	
+	//개별 사용자 체크박스 클릭시 이벤트
+	function fn_fnOutGroupKeyClickHandler(chk){
+		if(chk.is(":checked")){
+	        $(this).parent().parent().removeClass().addClass("selected");
+	        fn_addGroup( chk.parent().parent().find(".outGroupKey").val(),chk.parent().parent().find("td:eq(1)").text() ,chk.parent().parent().find("td:eq(2)").text(), chk.parent().parent().find("td:eq(3)").text());
+	    } else {
+	        chk.parent().parent().removeClass().addClass("no_select");
+	        fn_removeGroup( chk.val() );
+	    }
+	}
+	
+	//개별 사용자 체크박스 클릭시 이벤트
+	$(document).on("click",".trInGroup",function(){
+        fn_removeGroup($(this)[0].id);
+        group_list_incheck();
+	});
+	
+</script>
+
+<table class="tbl-search">
+	<thead>
+		<tr>
+			<td>
+				<h2>#springMessage("menu.push.sendManage.groupSearch")</h2>	<!--  그룹 검색 -->
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<select class="w120" id="selGroupSearchCondition">
+					<option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+					<option value="0">#springMessage("menu.push.user.groupName")</option> <!-- 그룹명 -->
+					<option value="1">#springMessage("menu.push.user.groupDesc")</option> <!-- 그룹설명 -->
+				</select>
+				
+				<input type="text" id="txtGroupConditionValue"/>
+				<a href="javascript:void(0)" onClick="fn_groupSearch(1)" class="tbl-btn2">#springMessage("common.button.view")</a>	<!-- 조회  -->
+			</td>
+		</tr>
+	</thead>
+</table>
+
+<table class="full-width">
+	<caption></caption>
+	<colgroup>
+		<col>
+		<col style="width:10px">
+		<col>
+	</colgroup>
+	<tr>
+		<td class="tbl-wrap" valign="top">
+			
+			<div id="divGroupOutList" >
+				#parse("admin/commonPush/popup/targetSelection/targetSelectionPopUpTabGroupOutList.vm")
+			</div>
+			
+		</td>
+		<td></td>
+		<td class="tbl-wrap" valign="top">
+			
+			<div id="divGroupInList" >
+				#parse("admin/commonPush/popup/targetSelection/targetSelectionPopUpTabGroupInList.vm")
+			</div>
+			
+		</td>
+	</tr>
+</table>
+
+

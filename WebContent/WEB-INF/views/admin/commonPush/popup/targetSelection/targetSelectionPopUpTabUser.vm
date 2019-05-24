@@ -1,0 +1,233 @@
+<script type="text/javascript">
+	$(document).ready(function() {
+	});
+	
+	var userIdTypeSelected = '';
+
+	//조회
+	function fn_userSearch(PAGE_NUM){
+		var appId = $("#appId").val();
+		var serviceCode = $("#serviceCode").val();
+		var userIdType = $("#selIDType").val();
+		userIdTypeSelected = userIdType;
+		
+		var searchKey;
+		var selData =  $("#selSearchCondition").val();
+		if(selData == "0"){
+			searchKey = "CUID";
+		}else if(selData == "1"){
+			searchKey = "CNAME";
+		}
+		
+		var searchWord = $("#txtConditionValue").val();
+		
+		var url = CONTEXT_PATH + "/admin/commonPush/popup/targetSelection/user";
+    	var type = "POST";
+    	var data ="PAGE_NUM=" + PAGE_NUM + "&" +
+    			  "APPID=" + appId + "&" +
+    			  "SERVICECODE=" + serviceCode + "&" +
+    			  "USERIDTYPE=" + userIdType + "&" +
+    			  "searchKey=" + searchKey + "&" +
+    			  "searchWord=" + encodeURIComponent(searchWord);
+    	var target = $("#divUserOutList");
+    	
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+//    	if(PAGE_NUM == '1')
+//    		fn_initSeletedUser();
+	}
+
+	//사용자 추가
+	function fn_addUser(userId, cname, pnsId){
+		if(isDuplicatedUser(userId) == 0){
+			$("#default_text").hide();
+			$("#tblInUser").append("<tr class='classTrInUser' id="+ userId +"> <td class='tdInUserID' style='overflow:hidden;''> " + userId + "</td> <td class='tdInUserCNAME' style='overflow:hidden;'>" + cname + "</td> <td class='tdInUserLIST_PNSID' style='overflow:hidden;'>" + pnsId + "</td> </tr>");
+		}
+	}
+	
+	//사용자 제거
+	function fn_removeUser(userId){
+		$("#tblInUser").find("tr").each(function(){
+			if( $(this).attr("id") == userId){
+				$(this).remove();
+			}
+		});
+
+		if($("#tblInUser").find("tr").size() <= 2){
+			$("#default_text").show();
+		}
+	}
+	
+	//사용자 중복체크
+	function isDuplicatedUser(userId){
+		var result = 0;
+		var inUserArr = $("#tblInUser").find($(".classTrInUser"));
+		
+		for(var i=0; i < inUserArr.size(); i++){
+			if(inUserArr[i].id == userId){
+				result = 1;
+			}
+		}
+		return result;
+	}	
+	
+	//전체선택 체크박스 클릭 핸들러
+	function fn_checkAllOutUserClickHandler(chk){
+		if(chk.is(":checked")){
+			$(this).parent().removeClass().addClass("selected");
+			$(".classCheckOutUser").each(function(){
+				var tr = $(this).parent().parent();
+				tr.removeClass().addClass("selected");
+				fn_addUser(fn_getUserId(tr), fn_getCname(tr), fn_getPsId(tr));
+			});
+		}else{
+			chk.removeClass().addClass("no_select");
+			$(".classCheckOutUser").each(function(){
+				var tr = $(this).parent().parent();
+				tr.removeClass().addClass("no_select");
+		        fn_removeUser( $(this).val() );
+			});
+		}
+		user_list_incheck();
+	}
+	
+	//체크박스 체크 동기화
+	function user_list_incheck(){
+		
+		$(".classCheckOutUser").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+		
+			var pushKey = $(this).val();
+			var con = 0;
+			$("#tblInUser").find("tr").each(function(){
+				if( $(this).attr("id") == pushKey){
+					con = 1;
+				}
+			});
+	
+			if(con == 1){
+				$(this).parent().parent().removeClass().addClass("selected");
+				var selectBox = $(this)[0];
+				selectBox.checked = true;
+			}
+		});
+	}
+	
+	//대상자 목록 TR 클릭 핸들러 (추가)
+	function fn_OutUserTrClickHandler(tr){
+		if(tr.attr("class") == "selected"){
+			tr.removeClass().addClass("no_select");
+			fn_removeUser( tr.find(".classCheckOutUser").val() );
+		}else{
+			tr.removeClass().addClass("selected");
+			fn_addUser(fn_getUserId(tr), fn_getCname(tr), fn_getPsId(tr));
+		}
+		user_list_incheck();
+	}
+	
+	//추가 대상자 TR 클릭 핸들러. (제거)
+	$(document).on("click",".classTrInUser",function(){
+        fn_removeUser($(this)[0].id);
+        user_list_incheck();
+	});
+	
+	
+	//deprecated
+	function fn_OutUserCheckBoxClickHandler(chk){
+		var tr = chk.parent().parent();
+		if(chk.is(":checked")){
+			tr.removeClass().addClass("selected");
+	        fn_addUser(fn_getUserId(tr), fn_getCname(tr), fn_getPsId(tr));
+	    } else {
+	    	tr.removeClass().addClass("no_select");
+	        fn_removeUser( chk.val() );
+	    }
+	}
+	
+	function fn_initSeletedUser(){
+		$("#tblInUser").find("tr").each(function(){
+			if($(this).attr("class") == 'classTrInUser'){
+				console.log($(this).attr("class"));
+				$(this).remove();
+			}
+		});
+
+		if($("#tblInUser").find("tr").size() <= 2){
+			$("#default_text").show();
+		}
+		user_list_incheck();
+		
+		// 대상자 목록 아이디 컬럼명을 CUID/PSID 검색 기준에 따라 다르게 보이도록 처리.
+		$("#tblOutUser").find("th").eq(1).text(userIdTypeSelected=="PSID"? '#springMessage("login.userid")'+"(PSID)": '#springMessage("login.userid")'+"(CUID)"); //아이디
+		$("#tblInUser").find("th").eq(0).text(userIdTypeSelected=="PSID"? '#springMessage("login.userid")'+"(PSID)": '#springMessage("login.userid")'+"(CUID)"); //아이디
+	}
+	
+	//사용자 ID
+	function fn_getUserId(tr){
+		return tr.find(".classCheckOutUser").val();
+	}
+	//사용자 이름
+	function fn_getCname(tr){
+		return tr.find(".classCNAME").text();
+	}
+	//사용자 PSNID
+	function fn_getPsId(tr){
+		return tr.find(".classPNSID").text();
+	}
+	
+</script>
+
+			
+<table class="tbl-search">
+		
+	<thead>
+		<tr>
+			<td>
+				<h2>#springMessage("menu.store.userDevice.search") (#springMessage("menu.push.sendManage.searchDesc1") $!serviceCode #springMessage("menu.push.sendManage.searchDesc2"))</h2> <!-- 사용자 검색      선택된 발송정책      에 등록된 사용자 정보를 검색합니다.-->
+			</td>
+		</tr>
+		<tr>
+			<td>	
+				<select class="w120" id="selIDType" >
+					<option value="CUID">CUID#springMessage("common.text.standard")</option> <!-- 기준 -->
+##					<option value="PSID">PSID#springMessage("common.text.standard")</option> <!-- 기준 -->
+				</select>
+				<select class="w120" id="selSearchCondition" >
+					<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+					<option value="0">UserID</option>
+					<option value="1">#springMessage("common.text.name")</option> <!-- 이름 -->
+				</select>
+				<input type="text" id="txtConditionValue"/>
+				<a href="javascript:void(0)" onClick="fn_userSearch(1)" class="tbl-btn2">#springMessage("common.button.view")</a>	<!-- 조회  -->
+			</td>
+		</tr>
+	</thead>
+</table>
+
+
+<table class="full-width">
+	<caption></caption>
+	<colgroup>
+		<col>
+		<col style="width:10px">
+		<col>
+	</colgroup>
+	<tr>
+		<td class="tbl-wrap" valign="top">
+			
+			<div id="divUserOutList">
+				#parse("admin/commonPush/popup/targetSelection/targetSelectionPopUpTabUserOutList.vm")
+			</div>
+			
+		</td>
+		<td></td>
+		<td class="tbl-wrap" valign="top">
+			
+			<div id="divUserInList">
+				#parse("admin/commonPush/popup/targetSelection/targetSelectionPopUpTabUserInList.vm")
+			</div>
+			
+		</td>
+	</tr>
+</table>

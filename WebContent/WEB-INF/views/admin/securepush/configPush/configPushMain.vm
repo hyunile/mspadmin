@@ -1,0 +1,163 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	fn_initPage('$!itemInfo.INDICATOR_TITLE','$!itemInfo.INDICATOR_ICON');
+	
+});
+
+$(document).on("change","#ICON_IMAGE",function(){
+	
+    readURL(this);
+});
+
+// 선택된 이미지 표시.
+function readURL(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        
+        reader.onload = function (e) {
+            //$('#preview').attr('src', e.target.result);
+            $('.preview').each(function(){ $(this).attr('src', e.target.result); });
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+$(document).on("keyup","#TITLE",function(event){
+	setInputText(event.target.value);
+});
+
+// 입력된 제목을 프리뷰 영역에 표시.
+function setInputText(text) {
+	if(text == '')text = '#springMessage("menu.securePush.configPush.newPushText")'; //새로운 푸시가 도착했어요!
+	$('#title_preview1').text(text);
+	$('#title_preview2').text(text);
+}
+
+$(document).on("change","input[name='TITLE_CONFIG']",function(){
+	var _val = $(this).val();
+	if(_val == "CUSTOM")
+		$("#TITLE").removeAttr("disabled");
+	else
+		$("#TITLE").attr("disabled", true);
+});
+
+// 설정된 값이 있으면 초기 화면 세팅.
+function fn_initPage(_title, _iconPath){
+	if(_title != null && '' != _title){
+		$('input:radio[name=TITLE_CONFIG]').filter('[value=CUSTOM]').prop('checked',true);
+		$("#TITLE").removeAttr("disabled");
+		$("#TITLE").val(_title);
+		setInputText(_title);
+	}
+	if(_iconPath != null && '' != _iconPath){
+		$('.preview').each(function(){ 
+			$(this).attr('src', CONTEXT_PATH + "/admin/securepush/configPush/downIconFile?ICON_PATH=" + _iconPath); 
+		});
+	}
+}
+
+//설정 적용
+function fn_cfgWrite(){
+	
+	if(!confirm('#springMessage("common.alert.apply")')){    //적용하시겠습니까?
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/securepush/configPush/register";
+	var data = new FormData($("form[name=frmWrite]")[0]);//$("form[name=frmWrite]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		cache: false,
+        contentType: false,
+        processData: false,
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.push.user.alert.success")'); // 성공적으로 적용되었습니다.
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		}
+	});
+}
+
+// 초기화.
+function fn_cfgReset(){
+	$("form[name=frmWrite]")[0].reset();
+	$("#TITLE").attr("disabled", true);
+	$('.preview').each(function(){ $(this).attr('src', '$RESOURCES_PATH/images/sub/push_bg.jpg'); });
+	setInputText('');
+	$("#ICON_PATH").val('');
+}
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span></span>
+		<span></span>
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<form name="frmWrite" method="post" enctype="multipart/form-data">
+			
+		<div class="scroll-area">
+
+			<div class="push-message-wrap">
+				<div class="push-message">
+					<span><small>※ #springMessage("menu.securePush.configPush.recommendSize") 144 * 144</small></span> <!-- 권장 사이즈 -->
+					<div class="file">
+						<div class="center">
+							<input type="file" name="ICON_IMAGE" id="ICON_IMAGE">
+							<img src="$RESOURCES_PATH/images/sub/push_bg.jpg" alt="" id="preview" class="preview">
+							<input type="hidden" name="ICON_PATH" id="ICON_PATH" value="$!itemInfo.INDICATOR_ICON" />
+						</div>
+					</div>
+					
+					<span>#springMessage("menu.securePush.configPush.senderDispArea")</span> <!-- 발신자 표시 영역 -->
+					<input type="radio" name="TITLE_CONFIG" id="normal" value="DEFAULT" checked><label for="normal">#springMessage("menu.securePush.configPush.msgTitle")</label><br /> <!-- 메시지 제목 -->
+					<input type="radio" name="TITLE_CONFIG" id="text" value="CUSTOM"><label for="text"></label><input type="text" name="TITLE" id="TITLE" placeholder="#springMessage('menu.securePush.configPush.msgTitle.placeholder')" maxlength="20" disabled> <!-- 직접 입력 (최대 20자 제한) -->
+				</div>
+				<a href="javascript:fn_cfgReset();void(0)" class="btn1 type2">#springMessage("menu.securePush.msgSend.reset")</a> <!-- 초기화 -->
+				<a href="javascript:fn_cfgWrite();void(0)" class="btn1 fr">#springMessage("common.header.apply")</a> <!-- 적용 -->
+			</div>
+
+			<div class="top-push">
+				<img src="$RESOURCES_PATH/images/sub/push_img.jpg" alt="">
+				<div class="push">
+					<div class="img-wrap">
+						<div class="img-center">
+							<img src="$RESOURCES_PATH/images/sub/push_bg.jpg" alt="" class="preview">
+						</div>
+					</div>
+					<div>#springMessage("menu.securePush.configPush.senderDisplay")</div> <!-- 발신자 표시 -->
+					<span id="title_preview1">#springMessage("menu.securePush.configPush.newPushText")</span> <!-- 새로운 푸시가 도착했어요! -->
+				</div>
+			</div>
+
+			<div class="popup-push">
+				<img src="$RESOURCES_PATH/images/sub/push_img.jpg" alt="">
+				<div class="push">
+					<div class="img-wrap">
+						<div class="img-center">
+							<img src="$RESOURCES_PATH/images/sub/push_bg.jpg" alt="" class="preview">
+						</div>
+					</div>
+					<div>#springMessage("menu.securePush.configPush.senderDisplay")</div> <!-- 발신자 표시 -->
+					<span id="title_preview2">#springMessage("menu.securePush.configPush.newPushText")</span> <!-- 새로운 푸시가 도착 했어요! -->
+					<div class="button-wrap">
+						<a href="javascript:void(0)" class="close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+						<a href="javascript:void(0)" class="view">#springMessage("menu.securePush.configPush.button.view")</a> <!-- 보기 -->
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</form>
+</div>

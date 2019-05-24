@@ -1,0 +1,273 @@
+<!-- 
+화면 : 배포관리 리스트 메인
+url : admin/mobile/rsc/deployList
+작성자 : 장문규
+ -->
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.mobile")</span>
+		<span>#springMessage("menu.mobile.deploy")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.mobile.deploy")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<table class="tbl-search">
+		<caption></caption>
+		<colgroup>
+			<col style="width:80px">
+			<col style="width:250px">
+			<col>
+		</colgroup>
+		<thead>
+			<tr>
+				<th>#springMessage("common.text.appname")</th>	 <!-- App. 명 -->
+				<td>
+					<select id="selectSvc" >
+        				#foreach($svc in $serviceList)
+        					<option value="$svc.SVC_ID">$svc.SVC_NM</option>
+        				#end
+        			</select>
+				</td>
+				<td><a href="javascript:void(0)" id="reSearch" class="tbl-btn2">#springMessage("common.button.view")</a></td>
+			</tr>
+		</thead>
+	</table>
+	
+	#### E : 조회 폼 부분  ####
+	
+	##배포한 목록 나타날 영역
+	<div id="ResTableDiv">
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		
+		<div id="deployListDiv">
+			<table class="tbl-nb" summary="항목선택,앱서비스명,배포명,버전,배포파일명,등록일,배포모드,상태,다운">
+				<colgroup>
+					<col  width="15%"/><col  width="auto"/><col  width="20%"/>
+					<col  width="10%"/><col  width="10%"/><col  width="70px"/>
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("menu.mobile.deploy.version")</th> <!-- 버전 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.name")</th> <!-- 배포명 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+						<th scope="col" id="orderDPLY_TP" title="클릭하여 정렬변경">#springMessage("menu.mobile.deploy.mode")1</th> <!-- 배포모드 -->
+						<th scope="col" id="orderUSE_YN" title="클릭하여 정렬변경">#springMessage("menu.mobile.deploy.status")</th> <!-- 상태 -->
+						<th scope="col">#springMessage("common.button.down")</th> <!-- 다운 -->
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td colspan="6"> #springMessage("menu.mobile.deploy.alertSelect")</td> <!-- 배포 목록 조회를 해주세요. -->
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		
+	</div>
+
+	<!--  배포관리 상세이동 form  -->
+	<form name="frmDeployDetail" method="post">
+		<input type="hidden"  name="DPLY_IDX"	value="" />
+		<input type="hidden"  name="SVC_NM"     value="" />
+		<input type="hidden"  name="SVC_ID"     value="" />
+		<input type="hidden"  name="REG_DTTM"   value="" />
+		<input type="hidden"  name="DPLY_NM"    value="" />
+		<input type="hidden"  name="DPLY_VER"   value="" />
+        <input type="hidden"  name="FILE_IDX"  value="" />
+		<input type="hidden"  name="FILE_NAME"  value="" />
+		<input type="hidden"  name="DPLY_TP"    value="" />
+		<input type="hidden"  name="USE_YN"     value="" />
+		<input type="hidden"  name="DPLY_DESC"  value="" />
+		<input type="hidden"  name="NUM"  value="" />
+		<input type="hidden"  name="SIZE"  value="" />
+	</form>
+
+	<input type="hidden" id="orderTarget" value="DPLY_IDX"/>
+	<input type="hidden" id="orderType" value="DESC"/>
+</div>
+
+<script type="text/javascript">
+
+//백스페이스로 이전화면 진입 방지(배포 후 리스트에서 가는것 방지)
+document.onkeydown=function() {
+    if(event.srcElement.type != "text" && event.srcElement.type != "textarea") {
+    	if(event.keyCode==8) return false;
+    }
+}
+
+
+function fn_noticeList(pageNum){
+	fn_searchList(pageNum);
+}
+
+//목록조회
+function fn_searchList(pageNum){
+
+	if(${serviceList.size()} == 0){
+		alert('#springMessage("common.alert.noSelect")'); //'조회가능한 App.이 없습니다'
+		return;
+	}
+	var serviceId = $("#selectSvc option:selected").val();
+	if(serviceId == "") return;
+	
+	var orderTarget = $("#orderTarget").val();
+	var orderType = $("#orderType").val();
+	var PAGE_SIZE = $("#selRowSize").val();
+
+	var data = "SVC_ID="+serviceId + "&PAGE_SIZE="+PAGE_SIZE + "&PAGE_NUM="+pageNum +"&ORDER_TARGET=" + orderTarget + "&ORDER_TYPE="+orderType;
+
+	var AjaxHTML =	jQuery.ajax({
+			url: "$!{CONTEXT_PATH}/admin/mobile/rsc/ajax/deployList"
+			,type:"post"
+			,data:data
+			,dataType:"html"
+			,async:false
+		}).responseText;
+
+	$('#deployListDiv').html(AjaxHTML);
+}
+
+
+$(document).ready(function()
+{
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	
+	var NUM = "$!CON";
+	if( NUM == "R"){
+		$("#selectSvc").val("$!SVC_ID");
+		$("#selRowSize").val("$!SIZE");
+		fn_searchList($!NUM);
+	}
+	
+
+	//1.select box 변경 이벤트
+    $('#selectSvc').change(function(){
+		$("#orderTarget").val("DPLY_IDX");
+		$("#orderType").val("DESC");
+		fn_searchList(1);
+    });
+
+	//2. 재조회 이벤트
+	$("#reSearch").click(function(){
+		$("#orderTarget").val("DPLY_VER");
+		$("#orderType").val("DESC");
+		fn_searchList(1);
+	});
+
+	//2. moveResourceUpload
+	$("#moveResourceUpload").click(function(){
+		var serviceid = $("#selectSvc option:selected").val();
+		if("all" == serviceid) {
+			serviceid = "";
+		}
+
+		location.href = "$!{CONTEXT_PATH}/admin/mobile/rsc/upload?SVC_ID=" +serviceid ;
+
+	});
+	
+	var R_SVC_ID = "$!R_SVC_ID";
+	
+	if(R_SVC_ID != "" ){
+		$("#SVC_ID").val(R_SVC_ID);
+		$("#orderTarget").val("DPLY_VER");
+		$("#orderType").val("DESC");
+		fn_searchList(1);
+	}else{//페이지 최초 로딩 시 정렬 조건을 조회 버튼을 눌렀을 때와 같이 맞춤.
+		$("#orderTarget").val("DPLY_VER");
+		$("#orderType").val("DESC");
+		fn_searchList(1);
+	}
+	
+});
+
+//3. 배포관리 상세화면 이동
+$(document).on("click",".moveResDeployDetail",function( e ){
+
+	document.frmDeployDetail.DPLY_IDX.value = $(this).find("#DPLY_IDX").val();
+	document.frmDeployDetail.SVC_NM.value = $(this).find("#SVC_NM").val();
+	document.frmDeployDetail.SVC_ID.value = $(this).find("#SVC_ID").val();
+	document.frmDeployDetail.REG_DTTM.value = $(this).find("td").eq(2).text();
+	document.frmDeployDetail.DPLY_NM.value = $(this).find("td").eq(1).text();
+	document.frmDeployDetail.DPLY_VER.value = $(this).find("td").eq(0).text();
+    document.frmDeployDetail.FILE_IDX.value = $(this).find("#FILE_IDX").val();
+	document.frmDeployDetail.FILE_NAME.value = $(this).find("#FILE_NAME").val();
+	//document.frmDeployDetail.FILE_PATH.value =  $(this).find("#FILE_PATH").val();
+	document.frmDeployDetail.DPLY_TP.value = $(this).find("#DPLY_TP").val();
+	document.frmDeployDetail.USE_YN.value = $(this).find("#USE_YN").val();
+	document.frmDeployDetail.DPLY_DESC.value = $(this).find("#DPLY_DESC").val();
+	document.frmDeployDetail.NUM.value = $("#NOW_NUM").val();
+	document.frmDeployDetail.SIZE.value = $("#selRowSize").val();
+
+	document.frmDeployDetail.action         = "$!{CONTEXT_PATH}/admin/mobile/rsc/deploy/deployDetail";
+	document.frmDeployDetail.submit();
+
+});
+
+//DESC <-> ASC 변경 함수
+function changeOrderType(){
+	if($("#orderType").val() == "DESC"){
+    	$("#orderType").val("ASC");
+	}else{
+    	$("#orderType").val("DESC");
+	}
+}
+
+//컬럼 클릭 -> ORDER BY
+$(document).on("click","#orderDPLY_TP",function( e ){
+	$("#orderTarget").val("DPLY_TP");
+	changeOrderType();
+	fn_searchList(1);
+});
+$(document).on("click","#orderUSE_YN",function( e ){
+	$("#orderTarget").val("USE_YN");
+	changeOrderType();
+	fn_searchList(1);
+});
+$(document).on("click","#orderDPLY_IDX",function( e ){
+	$("#orderTarget").val("DPLY_IDX");
+	changeOrderType();
+	fn_searchList(1);
+});
+$(document).on("click","#orderDPLY_NM",function( e ){
+	$("#orderTarget").val("DPLY_NM");
+	changeOrderType();
+	fn_searchList(1);
+});
+$(document).on("click","#orderDPLY_VER",function( e ){
+	$("#orderTarget").val("DPLY_VER");
+	changeOrderType();
+	fn_searchList(1);
+});
+$(document).on("click","#orderREG_DTTM",function( e ){
+	$("#orderTarget").val("REG_DTTM");
+	changeOrderType();
+	fn_searchList(1);
+});
+
+function fn_changeRowSize(){
+	$("#orderTarget").val("DPLY_VER");
+	$("#orderType").val("DESC");
+	fn_searchList(1);
+}
+</script>

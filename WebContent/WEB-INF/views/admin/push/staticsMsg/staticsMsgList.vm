@@ -1,0 +1,113 @@
+	<div class="tbl-wrap">
+		<h2 class="tbl-title">#springMessage("menu.stats.push.allStat")</h2>  <!-- 전체 통계 -->
+		<ul>
+			<li><div>
+				<p>#springMessage("menu.stats.push.allSendNum")</p> <!-- 총 발송 메시지 건수-->
+				<p><strong>$!totPushStatisticsMsg.TOTAL_SEND_CNT </strong>#springMessage("common.text.gun")</p>  <!--  건 -->
+				<p>(100%)</p>
+			</div></li>
+			<li>
+				<div>
+					<p>#springMessage("menu.stats.push.success")</p>	<!--  성공 -->
+					<p><strong>$!totPushStatisticsMsg.SUCC_CNT</strong>#springMessage("common.text.gun")</p>	<!--  건 -->
+					<p>($!totPushStatisticsMsg.SUCC_RATE%)</p>
+				</div>
+				<div>
+					<p>#springMessage("menu.stats.push.fail")</p>	<!--  실패 -->
+					<p><strong>$!totPushStatisticsMsg.FAIL_CNT</strong>#springMessage("common.text.gun")</p>
+					<p>($!totPushStatisticsMsg.FAIL_RATE%)</p>
+				</div>
+			</li>
+			<li>
+				<div>
+					<p>#springMessage("menu.stats.push.receive")</p>	<!--  수신 -->
+					<p><strong>$!totPushStatisticsMsg.RECV_CNT</strong>#springMessage("common.text.gun")</p>
+					<p>($!totPushStatisticsMsg.RECV_RATE%)</p>
+				</div>
+				<div>
+					<p>#springMessage("menu.stats.push.readCheck")</p>	<!-- 읽음확인 -->
+					<p><strong>$!totPushStatisticsMsg.READ_CNT</strong>#springMessage("common.text.gun")</p>
+					<p>($!totPushStatisticsMsg.READ_RATE%)</p>
+				</div>
+			</li>
+		</ul>
+	</div>
+	
+	<table class="tbl-info">
+		<caption></caption>
+		<tr>
+			<td>
+				
+			</td>
+			<td class="txtRight">
+				#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+				<div class="tbl-info-select">
+					<label for="num">#springMessage("common.select.options_10")</label>
+					<select id="selRowSize" title="#springMessage('common.title.selectOne')" onchange="fn_changeRowSize()"> <!-- 항목선택 -->
+           				<option value="10">#springMessage("common.select.options_10")</option>
+           				<option value="30">#springMessage("common.select.options_30")</option>
+           				<option value="50">#springMessage("common.select.options_50")</option>
+           			</select>
+				</div>
+			</td>
+		</tr>
+	</table>
+
+	<table class="tbl-nb"  id="sortableTable" >
+		<colgroup >
+			<col  width="15%"/>
+			<col  width="AUTO"/>
+			<col  width="7%"/>
+			<col  width="10%"/>
+			<col  width="10%"/>
+			<col  width="10%"/>
+			<col  width="10%"/>
+			<col  width="10%"/>
+		</colgroup>
+		<thead>
+			<tr>
+				<th>#springMessage("menu.stats.push.sendDate2")</th> <!-- 발송일 -->
+				<th>#springMessage("menu.stats.push.message")</th> <!--메세지  -->
+				<th>#springMessage("menu.mobile.deploy.status")</th> <!-- 상태 -->
+				<th>#springMessage("menu.stats.push.allSend")</th> <!--총 발송  -->
+				<th>#springMessage("menu.stats.push.success")</th> <!--성공  -->
+                <th>#springMessage("menu.stats.push.fail")</th> <!--실패  -->
+				<th>#springMessage("menu.stats.push.receive")</th> <!--수신  -->
+				<th>#springMessage("menu.stats.push.read")</th> <!--읽음  -->
+			</tr>
+		</thead>
+		<tbody>
+			#foreach($pushStatisticsMsg in $listPushStatisticsMsgDTO)
+			#set($j_tot = $!pushStatisticsMsg.TOT_CNT)
+			<tr>
+				<td>$!pushStatisticsMsg.REGDATE</td>
+				<td>$!pushStatisticsMsg.MESSAGE</td>
+				<td></td>
+				<td>$!pushStatisticsMsg.TOTAL_SEND_CNT</td>
+				<td>$!pushStatisticsMsg.SUCC_CNT</td>
+				<td>$!pushStatisticsMsg.FAIL_CNT</td>
+				<td>$!pushStatisticsMsg.RECV_CNT</td>
+				<td>$!pushStatisticsMsg.READ_CNT</td>
+			</tr>	
+			#end	
+			
+			#if(!$j_tot)
+			<tr>
+				<td colspan="8" class="ta_c">#springMessage("common.alert.nodata")</td>  <!-- 데이터가 없습니다. -->
+			</tr>
+			#end
+		</tbody>
+	</table>
+	
+	<div class="j_page_div">
+		##현재 페이지
+		<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+		##총 개수
+		<input type="hidden" name="J_tot" value="$!j_tot"/>
+		##한페이지의 로우수
+		<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+		##한페이지수
+		<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+		##이밴트
+		<input type="hidden" name="j_event" value="fn_getStaticsMsgList"/>
+	</div>

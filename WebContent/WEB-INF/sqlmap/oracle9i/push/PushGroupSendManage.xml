@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.groupSend.mapper.GroupSendManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+	<sql id="head">
+		SELECT *
+        FROM ( SELECT 
+                    ROWNUM RNUM
+                   ,COUNT(*) OVER() TOT_CNT
+                   ,A.*
+               FROM (SELECT * FROM (
+	</sql>
+	
+	<sql id="bottom">
+		)
+                    ) A
+             )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+	
+	<!-- 그룹 발송 조회 리스트 -->
+    <select id="SelectGroupSendList" parameterType="kr.msp.admin.push.groupSend.dto.GroupSendDto" resultType="kr.msp.admin.push.groupSend.dto.GroupSendDto">
+        <include refid="head"/>
+           SELECT 
+			    D.MSGGRPSEQNO
+			   ,D.SEQNO
+			   ,D.RESERVEDATE
+			   ,D.RESERVE_TYPE
+			   ,D.APPID
+			   ,D.GROUPSEQ
+			   ,D.SENDERSEQ
+			   ,D.SENDERCODE
+			   ,D.MESSAGE
+			   ,D.REGDATE
+			   ,D.STATE
+			FROM (
+			        SELECT 
+			            A.MSGGRPSEQNO
+			           ,A.SEQNO
+			           ,TO_CHAR(A.RESERVEDATE, 'YYYY.MM.DD HH24:MI:SS') AS RESERVEDATE  
+			           ,CASE WHEN A.RESERVEDATE = A.REGDATE
+			                 THEN 'I'
+			                 ELSE 'R'
+			            END AS RESERVE_TYPE
+			           ,A.APPID
+			           ,A.GROUPSEQ
+			           ,A.SENDERSEQ
+			           ,(SELECT SENDERCODE
+			               FROM T_PUSH_SENDER_INFO C
+			              WHERE A.SENDERSEQ = C.SENDERSEQ) AS SENDERCODE
+			           ,A.MESSAGE
+			           ,TO_CHAR(A.REGDATE, 'YYYY.MM.DD HH24:MI:SS') AS REGDATE
+			           ,A.STATE
+			        FROM T_PUSH_MESSAGE_GROUP A
+			        WHERE A.RESERVEDATE BETWEEN TO_DATE(#{RESERVEDATE_S}, 'YYYY.MM.DD HH24MI') AND TO_DATE(#{RESERVEDATE_E}, 'YYYY.MM.DD HH24MI')
+			              AND A.APPID = #{APPID}
+			              <if test="SENDERSEQ != null and SENDERSEQ != ''">
+			              	AND A.SENDERSEQ = #{SENDERSEQ}
+			              </if>
+			              <if test="GROUPSEQ != null and GROUPSEQ != ''">
+			              	AND  A.GROUPSEQ = #{GROUPSEQ}
+			              </if>
+			        ORDER BY MSGGRPSEQNO DESC) D
+				<where>
+					<if test="RESERVE_TYPE != '' and RESERVE_TYPE != null">
+						D.RESERVE_TYPE = #{RESERVE_TYPE}
+					</if>
+				</where>
+	       <include refid="bottom"/>
+    </select>
+   
+    <!-- 그룹 사용자 발송조회 상세 리스트 -->   
+    <select id="SelectGroupUserSendList" parameterType="kr.msp.admin.push.groupSend.dto.GroupSendDto" resultType="kr.msp.admin.push.groupSend.dto.GroupSendDto">
+         <include refid="head"/>
+           SELECT
+			    A.SEQNO
+			   ,TO_CHAR(A.RESERVEDATE, 'YYYY.MM.DD HH24:MI:SS') AS RESERVEDATE
+			   ,CASE WHEN A.RESERVEDATE = A.REGDATE
+			          THEN 'I'
+			          ELSE 'R'
+			    END AS RESERVE_TYPE
+			   ,A.APPID
+			   ,A.CUID
+			   ,A.SENDERSEQ
+			   ,(SELECT SENDERCODE
+			       FROM T_PUSH_SENDER_INFO C
+			      WHERE A.SENDERSEQ = C.SENDERSEQ) AS SENDERCODE
+			   ,A.MESSAGE
+			   ,CASE WHEN (SELECT COUNT(*)
+			               FROM T_PUSH_COMPLETE B
+			               WHERE A.SEQNO = B.SEQNO AND A.CUID = B.CUID AND B.RECEIVEACK = 'S') > 0
+			         THEN 'Y'
+			         ELSE 'N'
+			    END AS SEND_YN
+			   ,CASE WHEN (SELECT COUNT(*)
+			               FROM T_PUSH_COMPLETE B
+			               WHERE A.SEQNO = B.SEQNO AND A.CUID = B.CUID AND B.RECEIVEACK = 'R') > 0
+			         THEN 'Y'
+			         ELSE 'N'
+			    END AS READ_YN
+			   ,TO_CHAR(A.REGDATE, 'YYYY.MM.DD HH24:MI:SS') AS REGDATE
+			FROM T_PUSH_MESSAGE A
+			WHERE SEQNO = #{SEQNO}
+			ORDER BY A.SEQNO DESC
+           <include refid="bottom"/>
+    </select>
+
+    <select id="SelectMsgSendInfo"  resultType="java.util.HashMap">
+    select A.MESSAGE,A.SEQNO,B.GROUPNAME,ViewA.TOTCNT, ViewA.GROUPSEQ, TO_CHAR(A.RESERVEDATE,'YYYY-MM-DD HH24:MM') RESERVEDATE
+    from T_PUSH_MESSAGE_GROUP A, T_PUSH_USER_GROUP_INFO B,
+        (select A.MSGGRPSEQNO,count(B.GROUPSEQ) as TOTCNT, B.GROUPSEQ
+        from  T_PUSH_MESSAGE_GROUP A, T_PUSH_USER_GROUP B
+        where A.GROUPSEQ=B.GROUPSEQ
+        group by A.MSGGRPSEQNO,B.GROUPSEQ
+        ) ViewA
+    where A.GROUPSEQ=B.GROUPSEQ
+    AND A.GROUPSEQ=ViewA.GROUPSEQ
+    AND A.MSGGRPSEQNO=ViewA.MSGGRPSEQNO
+    AND A.RESERVEDATE BETWEEN TO_DATE(#{RESERVEDATE_S}, 'YYYY.MM.DD HH24MI') AND TO_DATE(#{RESERVEDATE_E}, 'YYYY.MM.DD HH24MI')
+    <if test="MESSAGE != '' and MESSAGE != null">
+    AND A.MESSAGE like '%${MESSAGE}%'
+    </if>
+    order by SEQNO desc
+    </select>
+
+    <select id="SelectMsgSendSuccess"  resultType="java.util.HashMap">
+        SELECT COUNT(SEQNO) AS TOTCNT, SEQNO from
+        (select B.SEQNO
+        from  T_PUSH_MESSAGE_GROUP A, T_PUSH_COMPLETE B
+        where A.SEQNO=B.SEQNO
+        AND A.RESERVEDATE BETWEEN TO_DATE(#{RESERVEDATE_S}, 'YYYY.MM.DD HH24MI') AND TO_DATE(#{RESERVEDATE_E}, 'YYYY.MM.DD HH24MI')
+        <if test="MESSAGE != '' and MESSAGE != null">
+            AND A.MESSAGE like '%${MESSAGE}%'
+        </if>
+        group by B.SEQNO, B.CUID)
+        group BY SEQNO
+    </select>
+
+    <select id="SelectMsgSendFail"  resultType="java.util.HashMap">
+        SELECT count(SEQNO) as TOTCNT, SEQNO
+        FROM
+          (select B.SEQNO
+          from  T_PUSH_MESSAGE_GROUP A, T_PUSH_FAILED B
+          where A.SEQNO=B.SEQNO
+        AND A.RESERVEDATE BETWEEN TO_DATE(#{RESERVEDATE_S}, 'YYYY.MM.DD HH24MI') AND TO_DATE(#{RESERVEDATE_E}, 'YYYY.MM.DD HH24MI')
+        <if test="MESSAGE != '' and MESSAGE != null">
+            AND A.MESSAGE like '%${MESSAGE}%'
+        </if>
+          group by B.SEQNO, B.CUID)
+        GROUP BY SEQNO
+    </select>
+</mapper>

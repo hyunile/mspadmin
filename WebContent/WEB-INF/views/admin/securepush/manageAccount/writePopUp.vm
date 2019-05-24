@@ -1,0 +1,57 @@
+<script type="text/javascript">
+	
+	
+</script>
+<div>
+	<form name="frmWriteUserInfo" method="POST">
+	<table class="tbl">
+		<caption>#springMessage("menu.securePush.manageAccount.grantPrivilege")</caption> <!-- 관리자 권한 부여 -->
+		<colgroup>
+			<col style="width:140px">
+			<col style="width:300px">
+		</colgroup>
+		<tr>
+			<th>#springMessage("common.text.name")</th> <!-- 이름 -->
+			<td>$!itemInfo.USER_NM
+				<input type="hidden" name="USER_NM" value="$!itemInfo.USER_NM"/>
+				<input type="hidden" name="USER_ID" value="$!itemInfo.USER_ID"/>
+				<input type="hidden" name="EMAIL" value="$!itemInfo.EMAIL"/>
+			</td>
+		</tr>
+		<tr>
+			<th>#springMessage("common.text.dept")</th> <!-- 부서 -->
+			<td>$!itemInfo.FULL_NM</td>
+		</tr>
+		<tr>
+			<th>#springMessage("common.header.phoneNumber")</th> <!-- 연락처 -->
+			<td>$!itemInfo.CELL_NO<input type="hidden" name="CELL_NO" value="$!itemInfo.CELL_NO"/></td>
+		</tr>
+		<tr>
+			<th><label for="adminID">#springMessage("menu.securePush.manageAccount.adminId")</label></th> <!-- 관리자 아이디 -->
+			<td>
+				<input type="text" name="ADMIN_ID" id="adminID" class="full-width" style="width:75% !important;">
+				<a href="javascript:fn_idCheck('write');void(0);" class="btn2">#springMessage("common.button.duplicateCheck")</a> <!-- 중복체크 -->
+			</td>
+		</tr>
+		<tr>
+			<th><label for="adminPw">#springMessage("menu.securePush.manageAccount.adminPwd")</label></th> <!-- 관리자 비밀번호 -->
+			<td><input type="password" name="PASSWORD" id="adminPw" class="full-width" placeholder="#springMessage('common.text.pwdPlaceholder')"></td> <!-- 특수문자,숫자와 영문자 조합으로 10~20자리 -->
+		</tr>
+		<tr>
+			<th>#springMessage("menu.securePush.manageAccount.auth")</th> <!-- 권한 -->
+			<td>
+				<select id="GROUP_ID" name="GROUP_ID"  class="width50">
+					<option value="">#springMessage("common.select.choose")</option>
+					#foreach( $authGroup in $authGroupList )
+						<option value="$!authGroup.ID_GROUP" >$esc.xml($!authGroup.NM_GROUP)</option>
+					#end
+				</select>
+			</td>
+		</tr>
+	</table>
+	</form>
+	<div class="btn-wrap">
+		<a href="javascript:fn_goSelectOrgPop();void(0)" class="btn1 type2">#springMessage("menu.securePush.manageAccount.prev")</a> <!-- 이전 -->
+		<a href="javascript:fn_pageWrite();void(0)" class="btn1 fr">#springMessage("common.button.regist")</a><!-- 등록 -->
+	</div>
+</div>

@@ -1,0 +1,123 @@
+<script type="text/javascript">
+    $(document).ready(function(){
+		if('$isNewAdd' == 0){
+			setModify();
+		}else{
+			setAdd();
+		}
+    });
+	
+	function setAdd(){
+		document.getElementById("trHashVal").style.display = 'none';
+		document.getElementById("trCoreHash").style.display = 'none';
+		document.getElementById("trOsType").style.display = 'none';
+		document.getElementById("trSvcNm").style.display = 'none';
+		document.getElementById("trSvcVer").style.display = 'none';
+	}
+	
+	//수정.
+	function setModify(){
+		document.frmServiceInfo.AppId.value = "$fraService.APP_ID";
+		document.frmServiceInfo.OsType.value = "$fraService.OS_TYPE";
+		document.frmServiceInfo.AppVer.value = "$fraService.APP_VER";
+		
+		var osType;
+		if("$fraService.OS_TYPE" == "A"){
+			osType = "Android"
+		}else if("$fraService.OS_TYPE" == "I"){
+			osType = "IOS"
+		}
+		$("#lblOsType").text(osType);
+		$("#lblSvcNm").text("$fraService.SVC_NM");
+		$("#lblAppVer").text("$fraService.APP_VER");
+		$("#txtFraDesc").val("$fraService.FRA_DESC");
+		
+		var hashData = JSON.stringify($fraService.HASH_VAL);
+		$("#txtHashVal").text(hashData);
+		
+		var coreHash = JSON.parse(hashData).core[0].hash;
+		$("#lblCoreHash").text(coreHash);
+
+		document.getElementById("trPackage").style.display = 'none';
+	}
+</script>
+<form name="frmServiceInfo">
+	
+			<table class="tbl" summary="앱아이디,서비스명,서비스 설명">
+				<colgroup>
+					<col width="30%"/><col width="70%"/>
+				</colgroup>
+				<tr id="trOsType">
+					<th>
+						<label for="selectOSType" class="required">OS</label>
+					</th>
+					<td>
+						<label id="lblOsType"></label>
+					</td>
+				</tr>
+				<tr id="trSvcNm">
+					<th>
+						<label for="lblSvcNm" class="required">#springMessage("menu.mobile.record.appService")</label> <!-- 앱서비스명 -->
+					</th>
+					<td>
+                        <label id="lblSvcNm"></label>
+					</td>
+				</tr>
+				<tr id="trSvcVer">
+					<th>
+						<label for="lblAppVer" class="required">#springMessage("menu.mobile.deploy.version")</label> <!-- 버전 -->
+					</th>
+					<td>
+						<label class="width95" id="lblAppVer"></label >
+					</td>
+				</tr>
+				<tr id="trPackage">
+					<th>
+						<label class="required">packaging File</label>
+					</th>
+					<td>
+						<input type="file" id="RES_FILE" name="RES_FILE"  class="width95"/>
+					</td>
+				</tr>
+				<tr>
+					<th>
+						<label for="txtFraDesc">#springMessage("common.header.desc")</label> <!-- 설명 -->
+					</th>
+					<td>
+						<input type="text" id="txtFraDesc" class="width95">
+					</td>
+				</tr>
+				<tr id="trCoreHash">
+					<th>
+						<label for="lblCoreHash">Core File HashKey</label>
+					</th>
+					<td>
+                        <label id="lblCoreHash"></label>
+					</td>
+				</tr>
+				<tr id="trHashVal">
+					<th>
+						<label for="txtHashVal">Hash Map</label>
+					</th>
+					<td>
+                        <div style="width:100%; height:220px; overflow:auto; word-wrap: break-word;" id="txtHashVal"></div>
+					</td>
+				</tr>
+				
+			</table>
+	
+			<div class="btn-wrap txtCenter">
+				#if($isNewAdd == 1)
+					<a href="javascript:void(0);" onclick="fn_write();" class="btn1"><strong>#springMessage("common.button.save")</strong></a><!-- 저장 -->
+				#elseif($isNewAdd == 0)
+					<a href="javascript:void(0);" onclick="fn_modify();" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+					<a href="javascript:void(0);" onclick="fn_getAppManageDetailDelete();" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+				#end
+				<a href="javascript:void(0);" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+			</div>
+		
+		<input type="hidden" name="AppId">
+		<input type="hidden" name="OsType">
+		<input type="hidden" name="AppVer">
+	
+</form>

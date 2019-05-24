@@ -1,0 +1,1027 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.appInfo.mapper.AppInfoDao">
+     <!-- user information -->
+    <resultMap type="kr.msp.admin.store.appInfo.dto.BinaryDto" id="BinaryDto">
+        
+        <result property="APP_PLAT_IDX_10"      column = "10_APP_PLAT_IDX"   />
+        <result property="BIN_NO_10"               column = "10_BIN_NO"           />
+        <result property="PLAT_VER_IDX_10"      column = "10_PLAT_VER_IDX"   />
+        <result property="BIN_VER_10"              column = "10_BIN_VER"           />
+        <result property="FILE_SIZE_10"            column = "10_FILE_SIZE"         />
+        <result property="DL_URL_10"                column = "10_DL_URL"          />
+        <result property="BIN_FILE_NM_10"        column = "10_BIN_FILE_NM"     />
+        <result property="ORG_BIN_FILE_NM_10" column = "10_ORG_BIN_FILE_NM"    />
+        <result property="UPDATE_DESC_10"       column = "10_UPDATE_DESC"     />
+        <result property="PAKG_ID_10"                column = "10_PAKG_ID"     />
+        
+        <result property="APP_PLAT_IDX_20"      column = "20_APP_PLAT_IDX"   />
+        <result property="BIN_NO_20"               column = "20_BIN_NO"           />
+        <result property="PLAT_VER_IDX_20"      column = "20_PLAT_VER_IDX"   />
+        <result property="BIN_VER_20"              column = "20_BIN_VER"           />
+        <result property="FILE_SIZE_20"            column = "20_FILE_SIZE"         />
+        <result property="DL_URL_20"                column = "20_DL_URL"          />
+        <result property="BIN_FILE_NM_20"        column = "20_BIN_FILE_NM"     />
+        <result property="ORG_BIN_FILE_NM_20" column = "20_ORG_BIN_FILE_NM"    />
+        <result property="UPDATE_DESC_20"       column = "20_UPDATE_DESC"     />
+        <result property="PAKG_ID_20"                column = "20_PAKG_ID"     />
+    </resultMap>
+    
+     <resultMap type="kr.msp.admin.store.appInfo.dto.AppImageDto" id="AppImageDto">
+        <result property="IMG_IDX_1"        column = "1_IMG_IDX"  />
+        <result property="IMG_PATH_1"      column = "1_IMG_PATH"   />
+        <result property="FILE_NM_1"        column = "1_FILE_NM"   />
+        <result property="IMG_IDX_2"        column = "2_IMG_IDX"  />
+        <result property="IMG_PATH_2"      column = "2_IMG_PATH"   />
+        <result property="FILE_NM_2"        column = "2_FILE_NM"   />
+        <result property="IMG_IDX_3"        column = "3_IMG_IDX"  />
+        <result property="IMG_PATH_3"      column = "3_IMG_PATH"   />
+        <result property="FILE_NM_3"        column = "3_FILE_NM"   />
+        <result property="IMG_IDX_4"        column = "4_IMG_IDX"  />
+        <result property="IMG_PATH_4"      column = "4_IMG_PATH"   />
+        <result property="FILE_NM_4"        column = "4_FILE_NM"   />
+        <result property="IMG_IDX_5"        column = "5_IMG_IDX"  />
+        <result property="IMG_PATH_5"      column = "5_IMG_PATH"   />
+        <result property="FILE_NM_5"        column = "5_FILE_NM"   />
+        <result property="IMG_IDX_6"        column = "6_IMG_IDX"  />
+        <result property="IMG_PATH_6"      column = "6_IMG_PATH"   />
+        <result property="FILE_NM_6"        column = "6_FILE_NM"   />
+        <result property="IMG_IDX_7"        column = "7_IMG_IDX"  />
+        <result property="IMG_PATH_7"      column = "7_IMG_PATH"   />
+        <result property="FILE_NM_7"        column = "7_FILE_NM"   />
+        </resultMap>
+    
+    <!-- Common Paging QUERY start -->
+	<sql id="head">
+		SELECT * FROM ( SELECT ROWNUM RNUM ,COUNT(*) OVER() TOT_CNT ,A.* FROM (SELECT * FROM (
+	</sql>
+	
+	<sql id="bottom">
+		) ) A )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+	<!-- Common Paging QUERY end -->
+   
+    <!-- App 정보 리스트 조회 --> 
+    <select id="selectAppInfoList" 
+	        parameterType="kr.msp.admin.store.appInfo.dto.AppInfoSearchDto"
+	        resultType   ="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+	   <include refid="head"/>
+	   /* AppInfoManageSql > selectAppInfoList*/
+	   SELECT APP.APP_IDX, APP.APP_NM, APP.USE_YN, 
+                   TO_CHAR (APP.REG_DTTM, 'YYYY.MM.DD') AS REG_DT,
+                   USR.USER_NM, PLAT.PLATFORM, APP.SVC_ID, APP.CATG_CD,
+                   APP.STS_CD
+		FROM   TB_STO_APP  APP,
+		           TB_STO_SVC  SVC,
+		           TB_SYS_USER USR,
+		           (SELECT  A.APP_IDX,
+		                     rtrim (xmlagg (xmlelement (C, PLATFORM || ',')).extract ('//text()'), ',') PLATFORM
+		            FROM TB_STO_APP A,   
+		                    TB_STO_APP_PLAT B,
+		                    (SELECT DISTINCT BIN.APP_PLAT_IDX, APP_PLAT.APP_IDX,  PLAT.PLAT_NM||'('||VER.PLAT_VER_CD||')'  PLATFORM 
+		                     FROM 
+		                        TB_STO_BIN   BIN, 
+		                        TB_STO_PLAT_VER  VER,
+		                        TB_STO_PLAT  PLAT,
+		                        TB_STO_APP_PLAT APP_PLAT
+		                     WHERE PLAT.PLAT_IDX= VER.PLAT_IDX
+		                     <if test="PLATFORM != null and PLATFORM != ''">   
+                              AND    PLAT.PLAT_CD  = #{PLATFORM}
+                              </if>
+		                      AND VER.PLAT_VER_IDX = BIN.PLAT_VER_IDX
+		                      AND BIN.USE_YN = 'Y'
+		                      AND APP_PLAT.USE_YN = 'Y'
+		                      AND APP_PLAT.APP_PLAT_IDX = BIN.APP_PLAT_IDX
+                              AND APP_PLAT.PLAT_IDX   = PLAT.PLAT_IDX  
+		                    ) C
+		            WHERE A.APP_IDX = B.APP_IDX
+		            AND A.APP_IDX     = C.APP_IDX
+		            AND B.APP_PLAT_IDX = C.APP_PLAT_IDX
+		            <!--AND A.STS_CD = 'Y'-->
+		            <if test="APP_NM != null and APP_NM != ''">   
+				    AND    A.APP_NM  LIKE '%'||#{APP_NM}||'%'
+				    </if>
+				    <if test="PAKG_ID != null and PAKG_ID != ''">   
+				    AND    B.PAKG_ID  LIKE '%'||#{PAKG_ID}||'%'
+				    </if>
+		            group by A.APP_IDX
+		              ) PLAT
+		WHERE    APP.SVC_ID = SVC.SVC_ID
+		AND  APP.REG_ID = USR.USER_ID
+		<!--AND  APP.STS_CD = 'Y'-->
+		<if test="PLATFORM != null and PLATFORM != ''">   
+		AND   APP.APP_IDX = PLAT.APP_IDX 
+		</if>
+		<if test="PLATFORM == null or PLATFORM == ''">   
+        AND   APP.APP_IDX = PLAT.APP_IDX(+) 
+		</if>    
+      	<if test="APP_NM != null and APP_NM != ''">   
+        AND   APP.APP_NM  LIKE '%'||#{APP_NM}||'%'
+        </if>
+        <!-- 
+        <if test="PAKG_ID != null and PAKG_ID != ''">   
+        AND   APP.PAKG_ID  LIKE '%'||#{PAKG_ID}||'%'
+        </if>
+         -->
+		<if test="ORDER_TYPE == 'DESC' ">
+            ORDER BY  ${ORDER_TARGET} DESC
+        </if>
+        <if test="ORDER_TYPE == 'ASC' ">
+            ORDER BY  ${ORDER_TARGET} ASC
+        </if>
+      <include refid="bottom"/>
+	</select>
+	<!-- App 정보 상세조회 --> 
+    <select id="selectAppDetailInfo" 
+            parameterType="kr.msp.admin.store.appInfo.dto.AppInfoSearchDto"
+            resultType   ="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+	    /*  AppInfoManageSql > selectAppDetailInfo  */
+        SELECT A.SVC_ID, A.SVC_NM, C.CATG_CD, 
+            (SELECT CATG_NM FROM TB_STO_CATG WHERE CATG_CD = C.CATG_CD AND USE_YN = 'Y') CATG_NM,
+	        C.APP_TYPE, C.APP_NM, C.SORT_NO, 
+	        C.APP_INFO, 
+	        C.APP_DESC,  C.APP_IDX, PUB_YN,
+	        ( SELECT DISTINCT X.PLAT_IDX    FROM TB_STO_APP_PLAT X, TB_STO_PLAT Y WHERE X.APP_IDX = #{APP_IDX} AND X.PLAT_IDX = Y.PLAT_IDX AND Y.PLAT_CD = '10' AND X.USE_YN = 'Y') ANDROID,
+	        ( SELECT DISTINCT X.PLAT_IDX    FROM TB_STO_APP_PLAT X, TB_STO_PLAT Y WHERE X.APP_IDX = #{APP_IDX}  AND X.PLAT_IDX = Y.PLAT_IDX AND Y.PLAT_CD = '20'  AND X.USE_YN = 'Y')  APPLE,
+	        ( SELECT DISTINCT X.DIST_TYPE  FROM TB_STO_APP_PLAT X, TB_STO_PLAT Y WHERE X.APP_IDX = #{APP_IDX}  AND X.PLAT_IDX = Y.PLAT_IDX AND Y.PLAT_CD = '20' AND X.USE_YN = 'Y')  DIST_TYPE,
+            ( SELECT DISTINCT X.CALL_URL    FROM TB_STO_APP_PLAT X, TB_STO_PLAT Y WHERE X.APP_IDX = #{APP_IDX}  AND X.PLAT_IDX = Y.PLAT_IDX AND Y.PLAT_CD = '20' AND X.USE_YN = 'Y')  CALL_URL
+		FROM TB_SVC A, TB_STO_SVC B, TB_STO_APP C
+		WHERE A.SVC_ID = B.SVC_ID
+		AND A.SVC_ID = C.SVC_ID
+		AND B.USE_YN = 'Y'
+		AND C.USE_YN = 'Y'
+		AND C.APP_IDX = #{APP_IDX}
+    </select>
+
+    <!-- App 바이너리 파일  상세조회 --> 
+    <select id="selectAppBinaryInfo" 
+            parameterType="kr.msp.admin.store.appInfo.dto.AppInfoSearchDto"  resultMap="BinaryDto">
+         <!-- 
+         /* AppInfoManageSql >  selectAppBinaryInfos*/
+        SELECT * FROM
+			(     
+			      
+			      SELECT     AA.APP_PLAT_IDX, DD.PLAT_CD, 
+			                     BB.BIN_NO  , BB.PLAT_VER_IDX  , BB.BIN_VER  , BB.FILE_SIZE  ,
+			                     BB.DL_URL , BB.BIN_FILE_NM , BB.ORG_BIN_FILE_NM , BB.UPDATE_DESC ,
+			                     PAKG_ID
+			        FROM
+			        (SELECT   C.APP_PLAT_IDX, 
+			            C.DIST_TYPE,
+			            C.CALL_URL,
+			            B.APP_INFO, 
+			            B.APP_DESC,
+			            C.PAKG_ID
+			        FROM  TB_STO_SVC A, TB_STO_APP B, TB_STO_APP_PLAT C
+			        WHERE A.SVC_ID = B.SVC_ID
+			        AND A.USE_YN = 'Y'
+			        AND C.USE_YN = 'Y'
+			        AND C.APP_IDX = #{APP_IDX}
+			        AND C.APP_IDX = B.APP_IDX  
+			        ) AA,  
+			        TB_STO_BIN BB, 
+			        TB_STO_PLAT_VER CC,
+			        TB_STO_PLAT DD
+			        WHERE AA.APP_PLAT_IDX = BB.APP_PLAT_IDX
+			        AND BB.PLAT_VER_IDX = CC.PLAT_VER_IDX
+			        AND BB.USE_YN = 'Y'
+			        AND BB.BIN_NO = (SELECT MAX(BIN_NO) FROM TB_STO_BIN WHERE APP_PLAT_IDX = AA.APP_PLAT_IDX)
+			        AND CC.PLAT_IDX = DD.PLAT_IDX
+			)
+			Pivot
+			( 
+			   MAX(APP_PLAT_IDX) APP_PLAT_IDX, MAX(BIN_NO) BIN_NO, MAX(PLAT_VER_IDX) PLAT_VER_IDX, MAX(BIN_VER) BIN_VER, MAX(FILE_SIZE) FILE_SIZE,
+			   MAX(DL_URL) DL_URL,MAX(BIN_FILE_NM)  BIN_FILE_NM, MAX(ORG_BIN_FILE_NM) ORG_BIN_FILE_NM,MAX(UPDATE_DESC) UPDATE_DESC,MAX(PAKG_ID) PAKG_ID
+			   For  PLAT_CD in (10, 20)
+			)        
+			-->
+			/* AppInfoManageSql >  selectAppBinaryInfos*/
+			SELECT 
+			        MAX(APP_PLAT_IDX_10) "10_APP_PLAT_IDX"  , MAX(BIN_NO_10)  "10_BIN_NO"   , MAX(PLAT_VER_IDX_10) "10_PLAT_VER_IDX"        , MAX(BIN_VER_10)         "10_BIN_VER"
+			,       MAX(FILE_SIZE_10)    "10_FILE_SIZE"     , MAX(DL_URL_10)  "10_DL_URL"   , MAX(BIN_FILE_NM_10)  "10_BIN_FILE_NM"         , MAX(ORG_BIN_FILE_NM_10) "10_ORG_BIN_FILE_NM"
+			,       MAX(UPDATE_DESC_10)  "10_UPDATE_DESC"   , MAX(PAKG_ID_10) "10_PAKG_ID"
+			,       MAX(APP_PLAT_IDX_20) "20_APP_PLAT_IDX"  , MAX(BIN_NO_20)  "20_BIN_NO"   , MAX(PLAT_VER_IDX_20) "20_PLAT_VER_IDX"        , MAX(BIN_VER_20)         "20_BIN_VER"
+			,       MAX(FILE_SIZE_20)    "20_FILE_SIZE"     , MAX(DL_URL_20)  "20_DL_URL"   , MAX(BIN_FILE_NM_20)  "20_BIN_FILE_NM"         , MAX(ORG_BIN_FILE_NM_20) "20_ORG_BIN_FILE_NM"
+			,       MAX(UPDATE_DESC_20)  "20_UPDATE_DESC"   , MAX(PAKG_ID_20) "20_PAKG_ID"
+			FROM
+			(               
+			        SELECT  AA.APP_PLAT_IDX APP_PLAT_IDX_10 , BB.BIN_NO BIN_NO_10     , BB.PLAT_VER_IDX PLAT_VER_IDX_10       , BB.BIN_VER         BIN_VER_10
+			        ,       BB.FILE_SIZE    FILE_SIZE_10    , BB.DL_URL DL_URL_10     , BB.BIN_FILE_NM  BIN_FILE_NM_10        , BB.ORG_BIN_FILE_NM ORG_BIN_FILE_NM_10
+			        ,       BB.UPDATE_DESC  UPDATE_DESC_10  , PAKG_ID   PAKG_ID_10
+			        ,       NULL            APP_PLAT_IDX_20 , NULL      BIN_NO_20     , NULL            PLAT_VER_IDX_20       , NULL               BIN_VER_20
+			        ,       NULL            FILE_SIZE_20    , NULL      DL_URL_20     , NULL            BIN_FILE_NM_20        , NULL               ORG_BIN_FILE_NM_20
+			        ,       NULL            UPDATE_DESC_20  , NULL      PAKG_ID_20
+			        FROM    (
+			                        SELECT   C.APP_PLAT_IDX, C.DIST_TYPE, C.CALL_URL, B.APP_INFO, B.APP_DESC, C.PAKG_ID
+			                        FROM    TB_STO_SVC A
+			                        ,       TB_STO_APP B
+			                        ,       TB_STO_APP_PLAT C
+			                        WHERE   A.SVC_ID = B.SVC_ID
+			                        AND     A.USE_YN = 'Y'
+			                        AND     C.USE_YN = 'Y'
+			                        AND     C.APP_IDX = #{APP_IDX}
+			                        AND     C.APP_IDX = B.APP_IDX  
+			                ) AA
+			        ,       TB_STO_BIN BB
+			        ,       TB_STO_PLAT_VER CC
+			        ,       TB_STO_PLAT DD
+			        WHERE   AA.APP_PLAT_IDX = BB.APP_PLAT_IDX
+			        AND     BB.PLAT_VER_IDX = CC.PLAT_VER_IDX
+			        AND     BB.USE_YN = 'Y'
+			        AND     BB.BIN_NO = (SELECT MAX(BIN_NO) FROM TB_STO_BIN WHERE APP_PLAT_IDX = AA.APP_PLAT_IDX)
+			        AND     CC.PLAT_IDX = DD.PLAT_IDX
+			        AND     DD.PLAT_CD = '10'
+			        UNION ALL
+			        SELECT  NULL            APP_PLAT_IDX_10 , NULL      BIN_NO_10     , NULL            PLAT_VER_IDX_10       , NULL               BIN_VER_10
+			        ,       NULL            FILE_SIZE_10    , NULL      DL_URL_10     , NULL            BIN_FILE_NM_10        , NULL               ORG_BIN_FILE_NM_10
+			        ,       NULL            UPDATE_DESC_10  , NULL      PAKG_ID_10
+			        ,       AA.APP_PLAT_IDX APP_PLAT_IDX_20 , BB.BIN_NO BIN_NO_20     , BB.PLAT_VER_IDX PLAT_VER_IDX_20       , BB.BIN_VER         BIN_VER_20
+			        ,       BB.FILE_SIZE    FILE_SIZE_20    , BB.DL_URL DL_URL_20     , BB.BIN_FILE_NM  BIN_FILE_NM_20        , BB.ORG_BIN_FILE_NM ORG_BIN_FILE_NM_20
+			        ,       BB.UPDATE_DESC  UPDATE_DESC_20  , PAKG_ID   PAKG_ID_20
+			        FROM    (
+			                        SELECT   C.APP_PLAT_IDX, C.DIST_TYPE, C.CALL_URL, B.APP_INFO, B.APP_DESC, C.PAKG_ID
+			                        FROM    TB_STO_SVC A
+			                        ,       TB_STO_APP B
+			                        ,       TB_STO_APP_PLAT C
+			                        WHERE   A.SVC_ID = B.SVC_ID
+			                        AND     A.USE_YN = 'Y'
+			                        AND     C.USE_YN = 'Y'
+			                        AND     C.APP_IDX = #{APP_IDX}
+			                        AND     C.APP_IDX = B.APP_IDX  
+			                ) AA
+			        ,       TB_STO_BIN BB
+			        ,       TB_STO_PLAT_VER CC
+			        ,       TB_STO_PLAT DD
+			        WHERE   AA.APP_PLAT_IDX = BB.APP_PLAT_IDX
+			        AND     BB.PLAT_VER_IDX = CC.PLAT_VER_IDX
+			        AND     BB.USE_YN = 'Y'
+			        AND     BB.BIN_NO = (SELECT MAX(BIN_NO) FROM TB_STO_BIN WHERE APP_PLAT_IDX = AA.APP_PLAT_IDX)
+			        AND     CC.PLAT_IDX = DD.PLAT_IDX
+			        AND     DD.PLAT_CD = '20'
+			)
+    </select>
+    
+    <!-- App 이미지 정보  상세조회 --> 
+    <select id="selectAppImageInfo" 
+            parameterType="kr.msp.admin.store.appInfo.dto.AppInfoSearchDto"  resultMap = "AppImageDto" >
+        <!-- 
+        /*  AppInfoManageSql > selectAppImageInfo  */
+     	SELECT * FROM
+		(     
+		    SELECT #{serviceUrl}|| X.DL_URL AS IMG_PATH, X.FILE_NM||'.'||X.EXT_NM  FILE_NM, X.DISP_NO, X.IMG_IDX
+		    FROM
+		    (
+		    	SELECT  D.*
+		        FROM 
+		        	TB_SVC A, 
+		        	TB_STO_SVC B, 
+		        	TB_STO_APP C, 
+		        	TB_STO_APP_IMG D
+		        WHERE 
+		        		A.SVC_ID = B.SVC_ID
+		        	AND B.USE_YN = 'Y'
+		        	AND C.USE_YN = 'Y'
+		        	AND D.USE_YN = 'Y'
+		        	AND D.APP_IDX = #{APP_IDX}
+		        	AND A.SVC_ID = C.SVC_ID
+		        	AND C.APP_IDX = D.APP_IDX
+		        ) X,
+		        (
+		        SELECT 120 IMG_W, 120 IMG_H, 1 DISP_NO FROM DUAL
+		        UNION ALL
+		        SELECT 75 IMG_W, 75 IMG_H,  2 DISP_NO FROM DUAL
+		        UNION ALL
+		        SELECT 30 IMG_W, 30 IMG_H, 3 DISP_NO FROM DUAL
+		        UNION ALL
+		        SELECT 120 IMG_W, 240 IMG_H, 4 DISP_NO FROM DUAL
+		        UNION ALL
+		        SELECT 120 IMG_W, 240 IMG_H, 5 DISP_NO FROM DUAL
+		        UNION ALL
+		        SELECT 120 IMG_W, 240 IMG_H, 6 DISP_NO FROM DUAL
+		        UNION ALL
+		        SELECT 120 IMG_W, 240 IMG_H, 7 DISP_NO FROM DUAL
+		        ) Y
+		    WHERE X.IMG_W = Y.IMG_W
+		    AND X.IMG_H = Y.IMG_H
+		    AND X.DISP_NO = Y.DISP_NO
+		)
+		Pivot
+		( 
+		   MAX(IMG_IDX) IMG_IDX, MAX(IMG_PATH) IMG_PATH, MAX(FILE_NM) FILE_NM
+		 
+		   For  DISP_NO in (1,2,3,4,5,6,7)
+		) 
+		 -->
+		/*  AppInfoManageSql > selectAppImageInfo  */
+		SELECT MAX(APP_IDX) APP_IDX
+		,        MAX(IMG_IDX_1) "1_IMG_IDX"        , MAX(IMG_PATH_1) "1_IMG_PATH"        , MAX(FILE_NM_1) "1_FILE_NM"
+		,        MAX(IMG_IDX_2) "2_IMG_IDX"        , MAX(IMG_PATH_2) "2_IMG_PATH"        , MAX(FILE_NM_2) "2_FILE_NM"
+		,        MAX(IMG_IDX_3) "3_IMG_IDX"        , MAX(IMG_PATH_3) "3_IMG_PATH"        , MAX(FILE_NM_3) "3_FILE_NM"
+		,        MAX(IMG_IDX_4) "4_IMG_IDX"        , MAX(IMG_PATH_4) "4_IMG_PATH"        , MAX(FILE_NM_4) "4_FILE_NM"
+		,        MAX(IMG_IDX_5) "5_IMG_IDX"        , MAX(IMG_PATH_5) "5_IMG_PATH"        , MAX(FILE_NM_5) "5_FILE_NM"
+		,        MAX(IMG_IDX_6) "6_IMG_IDX"        , MAX(IMG_PATH_6) "6_IMG_PATH"        , MAX(FILE_NM_6) "6_FILE_NM"
+		,        MAX(IMG_IDX_7) "7_IMG_IDX"        , MAX(IMG_PATH_7) "7_IMG_PATH"        , MAX(FILE_NM_7) "7_FILE_NM"
+		FROM
+		(
+		    SELECT    APP_IDX
+		    ,        IMG_IDX    IMG_IDX_1        , IMG_PATH    IMG_PATH_1        , FILE_NM     FILE_NM_1
+		    ,        NULL       IMG_IDX_2        , NULL        IMG_PATH_2        , NULL        FILE_NM_2
+		    ,        NULL       IMG_IDX_3        , NULL        IMG_PATH_3        , NULL        FILE_NM_3
+		    ,        NULL       IMG_IDX_4        , NULL        IMG_PATH_4        , NULL        FILE_NM_4
+		    ,        NULL       IMG_IDX_5        , NULL        IMG_PATH_5        , NULL        FILE_NM_5
+		    ,        NULL       IMG_IDX_6        , NULL        IMG_PATH_6        , NULL        FILE_NM_6
+		    ,        NULL       IMG_IDX_7        , NULL        IMG_PATH_7        , NULL        FILE_NM_7
+		    FROM    (
+		                    SELECT    #{serviceUrl}|| X.DL_URL IMG_PATH, X.FILE_NM || '.' || X.EXT_NM  FILE_NM, X.DISP_NO, X.IMG_IDX, X.APP_IDX
+		                    FROM    
+		                    (
+		                        SELECT    APP_IMG.*
+		                        FROM    TB_SVC SVC
+		                                INNER JOIN TB_STO_SVC STO_SVC
+		                                    ON SVC.SVC_ID = STO_SVC.SVC_ID AND STO_SVC.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP STO_APP
+		                                    ON SVC.SVC_ID = STO_APP.SVC_ID AND STO_APP.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP_IMG APP_IMG
+		                                    ON STO_APP.APP_IDX = APP_IMG.APP_IDX AND APP_IMG.USE_YN = 'Y'
+		                        WHERE    APP_IMG.APP_IDX = #{APP_IDX}
+		                    ) X
+		                    INNER JOIN 
+		                    (
+		                        SELECT 120 IMG_W, 120 IMG_H, 1 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 75 IMG_W, 75 IMG_H,  2 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 30 IMG_W, 30 IMG_H, 3 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 4 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 5 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 6 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 7 DISP_NO FROM DUAL
+		                    ) Y
+		                        ON    X.IMG_W = Y.IMG_W
+		                    AND X.IMG_H = Y.IMG_H
+		                    AND X.DISP_NO = Y.DISP_NO
+		                )
+		    WHERE    DISP_NO = 1
+		    UNION ALL
+		    SELECT    APP_IDX
+		    ,        NULL       IMG_IDX_1        , NULL        IMG_PATH_1        , NULL        FILE_NM_1
+		    ,        IMG_IDX    IMG_IDX_2        , IMG_PATH    IMG_PATH_2        , FILE_NM     FILE_NM_2
+		    ,        NULL       IMG_IDX_3        , NULL        IMG_PATH_3        , NULL        FILE_NM_3
+		    ,        NULL       IMG_IDX_4        , NULL        IMG_PATH_4        , NULL        FILE_NM_4
+		    ,        NULL       IMG_IDX_5        , NULL        IMG_PATH_5        , NULL        FILE_NM_5
+		    ,        NULL       IMG_IDX_6        , NULL        IMG_PATH_6        , NULL        FILE_NM_6
+		    ,        NULL       IMG_IDX_7        , NULL        IMG_PATH_7        , NULL        FILE_NM_7
+		    FROM    (
+		                    SELECT    #{serviceUrl}|| X.DL_URL IMG_PATH, X.FILE_NM || '.' || X.EXT_NM  FILE_NM, X.DISP_NO, X.IMG_IDX, X.APP_IDX
+		                    FROM    
+		                    (
+		                        SELECT    APP_IMG.*
+		                        FROM    TB_SVC SVC
+		                                INNER JOIN TB_STO_SVC STO_SVC
+		                                    ON SVC.SVC_ID = STO_SVC.SVC_ID AND STO_SVC.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP STO_APP
+		                                    ON SVC.SVC_ID = STO_APP.SVC_ID AND STO_APP.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP_IMG APP_IMG
+		                                    ON STO_APP.APP_IDX = APP_IMG.APP_IDX AND APP_IMG.USE_YN = 'Y'
+		                        WHERE    APP_IMG.APP_IDX = #{APP_IDX}
+		                    ) X
+		                    INNER JOIN 
+		                    (
+		                        SELECT 120 IMG_W, 120 IMG_H, 1 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 75 IMG_W, 75 IMG_H,  2 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 30 IMG_W, 30 IMG_H, 3 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 4 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 5 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 6 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 7 DISP_NO FROM DUAL
+		                    ) Y
+		                        ON    X.IMG_W = Y.IMG_W
+		                    AND X.IMG_H = Y.IMG_H
+		                    AND X.DISP_NO = Y.DISP_NO
+		                )
+		    WHERE    DISP_NO = 2
+		    UNION ALL
+		    SELECT    APP_IDX
+		    ,        NULL       IMG_IDX_1        , NULL        IMG_PATH_1        , NULL        FILE_NM_1
+		    ,        NULL       IMG_IDX_2        , NULL        IMG_PATH_2        , NULL        FILE_NM_2
+		    ,        IMG_IDX    IMG_IDX_3        , IMG_PATH    IMG_PATH_3        , FILE_NM     FILE_NM_3
+		    ,        NULL       IMG_IDX_4        , NULL        IMG_PATH_4        , NULL        FILE_NM_4
+		    ,        NULL       IMG_IDX_5        , NULL        IMG_PATH_5        , NULL        FILE_NM_5
+		    ,        NULL       IMG_IDX_6        , NULL        IMG_PATH_6        , NULL        FILE_NM_6
+		    ,        NULL       IMG_IDX_7        , NULL        IMG_PATH_7        , NULL        FILE_NM_7
+		    FROM    (
+		                    SELECT    #{serviceUrl}|| X.DL_URL IMG_PATH, X.FILE_NM || '.' || X.EXT_NM  FILE_NM, X.DISP_NO, X.IMG_IDX, X.APP_IDX
+		                    FROM    
+		                    (
+		                        SELECT    APP_IMG.*
+		                        FROM    TB_SVC SVC
+		                                INNER JOIN TB_STO_SVC STO_SVC
+		                                    ON SVC.SVC_ID = STO_SVC.SVC_ID AND STO_SVC.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP STO_APP
+		                                    ON SVC.SVC_ID = STO_APP.SVC_ID AND STO_APP.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP_IMG APP_IMG
+		                                    ON STO_APP.APP_IDX = APP_IMG.APP_IDX AND APP_IMG.USE_YN = 'Y'
+		                        WHERE    APP_IMG.APP_IDX = #{APP_IDX}
+		                    ) X
+		                    INNER JOIN 
+		                    (
+		                        SELECT 120 IMG_W, 120 IMG_H, 1 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 75 IMG_W, 75 IMG_H,  2 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 30 IMG_W, 30 IMG_H, 3 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 4 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 5 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 6 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 7 DISP_NO FROM DUAL
+		                    ) Y
+		                        ON    X.IMG_W = Y.IMG_W
+		                    AND X.IMG_H = Y.IMG_H
+		                    AND X.DISP_NO = Y.DISP_NO
+		                )
+		    WHERE    DISP_NO = 3
+		    UNION ALL
+		    SELECT    APP_IDX
+		    ,        NULL       IMG_IDX_1        , NULL        IMG_PATH_1        , NULL        FILE_NM_1
+		    ,        NULL       IMG_IDX_2        , NULL        IMG_PATH_2        , NULL        FILE_NM_2
+		    ,        NULL       IMG_IDX_3        , NULL        IMG_PATH_3        , NULL        FILE_NM_3
+		    ,        IMG_IDX    IMG_IDX_4        , IMG_PATH    IMG_PATH_4        , FILE_NM     FILE_NM_4
+		    ,        NULL       IMG_IDX_5        , NULL        IMG_PATH_5        , NULL        FILE_NM_5
+		    ,        NULL       IMG_IDX_6        , NULL        IMG_PATH_6        , NULL        FILE_NM_6
+		    ,        NULL       IMG_IDX_7        , NULL        IMG_PATH_7        , NULL        FILE_NM_7
+		    FROM    (
+		                    SELECT    #{serviceUrl}|| X.DL_URL IMG_PATH, X.FILE_NM || '.' || X.EXT_NM  FILE_NM, X.DISP_NO, X.IMG_IDX, X.APP_IDX
+		                    FROM    
+		                    (
+		                        SELECT    APP_IMG.*
+		                        FROM    TB_SVC SVC
+		                                INNER JOIN TB_STO_SVC STO_SVC
+		                                    ON SVC.SVC_ID = STO_SVC.SVC_ID AND STO_SVC.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP STO_APP
+		                                    ON SVC.SVC_ID = STO_APP.SVC_ID AND STO_APP.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP_IMG APP_IMG
+		                                    ON STO_APP.APP_IDX = APP_IMG.APP_IDX AND APP_IMG.USE_YN = 'Y'
+		                        WHERE    APP_IMG.APP_IDX = #{APP_IDX}
+		                    ) X
+		                    INNER JOIN 
+		                    (
+		                        SELECT 120 IMG_W, 120 IMG_H, 1 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 75 IMG_W, 75 IMG_H,  2 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 30 IMG_W, 30 IMG_H, 3 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 4 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 5 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 6 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 7 DISP_NO FROM DUAL
+		                    ) Y
+		                        ON    X.IMG_W = Y.IMG_W
+		                    AND X.IMG_H = Y.IMG_H
+		                    AND X.DISP_NO = Y.DISP_NO
+		                )
+		    WHERE    DISP_NO = 4
+		    UNION ALL
+		    SELECT    APP_IDX
+		    ,        NULL       IMG_IDX_1        , NULL        IMG_PATH_1        , NULL        FILE_NM_1
+		    ,        NULL       IMG_IDX_2        , NULL        IMG_PATH_2        , NULL        FILE_NM_2
+		    ,        NULL       IMG_IDX_3        , NULL        IMG_PATH_3        , NULL        FILE_NM_3
+		    ,        NULL       IMG_IDX_4        , NULL        IMG_PATH_4        , NULL        FILE_NM_4
+		    ,        IMG_IDX    IMG_IDX_5        , IMG_PATH    IMG_PATH_5        , FILE_NM     FILE_NM_5
+		    ,        NULL       IMG_IDX_6        , NULL        IMG_PATH_6        , NULL        FILE_NM_6
+		    ,        NULL       IMG_IDX_7        , NULL        IMG_PATH_7        , NULL        FILE_NM_7
+		    FROM    (
+		                    SELECT    #{serviceUrl}|| X.DL_URL IMG_PATH, X.FILE_NM || '.' || X.EXT_NM  FILE_NM, X.DISP_NO, X.IMG_IDX, X.APP_IDX
+		                    FROM    
+		                    (
+		                        SELECT    APP_IMG.*
+		                        FROM    TB_SVC SVC
+		                                INNER JOIN TB_STO_SVC STO_SVC
+		                                    ON SVC.SVC_ID = STO_SVC.SVC_ID AND STO_SVC.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP STO_APP
+		                                    ON SVC.SVC_ID = STO_APP.SVC_ID AND STO_APP.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP_IMG APP_IMG
+		                                    ON STO_APP.APP_IDX = APP_IMG.APP_IDX AND APP_IMG.USE_YN = 'Y'
+		                        WHERE    APP_IMG.APP_IDX = #{APP_IDX}
+		                    ) X
+		                    INNER JOIN 
+		                    (
+		                        SELECT 120 IMG_W, 120 IMG_H, 1 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 75 IMG_W, 75 IMG_H,  2 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 30 IMG_W, 30 IMG_H, 3 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 4 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 5 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 6 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 7 DISP_NO FROM DUAL
+		                    ) Y
+		                        ON    X.IMG_W = Y.IMG_W
+		                    AND X.IMG_H = Y.IMG_H
+		                    AND X.DISP_NO = Y.DISP_NO
+		                )
+		    WHERE    DISP_NO = 5
+		    UNION ALL
+		    SELECT    APP_IDX
+		    ,        NULL       IMG_IDX_1        , NULL        IMG_PATH_1        , NULL        FILE_NM_1
+		    ,        NULL       IMG_IDX_2        , NULL        IMG_PATH_2        , NULL        FILE_NM_2
+		    ,        NULL       IMG_IDX_3        , NULL        IMG_PATH_3        , NULL        FILE_NM_3
+		    ,        NULL       IMG_IDX_4        , NULL        IMG_PATH_4        , NULL        FILE_NM_4
+		    ,        NULL       IMG_IDX_5        , NULL        IMG_PATH_5        , NULL        FILE_NM_5
+		    ,        IMG_IDX    IMG_IDX_6        , IMG_PATH    IMG_PATH_6        , FILE_NM     FILE_NM_6
+		    ,        NULL       IMG_IDX_7        , NULL        IMG_PATH_7        , NULL        FILE_NM_7
+		    FROM    (
+		                    SELECT    #{serviceUrl}|| X.DL_URL IMG_PATH, X.FILE_NM || '.' || X.EXT_NM  FILE_NM, X.DISP_NO, X.IMG_IDX, X.APP_IDX
+		                    FROM    
+		                    (
+		                        SELECT    APP_IMG.*
+		                        FROM    TB_SVC SVC
+		                                INNER JOIN TB_STO_SVC STO_SVC
+		                                    ON SVC.SVC_ID = STO_SVC.SVC_ID AND STO_SVC.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP STO_APP
+		                                    ON SVC.SVC_ID = STO_APP.SVC_ID AND STO_APP.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP_IMG APP_IMG
+		                                    ON STO_APP.APP_IDX = APP_IMG.APP_IDX AND APP_IMG.USE_YN = 'Y'
+		                        WHERE    APP_IMG.APP_IDX = #{APP_IDX}
+		                    ) X
+		                    INNER JOIN 
+		                    (
+		                        SELECT 120 IMG_W, 120 IMG_H, 1 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 75 IMG_W, 75 IMG_H,  2 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 30 IMG_W, 30 IMG_H, 3 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 4 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 5 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 6 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 7 DISP_NO FROM DUAL
+		                    ) Y
+		                        ON    X.IMG_W = Y.IMG_W
+		                    AND X.IMG_H = Y.IMG_H
+		                    AND X.DISP_NO = Y.DISP_NO
+		                )
+		    WHERE    DISP_NO = 6
+		    UNION ALL
+		    SELECT    APP_IDX
+		    ,        NULL       IMG_IDX_1        , NULL        IMG_PATH_1        , NULL        FILE_NM_1
+		    ,        NULL       IMG_IDX_2        , NULL        IMG_PATH_2        , NULL        FILE_NM_2
+		    ,        NULL       IMG_IDX_3        , NULL        IMG_PATH_3        , NULL        FILE_NM_3
+		    ,        NULL       IMG_IDX_4        , NULL        IMG_PATH_4        , NULL        FILE_NM_4
+		    ,        NULL       IMG_IDX_5        , NULL        IMG_PATH_5        , NULL        FILE_NM_5
+		    ,        NULL       IMG_IDX_6        , NULL        IMG_PATH_6        , NULL        FILE_NM_6
+		    ,        IMG_IDX    IMG_IDX_7        , IMG_PATH    IMG_PATH_7        , FILE_NM     FILE_NM_7
+		    FROM    (
+		                    SELECT    #{serviceUrl}|| X.DL_URL IMG_PATH, X.FILE_NM || '.' || X.EXT_NM  FILE_NM, X.DISP_NO, X.IMG_IDX, X.APP_IDX
+		                    FROM    
+		                    (
+		                        SELECT    APP_IMG.*
+		                        FROM    TB_SVC SVC
+		                                INNER JOIN TB_STO_SVC STO_SVC
+		                                    ON SVC.SVC_ID = STO_SVC.SVC_ID AND STO_SVC.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP STO_APP
+		                                    ON SVC.SVC_ID = STO_APP.SVC_ID AND STO_APP.USE_YN = 'Y'
+		                                INNER JOIN TB_STO_APP_IMG APP_IMG
+		                                    ON STO_APP.APP_IDX = APP_IMG.APP_IDX AND APP_IMG.USE_YN = 'Y'
+		                        WHERE    APP_IMG.APP_IDX = #{APP_IDX}
+		                    ) X
+		                    INNER JOIN 
+		                    (
+		                        SELECT 120 IMG_W, 120 IMG_H, 1 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 75 IMG_W, 75 IMG_H,  2 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 30 IMG_W, 30 IMG_H, 3 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 4 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 5 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 6 DISP_NO FROM DUAL UNION ALL
+		                        SELECT 120 IMG_W, 240 IMG_H, 7 DISP_NO FROM DUAL
+		                    ) Y
+		                        ON    X.IMG_W = Y.IMG_W
+		                    AND X.IMG_H = Y.IMG_H
+		                    AND X.DISP_NO = Y.DISP_NO
+		                )
+		    WHERE    DISP_NO = 7
+		) A
+    </select>
+    
+    <!--앱플랫폼 일련번호 리스트로 조회하기 --> 
+    <select id="selectAppPlatIdxList"    parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto"
+                                                     resultType   ="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+        /* AppInfoManageSql > selectAppPlatIdxList */
+        SELECT APP_PLAT_IDX, PLAT_IDX AS PLAT_IDX_T, APP_IDX
+        FROM TB_STO_APP_PLAT
+        WHERE  APP_IDX = #{APP_IDX}
+        <if test="APP_PLAT_IDX != null and APP_PLAT_IDX != ''">
+            AND APP_PLAT_IDX = #{APP_PLAT_IDX}
+        </if>
+        AND USE_YN = 'Y'
+    </select>
+  	
+  	<!-- App 정보 리스트 내 사용유무 상태 변경 StsCd --> 
+    <update id="updateStoreAppStsCd" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+        /* AppInfoManageSql > updateStoreAppStsCd */
+        UPDATE TB_STO_APP
+        SET USE_YN = #{USE_YN},
+            MOD_ID   = #{MOD_ID},
+            MOD_DTTM = SYSDATE,
+            USE_DT = SYSDATE
+        WHERE APP_IDX = #{APP_IDX}
+    </update>
+
+     <!-- 서비스 리스트 SELECTBOX 조회 -->
+    <select id="selectBoxPlatformList"  resultType="kr.msp.admin.store.device.dto.PlatformDto">
+        /* AppInfoManageSql > selectBoxPlatformList */
+        SELECT PLAT_CD 
+                 , PLAT_NM  
+                 , PLAT_IDX
+        FROM TB_STO_PLAT
+    </select>
+    
+    <!-- 플랫폼코드별 버전 목록 -->    
+    <select id="selectPlatformVerListByPlatCd" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoSearchDto" resultType="kr.msp.admin.store.device.dto.PlatformDto">
+        /* AppInfoManageSql > selectPlatformVerListByPlatCd */
+        SELECT A.PLAT_VER_IDX, A.PLAT_VER_CD, A.PLAT_VER_NM 
+		FROM   TB_STO_PLAT_VER A, TB_STO_PLAT B
+		WHERE  A.PLAT_IDX = B.PLAT_IDX
+		AND  B.PLAT_CD = #{PLAT_CD}
+		ORDER  BY A.PLAT_VER_CD ASC
+    </select>
+    
+    <!-- app 명 및 package 명 중복체크-->
+    <select id="checkDupApp"  resultType="java.lang.Integer" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+        /* AppInfoManageSql > checkDupApp */
+        <!-- 
+        SELECT COUNT(A.APP_IDX) 
+        FROM TB_STO_APP A, TB_STO_SVC B 
+        WHERE  A.SVC_ID = B.SVC_ID
+        AND A.USE_YN = 'Y'
+        <if test="CHECK != null and CHECK == 'APP_NM' ">    
+        AND   A.APP_NM  = #{APP_NM}
+        </if>
+        <if test="CHECK != null and CHECK == 'PAKG_ID' ">     
+        AND   A.PAKG_ID  =  #{PAKG_ID}
+        </if> 
+        -->
+        SELECT COUNT(1)
+        FROM    TB_STO_APP A
+                    INNER JOIN TB_STO_SVC B 
+                        ON A.SVC_ID = B.SVC_ID AND A.USE_YN = 'Y' AND B.USE_YN = 'Y'
+        <choose>
+            <when test="CHECK=='APP_NM'">
+             WHERE   A.APP_NM  = #{APP_NM}
+             </when>
+            <when test="CHECK=='PAKG_ID_10'">
+	                  INNER JOIN TB_STO_APP_PLAT C
+	                      ON A.APP_IDX = C.APP_IDX AND C.USE_YN = 'Y'
+	                  INNER JOIN TB_STO_PLAT D
+	                      ON C.PLAT_IDX = D.PLAT_IDX 
+                WHERE   C.PAKG_ID  = #{PAKG_ID_10} AND D.PLAT_DESC='Android'
+            </when>
+            <when test="CHECK=='PAKG_ID_20'">
+	                  INNER JOIN TB_STO_APP_PLAT C
+	                      ON A.APP_IDX = C.APP_IDX AND C.USE_YN = 'Y'
+	                  INNER JOIN TB_STO_PLAT D
+	                      ON C.PLAT_IDX = D.PLAT_IDX 
+                WHERE   C.PAKG_ID  = #{PAKG_ID_20} AND D.PLAT_DESC='iOS'
+            </when>
+        </choose>
+    </select>
+
+    <!-- 호출URL 중복체크-->
+    <select id="checkDupCallUrl"  resultType="java.lang.Integer"  parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+         /* AppInfoManageSql > checkDupCallUrl */
+        SELECT COUNT(A.APP_IDX) 
+        FROM TB_STO_APP A, TB_STO_SVC B , TB_STO_APP_PLAT C
+        WHERE  A.SVC_ID = B.SVC_ID
+        AND A.USE_YN = 'Y'
+        AND A.APP_IDX = C.APP_IDX
+        AND C.CALL_URL = #{CALL_URL}
+    </select> 
+    
+    <!-- 스토어 서비스 정보 조회-->
+    <!-- 스토어 서비스는 1개만 존재 해야 한다!! -->
+    <!-- 사용자 실수로 여러개 등록 되더라도 그 예외는 처리하지 않고 에러를 발생 시키도록 한다. -->
+    <select id="selectSvcInfo"   resultType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+        /* AppInfoManageSql > selectSvcInfo */
+        SELECT  B.SVC_ID, B.SVC_NM  
+        FROM    TB_STO_SVC A
+                INNER JOIN TB_SVC B 
+                    ON A.SVC_ID = B.SVC_ID AND  A.USE_YN = 'Y'
+    </select>  
+    
+    <!-- 앱정보일련번호 SELECT -->
+    <select id="selectAppIdx"  resultType="java.lang.Integer">
+         /* AppInfoManageSql > selectAppIdx */
+        SELECT SEQ_TB_STO_APP.NEXTVAL FROM DUAL
+    </select>
+    
+    <!-- 앱플랫폼정보 일련번호 SELECT -->
+    <select id="selectAppPlatIdx"  resultType="java.lang.Integer">
+         /*  AppInfoManageSql > selectAppPlatIdx  */
+        SELECT SEQ_TB_STO_APP_PLAT.NEXTVAL FROM DUAL
+    </select><!-- 완료 -->
+    
+    <!-- 바이너리 리스트 조회-->
+    <select id="selectBinaryList"  resultType="kr.msp.admin.store.appInfo.dto.BinaryDto"  parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+         /*  AppInfoManageSql > selectBinaryList  */
+        SELECT A.*, ROWNUM RNUM
+	    FROM
+	    (
+	        SELECT     A.APP_PLAT_IDX, 
+	                B.BIN_NO, B.PLAT_VER_IDX, B.BIN_VER  , B.FILE_SIZE,
+	                B.DL_URL, B.ORG_BIN_FILE_NM, B.REG_DTTM, B.REG_ID
+	        FROM
+				    TB_STO_APP_PLAT A,
+				    TB_STO_BIN B, 
+				    TB_STO_PLAT_VER C,
+				    TB_STO_PLAT D
+			 WHERE A.APP_PLAT_IDX = B.APP_PLAT_IDX
+			 AND B.PLAT_VER_IDX = C.PLAT_VER_IDX
+			 AND A.APP_PLAT_IDX = #{APP_PLAT_IDX}
+			 AND A.PLAT_IDX = D.PLAT_IDX  
+			 AND C.PLAT_IDX = D.PLAT_IDX
+			 AND D.PLAT_CD = #{PLAT_CD}
+			 AND B.USE_YN = 'Y'
+			 AND A.USE_YN = 'Y'  
+			 ORDER BY B.REG_DTTM DESC
+		)   A 
+     </select>
+     
+     <!-- 바이너리 HISTORY 리스트 조회-->
+    <select id="selectBinaryHistoryList"  resultType="kr.msp.admin.store.appInfo.dto.BinaryDto"  parameterType="kr.msp.admin.store.appInfo.dto.BinaryDto">
+         /*  AppInfoManageSql > selectBinaryHistoryList  */
+        SELECT  A.APP_PLAT_IDX, A.BIN_VER , A.DL_URL||ORG_BIN_FILE_NM  AS  ORG_BIN_FILE_NM , 
+                   A.DL_URL||BIN_FILE_NM AS  BIN_FILE_NM , PLAT_VER_NM || '(' ||PLAT_VER_CD || ')'  PLAT_VER_NM ,    
+                   A.REG_DTTM,  ROWNUM RNUM  , COUNT(*) OVER() TOT_CNT
+        FROM
+		(
+		    SELECT  A.APP_PLAT_IDX, A.BIN_VER, A.DL_URL, A.ORG_BIN_FILE_NM, A.BIN_FILE_NM , A.REG_DTTM,  A.PLAT_VER_IDX, B.PLAT_VER_NM , B.PLAT_VER_CD
+		    FROM TB_STO_BIN A, TB_STO_PLAT_VER  B 
+		    WHERE A.APP_PLAT_IDX = #{APP_PLAT_IDX}
+		    AND A.USE_YN = 'Y'
+		    AND A.PLAT_VER_IDX = B.PLAT_VER_IDX
+		    ORDER BY REG_DTTM  DESC
+		) A
+     </select>
+     
+     <!-- 수정시, 체크해제된 삭제대상 SELECT  -->
+     <select id="selectAppPlatIdxDiffList" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto" resultType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+        /* AppInfoManageSql > selectAppPlatIdxDiffList */
+        SELECT APP_PLAT_IDX, PLAT_IDX AS PLAT_IDX_T, APP_IDX  
+        FROM TB_STO_APP_PLAT 
+		WHERE USE_YN = 'Y'
+		AND APP_IDX = #{APP_IDX}
+		AND PLAT_IDX NOT IN(
+			SELECT PLAT_IDX FROM TB_STO_APP_PLAT
+			WHERE USE_YN = 'Y'
+			<if test="PLAT_IDX_ARR != null and PLAT_IDX_ARR != ''">   
+			AND PLAT_IDX IN (
+			<foreach collection="PLAT_IDX_ARR" item="a" separator=",">#{a}</foreach>
+            )
+            </if>
+			AND APP_IDX = #{APP_IDX}
+		 )
+		ORDER BY PLAT_IDX DESC
+    </select>
+    
+    <!-- 앱정보 등록 -->
+	 <insert id="insertAppInfo" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+         /*  AppInfoManageSql > insertAppImage  */
+	    INSERT INTO TB_STO_APP (
+                APP_IDX, SVC_ID, <!-- PAKG_ID,  -->APP_NM, APP_DESC, STS_CD, USE_YN, PUB_YN, REG_ID, REG_DTTM, USE_DT, APP_INFO, SORT_NO,  CATG_CD, APP_TYPE
+		) VALUES (
+		    #{APP_IDX}
+		    <!-- , (SELECT MAX(SVC_ID) FROM TB_STO_SVC WHERE USE_YN = 'Y') -->
+		    <!-- , #{PAKG_ID} -->
+		    , #{SVC_ID}
+            , #{APP_NM}
+		    , #{APP_DESC}
+		    , 'Y'
+		    , 'Y'
+		    , #{PUB_YN}
+		    , #{REG_ID}
+		    , SYSDATE
+		    , null
+		    , #{APP_INFO}
+		    , NVL(DECODE(#{SORT_NO}, '', 0, #{SORT_NO}),0)
+            , #{CATG_CD}
+            , #{APP_TYPE}
+		)    
+    </insert>
+
+ 	<!-- 앱플랫폼 매핑정보 등록-->
+	<insert id="insertAppPlat" parameterType="kr.msp.admin.store.appInfo.dto.AppPlatInfoDto">
+        /*  AppInfoManageSql > insertAppPlat  */
+        INSERT INTO TB_STO_APP_PLAT (
+              APP_PLAT_IDX, APP_IDX, PLAT_IDX,  REG_ID, REG_DTTM, DIST_TYPE, CALL_URL, USE_YN, PAKG_ID
+        ) VALUES (
+             #{APP_PLAT_IDX}
+            ,#{APP_IDX}
+            ,#{PLAT_IDX_T}
+            ,#{REG_ID}
+            ,SYSDATE
+            ,#{DIST_TYPE}
+            ,#{CALL_URL}
+            , 'Y'
+            , #{PAKG_ID}
+        )
+    </insert>
+    
+    <!-- 바이너리 정보 등록 -->
+    <insert id="insertBinary" parameterType="kr.msp.admin.store.appInfo.dto.BinaryDto">
+         /*  AppInfoManageSql > insertBinary  */
+        INSERT INTO TB_STO_BIN
+          (BIN_NO, APP_PLAT_IDX, PLAT_VER_IDX,  BIN_FILE_NM, ORG_BIN_FILE_NM, 
+           FILE_SIZE, BIN_VER, DL_URL, REG_DTTM, REG_ID, 
+           USE_YN,  STO_WEB_DPLY_STS, MOB_WEB_DPLY_STS, UPDATE_DESC)
+        values
+         ( SEQ_TB_STO_BIN.NEXTVAL
+          , #{APP_PLAT_IDX}
+          , #{PLAT_VER_IDX}
+          , #{BIN_FILE_NM}
+          , #{ORG_BIN_FILE_NM}
+          , #{FILE_SIZE}
+          , #{BIN_VER}
+          , #{DL_URL}
+          , sysdate
+          , #{REG_ID}
+          , 'Y', 'Y', 'Y'
+          , #{UPDATE_DESC}
+          )
+    </insert>    
+    
+     <!-- 이미지 정보 등록 -->
+     <insert id="insertAppImage" parameterType="kr.msp.admin.store.appInfo.dto.AppImageDto">
+        /*  AppInfoManageSql > insertAppImage  */
+        INSERT INTO TB_STO_APP_IMG(
+        IMG_IDX, FILE_NM, EXT_NM, FILE_SIZE, IMG_TYPE, DISP_NO, USE_YN, REG_DT, REG_ID
+        ,DL_URL, IMG_PATH, APP_IDX, IMG_W, IMG_H
+        )VALUES(
+        SEQ_TB_STO_APP_IMG.NEXTVAL,
+        #{FILE_NM},
+        #{EXT_NM},
+        #{FILE_SIZE},
+        #{IMG_TYPE},
+        #{DISP_NO},
+        'Y',
+        SYSDATE,
+        #{REG_ID},
+        #{DL_URL},
+        #{IMG_PATH},
+        #{APP_IDX},
+        #{IMG_W},
+        #{IMG_H}
+        )
+    </insert>       
+    
+    <!-- 앱 정보 수정 -->
+    <update id="updateAppInfo" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+        /*  AppInfoManageSql > updateAppInfo  */
+        UPDATE  TB_STO_APP 
+        SET MOD_ID    = #{MOD_ID}
+            , MOD_DTTM = SYSDATE
+            <!-- , PAKG_ID   = #{PAKG_ID} -->
+            , APP_NM    = #{APP_NM}
+            , APP_DESC = #{APP_DESC}
+            , APP_INFO  =  #{APP_INFO}
+            , SORT_NO  = NVL(DECODE(#{SORT_NO}, '', 0, #{SORT_NO}),0)
+            , CATG_CD  = #{CATG_CD}
+            , APP_TYPE = #{APP_TYPE}
+            , PUB_YN = #{PUB_YN}
+        WHERE APP_IDX  = #{APP_IDX}
+    </update>
+   
+    
+    <!-- 앱플랫폼 매핑정보 수정-->
+    <!-- 
+    <update id="saveAppPlat" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+        /*  AppInfoManageSql > saveAppPlat  */
+        MERGE INTO TB_STO_APP_PLAT
+        USING DUAL
+        ON (
+            APP_PLAT_IDX  = #{APP_PLAT_IDX}
+        ) 
+        WHEN MATCHED THEN
+        UPDATE SET
+              MOD_ID    = #{MOD_ID}
+            , MOD_DTTM = SYSDATE
+            , PLAT_IDX    = #{PLAT_IDX_T}
+            , DIST_TYPE = #{DIST_TYPE}
+            , CALL_URL  =  #{CALL_URL}
+        WHEN NOT MATCHED THEN
+        INSERT (
+             APP_PLAT_IDX, APP_IDX, PLAT_IDX,  REG_ID, REG_DTTM, DIST_TYPE, CALL_URL, USE_YN
+        ) VALUES(
+             #{APP_PLAT_IDX}
+            ,#{APP_IDX}
+            ,#{PLAT_IDX_T}
+            ,#{REG_ID}
+            ,SYSDATE
+            ,#{DIST_TYPE}
+            ,#{CALL_URL}
+            , 'Y'
+        )
+    </update>
+     -->
+    <select id="selectAppPlatCount" parameterType="kr.msp.admin.store.appInfo.dto.AppPlatInfoDto" resultType="int">
+        /*  AppInfoManageSql > saveAppPlat  */
+        SELECT COUNT(1)
+        FROM TB_STO_APP_PLAT
+        WHERE APP_PLAT_IDX  = #{APP_PLAT_IDX}
+    </select>
+    <update id="updateAppPlat" parameterType="kr.msp.admin.store.appInfo.dto.AppPlatInfoDto">
+        /*  AppInfoManageSql > saveAppPlat  */
+         UPDATE TB_STO_APP_PLAT
+         SET
+              MOD_ID    = #{MOD_ID}
+            , MOD_DTTM = SYSDATE
+            , PLAT_IDX    = #{PLAT_IDX_T}
+            , DIST_TYPE = #{DIST_TYPE}
+            , CALL_URL  =  #{CALL_URL}
+             , PAKG_ID   = #{PAKG_ID}
+		WHERE APP_PLAT_IDX  = #{APP_PLAT_IDX}
+    </update>
+    <!-- 바이너리 정보 수정 -->
+    <update id="updateBinary" parameterType="kr.msp.admin.store.appInfo.dto.BinaryDto">
+         /*  AppInfoManageSql > updateBinary  */
+        UPDATE  TB_STO_BIN 
+        SET 
+             PLAT_VER_IDX    = #{PLAT_VER_IDX}
+            , BIN_VER            = #{BIN_VER}
+            , UPDATE_DESC    =  #{UPDATE_DESC}
+        WHERE APP_PLAT_IDX  = #{APP_PLAT_IDX}
+        AND BIN_NO = (select BIN_NO from (SELECT MAX(BIN_NO) as BIN_NO FROM TB_STO_BIN WHERE APP_PLAT_IDX = #{APP_PLAT_IDX}))
+    </update>    
+   
+    <!-- 바이너리 파일정보 수정 -->
+    <update id="updateBinaryFile" parameterType="kr.msp.admin.store.appInfo.dto.BinaryDto">
+         /*  AppInfoManageSql > updateBinaryFile  */
+        UPDATE  TB_STO_BIN 
+        SET 
+             PLAT_VER_IDX    = #{PLAT_VER_IDX}
+            , BIN_VER            = #{BIN_VER}
+            , UPDATE_DESC    = #{UPDATE_DESC}
+            , BIN_FILE_NM      = #{BIN_FILE_NM}
+            , ORG_BIN_FILE_NM = #{ORG_BIN_FILE_NM}
+            , FILE_SIZE  = #{FILE_SIZE}
+            , DL_URL      = #{DL_URL}
+        WHERE APP_PLAT_IDX  = #{APP_PLAT_IDX}
+     </update>    
+   
+     <!-- 앱 이미지 정보 수정 -->
+     <update id="updateAppImage" parameterType="kr.msp.admin.store.appInfo.dto.AppImageDto">
+        /*  AppInfoManageSql > updateAppImage  */
+        UPDATE TB_STO_APP_IMG
+        SET
+              MOD_ID    = #{MOD_ID}
+            , MOD_DT    = SYSDATE
+            , FILE_NM    = #{FILE_NM}
+            , EXT_NM    = #{EXT_NM}
+            , FILE_SIZE = #{FILE_SIZE}
+            , IMG_TYPE = #{IMG_TYPE}
+            , DL_URL     = #{DL_URL}
+            , IMG_PATH  = #{IMG_PATH}
+        WHERE   IMG_IDX   = #{IMG_IDX}
+        AND DISP_NO  = #{DISP_NO}    
+     </update>
+
+    <!-- 앱정보 삭제-->
+	<delete id="deleteTbStoApp" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+        /*  AppInfoManageSql > deleteTbStoApp  */
+       DELETE FROM TB_STO_APP
+       WHERE APP_IDX  = #{APP_IDX}
+    </delete>
+    
+	<!-- 앱플랫폼 정보 삭제  APP_IDX key-->
+    <delete id="deleteTbStoAppPlat" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+         /*  AppInfoManageSql >  deleteTbStoAppPlat */
+       DELETE FROM TB_STO_APP_PLAT
+       WHERE APP_PLAT_IDX  = #{APP_IDX}
+    </delete>
+	
+    <!-- 앱플랫폼 정보 삭제 APP_PLAT_IDX key-->
+    <update id="deleteTbStoAppPlat2" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+         /*  AppInfoManageSql >  deleteTbStoAppPlat2 */
+        UPDATE TB_STO_APP_PLAT
+        SET MOD_DTTM = SYSDATE
+           , MOD_ID    = #{MOD_ID}
+           , USE_YN     = 'N'
+       WHERE APP_PLAT_IDX  = #{APP_PLAT_IDX}
+    </update>
+    
+    
+    <!-- 바이너리정보 삭제-->
+	<delete id="deleteTbStoBin" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+         /*  AppInfoManageSql >  deleteTbStoBin */
+       DELETE FROM TB_STO_BIN
+       WHERE APP_PLAT_IDX  = #{APP_PLAT_IDX}
+    </delete>
+	
+	<!-- 앱  이미지  삭제-->
+	<delete id="deleteAppImgByAppIDx" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoDto">
+       /* AppInfoManageSql >  deleteAppImgByAppIDx */
+       DELETE FROM  TB_STO_APP_IMG
+        WHERE  APP_IDX = #{APP_IDX}
+    </delete>
+
+	<!-- 이미지 한건 삭제-->
+	<update id="deleteAppImgByImgIDx" parameterType="kr.msp.admin.store.appInfo.dto.AppImageDto">
+       /* AppInfoManageSql >  deleteAppImgByImgIDx */
+        UPDATE  TB_STO_APP_IMG
+        SET  MOD_DT = SYSDATE
+           , MOD_ID    = #{MOD_ID}
+           , USE_YN     = 'N'
+        WHERE  IMG_IDX = #{IMG_IDX}
+    </update>    
+  
+</mapper>

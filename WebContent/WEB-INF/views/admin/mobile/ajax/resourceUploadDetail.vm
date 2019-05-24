@@ -1,0 +1,60 @@
+<!-- 
+화면 : 모바일관리 업로드 된 파일들 조회 table
+url : admin/mobile/rsc/uploadNewResourceList
+		( resourceUpload.vm 에서 ajax통신후 리스트 구현)
+작성자 : 장문규
+ -->
+
+<table class="tbList1" id="testSort" summary="항목선택,ID,파일명,확장자,크기,등록일,삭제여부,상태">
+	<colgroup>
+		<col width="5%"/><col width="8%"/><col width="25%"/><col width="8%"/><col width="10%"/>
+		<col width="20%"/><col width="8%"/><col width="auto"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col" title="+ 추가할 리소스 - 삭제할 리소스"></th>
+			<th scope="col">ID</th>		
+			<th scope="col">#springMessage("menu.mobile.manage.fileName") </th> <!-- 파일명 -->
+			<th scope="col">#springMessage("menu.mobile.record.extension")</th> <!-- 확장자 -->
+			<th scope="col">#springMessage("menu.mobile.record.size")(byte)</th> <!-- 크기 -->
+			<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+			<th scope="col">#springMessage("menu.mobile.manage.deleteYN")</th> <!-- 삭제여부 -->
+			<th scope="col">#springMessage("menu.mobile.deploy.status")</th> <!-- 상태 -->
+		</tr>
+	</thead>
+	<tbody>
+	#foreach($rsc in $sorter.sort($newResourceList, "RSC_FILE_IDX"))	##FILE_NAME:desc
+	#set($j_tot = $rsc.TOT_CNT)
+		<tr class='resDeployAdd'>
+			<td class="codeGrpClick">+</td>
+			<td class="codeGrpClick">$!rsc.RSC_FILE_IDX</td>
+			##<td class="codeGrpClick">$!rsc.RSC_ID</td>
+			<td class="codeGrpClick">$!rsc.FILE_NM</td>
+			<td class="codeGrpClick">$!rsc.FILE_EXT</td>
+			<td class="codeGrpClick">$!rsc.FILE_SIZE</td>
+			<td class="codeGrpClick">$!rsc.MOD_DTTM</td>
+			<td class="codeGrpClick">N</td>
+		#if($!rsc.STS_CD == "W")
+			<td>#springMessage("menu.mobile.manage.new")</td> <!-- 신규 -->
+		#else
+			<td>#springMessage("menu.mobile.manage.original")</td> <!-- 기존 -->
+		#end
+		</tr>
+	#end
+	</tbody>
+</table>
+
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_noticeList"/>
+</div>
+
+

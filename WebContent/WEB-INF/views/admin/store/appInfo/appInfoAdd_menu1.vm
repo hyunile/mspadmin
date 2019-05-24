@@ -1,0 +1,274 @@
+<!--  01. 기본정보입력  -->
+<table class="tbl" summary="제목,내용" id="frmTable">
+    <colgroup>
+    	<col width="18%"/><col width="32%"/><col width="18%"/><col width="32%"/>
+    </colgroup>
+    
+    <tr>
+        <th scope="row">
+        	<label for="subject" class="redNotice">#springMessage("common.text.serviceName")</label> <!-- 서비스명 -->
+        </th>
+        <td>
+            #if($appInfo)
+            <input type="hidden" id="SVC_ID"  name="SVC_ID"  value="$appInfo.SVC_ID"/>
+            $!appInfo.SVC_NM
+            <input type="hidden" class="input_txt" id="SVC_NM"  name="SVC_NM" value="$!appInfo.SVC_NM"/>
+            #else 
+            <input type="hidden" id="SVC_ID"  name="SVC_ID"  value="$serviceInfo.SVC_ID"/>
+            $!serviceInfo.SVC_NM
+            <input type="hidden" class="input_txt" id="SVC_NM"  name="SVC_NM" value="$!serviceInfo.SVC_NM"/>
+            #end     
+        </td>
+        <th scope="row">
+        	<label for="subject" class="redNotice">#springMessage("menu.store.appManage.showYN")</label> <!-- 공개여부 -->
+        </th>
+        <td>
+            <input type="radio" name="PUB_YN" id="PUB_YN_Y" value="Y" #if($!appInfo.PUB_YN == "Y") checked="checked" #end/> &nbsp;<label for="PUB_YN_Y">#springMessage("menu.store.appManage.show_Y")</label>&nbsp;&nbsp;&nbsp;&nbsp; <!-- 공개 -->
+            <input type="radio" name="PUB_YN" id="PUB_YN_N" value="N" #if($!appInfo.PUB_YN != "Y") checked="checked" #end/> &nbsp;<label for="PUB_YN_N">#springMessage("menu.store.appManage.show_N")</label>  <!-- 비공개 -->
+        </td>		
+    </tr>
+    <tr>
+        <th scope="row">
+        	<label for="subject" class="redNotice">App #springMessage("menu.store.userGroup.category")</label> <!-- 카테고리 -->
+        </th>
+        <td style="position:relative;">
+            <input type="hidden" id="CATG_CD" name="CATG_CD" value="$appInfo.CATG_CD"/>
+            <input type="text" readonly='readonly' class="input_txt btn_left" id="CATG_NM" name="CATG_NM" style="width:130px;" valid_name="카테고리" valid_type="x" value="$!appInfo.CATG_NM"/>
+            <a href="javascript:void(0)" id="popupCatg" class="tbl-btn1">#springMessage("menu.store.appManage.categoryChoose")</a>	<!-- 카테고리선택 -->
+        </td>
+        <th scope="row">
+        	<label for="subject" class="redNotice">App #springMessage("common.text.classify")</label> <!-- 분류 -->
+        </th>
+        <td>
+            <input type="radio" name="APP_TYPE" value="10" id="APP_TYPE_10" #if($!appInfo.ANDROID != "") checked="checked" #end/> &nbsp;<label for="APP_TYPE_10">#springMessage("common.text.must")</label> &nbsp;&nbsp;&nbsp;&nbsp; <!-- 필수 -->
+            <input type="radio" name="APP_TYPE" value="20" id="APP_TYPE_20" #if($!appInfo.APPLE != "") checked="checked"  #end /> &nbsp;<label for="APP_TYPE_20">#springMessage("menu.push.approve.general")</label> <!-- 일반 -->
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">
+        	<label for="subject" class="redNotice">#springMessage("common.text.appname")</option> <!-- App 명 -->
+        </th>
+        <td colspan="3" style="position:relative;">
+            <input type="text" class="input_txt btn_left" style="width:80%;" id="APP_NM" name="APP_NM" value="$!appInfo.APP_NM" maxlength="50" onchange="javascript:dupChkInit(this);" valid_name="App 명" valid_type="x,l:50"/>
+            <a href="javascript:void(0)" id="checkDupAppNm" check="APP_NM" class="tbl-btn1">#springMessage("menu.store.appManage.sameCheck")</a>	<!-- 중복확인 -->
+        </td>               
+    </tr>
+    <tr>
+        <th scope="row">
+        	<label for="subject" class="redNotice">#springMessage("menu.store.appManage.platformType")</label> <!-- 플랫폼 구분 -->
+        </th>
+        <td style="position:relative;" >
+            
+            #foreach( $plat in $platList )
+                #if($appInfo)
+		            <input type="checkbox" id="$!plat.PLAT_IDX" name="PLAT_IDX" value="$!plat.PLAT_IDX" platCd="$!plat.PLAT_CD" #if($!plat.PLAT_IDX==$!appInfo.ANDROID) checked="checked" #end  #if($!plat.PLAT_IDX==$!appInfo.APPLE) checked="checked" #end>
+		            <label for="$!plat.PLAT_IDX">
+		            $!plat.PLAT_NM
+		            </label>     
+		            <input type="hidden" id="PLAT_CD" name="PLAT_CD" value="$!plat.PLAT_CD">
+                #else 
+		            <input type="checkbox" id="$!plat.PLAT_IDX" name="PLAT_IDX" value="$!plat.PLAT_IDX" platCd="$!plat.PLAT_CD" >
+		            <label for="$!plat.PLAT_IDX">
+		            $!plat.PLAT_NM
+		            </label>     
+		            &nbsp;
+		            <input type="hidden" id="PLAT_CD" name="PLAT_CD" value="$!plat.PLAT_CD">
+                #end
+                #if( $velocityCount > 1)
+						## 플랫폼 종류는 2종류 까지만 보이도록 한다.
+						## UI 구성이 다 안되어 있을 경우, 이미지 업로드 시에 file element 갯수가 맞지 않아서 오류가 발생한다.
+						## 플랫폼 구성은 해 놓고 하도록 한다.
+                        #break
+				#end
+            #end
+        </td>      
+        <th scope="row">
+    		<label for="subject" class="redNotice">#springMessage("menu.store.appManage.range")</label> <!-- 정렬순서 -->
+        </th>
+        <td style="position:relative;">
+    		<input type="text" id="SORT_NO" name="SORT_NO" valid_name="정렬우선순위" valid_type="i" value="$!appInfo.SORT_NO" class="input_txt" style="width:50px;"/> (1~9999)
+        </td> 
+    
+    </tr>
+
+</table><br/>
+
+<div id="tabs">  
+    <ul>   
+        #set($j_tot = 1)
+            #foreach( $plat in $platList )
+        <li><a href="#tabs_$!plat.PLAT_CD">$!plat.PLAT_NM</a></li>    
+            #if( $velocityCount > 1)
+					## 플랫폼 종류는 2종류 까지만 보이도록 한다.
+					## UI 구성이 다 안되어 있을 경우, 이미지 업로드 시에 file element 갯수가 맞지 않아서 오류가 발생한다.
+					## 플랫폼 구성은 해 놓고 하도록 한다.
+                    #break
+			#end
+        #end
+    </ul>  
+    
+    
+    <!--  안드로이드   -->
+    <div id="tabs_10">   
+        <p>
+        <input type="hidden"  id="APP_PLAT_IDX_10"  name="APP_PLAT_IDX_10" value="$!binaryInfo.APP_PLAT_IDX_10" />      
+        <table class="tbl" summary="제목,내용" id="frmTable10">
+            <colgroup>
+            	<col width="22%"/><col width="28%"/><col width="22%"/><col width="28%"/>
+            </colgroup>
+            <tr>
+                <th scope="row">
+                	<label for="subject" class="redNotice">#springMessage("menu.store.appManage.packageName")</label> <!-- 패키지명 -->
+                </th>
+                <td colspan="3" style="position:relative;">
+                    <input type="text" class="input_txt btn_left" id="PAKG_ID_10"  name="PAKG_ID_10" value="$!binaryInfo.PAKG_ID_10" style="width:75%;"  maxlength="200" onchange="javascript:dupChkInit(this);" valid_name="패키지 명" valid_type="l:200" />
+                    <a href="javascript:void(0)" id="checkDupPakgId_10"  check="PAKG_ID_10" class="tbl-btn1">#springMessage("menu.store.appManage.sameCheck")</a>	<!-- 중복확인 -->
+                </td>          
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject" class="redNotice">#springMessage("menu.store.appManage.platformVersion")  </label> <!-- 플랫폼 버전 -->
+                </th>
+                <td>
+                    <select id = "PLAT_VER_IDX_10" name="PLAT_VER_IDX_10" platCd="10" >
+                    	<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+                    	#if($verList10)
+                    		#foreach( $v in $verList10 )
+                        <option value="$!v.PLAT_VER_IDX" #if($!v.PLAT_VER_IDX==$!binaryInfo.PLAT_VER_IDX_10) selected="selected" #end>$!v.PLAT_VER_CD $!v.PLAT_VER_NM</option>
+                    		#end
+                    	#end    
+                    </select>
+                </td>
+                <th scope="row">
+                	<label for="subject" class="redNotice">App #springMessage("menu.store.appManage.binaryVersion")</label> <!-- 바이너리 버전 -->
+                </th>
+                <td>
+                    <input type="text" class="input_txt" id="BIN_VER1_10" name="BIN_VER1_10" style="width:18%;" platCd="10" value="$!binaryInfo.BIN_VER1_10" /> •
+                    <input type="text" class="input_txt" id="BIN_VER2_10" name="BIN_VER2_10" style="width:18%;" platCd="10" value="$!binaryInfo.BIN_VER2_10" /> •
+                    <input type="text" class="input_txt" id="BIN_VER3_10" name="BIN_VER3_10" style="width:18%;" platCd="10" value="$!binaryInfo.BIN_VER3_10" />  
+                    <input type="hidden" id="BIN_VER_10"  name="BIN_VER_10" value="$!binaryInfo.BIN_VER_10" />      
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject" class="redNotice">#springMessage("menu.store.appManage.binaryFile")</label> <!-- 바이너리 파일 -->
+                </th>
+                <td colspan="3">
+                    <input type="file" name="files[0]"  id="binaryFile_10" platCd="10" />
+                    <input type="hidden" class="input_txt" id="binaryFile_10_text" name="binaryFile_10_text" style="width:97%;" readonly="readonly" value="$!binaryInfo.DL_URL_10$!binaryInfo.ORG_BIN_FILE_NM_10"/>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject">#springMessage("menu.store.appManage.changeContent")</label> <!-- 변경내역 -->
+                </th>
+                <td style="position:relative;" colspan="3">
+                	<textarea style="width:90%; height: 30px; overflow-y:auto" id="UPDATE_DESC_10" name="UPDATE_DESC_10" width="100%">$!binaryInfo.UPDATE_DESC_10</textarea>
+                </td>                   
+            </tr>
+        </table>
+        
+        <div class="btnArea ta_r" >
+            #if($!binaryInfo.PLAT_VER_IDX_10)
+            <a href="javascript:void(0)" id="binaryHistoryList_10" class="btn1">history #springMessage("common.button.view") </a>	<!-- 조회 -->
+            #end
+        </div>  
+    </div>  
+    
+    <!--  애플   -->
+    <div id="tabs_20">   
+        <p>
+        <input type="hidden"  id="APP_PLAT_IDX_20"  name="APP_PLAT_IDX_20" value="$!binaryInfo.APP_PLAT_IDX_20" />      
+        <table class="tbl" summary="제목,내용" id="frmTable20">
+            <colgroup>
+            	<col width="28%"/><col width="22%"/><col width="20%"/><col width="30%"/>
+            </colgroup>
+            <tr>
+                <th scope="row">
+                	<label for="subject" class="redNotice">Bundle ID</label>
+                </th>
+		
+				
+                <td colspan="3" style="position:relative;">
+                    <input type="text" class="input_txt btn_left" style="width:80%;" id="PAKG_ID_20"  name="PAKG_ID_20" value="$!binaryInfo.PAKG_ID_20"   maxlength="200" onchange="javascript:dupChkInit(this);" valid_name="패키지 명" valid_type="l:200" />
+                    <a href="javascript:void(0)" id="checkDupPakgId_20"  check="PAKG_ID_20" class="tbl-btn1">#springMessage("menu.store.appManage.sameCheck")</a>	<!-- 중복확인 -->
+                    
+                </td>          
+            </tr>
+			<tr>
+                <th scope="row">
+                	<label for="subject" class="redNotice">#springMessage("menu.store.appManage.platformVersion") </label> <!-- 플랫폼 버전 -->
+                </th>
+                <td>
+                
+                    <select id = "PLAT_VER_IDX_20" name="PLAT_VER_IDX_20" platCd="20" >
+                        <option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+                        #if($verList20)
+                            #foreach( $v in $verList20 )
+                        <option value="$!v.PLAT_VER_IDX" #if($!v.PLAT_VER_IDX==$!binaryInfo.PLAT_VER_IDX_20) selected="selected" #end>$!v.PLAT_VER_CD $!v.PLAT_VER_NM</option>
+                            #end
+                        #end    
+                    </select>
+                
+                </td>
+                <th scope="row">
+                	<label for="subject" class="redNotice">App #springMessage("menu.mobile.deploy.version")</label> <!-- 버전 -->
+                </th>
+                <td>
+                    <input type="text" class="input_txt" id="BIN_VER1_20"  name="BIN_VER1_20" style="width:18%;" platCd="20" value="$!binaryInfo.BIN_VER1_20"/> •
+                    <input type="text" class="input_txt" id="BIN_VER2_20"  name="BIN_VER2_20" style="width:18%;" platCd="20" value="$!binaryInfo.BIN_VER2_20"/> •
+                    <input type="text" class="input_txt" id="BIN_VER3_20"  name="BIN_VER3_20" style="width:18%;" platCd="20" value="$!binaryInfo.BIN_VER3_20"/>  
+                    <input type="hidden"  id="BIN_VER_20"  name="BIN_VER_20" value="$!binaryInfo.BIN_VER_20" />
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject" class="redNotice">iOS URL SCHEME</label>
+                </th>
+                
+                <td colspan="3">
+                    <input type="text" class="input_txt btn_left" style="width:80%;" id="CALL_URL" name="CALL_URL" value="$!appInfo.CALL_URL" onchange="javascript:dupChkInit(this);"    />
+                    <a href="javascript:void(0)" id="checklDupCallUrl" check="CALL_URL" class="tbl-btn1">#springMessage("menu.store.appManage.sameCheck")</a>	<!-- 중복확인 -->
+                </td>               
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject" class="redNotice">iOS #springMessage("menu.store.appManage.deployType") </label> <!-- 배포타입 -->
+                </th>
+                <td style="position:relative;" colspan="3">
+                    <select name="DIST_TYPE" >
+                        #if($distList)
+                            #foreach( $dist in $distList )
+                            	<option value="$!dist.CD_ID" #if($!dist.CD_ID==$!appInfo.DIST_TYPE) selected="selected" #end>$!dist.CD_NM</option>
+                            #end
+                        #end    
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject" class="redNotice">#springMessage("menu.store.appManage.binaryFile")</label> <!-- 바이너리 파일 -->
+                </th>
+                <td colspan="3">
+                    <input type="file" name="files[1]"  id="binaryFile_20" platCd="20" value="$!binaryInfo.ORG_BIN_FILE_NM_20"/>
+                    <input type="hidden" class="input_txt" id="binaryFile_20_text" name="binaryFile_20_text" style="width:97%;" readonly="readonly" value="$!binaryInfo.DL_URL_20$!binaryInfo.ORG_BIN_FILE_NM_20"/>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                	<label for="subject">#springMessage("menu.store.appManage.changeContent")</label> <!-- 변경내역 -->
+                </th>
+                <td style="position:relative;" colspan="3">
+                	<textarea style="width:90%; height: 30px; overflow-y:auto" id="UPDATE_DESC_20" name="UPDATE_DESC_20" width="100%">$!binaryInfo.UPDATE_DESC_20</textarea>
+                </td>                   
+            </tr>
+        
+        </table>
+        <div class="btnArea ta_r" >
+            #if($!binaryInfo.PLAT_VER_IDX_20)
+            	<button type="button" class="btn_basic" id="binaryHistoryList_20" ><strong>history #springMessage("common.button.view")</strong></button>  <!-- 조회 -->
+            #end
+        </div>  
+    </div>  <!-- div id="tabs_20" -->
+
+</div><!-- div id="tabs"  -->  

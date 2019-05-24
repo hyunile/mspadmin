@@ -1,0 +1,72 @@
+<div class="popup_content">
+	<!--  table List  -->
+	<table class="tb_view">
+		<colgroup>
+			<col width="20%"/>
+			<col width="35%"/>
+			<col width="10%"/>
+			<col width="35%"/>
+		</colgroup>
+		<thead>
+			<tr>
+				<th scope="cols">
+					#springMessage("menu.push.serverName") <!-- 서버 이름 -->
+					<input type="hidden" id="R_IPADDRESS" value="$R_IPADDRESS">
+    				<input type="hidden" id="R_PORT" value="$R_PORT">
+				</th>
+				<th scope="cols">
+					IP
+				</th>
+				<th scope="cols">
+					PORT
+				</th>
+				<th scope="cols">
+					#springMessage("menu.push.monitoring.errorDate") <!-- 장애 일시 --> 
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			#foreach( $monitoringinfo in $monitoringinfoList )
+	       		#set($j_tot = $monitoringinfo.TOT_CNT)
+	           	<tr >
+	           		<td style="text-align:left;">
+						$esc.xml($!monitoringinfo.SERVERNAME)
+					</td>
+					<td>
+						$esc.xml($!monitoringinfo.IPADDRESS)
+					</td>
+					<td>
+						$esc.xml($!monitoringinfo.PORT)
+					</td>
+					<td>
+						$!monitoringinfo.REGDATE
+					</td>
+	       		</tr>
+	   		#end
+	   		#if(!$j_tot)
+				<tr>
+					<td colspan="4">
+						#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+					</td>
+				</tr>
+			#end
+		</tbody>
+	</table>
+	<input type="hidden" id="INFO_PAGE_NUM" value="$!R_PAGE_NUM">
+	<div class="j_page_div">
+	 	##현재 페이지
+	 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+	    ##총 개수
+	    <input type="hidden" name="J_tot" value="$!j_tot">
+	    ##한페이지의 로우수
+	    <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+	    ##한페이지수
+	    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+	    ##이밴트
+	    <input type="hidden" name="j_event" value="fn_monitoringInfoList">
+	</div>
+	<!--  btnArea  -->
+	<div class="btn_pop">
+		<button type="button" onclick="fn_closePopup();" id="maskClose" class="btn_basic">#springMessage("common.button.close")</button> <!-- 닫기 -->
+	</div>
+</div>

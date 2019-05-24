@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.UserReserveSend.mapper.UserReserveSendManageDao">
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT *
+, @RN TOT_CNT
+FROM
+(
+	SELECT A.*
+	,	(@RN := @RN + 1) AS RNUM
+	FROM
+	(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+	) A
+	, (SELECT @RN := 0, @TOT := 0) R
+) A
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+	
+	<!-- 일반 메시지 발송 리스트 -->
+    <select id="SelectUserReserveSendList" parameterType="kr.msp.admin.push.UserReserveSend.dto.UserReserveSendDto" resultType="kr.msp.admin.push.UserReserveSend.dto.UserReserveSendDto">
+        <include refid="head"/>
+           SELECT 
+			    C.SEQNO
+			   ,C.RESERVEDATE
+			   ,C.APPID   
+			   ,C.CUID
+			   ,C.SENDERSEQ
+			   ,C.SENDERCODE
+			   ,C.MESSAGE
+			   ,C.REGDATE
+			FROM (
+			        SELECT 
+			            A.SEQNO
+			           , DATE_FORMAT(A.RESERVEDATE, '%Y.%m.%d %H:%i') AS RESERVEDATE
+			           ,A.APPID   
+			           ,A.CUID
+			           ,A.SENDERSEQ
+			           ,(SELECT SENDERCODE
+			              FROM T_PUSH_SENDER_INFO B
+			              WHERE A.SENDERSEQ = B.SENDERSEQ) AS SENDERCODE
+			           ,A.MESSAGE   
+			           , DATE_FORMAT(A.REGDATE, '%Y.%m.%d %H:%i') AS REGDATE
+			        FROM T_PUSH_MESSAGE A
+			        WHERE A.RESERVEDATE != A.REGDATE
+			              AND A.RESERVEDATE > NOW()
+			              AND A.TYPE = 'N'
+			              AND A.RESERVEDATE BETWEEN STR_TO_DATE(#{RESERVEDATE_S}, '%Y.%m.%d %H%i') AND STR_TO_DATE(#{RESERVEDATE_E}, '%Y.%m.%d %H%i')
+			              AND A.APPID = #{APPID}
+			              <if test="SENDERSEQ != '' and SENDERSEQ != null">
+			              	AND	A.SENDERSEQ = #{SENDERSEQ}
+			              </if>
+			         ORDER BY RESERVEDATE ASC
+			     ) C
+			     INNER JOIN T_PUSH_USER D ON (C.CUID = D.CUID)
+			<trim prefix="WHERE" prefixOverrides="AND|OR">
+			 	<if test="CNAME != '' and CNAME != null ">
+			 		AND D.CNAME = #{CNAME}
+			 	</if>
+			 	<if test="CUID != '' and CUID != null ">
+			 		AND D.CUID = #{CUID}
+			 	</if>
+			 	<if test="PHONENO != '' and PHONENO != null ">
+			 		AND D.PHONENO = #{PHONENO}
+			 	</if>
+			 </trim>
+	       <include refid="bottom"/>
+    </select>
+   
+    <!-- 메시지 예약 취소 가능 여부 체크 -->   
+    <select id="SelectMsgDeleteCheck" parameterType="kr.msp.admin.push.UserReserveSend.dto.UserReserveSendDto" resultType="kr.msp.admin.push.UserReserveSend.dto.UserReserveSendDto">
+        SELECT 
+               CASE WHEN RESERVEDATE - 5/24/60 > NOW()
+		            THEN 'Y'
+		            ELSE 'N'
+		        END AS DELETE_CHK
+		       DATE_FORMAT(RESERVEDATE, '%Y.%m.%d %H:%i') AS RESERVEDATE
+		       ,CUID
+		FROM T_PUSH_MESSAGE
+		WHERE SEQNO = #{SEQNO} AND CUID = #{CUID}
+    </select>
+    
+    <!-- 메시지 예약 취소 -->
+    <delete id="DeleteMsg" parameterType="kr.msp.admin.push.UserReserveSend.dto.UserReserveSendDto">
+        DELETE FROM T_PUSH_MESSAGE
+        WHERE SEQNO = #{SEQNO} AND CUID = #{CUID}
+    </delete>
+    
+    <select id="SelectSenderAll" resultType="kr.msp.admin.push.sender.dto.PushSenderDto">
+    	SELECT 
+			SENDERSEQ
+			,SENDERCODE
+			,SENDERNAME
+		FROM T_PUSH_SENDER_INFO
+		WHERE ISDELETED = 'N'
+    </select>
+    
+    <select id="SelectUserReserveSendOne" parameterType="kr.msp.admin.push.UserReserveSend.dto.UserReserveSendDto" resultType="kr.msp.admin.push.UserReserveSend.dto.UserReserveSendDto">
+    	SELECT 
+		    A.SEQNO
+		   ,DATE_FORMAT(A.RESERVEDATE, '%Y.%m.%d %H:%i')  AS RESERVEDATE
+		   ,A.APPID   
+		   ,A.CUID
+		   ,A.SENDERSEQ
+		   ,(SELECT SENDERCODE
+		      FROM T_PUSH_SENDER_INFO B
+		      WHERE A.SENDERSEQ = B.SENDERSEQ) AS SENDERCODE
+		   ,A.MESSAGE   
+		   ,DATE_FORMAT(REGDATE, '%Y.%m.%d %H:%i') AS REGDATE
+		FROM T_PUSH_MESSAGE A
+		WHERE SEQNO = #{SEQNO} AND CUID = #{CUID}
+    </select>
+	
+	
+</mapper>

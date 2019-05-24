@@ -1,0 +1,346 @@
+<script type="text/javascript">
+	//조직도에서 하위 조직이 있으면 화살표 생성
+	$(".tree-div a").bind("click keydown", function(){
+		$(this).nextAll("div").slideToggle();
+		$(this).toggleClass("expanded");
+	});
+	
+	// 부서 트리 선택 토글 이벤트 처리.
+	$(".tree-div span").bind("click keydown", function(e){
+		if(e.target != e.currentTarget)return;
+		$(this).toggleClass("selected");
+		$(".tree-div span").not(this).each(function(){
+			$(this).removeClass("selected");
+		});
+		if($(this).hasClass("selected")){
+			fn_getUserList($(this).siblings("input").val());
+		}
+	});
+	
+	// 전체 선택 체크 박스 핸들러.
+	$(".user-list-div #CHK_USER_ALL").bind("change", function(){
+		var _checked = $(this).is(":checked");
+		$(".user-list-div").find(".USER_CHK").each(function(){
+			$(this).prop("checked", _checked);
+			var userId = $(this).parent().parent().find(".USER_ID").val();
+			var userNm = $(this).parent().parent().find(".USER_NM").val();
+			if(_checked){
+				$(this).parent().parent().addClass("selected");
+				fn_addReceiverList(userId, userNm, 'usr');
+			}else{
+				$(this).parent().parent().removeClass("selected");
+				$("#popup_receiver").find("#" + userId).remove();
+			}
+		});
+	});
+	
+	// 부서 트리 체크 박스 핸들러.
+	$(".tree-div .DEPT_CHK").bind("change", function(){
+		var deptCd = $(this).parent().siblings(".DEPT_CD").val();
+		var deptNm = $(this).parent().siblings(".DEPT_FULL_NM").val();
+		
+		if($(this).is(":checked")){
+			fn_addReceiverList(deptCd, deptNm, 'dept');
+		}else{
+			$("#popup_receiver").find("#" + deptCd).remove();
+		}
+	});
+	
+	// 선택 목록에 추가.
+	function fn_addReceiverList(_key, _name, _type){
+		if($("#popup_receiver").find("#" + _key).length)return;
+		
+		var spanElem = '<span id="'+_key+'" class="'+_type+'">'+_name+'<a href="javascript:fn_removeReceiver(\''+_key+'\',\''+_type+'\');">'
+			+'<img src="$RESOURCES_PATH/images/sub/list_del.gif" /></a></span>';
+		$("#popup_receiver").append(spanElem);
+	}
+
+	// 선택된 목록에서 삭제.
+	function fn_removeReceiver(_key, _type){
+		$("#popup_receiver").find("#" + _key).remove();
+		if(_type == 'dept')
+			fn_uncheckDeptTree(_key);
+		else
+			fn_uncheckUserList(_key);
+	}
+	
+	// 부서 트리에서 체크 해제.
+	function fn_uncheckDeptTree(_deptCd){
+		if($(".tree-div #dptchk_"+_deptCd).is(":checked")){
+			$(".tree-div #dptchk_"+_deptCd).prop('checked', false);
+		}
+	}
+	
+	// 부서 트리에 체크 적용.
+	function fn_checkDeptTree(_deptCd){
+		if(!$(".tree-div #dptchk_"+_deptCd).is(":checked")){
+			$(".tree-div #dptchk_"+_deptCd).prop('checked', true);
+		}
+	}
+	
+	// 선택 목록과 부서 트리 체크 동기화.
+	function fn_syncDeptTree(){
+		$("#popup_receiver span.dept").each(function(){
+			var _deptCd = $(this).attr("id");
+			fn_checkDeptTree(_deptCd);
+		});
+	}
+	
+	// 부서 검색
+    function ch_deptSearch(){
+    	var sfrm=document.popDeptfrmSearch;
+   		if(sfrm.DEPT_NM.value.length>0&&sfrm.DEPT_NM.value.length<2){
+   			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+   			sfrm.DEPT_NM.value="";
+   			sfrm.DEPT_NM.focus();
+   			return;
+   		}
+   		fn_getDeptList();
+   		// 부서 트리가 새로 로딩될 때 이미 선택된 목록이 있으면 체크 표시함.
+   		fn_syncDeptTree();
+    }
+	
+	// 부서 목록 조회.
+    function fn_getDeptList(){
+    	var url = CONTEXT_PATH + "/admin/securepush/msgSend/findDept";
+    	var type = "POST";
+    	var data = $("form[name=popDeptfrmSearch]").serialize();
+		var target = $("#listPopupDeptTableDiv");
+		
+		fn_getList( url, type, data , target );
+		
+    }
+	
+ 	// 조직원 검색
+    function ch_userSearch(){
+    	var sfrm=document.popUserfrmSearch;
+   		if(sfrm.USER_NM.value.length>0&&sfrm.USER_NM.value.length<2){
+   			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+   			sfrm.USER_NM.value="";
+   			sfrm.USER_NM.focus();
+   			return;
+   		}
+   		fn_getUserList();
+    }
+	
+ 	// 조직원 목록 조회.
+    function fn_getUserList(deptCd){
+ 		// 선택된 사용자 초기화.
+    	$("#SELECTED_USER_ID").val("");
+    	var url = CONTEXT_PATH + "/admin/securepush/msgSend/findUser";
+    	var type = "POST";
+    	var data = '';
+    	if(deptCd != null && typeof(deptCd) != 'undefined'){
+    		data = "DEPT_CD=" + deptCd;
+    	}else{
+    		data = $("form[name=popUserfrmSearch]").serialize();
+    	}
+		var target = $("#listPopupUserTableDiv");
+		
+		fn_getList( url, type, data , target );
+		fn_syncUserList();
+    }
+	
+	// 조직원 목록에서 선택 해제.
+	function fn_uncheckUserList(_userId){
+		if($(".user-list-div #usrchk_"+_userId).is(":checked")){
+			$(".user-list-div #usrchk_"+_userId).prop('checked', false);
+			$(".user-list-div #usrchk_"+_userId).parent().parent().removeClass("selected");
+		}
+	}
+	
+	// 조직원 목록에 체크 적용.
+	function fn_checkUserList(_userId){
+		if(!$(".user-list-div #usrchk_"+_userId).is(":checked")){
+			$(".user-list-div #usrchk_"+_userId).prop('checked', true);
+			$(".user-list-div #usrchk_"+_userId).parent().parent().addClass("selected");
+		}
+	}
+	
+	// 선택 목록과 조직원 목록 체크 동기화.
+	function fn_syncUserList(){
+		$("#popup_receiver span.usr").each(function(){
+			var _userId = $(this).attr("id");
+			fn_checkUserList(_userId);
+		});
+	}
+	
+	// 선택완료 처리.
+	function fn_selectionComplete(){
+		$("#selected_receiver").html("");
+		
+		$("#popup_receiver span").each(function(){
+			var _id = $(this).attr("id");
+			var _type = $(this).attr("class");
+			var _name = $(this).text();
+			fn_addSelectedReceiverList(_id, _name, _type);
+		});
+		fn_closePopup();
+	}
+	
+	//공통코드 리스트 페이지 호출(공통)
+	function fn_getList( url, type, data, target ){
+		
+		var AjaxHTML = jQuery.ajax({
+			url: url ,
+			type: type ,
+			data: data ,
+			dataType: "html" ,
+			async: false ,
+			cache:false
+		}).responseText;
+
+		target.html(AjaxHTML);
+	}
+	
+</script>
+<div>
+	<table>
+		<caption></caption>
+		<colgroup>
+			<col>
+			<col style="width:10px">
+			<col>
+		</colgroup>
+		<tr>
+			<td class="tbl-wrap valignTop">
+				<div>
+					<form name="popDeptfrmSearch" method="post">
+					<table class="tbl-pop-search">
+						<caption>#springMessage("menu.securePush.manageAccount.deptSearch")</caption> <!-- 부서 검색 -->
+						<colgroup>
+							<col style="width:280px">
+							<col style="width:60px">
+						</colgroup>
+						<thead>
+							<td><input type="text" name="DEPT_NM" id="deptnm" placeholder="#springMessage('menu.securePush.manageAccount.deptSearch')" class="full" onkeydown="javascript:if(event.keyCode==13){ch_deptSearch();return false;}" /></td> <!-- 부서 검색 -->
+							<td><button type="button" class="tbl-btn1" onClick="ch_deptSearch()">#springMessage("common.button.search")</button></td> <!-- 검색 -->
+						</thead>
+					</table>
+					</form>
+				</div>
+				<div id="listPopupDeptTableDiv">
+					<table class="tbl-pop-info" style="margin-bottom:10px;">
+						<colgroup>
+							<col style="width:280px">
+							<col style="width:60px">
+						</colgroup>
+						<tbody>
+							<tr><td colspan="2"><div class="tree-div" style="height:450px;">
+								#set( $levelcnt_map = {} )
+								#foreach( $dept in $deptList )
+									
+								<div class="dep$!dept.LEVEL">
+									<span><input type="checkbox" class="DEPT_CHK" id="dptchk_$!dept.DEPT_CD"/><label for="dptchk_$!dept.DEPT_CD"></label>$!dept.DEPT_NM</span>
+									#if($dept.hasChild)
+										#set($dummy = $levelcnt_map.put($dept.LEVEL, $dept.childCnt))
+										#if($dept.LEVEL == 1)
+									<a class="expanded" href='javascript:void(0)'></a>
+										#else
+									<a href='javascript:void(0)'></a>	
+										#end
+									#end
+									<input type="hidden" class="DEPT_CD" value="$!dept.DEPT_CD"/>
+									<input type="hidden" class="DEPT_FULL_NM" value="$!dept.FULL_NM"/>
+									
+									#if(!$dept.hasChild)
+								</div>
+									#end
+									
+									## 상위 레벨의 태그가 열린 것이 있으면 닫는다.
+									#if($dept.LEVEL > 1)
+										#set( $prev_level = $dept.LEVEL - 1)
+										#set($current_levelcnt = $levelcnt_map.get($prev_level) - 1)
+										#set($dummy = $levelcnt_map.put($prev_level, $current_levelcnt))
+										
+										#if(!$dept.hasChild)
+											#set($isinterrupted = false)
+											#foreach($item in $levelcnt_map)
+												#if($!levelcnt_map.get($prev_level) == 0 && !$isinterrupted)
+								</div>		
+												#else
+													#set($isinterrupted = true)
+												#end
+												#set( $temp = $prev_level - 1 )
+												#set( $prev_level = $temp)
+											#end
+										#end
+									#end
+								#end
+							</div></td></tr>
+						</tbody>
+					</table>
+				</div>
+			</td>
+			<td></td>
+			<td class="tbl-wrap valignTop">
+				<div>
+					<form name="popUserfrmSearch" method="post">
+					<table class="tbl-pop-search">
+						<caption>#springMessage("menu.securePush.manageAccount.nameSearch")</caption> <!-- 이름 검색 -->
+						<colgroup>
+							<col style="width:360px">
+							<col style="width:60px">
+						</colgroup>
+						<thead>
+							<td><input type="text" name="USER_NM" id="usernm" placeholder="#springMessage('menu.securePush.manageAccount.nameSearch')" class="full" onkeydown="javascript:if(event.keyCode==13){ch_userSearch();return false;}" /></td> <!-- 이름 검색 -->
+							<td><button type="button" class="tbl-btn1" onClick="ch_userSearch()">#springMessage("common.button.search")</button></td> <!-- 검색 -->
+						</thead>
+					</table>
+					</form>
+				</div>
+				<div id="listPopupUserTableDiv">
+					<table class="tbl-pop-info user-list" style="margin-bottom:10px;">
+						<colgroup>
+							<col style="width:360px">
+							<col style="width:60px">
+						</colgroup>
+						<tbody>
+							<tr><td colspan="2"><div class="user-list-div" style="height:450px;">
+								<table>
+									<colgroup>
+										<col style="width:40px">
+										<col style="width:100px">
+										<col style="width:280px">
+									</colgroup>
+									<tr>
+										<th>
+											<input type="checkbox" name="CHK_USER_ALL" id="CHK_USER_ALL"><label for="CHK_USER_ALL"></label>
+										</th>
+										<th>#springMessage("common.text.name")</th> <!-- 이름 -->
+										<th>#springMessage("common.text.dept")</th> <!-- 부서 -->
+									</tr>
+									#foreach( $emp in $empList )
+									<tr class="user-list-row">
+										<td>
+											<input type="checkbox" class="USER_CHK" id="usrchk_$!emp.USER_ID"/><label for="usrchk_$!emp.USER_ID"></label>
+										</td>
+										<td>$!emp.USER_NM<input type="hidden" class="USER_ID" value="$!emp.USER_ID"/><input type="hidden" class="USER_NM" value="$!emp.USER_NM"/></td>
+										<td>$!emp.FULL_NM</td>
+									</tr>
+									#end
+								</table>
+							</div></td></tr>
+						</tbody>
+					</table>
+				</div>
+			</td>
+		</tr>
+	</table>
+	<small>※#springMessage("menu.securePush.msgSend.comment.sendByDept")</small> <!-- 부서단위 전송 시 선택된 부서의 하위 부서에 전체 전송됩니다. -->
+	<table class="tbl" style="width: auto;">
+		<caption>#springMessage("menu.securePush.manageSend.receiver")</caption> <!-- 받는 사람 -->
+		<colgroup>
+			<col style="width:120px">
+			<col style="width:670px">
+		</colgroup>
+		<tr>
+			<th>#springMessage("menu.securePush.manageSend.receiver")</th> <!-- 받는 사람 -->
+			<td>
+				<div class="receiver" id="popup_receiver">
+				</div>
+			</td>
+		</tr>
+	</table>
+	<a href="javascript:fn_selectionComplete();" class="btn1 fr">#springMessage("menu.securePush.msgSend.selectComplete")</a> <!-- 선택완료 -->
+</div>

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.userdevice.mapper.UserDeviceManageDao">
+
+
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+
+
+
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of sort Query -->
+	<!--  ================================================================================================= -->
+	<sql id="order">
+		<if test="ORDER_FIELD != null and ORDER_FIELD != ''">   
+			ORDER BY ${ORDER_FIELD} ${ORDER_TYPE} 
+		</if>
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of sort -->
+	<!--  ================================================================================================= -->
+
+		
+	<select id="selectUserDeviceList"  parameterType="kr.msp.admin.store.userdevice.dto.UserDeviceSearchDto" resultType="kr.msp.admin.store.userdevice.dto.UserDeviceDto">
+	    <!-- 사용자단말기 리스트 -->
+		<include refid="head"/>
+        SELECT A.EMP_NO, A.EMP_NM, A.EMP_CD, A.WORK_CD, A.EMAIL
+        	 , B.PHONE_NO PHONE_NO
+             , B.USERDEVC_IDX, B.DEVC_IDX, B.GUBUN_CD
+             ,  (
+                   SELECT	CD_NM 
+                   FROM	TB_SYS_CD_INFO 
+                   WHERE	CD_GRP_ID = 'ST004'
+                       AND CD_ID=B.GUBUN_CD
+               ) GUBUN_NM   
+             , C.DEVC_ID, C.BRD_NM, C.MFG_NM
+		FROM   TB_STO_USER A, TB_STO_USERDEVC B, TB_STO_DEVC C
+		WHERE  A.EMP_NO   = B.EMP_NO
+		AND    B.DEVC_IDX = C.DEVC_IDX
+		<if test="EMP_NO != null and EMP_NO != ''">   
+		AND    A.EMP_NO   = #{EMP_NO}
+		</if>
+		<if test="EMP_NM != null and EMP_NM != ''">   
+		AND    A.EMP_NM   LIKE '%'||#{EMP_NM}||'%'
+		</if>
+		<if test="DEVC_ID != null and DEVC_ID != ''">   
+		AND    C.DEVC_ID  LIKE '%'||#{DEVC_ID}||'%'
+		</if>
+		<if test="BRD_NM != null and BRD_NM != ''">   
+		AND    C.BRD_NM   LIKE '%'||#{BRD_NM}||'%'
+		</if>
+		<if test="MFG_NM != null and MFG_NM != ''">   
+		AND    C.MFG_NM   LIKE '%'||#{MFG_NM}||'%'
+		</if>
+		
+		<include refid="order"/>
+		<include refid="bottom"/>
+	</select>
+  
+	<select id="selectUserDevice" parameterType="kr.msp.admin.store.userdevice.dto.UserDeviceDto" resultType="kr.msp.admin.store.userdevice.dto.UserDeviceDto">
+	    <!-- (상세화면) 사용자단말기 기본정보 -->
+	    /* UserDeviceManageSql.xml -> selectUserDevice */
+		SELECT	A.EMP_NO, A.EMP_NM, A.EMP_CD, A.WORK_CD, A.EMAIL
+		,		B.PHONE_NO PHONE_NO
+		,		B.USERDEVC_IDX, B.DEVC_IDX, B.GUBUN_CD
+		,		(
+					SELECT	CD_NM 
+					FROM		TB_SYS_CD_INFO 
+					WHERE		CD_GRP_ID = 'ST004'
+									AND CD_ID=B.GUBUN_CD
+				) GUBUN_NM             
+		,		C.DEVC_ID, C.BRD_NM, C.MFG_NM
+		,		(
+					SELECT	COUNT(1)
+					FROM		TB_STO_USERDEVC S1
+					WHERE		S1.EMP_NO = A.EMP_NO
+				) DEV_CNT
+		FROM   TB_STO_USER A
+				INNER JOIN TB_STO_USERDEVC B
+					ON A.EMP_NO       = B.EMP_NO
+				INNER JOIN TB_STO_DEVC C
+					ON B.DEVC_IDX     = C.DEVC_IDX
+		WHERE	B.USERDEVC_IDX = #{USERDEVC_IDX}
+	</select>
+
+	<select id="selectDevice" resultType="kr.msp.admin.store.userdevice.dto.UserDeviceDto">
+		<!-- (상세화면) 지원단말기 정보  -->
+		SELECT DEVC_IDX, DEVC_ID, BRD_NM, MFG_NM
+		FROM   TB_STO_DEVC		  
+	</select>
+	
+	<select id="selectUser" parameterType="kr.msp.admin.store.userdevice.dto.UserDeviceDto" resultType="kr.msp.admin.store.userdevice.dto.UserDeviceDto">
+	    <!-- (상세화면) 사용자정보 검색 --> 
+		SELECT USR.EMP_NO, USR.EMP_NM, GRP.GRP_NM
+		FROM    TB_STO_USER USR
+		            LEFT JOIN TB_STO_USERGROUP UG
+		                ON USR.EMP_NO = UG.EMP_NO AND UG.USE_YN = 'Y'
+		            LEFT JOIN TB_STO_GROUP GRP
+		                ON UG.GRP_ID = GRP.GRP_ID AND GRP.USE_YN = 'Y'
+		WHERE   USR.USE_YN = 'Y'
+					AND USR.EMP_NM  LIKE '%' || #{EMP_NM} || '%' 
+		
+	</select>
+
+	<insert id="saveUserdevice" parameterType="kr.msp.admin.store.userdevice.dto.UserDeviceDto">
+	    <!-- 사용자단말기 신규추가 -->
+	    INSERT INTO TB_STO_USERDEVC(
+	    	   USERDEVC_IDX, EMP_NO, DEVC_IDX, GUBUN_CD, REG_ID, REG_DTTM, PHONE_NO
+	    ) VALUES (
+	    	   SEQ_TB_STO_USERDEVC.NEXTVAL
+	    	 , #{EMP_NO}
+	    	 , #{DEVC_IDX}
+	    	 , #{GUBUN_CD}
+	    	 , #{REG_ID}
+	    	 , (CURRENT TIMESTAMP)
+	    	 , #{PHONE_NO}
+	    )	    
+	</insert>
+
+	<update id="updateDevcgubun" parameterType="kr.msp.admin.store.userdevice.dto.UserDeviceDto">
+	    <!-- 사용자단말기 대표단말기(1)로 저장되는 경우 다른단말기를 모두 보조단말기(2)로 업데이트 -->
+	    UPDATE TB_STO_USERDEVC SET
+	    	   GUBUN_CD  = '2'  
+	    WHERE  EMP_NO    = #{EMP_NO} 
+	</update>
+
+	<update id="updateUserdevice" parameterType="kr.msp.admin.store.userdevice.dto.UserDeviceDto">
+	    <!-- 사용자단말기 정보갱신 -->
+	    UPDATE TB_STO_USERDEVC SET
+	           DEVC_IDX     = #{DEVC_IDX}
+	    	 , GUBUN_CD     = #{GUBUN_CD}
+	    	 , PHONE_NO     = #{PHONE_NO}
+	    WHERE  USERDEVC_IDX = #{USERDEVC_IDX} 
+	</update>
+	
+	<select id="userSearchList" parameterType="kr.msp.admin.store.userdevice.dto.UserDeviceSearchDto" resultType="kr.msp.admin.store.userdevice.dto.UserDeviceDto">
+	    <!-- (상세화면) 사용자정보 검색 --> 
+		<include refid="head"/>
+		SELECT USR.EMP_NO, USR.EMP_NM, GRP.GRP_NM
+		FROM    TB_STO_USER USR
+		            LEFT JOIN TB_STO_USERGROUP UG
+		                ON USR.EMP_NO = UG.EMP_NO AND UG.USE_YN = 'Y'
+		            LEFT JOIN TB_STO_GROUP GRP
+		                ON UG.GRP_ID = GRP.GRP_ID AND GRP.USE_YN = 'Y'
+		WHERE   USR.USE_YN = 'Y'
+			<if test="EMP_NO != null and EMP_NO != ''">   
+			AND    USR.EMP_NO   = #{EMP_NO}
+			</if>
+			<if test="EMP_NM != null and EMP_NM != ''">   
+			AND    USR.EMP_NM   LIKE '%'||#{EMP_NM}||'%'
+			</if>
+		<include refid="bottom"/>
+	</select>
+
+	<delete id="deleteUserdevice" parameterType="kr.msp.admin.store.userdevice.dto.UserDeviceDto">
+	    <!-- 사용자단말기 삭제하기 -->
+	    DELETE FROM TB_STO_USERDEVC 
+	    WHERE  USERDEVC_IDX = #{USERDEVC_IDX} 
+	</delete>
+</mapper>

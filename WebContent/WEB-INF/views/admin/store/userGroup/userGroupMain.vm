@@ -1,0 +1,187 @@
+<div id="conWrap">
+
+<script type="text/javascript">
+    var tot_cnt_v = 0; //단계 카운트
+    var add_flag = ""; //처음 행추가 클릭 flag
+    
+    jQuery(document).ready(function(){
+        //공통 페지징 처리
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+        
+        //메시지가 있으면 출력 
+        if($("#rtnMsg").val() != "" ){
+            alert($("#rtnMsg").val());
+        }
+        jQuery("input[name=SEARCH_GRP_NM]").focus();
+        
+    });
+    
+    //검색메뉴 hide
+    $(".se_con").each(function(i){
+        if(i != 0){
+            $(this).hide();
+        }
+    });
+     //검색조건
+    jQuery(document).on("change","#conSelect",function(){
+        var su = jQuery(this).val();
+        jQuery(".se_con").hide();
+        jQuery(".se_con").val("");
+        jQuery(".se_con:eq(" + su + ")").show();
+    });
+    
+    
+    //검색
+    function fn_select(){
+        $("#orderTarget").val("UG_IDX");
+        $("#orderType").val("DESC");
+        var pageNum = jQuery('#PAGE_NUM').val();
+        fn_groupList(pageNum);
+    }
+        
+    //리스트 검색
+    function fn_groupList(PAGE_NUM){
+        var orderTarget = $("#orderTarget").val();
+        var orderType = $("#orderType").val();
+    
+        var url  = CONTEXT_PATH + "/admin/store/userGroup";
+        var data = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM +"&ORDER_TARGET=" + orderTarget + "&ORDER_TYPE="+orderType;
+      
+        var target = jQuery("#groupTableDiv");
+        var type = "POST";
+       
+        //common.js 에 정의
+        fn_getCommonList( url, type, data, target );
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+    
+    //DESC <-> ASC 변경 함수
+    function changeOrderType(){
+        if($("#orderType").val() == "DESC"){
+            $("#orderType").val("ASC");
+        }else{
+            $("#orderType").val("DESC");
+        }
+    }
+    
+    //컬럼 클릭 -> ORDER BY
+    $(document).on("click","#orderGrpNm",function( e ){ //그룹명
+        $("#orderTarget").val("GRP_NM");
+        changeOrderType();
+        fn_groupList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderEmpNm",function( e ){ //회원명
+        $("#orderTarget").val("EMP_NM");
+        changeOrderType();
+        fn_groupList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderUserId",function( e ){ //회원ID
+        $("#orderTarget").val("USERID");
+        changeOrderType();
+        fn_groupList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderDeptNm",function( e ){ //부서명
+        $("#orderTarget").val("CD_NM");
+        changeOrderType();
+        fn_groupList(jQuery('#PAGE_NUM').val());
+    });
+    
+    //등록화면이동(GET)
+    $(document).on("click","#btn_save",function( e ){ 
+        document.location.href = CONTEXT_PATH + "/admin/store/userGroup/userGroupAdd";
+    });
+        
+    // check box all select event
+    $(document).on("click","#checkAll",function( e ){     
+        $(".chkCls").prop('checked', $(this).is(":checked"));  //class는 먹는데, id,name은 안먹음;;
+    });
+     
+    //리스트 삭제
+    $(document).on("click","#btn_delete",function( e ){ 
+       
+        var cnt = $(".chkCls:checkbox:checked").length;
+       
+        if(cnt < 1){
+             alert('#springMessage("menu.store.appManage.alert.chooseApp")'); //"한 개 이상 App정보를 선택하셔야 합니다"
+        }else{
+        
+             if(confirm('#springMessage("menu.store.userGroup.alert.groupDelete")')){ //"그룹을 삭제하시겠습니까?"
+                 var checkBoxList = [];
+                 $('.chkCls:not(#checkAll):checkbox:checked').each(function(i) {
+                       checkBoxList.push($(this).val());
+                 });
+    
+                 var data = "DEL_LIST="+checkBoxList;
+                
+                 jQuery.ajax({
+                        url: CONTEXT_PATH + "/admin/store/userGroup/deleteList"
+                        ,type:"post"
+                        ,data:data
+                    ,dataType:"json"
+                    ,success:function(data){
+                        alert(data.msg);
+                        if(data.result > 0){
+                             document.location.href =  CONTEXT_PATH + '/admin/store/userGroup';
+                        }
+                 }
+             }) 
+            
+         }
+    }
+});
+
+
+</script>
+ 
+    #### S : 프로그램 위치 기술 부분  ####
+    <div class="headerBg">
+        <div class="innerNavi">
+            <a href="${CONTEXT_PATH}/admin/main"><img src="$RESOURCES_PATH/img/icon/icon_home.gif" alt="home"/></a> 
+            <span>ADMIN </span>  <span>#springMessage("menu.system.serviceAppstore") </span>  <span>#springMessage("menu.store.userGroup") </span>  <strong>#springMessage("common.text.list")</strong> <!-- 앱스토어 / 사용자그룹 관리 / 목록 -->
+        </div>
+        <div class="tb_tit">
+            <h3>#springMessage("menu.store.userGroup")</h3> <!-- 사용자 그룹관리 -->
+        </div>
+    </div>
+    #### E : 프로그램 위치 기술 부분  ####
+
+   #### S : 조회 폼 부분  ####
+    <form name="frmSearch" method="post">
+        <input type="hidden" id="rtnCd" value="$!rtnCd" />
+        <input type="hidden" id="rtnMsg" value="$!rtnMsg" />
+        <div class="detail_searchBox">
+            <p>   
+                <select id="conSelect">
+                    <option value="0">#springMessage("menu.push.user.groupName")</option> <!-- 그룹명 -->
+                    <option value="1">#springMessage("")</option> <!-- 회원명 -->
+                </select>
+                <input class="se_con" type="text" name="SEARCH_GRP_NM"  onkeydown="javascript:if(event.keyCode==13){fn_groupList(1);return false;}"/>
+                <input class="se_con" type="text" name="SEARCH_EMP_NM" style="display:none" onkeydown="javascript:if(event.keyCode==13){fn_groupList(1);return false;}"/>          
+            </p>
+            <p class="btn_detail">
+                <a href="javascript:fn_select();" class="btn_search">#springMessage("common.button.search") </a> <!-- 검색 -->
+            </p>
+        </div>
+        
+        <input type="hidden" id="orderTarget" value="UG_IDX"/>
+        <input type="hidden" id="orderType" value="DESC"/>
+        
+        
+        
+    </form>
+    #### S : 리스트  폼 부분  ####
+    <div class="contents">
+        <div class="tbCon">       
+                        
+                <div id="groupTableDiv">
+<!--  templete vm include  -->                    
+#parse ("/admin/store/userGroup/userGroupList.vm")
+                </div>
+        </div>
+    </div>
+   
+  
+    #### E : 리스트  폼 부분  ####
+
+
+</div>  

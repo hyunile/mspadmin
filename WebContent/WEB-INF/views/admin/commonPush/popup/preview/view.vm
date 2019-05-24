@@ -1,0 +1,55 @@
+<table class="tb_list"  id="tbList" summary="번호,작성방법,템플릿유형,템플릿명,작성자,등록일">
+	<colgroup >
+		<col  width="5%"/>
+		<col  width="10%"/>
+		<col  width="10%"/>
+		<col  width="AUTO"/>
+		<col  width="10%"/>
+		<col  width="15%"/> 
+		<col  width="10%"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th>No</th>
+			<th>#springMessage("menu.push.setting.writeWay")</th> <!-- 작성방법 -->
+			<th>#springMessage("menu.push.setting.templateType")</th> <!-- 템플릿유형 -->
+			<th>#springMessage("menu.push.setting.templateName")</th> <!-- 템플릿명 -->
+			<th>#springMessage("common.header.author")</th> <!-- 작성자 -->
+			<th>#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $template in $templateList )
+		#set($j_tot = $!template.TOT_CNT)
+		<tr>
+			<td>$!template.RNUM</td>
+			<td>$!template.WRITE_TYPE</td>
+			<td>$!template.TEMPLATE_TYPE</td>
+			<td>$!template.TEMPLATECODE</td>
+			<td>$!template.REGID</td>
+			<td>$!template.REGDATE</td>
+			<td><button type="button" class="btn_basic" onClick="fn_setTemplateSelected('$template.TEMPLATECODE')"><span>#springMessage("common.select.choose")</span></button></td> <!-- 선택 -->
+		</tr>	
+		#end	
+		
+		#if(!$j_tot)
+		<tr>
+			<td colspan="7" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+		#end
+	</tbody>
+</table>
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_getTemplateList"/>
+</div>
+	

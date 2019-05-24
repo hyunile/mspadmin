@@ -1,0 +1,169 @@
+<style type="text/css">
+	ul, li {list-style:none; margin:0; padding:0; font-size:10pt; }
+
+	.image_list {clear:both;overflow: auto;position: relative;width: 100%; border:1px solid #e1e1e1; cursor:pointer; }
+	.image_list .images {position:absolute; display:none; }
+
+	.tab {width:475px;cursor:pointer;}
+	.tab li {text-align: center;width:90px;float:left;border-left:1px solid #e1e1e1;border-right:1px solid #e1e1e1;border-top:1px solid #e1e1e1;padding:7px;}
+	.tab li.fir {border-left:1px solid #e1e1e1;}
+
+	.tab_icon {width:475px;cursor:pointer;}
+	.tab_icon li {float:left;}
+
+	.tab li.tabOutClass {font-weight:normal;color:#707070;background-color:#fff}
+	.tab li.tabOverClass {font-weight:bold;color:#000;background-color:#D0D0D0;}
+</style>
+
+
+<script src="$!{RESOURCES_PATH}/async/jquery/jquery.cookie.js" type="text/javascript"></script>
+
+<link href="$!{RESOURCES_PATH}/async/src/skin/ui.dynatree.css" rel="stylesheet" type="text/css" id="skinSheet">
+<script src="$!{RESOURCES_PATH}/async/src/jquery.dynatree.js" type="text/javascript"></script>
+
+
+<form name="frmTempResInfo" method="POST">
+	<div class="popup_content">
+		<div>
+			<ul class="tab" id="tab">
+				<li class="tabOverClass" id="summaryList" onclick="userGroupTree();">#springMessage("common.text.user") #springMessage("common.text.group")</li> <!-- 사용자 그룹 -->
+				<li class="tabOutClass" id="treeList" onclick="deptTree();">#springMessage("common.text.org") #springMessage("common.text.group")</li> <!-- 조직도 그룹 -->
+			</ul>
+		</div>
+		
+		<div class="image_list" id="group_list" style="max-height:500px; overflow-y:auto;">
+			<div id="groupTree"></div>
+		</div>
+		<div class="image_list" id="dept_list" style="max-height:500px; overflow-y:auto;">
+        	<div id="deptTree"></div>
+        </div>
+	</div>
+	
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:void(0)"  onClick="fn_addAppUser();" class="btn1">#springMessage("common.button.add")</a>	<!-- 추가 -->
+		<a href="javascript:void(0)" onClick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div>
+	
+</form>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+    
+    	userGroupTree();
+    	
+    });
+
+	
+	function userGroupTree(){
+		
+		$("#group_list").show();	
+		$("#dept_list").hide();	
+		
+		$("#groupTree").dynatree({
+			checkbox: true,
+			selectMode: 3,
+			debugLevel: 0,
+			//clickFolderMode: 3,
+			initAjax: {
+				url: "userGroupTree",
+				data: {}
+			},
+			onLazyRead: function(node){
+				node.appendAjax({
+					url: "userGroupTree",
+					data: {"selected" :node.isSelected()
+						,"hideCheckbox":true
+						,"parentCd": node.data.key
+						, "subCnt":node.data.SUB_CNT
+						,"memberCnt": node.data.MEMBER_CNT
+						,"mode": "branch"
+					}
+				});
+			},
+			onSelect: function(select, node) {
+				var selKeys 	= node.tree.getSelectedNodes();
+				var selKeyDatas = jQuery.map(selKeys, function(node){
+					return node.data.GRP_ID;
+				});
+				var selKeyNames = jQuery.map(selKeys, function(node){
+					return node.data.title;
+				});
+				var selRoleNames = jQuery.map(selKeys, function(node){
+					return node.data.role;
+				});
+
+				userIdObj  = selKeyDatas;//.join(", ");
+				userNameObj = selKeyNames;//.join(", ")
+				userRoleObj = selRoleNames;//.join(", ");
+				
+			},
+			
+			onDblClick: function(node, event) {
+				node.toggleSelect();
+			},
+			onKeydown: function(node, event) {
+				if( event.which == 32 ) {
+					node.toggleSelect();
+					return false;
+				}
+			},
+			cookieId: "dynatree-Cb3",
+			idPrefix: "dynatree-Cb3-"
+		});		
+	}
+	
+	function deptTree(){
+	
+		$("#group_list").hide();	
+		$("#dept_list").show();	
+	
+		$("#deptTree").dynatree({
+			checkbox: true,
+			selectMode: 3,
+			debugLevel: 0,
+			initAjax: {
+				url: "divisionTree",
+				data: {"parentCd": "0"}
+			},
+			onLazyRead: function(node){
+				node.appendAjax({
+					url: "divisionTree",
+					data: {"selected" :node.isSelected(),"parentCd": node.data.key, "subCnt":node.data.SUB_CNT,"memberCnt": node.data.MEMBER_CNT,"mode": "funnyMode"} // Optional url arguments
+				});
+			},
+			onSelect: function(select, node) {
+				
+				var selKeys 	= node.tree.getSelectedNodes();
+				var selKeyDatas = jQuery.map(selKeys, function(node){
+					return node.data.EMP_NO;
+				});
+				var selKeyNames = jQuery.map(selKeys, function(node){
+					return node.data.keyName;
+				});
+				var selRoleNames = jQuery.map(selKeys, function(node){
+					return node.data.role;
+				});
+				
+				userIdObj  = selKeyDatas;//.join(", ");
+				userNameObj = selKeyNames;//.join(", ")
+				userRoleObj = selRoleNames;//.join(", ");
+								
+			},
+			
+			onDblClick: function(node, event) {
+				node.toggleSelect();
+			},
+			onKeydown: function(node, event) {
+				if( event.which == 32 ) {
+					node.toggleSelect();
+					return false;
+				}
+			},
+			cookieId: "dynatree-Cb3",
+			idPrefix: "dynatree-Cb3-"
+		});		
+	}
+	
+	
+</script>

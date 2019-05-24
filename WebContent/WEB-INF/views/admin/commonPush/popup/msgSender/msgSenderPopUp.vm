@@ -1,0 +1,145 @@
+<script type="text/javascript">
+    $(document).ready(function(){
+		//공통 페지징 처리
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+    });
+    
+    //페이징 처리
+    function fn_getMsgSenderList(PAGE_NUM){
+    	var url = CONTEXT_PATH + "/admin/commonPush/popup/msgSender";
+    	var type = "POST";
+    	var data ="PAGE_NUM=" + PAGE_NUM;
+		var target = $("#divPopupList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+    }
+    
+    $(document).on("click","#checkAllPopup",function(){
+		if($(this).is(":checked")){
+			$(".checkListPopup").each(function(){
+				$(this)[0].checked = true;
+			});
+		}else{
+			$(".checkListPopup").each(function(){
+				$(this)[0].checked = false;
+			});
+		}
+	});
+    
+    //추가
+    function fn_addMsgSender(){
+		var msgSender = $("#txtMsgSender").val();
+		var msgSenderDesc = $("#txtMsgSenderDesc").val();
+		if(msgSender == ''){
+			alert('#springMessage("menu.push.setting.alert.inputSenderName")'); //발송자명을 입력해 주세요.
+			$("#txtMsgSender").focus();
+			return;
+		}
+		if(msgSenderDesc == ''){
+			alert('#springMessage("menu.push.setting.alert.inputSenderDesc")'); //발송자 설명을 입력해 주세요.
+			$("#txtMsgSenderDesc").focus();
+			return;
+		}
+		var data = "MSGSENDER_NM=" + msgSender + "&" + 
+					"MSGSENDER_DESC=" + msgSenderDesc;
+        var url = CONTEXT_PATH + "/admin/commonPush/popup/addMsgSender";
+    	var type = "POST";
+        			  
+    	jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+				cache: false,
+    			success:function(data){
+					var msg;
+					if(data.result == 1){
+						msg = '#springMessage("menu.store.device.alert.save")'; //"저장을 성공 하였습니다."
+					}else if(data.result == 2){
+						msg = '#springMessage("menu.store.device.alert.saveFail")'+' '+'#springMessage("menu.push.user.alert.sameName")'; //"저장을 실패 하였습니다. 중복된 이름이 있습니다.";
+					}else{
+						msg = '#springMessage("menu.store.device.alert.saveFail")'; //"저장을 실패 하였습니다.";
+					}
+    				alert(msg);
+    				fn_getMsgSenderList(1);
+    			}
+    		});
+    }
+    
+	//삭제
+	function fn_deletePopup(){
+		if(confirm('#springMessage("menu.prevent.appManage.alert.realDelete")')){ //"정말 삭제 하시겠습니까?" 
+			var arrMsgId = new Array();
+			$(".checkListPopup:checked").each(function(){
+				var msgId = $(this).parents("tr").find("#msgId")[0].value*1;
+				arrMsgId.push(msgId);
+			});
+			fn_deleteCampaignPopup(arrMsgId);
+		}
+	}
+	
+	function fn_deleteCampaignPopup(arrMsgId){
+		var url = CONTEXT_PATH + "/admin/commonPush/popup/delMsgSender";
+    	var data = "LIST_MSGSENDER_IDX=" + arrMsgId;
+    	jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+				cache: false,
+    			success:function(data){
+					var msg;
+					if(data.result == 0){
+						msg = '#springMessage("menu.mobile.common.failDelete")'; //"삭제를 실패 하였습니다."
+					}else{
+						msg = '#springMessage("menu.mobile.common.successDelete")'; //"삭제를 성공 하였습니다.";
+					}
+    				alert(msg);
+    				fn_getMsgSenderList(1);
+    			}
+    		});
+	}
+	
+	function fn_setSender(snderName, snderCode){
+		if(confirm(snderName +'#springMessage("menu.push.user.alert.senderSave")')){ //"을(를) 발송자로 지정하시겠습니까?"
+ 			fn_closePopup();
+			fn_setMsgSender(snderCode);
+		} 
+	}
+	
+	
+</script>
+
+<form name="frmServiceInfo">
+	
+<!--		
+			<div class="popup_search_area">	
+				<table>
+					<tr>
+						<td>
+							<input type="text" class="inp_wd100" id="txtMsgSender"/>
+							<input type="text" class="inp_wd300" id="txtMsgSenderDesc"/>
+							<button type="button" class="btn_basic" onClick="fn_addMsgSender()"><span>추가</span></button>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							선택한 목록을
+							<button type="button" class="btn_basic" onClick="fn_deletePopup()"><span>삭제</span></button> 
+						</td>
+					</tr>
+				</table>
+			</div>
+-->				
+			
+			<div id="divPopupList">
+				#parse("admin/commonPush/popup/msgSender/msgSenderPopUpList.vm")
+			</div>
+			
+			<br><br>
+				
+			<div class="btn-wrap txtCenter">
+				<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+			</div>
+			
+</form>

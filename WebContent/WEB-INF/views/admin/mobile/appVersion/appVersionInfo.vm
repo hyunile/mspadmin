@@ -1,0 +1,97 @@
+<script type="text/javascript">
+	jQuery(document).ready(function(){
+		$("#r_svc_nm").text( $(".selected").find("td:eq(1)").text() );
+	});
+</script>
+
+<form name="frmAppVerInfo" method="POST">
+	
+			<table class="tbl" summary="사용자ID,사용자명,암호,이메일,연락처,비상연락처,사용여부,사용자그룹">
+				<colgroup><!--  4cell  -->
+					<col width="20%"/><col width="80%"/>
+				</colgroup>
+				<tr>
+					<th scope="row">
+						<label for="SVC_ID">#springMessage("common.text.appname")</label> <!-- App. 명 -->
+					</th>
+					<td id="r_svc_nm">
+					</td>
+				</tr>
+				
+				#foreach($maxApp in $maxAppVersionList)
+					<tr>
+						<th>
+							$!maxApp.PLAT_NM
+						</th>
+						<td>
+							#if( $maxApp.PLAT_IDX )
+								$!maxApp.BIN_VER_STR (#springMessage("menu.mobile.version.lastVersion")) <!-- 마지막 버전 -->
+								<input type="hidden" id="val_$maxApp.PLAT_IDX" value="$!maxApp.BIN_VER" >
+							#else
+								$!maxApp.BIN_VER_STR
+							#end
+						</td>
+					</tr>
+				#end
+			</table>
+			<br>
+			
+			<div class="tbl-wrap">
+				<h2 class="tbl-title">#springMessage("menu.mobile.version.binaryVersionIn")</h2> <!-- 바이너리 버전 등록 -->
+			</div>
+			
+			<table class="tbl" summary="사용자ID,사용자명,암호,이메일,연락처,비상연락처,사용여부,사용자그룹">
+				<colgroup><!--  4cell  -->
+					<col width="20%"/><col width="80%"/>
+				</colgroup>
+				<tr>
+					<th scope="PLAT_IDX">
+						<label for="PASSWORD">#springMessage("menu.mobile.version.platform")</label> <!-- 플랫폼유형 -->
+					</th>
+					<td>
+						<select id="PLAT_IDX" name="PLAT_IDX">
+							#foreach($plat in $platList)
+								<option value="$plat.PLAT_IDX">$plat.PLAT_NM</option>
+							#end
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="BIN_VER" class="redNotice">#springMessage("menu.mobile.version.binaryVersion")</label> <!-- 바이너리버전 -->
+					</th>
+					<td>
+						<input type="text" maxlangth="2" id="BIN_VER_1" style="width:45PX;" onkeydown="onlyNumber();">
+						 • 
+						<input type="text" maxlangth="2" id="BIN_VER_2" style="width:45PX;" onkeydown="onlyNumber();">
+						 • 
+						<input type="text" maxlangth="2" id="BIN_VER_3" style="width:45PX;" onkeydown="onlyNumber();">
+						<input type="hidden" id="BIN_VER" name="BIN_VER">
+					</td>
+				</tr>
+				<tr>
+					<th>
+						<label for="DOWNLOAD_MARKET_URL">#springMessage("menu.mobile.version.updateAddr")</label> <!-- 업데이트 주소 -->
+					</th>
+					<td>
+						<input type="text" name="DOWNLOAD_MARKET_URL" value="$!moblileServiceUpdateOne.DOWNLOAD_MARKET_URL"/>
+					</td>
+				</tr>
+				<tr>
+				<th>
+					<label for="MEMO">#springMessage("menu.mobile.version.updateNotice")</label> <!-- 업데이트 공지 -->
+				</th>
+				<td>
+					<textArea class="nonScroll" type="text" name="MEMO" value="$!moblileServiceUpdateOne.MEMO"/>
+				</td>
+			</tr>	
+		</table>
+			
+		
+		
+		<div class="btn-wrap txtCenter">
+			<a href="javascript:void(0)" onclick="fn_goWrite();" class="btn1">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+			<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+		</div>
+	
+</form>

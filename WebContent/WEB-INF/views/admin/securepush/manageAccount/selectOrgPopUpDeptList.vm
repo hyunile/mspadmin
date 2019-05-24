@@ -1,0 +1,67 @@
+<script type="text/javascript">
+	//조직도에서 하위 조직이 있으면 화살표 생성
+	$(".tree-div a").bind("click keydown", function(){
+		$(this).nextAll("div").slideToggle();
+		$(this).toggleClass("expanded");
+	});
+	
+	// 부서 트리 선택 토글 이벤트 처리.
+	$(".tree-div span").bind("click keydown", function(){
+		$(this).toggleClass("selected");
+		$(".tree-div span").not(this).each(function(){
+			$(this).removeClass("selected");
+		});
+		if($(this).hasClass("selected")){
+			fn_getUserList($(this).siblings("input").val());
+		}
+	});
+</script>
+<table class="tbl-pop-info">
+	<colgroup>
+		<col style="width:280px">
+		<col style="width:60px">
+	</colgroup>
+	<tbody>
+		<tr><td colspan="2"><div class="tree-div">
+			#set( $levelcnt_map = {} )
+			#foreach( $dept in $deptList )
+				
+			<div class="dep$!dept.LEVEL">
+				<span>$!dept.DEPT_NM</span>
+				#if($dept.hasChild)
+					#set($dummy = $levelcnt_map.put($dept.LEVEL, $dept.childCnt))
+					#if($dept.LEVEL == 1)
+				<a class="expanded" href='javascript:void(0)'></a>
+					#else
+				<a href='javascript:void(0)'></a>	
+					#end
+				#end
+				<input type="hidden" class="DEPT_CD" value="$!dept.DEPT_CD"/>
+				
+				#if(!$dept.hasChild)
+			</div>
+				#end
+				
+				## 상위 레벨의 태그가 열린 것이 있으면 닫는다.
+				#if($dept.LEVEL > 1)
+					#set( $prev_level = $dept.LEVEL - 1)
+					#set($current_levelcnt = $levelcnt_map.get($prev_level) - 1)
+					#set($dummy = $levelcnt_map.put($prev_level, $current_levelcnt))
+					
+					#if(!$dept.hasChild)
+						#set($isinterrupted = false)
+						#foreach($item in $levelcnt_map)
+							#if($!levelcnt_map.get($prev_level) == 0 && !$isinterrupted)
+			</div>		
+							#else
+								#set($isinterrupted = true)
+							#end
+							#set( $temp = $prev_level - 1 )
+							#set( $prev_level = $temp)
+						#end
+					#end
+				#end
+			#end
+		</div></td></tr>
+	</tbody>
+</table>

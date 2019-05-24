@@ -1,0 +1,46 @@
+<script type="text/javascript">
+</script>
+<form name="frmServiceInfo">
+	<div class="popup_content">
+		<fieldset>
+			<div class="tb_view">
+				<table>
+					<caption>#springMessage("menu.push.monitoring.sessionDetail")</caption> <!-- 세션 모니터링 상세 -->
+					<colgroup>
+						<col style="width:140px;"/>
+						<col style="width:auto;"/>
+						<col style="width:140px;"/>
+						<col style="width:auto;"/>
+					</colgroup>
+					<tbody>
+						<tr>
+    						<th scope="row">PSID</th>
+    						<td colspan="3">$!monitorSessionDetail.PSID</td>
+						</tr>
+					<tr>
+						<th scope="row">CUID</th>
+						<td>$!monitorSessionDetail.CUID</td>
+						<th scope="row">UPNS#springMessage("common.text.personUnit")</th> <!-- 명 -->
+						<td>$!monitorSessionDetail.SERVERNAME</td>
+					</tr>
+					<tr>
+						<th scope="row">#springMessage("menu.push.monitoring.deviceNum")</th> <!-- 단말번호 -->
+						<td>$!monitorSessionDetail.PHONE_NO</td>
+						<th scope="row">#springMessage("common.text.userName")</th> <!-- 사용자명 -->
+						<td>$!monitorSessionDetail.CNAME</td>
+					</tr>
+					<tr>
+						<th scope="row">#springMessage("menu.push.monitoring.loginTime")</th> <!-- 로그인시간 -->
+						<td>$!monitorSessionDetail.LOGIN_TIME</td>
+						<th scope="row">#springMessage("menu.mobile.deploy.status")</th> <!-- 상태 -->
+						<td>$!monitorSessionDetail.LOGIN</td>
+					</tr>
+				</tbody></table>
+			</div>
+		</fieldset>
+		<div class="btn_pop">
+			<button type="button" class="btn_pink" onclick="fn_checkUserSession('$!monitorSessionDetail.PSID', '$!monitorSessionDetail.SERVERNAME')">#springMessage("menu.push.monitoring.sessionCheck")</button> <!-- 세션 유효성 검사 -->
+			<button type="button" class="btn_pink" onclick="fn_terminateUserSession('$!monitorSessionDetail.PSID', '$!monitorSessionDetail.SERVERNAME')">#springMessage("menu.push.monitoring.endSession")</button> <!-- 세션 종료 -->
+		</div>
+	</div>
+</form>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.campaign.campaignManage.mapper.CampaignManageDao">
+
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+	<sql id="head">
+		SELECT viewC.*
+		FROM (
+		SELECT
+		(ROW_NUMBER() OVER()) AS "RNUM"
+		,COUNT(*) OVER() AS "TOT_CNT"
+		,viewB.*
+		FROM (SELECT viewA.* FROM (
+	</sql>
+
+	<sql id="bottom">
+		) AS viewA
+		) AS viewB
+		) AS viewC
+		WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+	
+	<!--리스트 조회 -->
+	<select id="selectCampaignList" parameterType="kr.msp.admin.campaign.campaignManage.dto.CampaignParamDTO" resultType="kr.msp.admin.campaign.campaignManage.dto.CampaignDTO" >
+		<include refid="head"/>
+		SELECT * FROM TB_CMP_CAMPAIGN
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- 단건 추가 -->
+	<insert id="insertCampaign" parameterType="kr.msp.admin.campaign.campaignManage.dto.CampaignParamDTO">
+		INSERT INTO TB_CMP_CAMPAIGN(CAMPAIGN_IDX, CAMPAIGN_NM, CAMPAIGN_CONTENT, CAMPAIGN_FROM_DT, CAMPAIGN_TO_DT, REG_ID, REG_DTTM, MOD_ID) 
+		VALUES (SEQ_TB_CMP_CAMPAIGN.NEXTVAL, #{CAMPAIGN_NM}, #{CAMPAIGN_CONTENT}, #{CAMPAIGN_FROM_DT}, #{CAMPAIGN_TO_DT}, #{REG_ID}, SYSDATE, #{MOD_ID})
+	</insert>
+	
+	<!-- 삭제 -->
+	<delete id="deleteCampaign" parameterType="kr.msp.admin.campaign.campaignManage.dto.CampaignParamDTO">
+		DELETE FROM TB_CMP_CAMPAIGN 
+		WHERE CAMPAIGN_IDX IN 
+		<foreach item="LIST_CMP_IDX" index="index" collection="LIST_CMP_IDX" open="(" separator="," close=")">
+        	#{LIST_CMP_IDX}
+  		</foreach>
+	</delete>
+    
+</mapper>

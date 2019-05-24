@@ -1,0 +1,23 @@
+<form name="frmUserInfo" method="POST">
+	
+			<table class="tbl" summary="파일선택">
+				<colgroup><!--  2cell  -->
+					<col width="25%"/><col width="75%"/>
+				</colgroup>
+				<tr>
+					<th scope="row">
+						<label for="USER_FILE">* #springMessage("menu.push.user.fineChoose")</label> <!-- 파일선택 -->
+					</th>
+					<td>
+						<input type="file" id="USER_FILE" name="USER_FILE" />
+					</td>
+				</tr>
+			</table>
+
+		<div class="btn-wrap txtCenter">
+			<button type="button" onclick="fn_download();" class="btn_basic"><span>#springMessage("menu.push.user.formDown")</span></button> <!-- 서식 다운 -->
+			<button type="button" onclick="fn_save();" class="btn_basic"><span>#springMessage("common.button.regist")</span></button> <!-- 등록 -->
+			<button type="button" onclick="fn_closePopup();" id="maskClose" class="btn_basic"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+		</div>
+	
+</form>

@@ -1,0 +1,100 @@
+<h4 class="title">#springMessage("menu.push.groupSendList")</h4> <!-- 그룹 발송 리스트 -->
+<table class="tbList1" style="word-wrap: break-word;">
+	<thead>
+   		<tr>
+   			<th>
+				#springMessage("menu.push.setting.sendDate") <!-- 발송일시 -->
+			</th>
+			<th>
+				#springMessage("menu.push.setting.sendType") <!-- 발송유형 -->
+			</th>
+   			<th>
+				APP ID
+			</th>
+			<th>
+				#springMessage("menu.push.user.groupName") <!--그룹명  -->
+			</th>
+			<th>
+				#springMessage("menu.stats.push.sender")ID <!-- 발송자 -->
+			</th>
+			<th>
+				#springMessage("common.text.registDate") <!-- 등록일시 -->
+			</th>
+			<th>
+				#springMessage("menu.mobile.deploy.status") <!-- 상태 -->
+			</th>
+			<th>
+				#springMessage("menu.push.setting.sendDesc") <!-- 발송내역 -->
+			</th>
+			<th>
+				#springMessage("common.header.detail") <!-- 상세 -->
+			</th>
+       	</tr>
+    </thead>
+    <tbody>
+		#foreach( $groupReserveSend in $groupReserveSendList )
+       		#set($j_tot = $groupReserveSend.TOT_CNT)
+           	<tr >
+           		<td >
+           			$esc.xml($!groupReserveSend.RESERVEDATE)
+           			<input type="hidden" class="MSGGRPSEQNO" value="$groupReserveSend.MSGGRPSEQNO">
+           			<input type="hidden" class="SEQNO" value="$groupReserveSend.SEQNO">
+   				</td>
+   				<td>
+   					 #if( $!groupReserveSend.RESERVE_TYPE == 'I' )
+   					 	#springMessage("menu.push.sendManage.now") <!-- 즉시 -->
+   					 #else
+   					 	#springMessage("menu.push.sendManage.reserve") <!-- 예약 -->
+   					 #end
+				</td>
+   				<td >
+           			$esc.xml($!groupReserveSend.APPID)
+           		</td>
+   				<td >
+           			$esc.xml($!groupReserveSend.GROUPSEQ)
+   				</td>
+   				<td >
+           			$esc.xml($!groupReserveSend.SENDERCODE)
+   				</td>
+   				<td id="check_td">
+   					$esc.xml($!groupReserveSend.REGDATE)
+           		</td>
+           		<td id="check_td">
+   					#if($groupReserveSend.STATE == "N")
+   						 #springMessage("common.text.noProcess")<!-- 미처리 -->
+					#elseif($groupReserveSend.STATE == "P")
+						 #springMessage("common.text.complete") <!-- 완료 -->
+					#elseif($groupReserveSend.STATE == "W")
+						 #springMessage("common.text.process") <!-- 작업중 -->
+					#end
+           		</td>
+           		<td>
+           			<input type="button" id="reserveSendInfoList" value="#springMessage('common.text.content')"> <!-- 내역 -->
+		      	</td>
+   				<td>
+           			<input type="button" id="reserveSendInfo" value="#springMessage('common.button.detail')"> <!-- 상세 -->
+   				</td>
+       		</tr>
+   		#end
+   		#if(!$j_tot)
+			<tr>
+				<td colspan="9">
+					#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+<input type="hidden" id="SEND_NUM" value="$!R_PAGE_NUM">
+<div class="j_page_div">
+ 	##현재 페이지
+ 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot">
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_RserveList">
+</div>

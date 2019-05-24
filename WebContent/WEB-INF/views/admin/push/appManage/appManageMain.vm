@@ -1,0 +1,437 @@
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+//페이징 처리
+function fn_serviceList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var url = CONTEXT_PATH + "/admin/push/appManage";
+	var type = "POST";
+	var data ="PAGE_NUM=" + PAGE_NUM + "&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+	var target = $("#serviceTableDiv");
+	fn_getList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//서비스 상세 화면
+$(document).on("click","#serviceModify",function(){
+	var APPID = $(this).parent().parent().find(".APPID").val();
+	var url = CONTEXT_PATH + "/admin/push/appManage/edit";
+	var type = "GET";
+	var data = "APPID=" + APPID;
+	var target = $("#windowPop");
+	var width = 600;
+	var title = "PUSH APP "+'#springMessage("common.button.modify")';  //수정
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//서비스 수정
+function fn_Modify(){
+	var url = CONTEXT_PATH + "/admin/push/appManage/edit";
+	var data = $("form[name=frmPushService]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_serviceList($("#SERVICE_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//pns 리스트 조회
+$(document).on("click","#pushtdClick",function(){
+	$("#CLICK_APPID").val( $(this).parent().parent().find(".APPID").val() );
+	fn_goPnsList();
+});
+
+function fn_goPnsList(){
+	var APPID = $("#CLICK_APPID").val();
+	var url = CONTEXT_PATH + "/admin/push/appManage/pns";
+	var type = "GET";
+	var data = "APPID=" + APPID;
+	var target = $("#windowPop");
+	var width = 850;
+	var title = "PNS "+'#springMessage("common.text.list")'; //목록 
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+}
+
+//pns 등록 화면
+$(document).on("click","#pnsWrite",function(){
+	var APPID = $("#CLICK_APPID").val();
+	var url = CONTEXT_PATH + "/admin/push/appManage/pns/regist";
+	var type = "GET";
+	var data = "APPID=" + APPID;
+	var target = $("#windowPop");
+	var width = 600;
+	var title = "PNS "+'#springMessage("common.button.regist")';  //등록
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+	
+	$("#PNSID").parent().parent().nextAll("tr").hide();
+});
+
+
+//pns 수정 화면
+$(document).on("click","#pnsModify",function(){
+	var PNSID = $(this).parent().parent().find(".PNSID").val();
+	var APPID = $("#CLICK_APPID").val();
+	var url = CONTEXT_PATH + "/admin/push/appManage/pns/edit";
+	var type = "GET";
+	var data = "APPID=" + APPID + "&PNSID=" + PNSID;
+	var target = $("#windowPop");
+	var width = 600;
+	var title = "PNS "+'#springMessage("common.button.modify")';  //수정
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+	
+	$("#PNSID").parent().parent().nextAll("tr").hide();
+});
+
+
+//pns id 변경시 입력 폼 변경
+$(document).on("change","#PNSID",function(){
+	$("#check_con").val("0");
+	$("#PNSID").parent().parent().nextAll("tr").hide();
+	$("#PNSID").parent().parent().nextAll("tr").find(".PNS_CERT").attr("id","");
+	$("#PNSID").parent().parent().nextAll("tr").find(".PNS_CERT").attr("name","");
+	$("#PNSID").parent().parent().nextAll("tr").find("#PNS_PASSWORD").attr("name","");
+	$("#PNSID").parent().parent().nextAll("tr").find("#PNS_KEYSTORE").attr("name","");
+	$("." + $(this).val()).find(".PNS_CERT").attr("id","CERT_FILE");
+	$("." + $(this).val()).find(".PNS_CERT").attr("name","CERT_FILE");
+	$("." + $(this).val()).find("#PNS_PASSWORD").attr("name","PASSWORD");
+	$("." + $(this).val()).find("#PNS_KEYSTORE").attr("name","KEYSTORE");
+	$("." + $(this).val()).show();
+});
+
+//pns 등록
+function fn_pnsInsert(){	
+	if( $("#PNSID").val() == ""){
+		alert("PNS ID"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+		return;
+	} else if ($("#check_con").val() != 1){
+		alert('#springMessage("menu.push.appManage.alert.doSameCheck")'); //중복체크를 해주세요.
+		return;
+	}
+
+	if($("#PNSID").val() == "AOM" || $("#PNSID").val() == "APNS"){
+		if($("." + $("#PNSID").val()).find("#PNS_CERT").val() == ""){
+			alert("KEYSTORE"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+		if($("." + $("#PNSID").val()).find("#PNS_PASSWORD").val() == ""){
+			alert("PASSWORD"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+	}
+
+	if($("#PNSID").val() == "GCM"){
+		if($("." + $("#PNSID").val()).find("#PNS_KEYSTORE").val() == ""){
+			alert("SENDER ID"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+		if($("." + $("#PNSID").val()).find("#PNS_PASSWORD").val() == ""){
+			alert("APIKEY"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+	}
+
+	if($("#PNSID").val() == "WNS"){
+		if($("." + $("#PNSID").val()).find("#PNS_KEYSTORE").val() == ""){
+			alert("CLIENT ID"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+		if($("." + $("#PNSID").val()).find("#PNS_PASSWORD").val() == ""){
+			alert("CLIEND SECRET"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+	}
+	
+ 	var PASSWORD = $("." + $("#PNSID").val()).find("#PNS_PASSWORD").val();
+ 	var KEYSTORE = $("." + $("#PNSID").val()).find("#PNS_KEYSTORE").val();
+ 	var APPID = $("#MO_APPID").val();
+ 	var PNSID = $("#PNSID").val();
+ 	
+ 	jQuery.ajaxFileUpload({
+		url: CONTEXT_PATH + '/admin/push/appManage/pns/regist',
+		secureuri:false,
+		fileElementId:'CERT_FILE',
+		data: {"PASSWORD":PASSWORD,"KEYSTORE":KEYSTORE,"APPID":APPID,"PNSID":PNSID},
+		dataType: 'html/text',
+		contentType : 'multipart/form-data',
+		success: function (data,status) {
+			var result = jQuery.parseJSON(data);
+			alert(result.msg);
+			if(result.result > 0){
+				//var APPID = $("#CLICK_APPID").val();
+				//var url = CONTEXT_PATH + "/admin/push/appManage/pns";
+				//var type = "POST";
+				//var data = "APPID=" + APPID;
+				//var target = $(".serviceSubListTr");
+				//fn_getList( url, type, data , target );
+				fn_goPnsList();
+			}
+		},
+        error:function(request,status,error){
+        	if(typeof(request.status) != 'undefined')
+            	alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//pns 수정
+function fn_pnsModify(){
+
+	if($("input[name=PNSID]").val() == "AOM" || $("input[name=PNSID]").val() == "APNS"){
+		if($("#PNS_PASSWORD").val() == ""){
+			alert("PASSWORD"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+	}
+
+	if($("input[name=PNSID]").val() == "GCM"){
+		if($("#PNS_KEYSTORE").val() == ""){
+			alert("SENDER ID"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+		if($("#PNS_PASSWORD").val() == ""){
+			alert("APIKEY"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+	}
+
+	if($("input[name=PNSID]").val() == "WNS"){
+		if($("#PNS_KEYSTORE").val() == ""){
+			alert("CLIENT ID"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+		if($("#PNS_PASSWORD").val() == ""){
+			alert("CLIEND SECRET"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+			return;
+		}
+	}
+
+ 	var PASSWORD = $("#PNS_PASSWORD").val();
+ 	var KEYSTORE = $("#PNS_KEYSTORE").val();
+ 	var APPID = $("#MO_APPID").val();
+ 	var PNSID = $("#MO_PNSID").val();
+ 	
+ 	
+ 	jQuery.ajaxFileUpload({
+		url: CONTEXT_PATH + '/admin/push/appManage/pns/edit',
+		secureuri:false,
+		fileElementId:'CERT_FILE',
+		data: {"PASSWORD":PASSWORD,"KEYSTORE":KEYSTORE,"APPID":APPID,"PNSID":PNSID},
+		dataType: 'html/text',
+		contentType : 'multipart/form-data',
+		success: function (data,status) {
+            var result = jQuery.parseJSON(data);
+            alert(result.msg);
+			if(result.result > 0){
+				//var APPID = $("#CLICK_APPID").val();
+				//var url = CONTEXT_PATH + "/admin/push/appManage/pns";
+				//var type = "GET";
+				//var data = "APPID=" + APPID;
+				//var target = $(".serviceSubListTr");
+				//fn_getList( url, type, data , target );
+				fn_goPnsList();
+			}
+		},
+        error:function(request,status,error){
+        	if(typeof(request.status) != 'undefined')
+            	alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});	
+}
+
+//PNS 삭제
+function fn_pnsDelete(){
+	var url = CONTEXT_PATH + "/admin/push/appManage/pns/delete";
+	var data = $("form[name=frmPnsService]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				//var APPID = $("#CLICK_APPID").val();
+				//var url = CONTEXT_PATH + "/admin/push/appManage/pns";
+				//var type = "GET";
+				//var data = "APPID=" + APPID;
+				//var target = $(".serviceSubListTr");
+				//fn_getList( url, type, data , target );
+				fn_goPnsList();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//pns id 중복체크
+function fn_checkPnsId(){
+ 	var APPID = $("#CLICK_APPID").val();
+ 	var PNSID = $("#PNSID").val();
+	var url = CONTEXT_PATH + "/admin/push/appManage/pns/check";
+	var data = "APPID=" + APPID + "&PNSID=" + PNSID;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#check_con").val("1");
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//공통코드 화면 호출(공통)
+function fn_getList( url, type, data, target ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_serviceList(1);
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.system.appManage")</span>		<!-- APP 관리 -->
+		<span>#springMessage("menu.push.appmanage.appview")</span>	<!-- APP 조회 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.push.appmanage.appview")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<form name="frmList" method="post">
+		
+		#### S : 리스트  폼 부분  ####	
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+
+		<div class="tbCon" id="serviceTableDiv">
+			<input type="hidden" id="CLICK_APPID" value="$CLICK_APPID" />
+			
+			<table class="tbl-nb" summary="APP ID,APP NAME,등록일자,변경일시,상세">
+				<colgroup><!--  5cell  -->
+					<col width="200px"/>
+					<col width="auto"/>
+					<col width="200px"/>
+					<col width="200px"/>
+					<col width="70px"/>
+					<col width="70px"/>
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">APP ID</th>
+						<th scope="col">APP NAME</th>
+						<th scope="col">#springMessage("menu.push.appManage.insertDate")</th> <!-- 등록일자 -->
+						<th scope="col">#springMessage("menu.push.appManage.updateDate")</th> <!-- 변경일시 -->
+						<th scope="col"> </th>
+						<!--<th scope="col"> </th>-->
+					</tr>
+				</thead>
+				<tbody>
+				#foreach($pushService in $pushServiceList)
+					#set($j_tot = $pushService.TOT_CNT)
+					<tr>
+						<td>
+							$esc.xml($!pushService.APPID)
+							<input type="hidden" class="APPID" value="$pushService.APPID" />
+						</td>
+						#if(!$pushService.APPNAME)
+							<td>
+								$!pushService.APPNAME
+							</td>
+						#else
+						<td>
+							$esc.xml($!pushService.APPNAME)
+						</td>
+						#end
+						<td >
+							$!pushService.REGDATE
+						</td>
+						<td >
+							$!pushService.MODDATE
+						</td>
+						<td>
+							<a href="javascript:void(0)" class="btn2" id="serviceModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+						</td>
+						<!--
+						<td>
+							<a href="javascript:void(0)" class="btn2" id="pushtdClick">PNS</a>
+						</td>
+						-->
+					</tr>
+				#end
+				#if(!$j_tot)
+					<tr>
+						<td colspan="5" class="ta_c"> #springMessage("menu.push.appManage.noService") </td> <!-- 등록된 서비스가 없습니다. -->
+					</tr>
+				#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="SERVICE_NUM" value="$!R_PAGE_NUM" />
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot" />
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_serviceList" />
+			</div>
+			
+		</div>
+		
+		#### E : 리스트  폼 부분  ####
+	</form>
+</div>

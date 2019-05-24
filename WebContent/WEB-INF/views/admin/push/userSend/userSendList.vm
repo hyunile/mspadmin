@@ -1,0 +1,90 @@
+<h4 class="title">#springMessage("menu.push.userSendList")</h4> <!-- 사용자 발송 리스트 -->
+<table class="tbList1" style="word-wrap: break-word;">
+	<thead>
+   		<tr>
+   			<th>
+				#springMessage("menu.push.reserveDate") <!-- 예약일시 -->
+			</th>
+			<th>
+				#springMessage("menu.push.setting.sendType") <!-- 발송유형 -->
+			</th>
+			<th>
+				APP ID
+			</th>
+			<th>
+				CUID
+			</th>
+			<th>
+				#springMessage("menu.stats.push.sender")ID <!-- 발송자 -->
+			</th>
+			<th>
+				#springMessage("menu.push.sendManage.seeCheck") <!--수신확인-->
+			</th>
+			<th>
+				#springMessage("menu.push.sendManage.readCheck") <!--읽음확인-->
+			</th>		
+			<th>
+				#springMessage("common.header.detail") <!-- 상세 -->
+			</th>
+       	</tr>
+    </thead>
+    <tbody>
+		#foreach( $userUserSend in $pushUserSendList )
+       		#set($j_tot = $userUserSend.TOT_CNT)
+           	<tr>
+           		<td id="check_td">
+           			$esc.xml($userUserSend.RESERVEDATE)
+           			<input type="hidden" class="SEQNO" value="$userUserSend.SEQNO">
+           			<input type="hidden" class="CUID" value="$userUserSend.CUID">
+   				</td>
+   				<td id="check_td">
+   					#if($userUserSend.RESERVE_TYPE == "I")
+   						#springMessage("menu.push.sendManage.now") <!-- 즉시-->
+					#else
+						#springMessage("menu.push.sendManage.reserve") <!-- 예약-->
+					#end
+				</td >
+   				<td id="check_td">
+           			$esc.xml($userUserSend.APPID)
+           		</td>
+   				<td id="check_td">
+           			$esc.xml($userUserSend.CUID)
+   				</td>
+   				<td id="check_td">
+           			$!userUserSend.SENDERCODE
+   				</td>
+   				<td id="check_td">
+           			$esc.xml($userUserSend.SEND_YN)
+   				</td>
+   				<td id="check_td">
+           			$esc.xml($userUserSend.READ_YN)
+   				</td>   			
+   				<td>
+           			<input type="button" id="reserveSendInfo" value="#springMessage('common.button.detail')"> <!-- 상세 -->
+   				</td>
+       		</tr>
+       		<tr>
+       		</tr>
+   		#end
+   		#if(!$j_tot)
+			<tr>
+				<td colspan="8">
+					#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+<input type="hidden" id="SEND_NUM" value="$!R_PAGE_NUM">
+<div class="j_page_div">
+ 	##현재 페이지
+ 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot">
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_RserveList">
+</div>

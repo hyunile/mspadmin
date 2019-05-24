@@ -1,0 +1,50 @@
+#set($totalMsgCount = $gnr_send_cnt + $gnr_fail_cnt )
+
+#if($totalMsgCount == 0 )
+	#set($ratioSuccess = 0)
+	#set($ratioFail = 0)
+	#set($ratioRecvCnt = 0)
+	#set($ratioReadCnt = 0)
+#else
+	#set($ratioSuccess = $gnr_send_cnt / $totalMsgCount * 100)
+	#set($ratioFail = $gnr_fail_cnt / $totalMsgCount * 100)
+	#set($ratioRecvCnt = $gnr_recv_cnt / $totalMsgCount * 100 )
+	#set($ratioReadCnt = $gnr_read_cnt / $totalMsgCount * 100 )
+#end
+
+#if($!useSecurePushStyle)
+<h2>[Push] #springMessage("menu.push.sendManage.sendStat") <small>$strPeriodParam</small></h2> <!-- 발송현황 -->
+<a href="javascript:GO_MENU_URL_favori('0000000018','0000000013','/admin/push/msgSendStatus');" class="more">#springMessage("common.button.moreView")</a> <!-- 더보기 -->
+#else
+<h2>메시지 발송 통계 <small>$strPeriodParam</small></h2>
+#end
+
+<table class="stat">
+	<caption>#springMessage("menu.push.sendManage.sendStat")</caption> <!-- 발송현황 -->
+	<tr>
+		<td>
+			<h3>#springMessage("menu.stats.push.allSendNum")</h3> <!-- 총 발송 메시지 건수 -->
+			<p><strong>$totalMsgCount</strong>#springMessage("common.text.gun")</p> <!-- 건 -->
+		</td>
+		<td>
+			<h3>#springMessage("menu.push.sendManage.sendResult") (#springMessage("common.text.success") / #springMessage("common.text.fail") #springMessage("common.text.gun"))</h3> <!-- 발송 결과(성공/실패 건) -->
+			<strong>$gnr_send_cnt<span><em>/</em>$gnr_fail_cnt</span></strong>
+			<div class="progressBar" data-progress="$ratioSuccess"><div></div></div>
+			<span>(#springMessage("common.text.success") : $ratioSuccess % ) /( #springMessage("common.text.fail") : $ratioFail %  )</span> <!-- 성공 --> <!-- 실패 -->
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<h3>#springMessage("menu.stats.push.receive")</h3>  <!-- 수신 -->
+			<p><strong>$gnr_recv_cnt</strong>#springMessage("common.text.gun")</p> <!-- 건 -->
+			<div class="progressBar" data-progress="$ratioRecvCnt"><div></div></div>
+			<span>$ratioRecvCnt %</span>
+		</td>
+		<td>
+			<h3>#springMessage("menu.push.sendManage.readCheck")</h3> <!-- 읽음 확인 -->
+			<p><strong>$gnr_read_cnt</strong>#springMessage("common.text.gun")</p> <!-- 건 -->
+			<div class="progressBar" data-progress="$ratioReadCnt"><div></div></div>
+			<span>$ratioReadCnt %</span>
+		</td>
+	</tr>
+</table>

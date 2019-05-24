@@ -1,0 +1,371 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+	
+	//달력 구현
+	$("#END_DATE_S").datepicker({
+		regional: "ko",
+		dateFormat: "yymmdd",
+		showOn: "button",
+		buttonImage: CONTEXT_PATH + "/resources/img/btn/btn_calendar.gif",
+		buttonImageOnly: true,
+		altField: "#END_VIEW_S",
+		altFormat: "yy.mm.dd"
+	});
+	
+	//달력 구현
+	$("#END_DATE_E").datepicker({
+		regional: "ko",
+		dateFormat: "yymmdd",
+		showOn: "button",
+		buttonImage: CONTEXT_PATH + "/resources/img/btn/btn_calendar.gif",
+		buttonImageOnly: true,
+		altField: "#END_VIEW_E",
+		altFormat: "yy.mm.dd"
+	});
+	
+	$("#END_VIEW_S").val(jQuery.datepicker.formatDate("yy.mm.dd", new Date()));
+	$("#END_VIEW_E").val(jQuery.datepicker.formatDate("yy.mm.dd", new Date()));
+	
+	$("#END_DATE_S").val(jQuery.datepicker.formatDate("yymmdd", new Date()));
+	$("#END_DATE_E").val(jQuery.datepicker.formatDate("yymmdd", new Date()));
+});
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+//그룹 MSG 발송 리스트 검색
+function fn_se_select(){
+	if( $("#END_VIEW_S").val() == ""){
+		alert('#springMessage("common.alert.startDate")'); //시작 일자을 입력해주세요.
+		return;
+	}
+	if( $("#END_VIEW_E").val() == "" ){
+		alert('#springMessage("common.alert.endDate")'); //"끝 일자을 입력해주세요."
+		return;
+	}
+	if( $("#END_DATE_S").val() +""+ $("#END_HOUR_S").val() +""+ $("#END_MINUTE_S").val() > $("#END_DATE_E").val() +""+ $("#END_HOUR_E").val() +""+ $("#END_MINUTE_E").val()){
+		alert('#springMessage("common.alert.dateError")'); //"시작 일자가 끝 일자보다 큽니다."
+		return;
+	}
+	$("#RESERVEDATE_S").val( $("#END_VIEW_S").val() +" "+ $("#END_HOUR_S").val() +""+ $("#END_MINUTE_S").val() );
+	$("#RESERVEDATE_E").val( $("#END_VIEW_E").val() +" "+ $("#END_HOUR_E").val() +""+ $("#END_MINUTE_E").val() );
+	
+	ch_search();
+}
+function ch_search(){
+	var sfrm=document.frmSearch;
+		if(sfrm.grpid.value.length>0&&sfrm.grpid.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.grpid.value="";
+			sfrm.grpid.focus();
+		}
+	fn_RserveList(1);
+}
+
+
+// MSG 발송 리스트 페이징
+function fn_RserveList(PAGE_NUM){
+	if($("form[name=frmSearch]").find("select[name=APPID]").val() == ""){
+		alert("APPID"+'#springMessage("common.alert.doInput2")'); //를 입력해주세요.
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/push/groupReserveSend";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#reserveSendTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//그룹 MSG 발송리스트 체크
+$(document).on("click","#check_td",function(){
+	if($(this).parent().attr("class") == "select"){
+		$(this).parent().removeClass().addClass("no_select");
+		var selectBox = $(this).parent().find(".check_row")[0];
+		selectBox.checked = false;
+		$(this).parent().find(".MSGGRPSEQNO").attr("name","");
+		$(this).parent().find(".SEQNO").attr("name","");
+	} else {
+		$(this).parent().removeClass().addClass("select");
+		var selectBox = $(this).parent().find(".check_row")[0];
+		selectBox.checked = true;
+		$(this).parent().find(".MSGGRPSEQNO").attr("name","MSGGRPSEQNO");
+		$(this).parent().find(".SEQNO").attr("name","SEQNO");
+	}
+});
+
+$(document).on("click",".check_row",function(){
+	if($(this).is(":checked")){
+		$(this).parent().parent().removeClass().addClass("select");
+		$(this).parent().parent().find(".MSGGRPSEQNO").attr("name","MSGGRPSEQNO");
+		$(this).parent().parent().find(".SEQNO").attr("name","SEQNO");
+	} else {
+		$(this).parent().parent().removeClass().addClass("no_select");
+		$(this).parent().parent().find(".MSGGRPSEQNO").attr("name","");
+		$(this).parent().parent().find(".SEQNO").attr("name","");
+	}
+});
+
+$(document).on("click","#all_check",function(){
+	if($(this).is(":checked")){
+		$(".no_select").each(function(){
+			$(this).removeClass().addClass("select");
+			var selectBox = $(this).find("input[type=checkbox]")[0];
+			selectBox.checked = true;
+			$(this).find(".MSGGRPSEQNO").attr("name","MSGGRPSEQNO");
+			$(this).find(".SEQNO").attr("name","SEQNO");
+		});
+	} else {
+		$(".select").each(function(){
+			$(this).removeClass().addClass("no_select");
+			var selectBox = $(this).find("input[type=checkbox]")[0];
+			selectBox.checked = false;
+			$(this).find(".MSGGRPSEQNO").attr("name","");
+			$(this).find(".SEQNO").attr("name","");
+		});
+	}
+});
+
+
+//그룹 MSG 발송 상세
+$(document).on("click","#reserveSendInfo",function(){
+	var MSGGRPSEQNO = $(this).parent().parent().find(".MSGGRPSEQNO").val();
+	
+	var url = CONTEXT_PATH + "/admin/push/groupReserveSend/info";
+	var type = "GET";
+	var data = "MSGGRPSEQNO=" + MSGGRPSEQNO;
+	var target = $("#windowPop");
+	var whideh = 700;
+	var title = '#springMessage("menu.stats.push.message")'+' '+'#springMessage("common.header.detail")';//"메시지 상세";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+
+//그룹 MSG 발송 메시지 발송내역 상세
+$(document).on("click","#reserveSendInfoList",function(){
+	
+	var MSGGRPSEQNO = $(this).parent().parent().find(".MSGGRPSEQNO").val();
+	var SEQNO = $(this).parent().parent().find(".SEQNO").val();
+	var url = CONTEXT_PATH + "/admin/push/groupReserveSend/infoList";
+	var type = "GET";
+	var data = "MSGGRPSEQNO=" + MSGGRPSEQNO + "&SEQNO=" + SEQNO + "&PAGE_NUM=" + 1;
+	var target = $("#windowPop");
+	var whideh = 750;
+	var title = '#springMessage("menu.push.groupMsgSendDetail")';//"그룹 메시지 발송내역 상세";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+
+//그룹 MSG 발송 메시지 발송내역 페이징
+function fn_RserveinfoList(PAGE_NUM){
+	var SEQNO = $("#R_SEQNO").val();
+	
+	var url = CONTEXT_PATH + "/admin/push/groupReserveSend/infoList";
+	var type = "GET";
+	var data = "SEQNO=" + SEQNO + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#windowPop");
+	var whideh = 750;
+	var title = '#springMessage("menu.push.groupMsgSendDetail")';//"그룹 메시지 발송내역 상세";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+
+//그룹 MSG 발송 메시지 예약 취소 
+$(document).on("click","#reserveSendDelete",function(){
+	
+	if($(".select").size() < 1){
+		alert('#springMessage("menu.push.alert.noDeleteMsg")'); //삭제할 메시지가 없습니다.
+		return;
+	}
+	
+	if(! confirm('#springMessage("menu.push.alert.reserveCancel")')){ //예약취소를 하시겠습니까?
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/push/groupReserveSend/delete";
+	var data = $("form[name=frmList]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_RserveList(1);
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+});
+</script>
+
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="headerBg">
+    	<div class="innerNavi">
+    		<a href="#"><img src="/resources/img/icon/icon_home.gif" alt="home"/></a> <span>모바일</span> <span>리소스 관리</span> <span>배포관리</span> <strong>목록</strong>
+		</div>
+		<div class="tb_tit">
+			<h3>#springMessage("menu.push.groupMSG")</h3> <!-- 그룹 MSG 발송 예약 -->
+		</div>
+	</div>
+    #### E : 프로그램 위치 기술 부분  ####
+
+   	#### S : 조회 폼 부분  ####
+   	<form name="frmSearch" method="post">
+		<div class="detail_searchBox">
+			<p>
+				<label class="width60">* #springMessage("menu.mobile.manage.term")</label>  <!-- 기간 -->
+				<input type="text" name="END_VIEW_S" id="END_VIEW_S" readonly="readonly" style="width: 100px;" />
+				<input type="hidden" name="END_DATE_S" id="END_DATE_S" style="width: 0px; border-style: none;" />
+             	
+             	&nbsp;
+             	<select name="END_HOUR_S" id="END_HOUR_S">
+             		#foreach ( $item in [0..23] )
+             			#if($item < 10)
+             				<option value="0$item">$item</option>
+             			#else
+             				<option value="$item">$item</option>
+             			#end
+		   			#end
+	   		    </select>
+	   		    #springMessage("common.text.hour")&nbsp; <!-- 시 -->
+	   		    <select name="END_MINUTE_S" id="END_MINUTE_S">
+             		#foreach ( $item in [0..59] )
+             			#if($item < 10)
+             				<option value="0$item">$item</option>
+             			#else
+             				<option value="$item">$item</option>
+             			#end
+		   			#end
+	   		    </select>
+	   		    #springMessage("common.text.minite") <!-- 분 -->
+	   		    <input type="hidden" name="RESERVEDATE_S" id="RESERVEDATE_S">
+	   		    &nbsp; ~
+	   		    <input type="text" name="END_VIEW_E" id="END_VIEW_E" readonly="readonly" style="width: 100px;" />
+	   		    <input type="hidden" name="END_DATE_E" id="END_DATE_E" style="width: 0px; border-style: none;" />
+             	
+             	&nbsp;
+             	<select name="END_HOUR_E" id="END_HOUR_E">
+             		#foreach ( $item in [0..23] )
+             			#if($item < 10)
+             				<option value="0$item">$item</option>
+             			#else
+             				<option value="$item">$item</option>
+             			#end
+		   			#end
+	   		    </select>
+	   		    #springMessage("common.text.hour")&nbsp; <!-- 시 -->
+	   		    <select name="END_MINUTE_E" id="END_MINUTE_E">
+             		#foreach ( $item in [0..59] )
+             			#if($item < 10)
+             				<option value="0$item">$item</option>
+             			#else
+             				<option value="$item">$item</option>
+             			#end
+		   			#end
+	   		    </select>
+	   		    #springMessage("common.text.minite") <!-- 분 -->
+	   		    <input type="hidden" name="RESERVEDATE_E" id="RESERVEDATE_E">
+			</p>
+			<p>
+				<label class="width60">#springMessage("menu.stats.push.sender")ID</label>  <!-- 발송자 -->
+				<select name="SENDERSEQ">
+					<option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+					#foreach($pushSender in $pushSenderList)
+						<option value="$pushSender.SENDERSEQ">$!pushSender.SENDERNAME</option>
+					#end
+				</select>
+			</p>
+			<p>
+				<label class="width60">* APPID</label> 
+				<select name="APPID">
+		    		<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+		    		#foreach($pushService in $pushServiceList)
+		    			<option value="$pushService.APPID">$pushService.APPID</option>
+					#end
+		    	</select>
+		    	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<label class="width60">#springMessage("menu.push.user.groupName")</label>  <!-- 그룹명 -->
+		    	<input class="se_con" type="text" id="grpid" name="GROUPSEQ" onkeydown="javascript:if(event.keyCode==13){fn_se_select();return false;}"/>
+			</p>
+			<p class="btn_detail">
+				<button type="button" onclick="fn_se_select()" class="btn_search">#springMessage("common.button.view")</button> <!-- 조회  -->
+			</p>
+		</div>
+	</form>
+
+    <form name="frmList" method="post">
+    #### S : 리스트  폼 부분  ####
+    <div class="contents">
+    	<div class="tbCon">
+    		<div class="btnArea1 ta_r">
+				<button type="button" class="btn_style1" id="reserveSendDelete"><span>#springMessage("menu.push.reserveCancel")</span></button> <!-- 예약 취소 -->
+			</div>
+			<br/>
+		    <div id="reserveSendTableDiv">
+		       	<table class="tbList1">
+					<colgroup><!--  9cell  -->
+						<col width="50px"/><col width="120px"/><col width="auto"/><col width="auto"/>
+						<col width="120px"/><col width="60px"/><col width="70px"/><col width="70px"/>
+					</colgroup>
+		       		<thead>
+			       		<tr>
+			       			<th scope="col">
+			       				<input type="checkbox" id="all_check"/>
+			       			</th>
+			       			<th scope="col">
+			       				#springMessage("menu.push.reserveDate") <!-- 예약일시 -->
+			       			</th>
+							<th scope="col">
+								#springMessage("menu.push.user.groupName") <!-- 그룹명 -->
+							</th>
+							<th scope="col">
+								#springMessage("menu.stats.push.sender")ID <!-- 발송자 -->
+							</th>
+							<th scope="col">
+								#springMessage("common.text.registDate") <!-- 등록일시 -->
+							</th>
+							<th scope="col">
+								#springMessage("menu.mobile.deploy.status") <!-- 상태 -->
+							</th>
+							<th scope="col">
+								 
+							</th>
+							<th scope="col">
+								 
+							</th>
+			           	</tr>
+			        </thead>
+			        <tbody>
+						<tr>
+							<td colspan="8">
+								#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+							</td>
+						</tr>
+					</tbody>
+		    	</table>
+			</div>
+		</div>
+    </div>
+	#### E : 리스트  폼 부분  ####
+</form>
+</div>

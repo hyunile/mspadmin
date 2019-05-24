@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.system.menu.mapper.SystemMenuDao">
+
+	<resultMap type="kr.msp.admin.common.dto.MenuDto" id="MenuDto">
+		<result property="ID_MENU" column="menu_id"/>
+		<result property="NM_MENU" column="menu_nm"/>
+		<result property="MENU_URL" column="menu_url"/>
+		<result property="YN_POPUP" column="popup_yn"/>
+		<result property="NO_WIDTH" column="popup_w"/>
+		<result property="NO_HEIGHT" column="popup_h"/>
+		<result property="YN_USE" column="sts_cd"/>
+		<result property="ID_INSERT" column="reg_id"/>
+		<result property="DT_INSERT" column="reg_dttm"/>
+		<result property="ID_UPDATE" column="mod_id"/>
+		<result property="DT_UPDATE" column="mod_dttm"/>
+		<result property="DESC_MENU" column="menu_desc"/>
+		<result property="NO_ORDER" column="sort_no"/>
+		<result property="ID_MENU_PARENT" column="up_menu_id"/>
+		<result property="MENU_LEVEL" column="menu_level"/>
+		<result property="SORT_ORDER" column="sort_order"/>
+		<result property="MENU_TYPE" column="menu_type"/>
+	</resultMap>
+
+	<!-- 메뉴트리 조회 -->
+    <select id="SelectMenuList" resultMap="MenuDto">
+		/* SelectMenuList */
+		SELECT
+	        MENU_ID
+	       ,MENU_NM
+	       ,UP_MENU_ID
+	       ,LEVEL AS MENU_LEVEL
+	       ,ROW_NUMBER() OVER() AS SORT_ORDER
+	       ,CASE WHEN LEVEL = 1             THEN 'TOP_MENU'
+                 WHEN CONNECT_BY_ISLEAF = 1 THEN 'PROGRAM'
+                 ELSE 'SUB_MENU'
+            END AS MENU_TYPE
+	    FROM TB_SYS_MENU
+	    START WITH UP_MENU_ID IS NULL
+	    CONNECT BY PRIOR MENU_ID = UP_MENU_ID
+	    ORDER SIBLINGS BY SORT_NO
+    </select><!-- 완료 -->
+    
+    <!-- 메뉴리스트 R 조회 -->
+    <select id="SelectMenuInfo" parameterType="kr.msp.admin.system.menu.dto.MenuParamDto" resultMap="MenuDto">
+		SELECT 
+		     MENU_ID
+		    ,UP_MENU_ID
+		    ,MENU_NM
+		    ,MENU_URL
+		    ,POPUP_YN
+		    ,POPUP_W
+		    ,POPUP_H
+		    ,STS_CD
+		    ,SORT_NO
+		    ,MENU_DESC    
+		    ,REG_ID
+		    ,REG_DTTM
+		    ,MOD_ID
+		    ,MOD_DTTM
+		FROM TB_SYS_MENU
+	   WHERE MENU_ID = #{ID_MENU}
+    </select><!-- 완료 -->
+    
+    <!-- 메뉴 변경-->
+    <update id="UpdateMenu" parameterType="kr.msp.admin.common.dto.MenuDto">
+		UPDATE TB_SYS_MENU
+		    SET MENU_NM     = #{NM_MENU}
+		       ,MENU_URL    = #{MENU_URL}
+		       ,SORT_NO    = #{NO_ORDER}
+		       ,POPUP_YN    = #{YN_POPUP}
+		       ,POPUP_W    = #{NO_WIDTH}
+		       ,POPUP_H   = #{NO_HEIGHT}
+		       ,STS_CD      = #{YN_USE}
+		       ,MENU_DESC   = #{DESC_MENU}
+		       ,MOD_ID   = #{ID_UPDATE}
+		       ,MOD_DTTM   = CURRENT
+		WHERE MENU_ID =  #{ID_MENU}
+    </update><!-- 완료 -->
+    
+    <!-- 메뉴등록-->
+    <insert id="InsertMenu" parameterType="kr.msp.admin.common.dto.MenuDto">
+		INSERT INTO TB_SYS_MENU(
+		             MENU_ID
+                    <if test="ID_MENU_PARENT != null and ID_MENU_PARENT != ''">
+		            ,UP_MENU_ID
+                    </if>
+		            ,MENU_NM
+		            ,MENU_URL
+		            ,SORT_NO
+		            ,POPUP_YN
+		            ,POPUP_W
+		            ,POPUP_H
+		            ,STS_CD
+		            ,MENU_DESC
+		            ,REG_ID
+		            ,REG_DTTM
+		            ,MOD_DTTM
+		        )
+				VALUES(
+		             (SELECT LPAD(CAST(CAST(NVL(MAX(MENU_ID), 0)+1 AS SMALLINT) AS VARCHAR(10)), 10, '0') FROM TB_SYS_MENU)
+                    <if test="ID_MENU_PARENT != null and ID_MENU_PARENT != ''">
+		            ,#{ID_MENU_PARENT}
+                    </if>
+		            ,#{NM_MENU}
+		            ,#{MENU_URL}
+		            ,#{NO_ORDER}
+		            ,#{YN_POPUP}
+		            ,#{NO_WIDTH}
+		            ,#{NO_HEIGHT}
+		            ,#{YN_USE}
+		            ,#{DESC_MENU}
+		            ,#{ID_INSERT}
+		            ,CURRENT
+		            ,CURRENT
+		            )
+    </insert><!-- 완료 -->
+    
+    <select id="SelectIdMenu" resultType="java.lang.String">
+		SELECT LPAD(CAST(CAST(NVL(MAX(MENU_ID), 0) AS SMALLINT) AS VARCHAR(10)), 10, '0') FROM TB_SYS_MENU
+    </select><!-- 완료 -->
+    
+    <!-- 바로가기메뉴 삭제 -->
+    <select id="DeleteMenuFavor" parameterType="list">
+    	DELETE FROM TB_SYS_FAVRT
+        WHERE	MENU_ID IN
+        <foreach item="AdminMenuDTO" index="index" collection="list" open="(" separator="," close=")">
+			#{AdminMenuDTO.MENU_ID}
+		</foreach>
+			
+    </select>
+    
+    <!-- 그룹별 메뉴권한정보 삭제 -->
+    <select id="DeleteMenuAuthGroup" parameterType="list">
+    	DELETE FROM TB_SYS_MENU_AUTH
+        WHERE	MENU_ID IN
+        <foreach item="AdminMenuDTO" index="index" collection="list" open="(" separator="," close=")">
+			#{AdminMenuDTO.MENU_ID}
+		</foreach>
+    </select>
+    
+    <!-- 메뉴삭제  -->
+    <delete id="DeleteMenu" parameterType="list">
+		DELETE FROM TB_SYS_MENU
+		WHERE	MENU_ID IN
+        <foreach item="AdminMenuDTO" index="index" collection="list" open="(" separator="," close=")">
+			#{AdminMenuDTO.MENU_ID}
+		</foreach>
+    </delete>
+    
+</mapper>
+

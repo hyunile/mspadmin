@@ -1,0 +1,62 @@
+<table class="tbl-nb" summary="카테고리,제목,첨부파일,작성자,작성일,상세">
+	<colgroup>
+		<col width="20%" /><col width="auto" /><col width="8%" /><col width="11%" />
+		<col width="14%" /><col width="11%" />
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("menu.securePush.freeBoard.catg")</th> <!-- 카테고리 -->
+			<th scope="col">#springMessage("common.header.title")</th> <!-- 제목 -->
+			<th scope="col">#springMessage("common.text.upFile")</th> <!-- 첨부파일 -->
+			<th scope="col">#springMessage("common.header.author")</th> <!-- 작성자 -->
+			<th scope="col">#springMessage("common.header.registDate")</th> <!-- 작성일 -->
+			<th scope="col"></th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $itemInfo in $itemList )
+			#set($j_tot = $!itemInfo.TOT_CNT)
+			<tr class="itemRow">
+				<td >
+					$esc.xml($!itemInfo.CATG_NM)
+					<input type="hidden" class="BOARD_ID" value="$!itemInfo.BOARD_ID" />
+				</td>
+				<td >
+					$esc.xml($!itemInfo.TITLE)
+				</td>
+				<td>
+					$!itemInfo.ATTACH_YN
+				</td>
+				<td>
+					$esc.xml($!itemInfo.USER_NM)
+				</td>
+				<td>
+					$!itemInfo.REG_DT
+				</td>
+				<td>
+					<a href="javascript:fn_goDetailPop('$!itemInfo.BOARD_ID');void(0);" class="btn2">#springMessage("common.button.detail")</a> <!-- 상세 -->
+				</td>
+			</tr>
+		#end
+		#if(!$j_tot)
+			<tr>
+				<td colspan="6" class="ta_c">#springMessage("common.alert.nodata")</td>		### 데이터가 없습니다 ###
+			</tr>
+		#end
+	</tbody>
+</table>
+
+<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot" />
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_pageList" />
+</div>

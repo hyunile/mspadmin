@@ -1,0 +1,32 @@
+<div class="mtit">
+	<h3>#springMessage("menu.mobile")<span>#springMessage("menu.mobile.config.rscDownStat")</span></h3> <!-- 모바일관리    리소스 다운로드 현황-->
+	<p style="visibility: hidden;">#springMessage("menu.mobile.config.rscDownStat")</p> <!-- 리소스 다운로드 현황 -->
+</div>
+<table class="mtbl">
+	<caption>모바일 관리: 리소스 다운로드 현황</caption>
+	<colgroup>
+		<col style="width:auto">
+		<col style="width:38%">
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("menu.mobile.manage.rscName")</th> <!-- 리소스명 -->
+			<th scope="col" class="last">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td class="first">Test resource 1</td>
+			<td class="last">2014.04.23</td>
+		</tr>
+		<tr>
+			<td class="first">Test resource 2</td>
+			<td class="last">2014.04.23</td>
+		</tr>
+		<tr class="last">
+			<td class="first">Test resource 3</td>
+			<td class="last">2014.04.23</td>
+		</tr>
+	</tbody>
+</table>
+<a href="#" class="mbtn">#springMessage("common.button.moreView")</a> <!-- 더보기 -->

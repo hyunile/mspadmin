@@ -1,0 +1,41 @@
+<h2>#springMessage("menu.securePush.reserveMsg.summaryTitle")</h2> <!-- 예약 발송 현황 -->
+<a style="top:18px;" href="javascript:GO_MENU_URL_favori('0000000097','0000000093','/admin/securepush/reserveMsg');" class="more">#springMessage("common.button.moreView")</a> <!-- 더보기 -->
+
+<table class="tbl-nb" style="margin-bottom:0px;">
+	<colgroup>
+		<col style="width:20%">
+		<col style="width:20%">
+		<col style="width:auto">
+		<col style="width:20%">
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("menu.securePush.msgSend.sender")</th> <!-- 발신자 -->
+			<th scope="col">#springMessage("menu.push.receiverPerson")</th> <!-- 수신자 -->
+			<th scope="col">#springMessage("common.header.title")</th> <!-- 제목 -->
+			<th scope="col" class="last">#springMessage("menu.push.sendManage.sendStatus")</th> <!-- 발송상태 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $itemInfo in $itemList)
+			#set($j_tot = $!itemInfo.TOT_CNT)
+		<tr>
+			<td class="first">$esc.xml($!itemInfo.SENDER_NM)</td>
+			<td class="first">$!itemInfo.RECV_NM</td>
+			<td class="first">$!itemInfo.TITLE</td>
+			<td class="last">
+				#if($!itemInfo.RESERV_STATUS == "1")
+				#springMessage("menu.stats.push.send") <!-- 발송 -->
+				#else
+				#springMessage("menu.securePush.msgSend.status.notSend") <!-- 미발송 -->
+				#end
+			</td>
+		</tr>
+		#end
+		#if(!$j_tot)
+		<tr>
+			<td colspan="4" class="ta_c" style="height:115px">#springMessage("common.alert.nodata")</td>		### 데이터가 없습니다 ###
+		</tr>
+		#end
+	</tbody>
+</table>

@@ -1,0 +1,89 @@
+<h2 class="tbl-title">#springMessage("menu.system.menuInfo")</h2>		### 메뉴 정보 ###
+<table class="tbl full-width">
+	<caption>#springMessage("menu.system.menuInfo")</caption>			### 메뉴 정보 ###
+	<colgroup>
+		<col style="width:120px">
+		<col>
+		<col style="width:120px">
+		<col>
+	</colgroup>
+	<tbody>
+		<tr>
+			<th>
+			##hidden##
+				<input type="hidden" id="ID_MENU_PARENT" name="ID_MENU_PARENT" value="$!menuOne.ID_MENU_PARENT" />
+				#if($menuOne)
+					<input type="hidden" id="write_type" value="update" />
+				#else
+					<input type="hidden" id="write_type" value="insert" />
+				#end
+			##hidden##
+				<label for="menuName">#springMessage("common.header.menuName")</label>			### 메뉴명 ###
+			</th>
+			<td colspan="3">
+				<input type="text" class="width50" id="NM_MENU" name="NM_MENU" value="$!menuOne.NM_MENU" />
+				#if($menuOne)
+					<input type="hidden" name="ID_MENU" value="$!menuOne.ID_MENU" />
+				#end
+			</td>
+		</tr>
+		<tr>
+			<th><label for="menuRegedit">#springMessage("common.header.menuUrl")</label></th>					### 메뉴경로 ###
+			<td colspan="3">
+				<input type="text" class="full-width" id="MENU_URL" name="MENU_URL" value="$!menuOne.MENU_URL">
+			</td>
+		</tr>
+		<tr>
+			<th><label for="menuSubmit">#springMessage("common.header.menuDesc")</label></th>		### 메뉴설명 ###
+			<td colspan="3">
+				<input type="text" class="full-width" id="DESC_MENU" name="DESC_MENU" value="$!menuOne.DESC_MENU">
+			</td>
+		</tr>
+		<tr>
+			<th><label for="priority">#springMessage("common.header.rank")</label></th>		### 우선순위 ###
+			<td colspan="3">
+				<input type="text" id="NO_ORDER" onkeydown="return onlyNumber();" name="NO_ORDER" value="$!menuOne.NO_ORDER" style="width:100px;" maxlength="3"/> (1~999)
+			</td>
+		</tr>
+		<tr>
+			<th>#springMessage("common.header.useYN")</th>		### 사용여부 ###
+			<td>
+				
+					<select id="YN_USE" name="YN_USE">
+					#if($menuOne.YN_USE == "N")
+						<option value="N" selected="selected" >#springMessage("common.header.use_N")</option>		### 미사용 ###
+						<option value="Y" >#springMessage("common.header.use_Y")</option>							### 사용 ###
+					#else
+						<option value="Y" selected="selected" >#springMessage("common.header.use_Y")</option>		### 사용 ###
+						<option value="N" >#springMessage("common.header.use_N")</option>							### 미사용 ###
+					#end
+					</select>
+				
+			</td>
+			<th>#springMessage("common.header.popupYN")</th>		### 팝업여부 ###
+			<td>
+				<select id="YN_POPUP" name="YN_POPUP"  >
+
+				#if($menuOne.YN_POPUP == "Y")
+					<option value="Y" selected="selected" >#springMessage("common.header.use_Y")</option><!-- 사용 -->
+					<option value="N" >#springMessage("common.header.use_N")</option><!-- 미사용 -->
+				#else
+					<option value="Y" >#springMessage("common.header.use_Y")</option><!-- 사용 -->
+					<option value="N" selected="selected" >#springMessage("common.header.use_N")</option><!-- 미사용 -->
+				#end
+
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<th><label for="windowWidth">#springMessage("common.header.windowWidth")</label></th>		### 창너비 ###
+			<td>
+				<input type="text" class="full-width" id="NO_WIDTH" name="NO_WIDTH" value="$!menuOne.NO_WIDTH" />
+			</td>
+			<th><label for="windowHeight">#springMessage("common.header.windowHeight")</label></th>			### 창높이 ###
+			<td>
+				<input type="text" class="full-width" id="NO_HEIGHT" name="NO_HEIGHT" value="$!menuOne.NO_HEIGHT" />
+			</td>
+		</tr>
+	</tbody>
+</table>

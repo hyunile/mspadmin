@@ -1,0 +1,58 @@
+<table class="tbList1">
+	<thead>
+		<tr>
+			<th width="30px">
+                <input type="checkbox" id="all_check">
+            </th>
+            <th width="100px">CUID</th>
+            <th width="auto">#springMessage("common.text.name")</th> <!-- 이름 -->
+            <th width="80px">#springMessage("menu.push.sendServer")</th> <!-- 발송서버 -->
+		</tr>
+	</thead>
+	<tbody>
+       	#foreach( $pushUser in $pushUserList )
+       		#set($j_tot = $pushUser.TOT_CNT)
+            #if($foreach.index==0)
+            <script>
+                document.getElementById("pushUserCnt_TD").innerHTML="총 $j_tot &nbsp;";
+            </script>
+            #end
+
+           	<tr class="no_select">
+           		<td>
+           			<input type="checkbox" class="CUID" value="$!{pushUser.CUID}" >
+				</td>
+           		<td id="user_check_td">
+           			$!{pushUser.CUID}
+   				</td>
+   				<td id="user_check_td">$!{pushUser.CNAME}</td>
+   				<td id="user_check_td">
+           			$!{pushUser.PNSID}
+   				</td>
+                <td style="display: none" id="user_check_td">
+                    $esc.url($!{pushUser.PSID})
+                </td>
+       		</tr>
+   		#end
+   		#if(!$j_tot)
+			<tr>
+				<td colspan="5">
+					#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+<input type="hidden" id="USER_NUM" value="$!R_PAGE_NUM">
+<div class="j_page_div">
+ 	##현재 페이지
+ 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+    ##총 개수
+    <input type="hidden" name="J_tot" id="J_tot" value="$!j_tot">
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_userList">
+</div>

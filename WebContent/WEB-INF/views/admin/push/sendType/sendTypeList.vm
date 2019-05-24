@@ -1,0 +1,83 @@
+<table class="tbl-nb" summary="서비스 코드,PNS ID,서비스 이름,수신 확인 여부,재발송 횟수,읽음 확인 여부,SMS발송 여부,상세">
+	<colgroup>
+		<col width="90px"/>
+		<col width="120px"/>
+		<col width="auto"/>
+		<col width="100px"/>
+		<col width="100px"/>
+		<col width="70px"/>
+	</colgroup>
+	
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("menu.push.setting.serviceCode")</th> <!-- 서비스 코드 -->
+			<th scope="col">PNS ID</th> 
+			<th scope="col">#springMessage("menu.push.setting.serviceName")</th> <!-- 서비스 이름  -->
+			<th scope="col">#springMessage("menu.push.setting.sendYN")</th> <!-- 수신 확인 여부 -->
+			<th scope="col">#springMessage("menu.push.setting.readYN")</th> <!-- 읽음 확인 여부 -->
+			<th scope="col"> </th>
+		</tr>
+	</thead>
+	#set ($s_code = 9987)
+		<tbody>
+			#foreach( $pushSendType in $pushSendTypeList )
+				#set($j_tot = $!pushSendType.TOT_CNT)
+    				<tr>
+    			#if($s_code != $!pushSendType.SERVICECODE)
+       				<td id="service_code">
+       					$!pushSendType.SERVICECODE
+       				<input type="hidden" class="SERVICECODE" value="$!pushSendType.SERVICECODE" />
+       				</td>
+       			#else
+					<td id="service_code">
+						<input type="hidden" class="SERVICECODE" value="$!pushSendType.SERVICECODE" />
+					</td>
+				#end
+				#set($s_code = $!pushSendType.SERVICECODE)
+			<td id="service_code_content">
+				$!esc.xml($!pushSendType.PNSID)
+				<input type="hidden" class="PNSID" value="$!pushSendType.PNSID" />
+			</td>
+			
+			<td style="word-wrap: break-word;" id="service_code_content">
+				$!pushSendType.SERVICENAME
+			</td>
+			
+			<td id="service_code_content">
+				$!pushSendType.RETRYFLAG
+			</td>
+			
+			
+			<td id="service_code_content">
+				$!pushSendType.RESENDFLAG
+			</td>
+			
+			
+			<td id="service_code_content">
+				<a href="javascript:void(0)" class="btn2" id="sendTypeModify">#springMessage("common.header.detail")</a> <!-- 상세 -->
+			</td>
+		</tr>
+		#end
+		
+		#if(!$j_tot)
+		<tr>
+			<td colspan="6" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+		#end
+		
+	</tbody>
+</table>
+
+<input type="hidden" id="SENDTYPE_NUM" value="$!R_PAGE_NUM"/>
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_sendTypeList"/>
+</div>

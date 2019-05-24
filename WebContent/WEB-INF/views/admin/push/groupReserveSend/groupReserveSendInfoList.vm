@@ -1,0 +1,58 @@
+<div class="popup_content">
+	<!--  table List  -->
+	<table class="tbList1">
+		<thead>
+			<tr>
+				<th scope="cols">
+					#springMessage("menu.push.reserveDate") <!-- 예약일시 -->
+					<input type="hidden" id="R_SEQNO" value="$R_SEQNO">
+				</th>
+				<th scope="cols">CUID</th>
+				<th scope="cols">#springMessage("menu.stats.push.sender")ID</th> <!-- 발송자 -->
+				<th scope="cols">#springMessage("common.text.registDate")</th> <!-- 등록일시 -->
+			</tr>
+		</thead>
+		<tbody>
+			#foreach( $groupReserveSend in $groupUserSendinfoList )
+	       		#set($j_tot = $groupReserveSend.TOT_CNT)
+	           	<tr>
+	           		<td >
+	           			$esc.xml($!groupReserveSend.RESERVEDATE)
+	   				</td>
+	   				<td style="text-align:left;">
+	           			$esc.xml($!groupReserveSend.CUID)
+	   				</td>
+	   				<td style="text-align:left;">
+	           			$esc.xml($!groupReserveSend.SENDERCODE)
+	   				</td>
+	   				<td >
+	   					$esc.xml($!groupReserveSend.REGDATE)
+	           		</td>
+	       		</tr>
+	   		#end
+	   		#if(!$j_tot)
+				<tr>
+					<td colspan="5">
+						#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+					</td>
+				</tr>
+			#end
+		</tbody>
+	</table>
+	<div class="j_page_div">
+	 	##현재 페이지
+	 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+	    ##총 개수
+	    <input type="hidden" name="J_tot" value="$!j_tot">
+	    ##한페이지의 로우수
+	    <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+	    ##한페이지수
+	    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+	    ##이밴트
+	    <input type="hidden" name="j_event" value="fn_RserveinfoList">
+	</div>
+	<!--  btnArea  -->
+	<div class="btnArea ta_r">
+		<button type="button" onclick="fn_closePopup();" class="btn_style1"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+	</div>
+</div>

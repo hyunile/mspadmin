@@ -1,0 +1,77 @@
+<table class="tbl-nb" >
+	<colgroup>
+		<col width="10%"></col>
+		<col width="13%"></col>
+		<col width="15%"></col>
+		<col width="15%"></col>
+		<col width="12%"></col>
+		<col width="15%"></col>
+		<col width="12%"></col>
+	</colgroup>
+	
+	<thead>
+		<tr>
+			<th class="sort" fname="EMP_NO">#springMessage("menu.store.user.number")<a class="mark" /></th> <!-- 사번 -->
+			<th class="sort" fname="EMP_NM">#springMessage("common.text.name")<a class="mark" /></th> <!-- 이름 -->
+	        <th class="sort" fname="DEVC_ID">#springMessage("menu.store.appManage.modelName")<a class="mark" /></th> <!-- 모델명 -->
+    		<th class="sort" fname="BRD_NM">#springMessage("menu.store.appManage.brandName")<a class="mark" /></th> <!-- 브랜드명 -->
+	       	<th class="sort" fname="MFG_NM">#springMessage("menu.store.appManage.makeName")<a class="mark" /></th> <!-- 제조사명 -->
+	       	<th class="sort" fname="PHONE_NO">#springMessage("common.text.phoneNum")<a class="mark" /></th> <!-- 전화번호 -->
+			<th class="sort" fname="GUBUN_NM">#springMessage("menu.store.userDevice.deviceType")<a class="mark" /></th> <!-- 단말기구분 -->
+ 		</tr>
+	</thead>
+	<tbody>
+    	#foreach( $userdevc in $userdeviceList )
+       		#set($j_tot = $userdevc.TOT_CNT)
+            <tr class="userdevcDiv">
+            	<td  class="mp_lnk">
+            		<input type="hidden" id="USERDEVC_IDX" value="$!userdevc.USERDEVC_IDX">
+            		$!userdevc.EMP_NO<!-- 사번 -->
+            	</td>
+            	<td  class="mp_lnk" style="text-align:center;">
+            		$!userdevc.EMP_NM<!-- 이름 -->
+            	</td>
+            	<td class="mp_lnk" style="text-align:center;">
+            		$esc.xml($!userdevc.DEVC_ID)<!-- 모델명 -->
+            	</td>
+            	<td class="mp_lnk" style="text-align:center;">
+            		$esc.xml($!userdevc.BRD_NM)<!-- 브랜드명 -->
+            	</td>
+            	<td class="mp_lnk" style="text-align:center;">
+            		$!userdevc.MFG_NM<!-- 제조사명 -->
+            	</td>
+            	<td class="mp_lnk">
+            		$!userdevc.PHONE_NO<!-- 휴대폰 번호 -->
+            	</td>
+            	<td class="mp_lnk">
+            		$!userdevc.GUBUN_NM<!-- 단말구분 -->
+            	</td>
+         	</tr>
+		#end
+		#if(!$j_tot)
+	   		<tr >
+	   			<td align="center" colspan="7">
+	   				#springMessage("menu.store.appManage.alert.noSearchDevice") <!-- 검색된 단말기가 없습니다. -->
+	           	</td>
+	       	</tr>
+	   	#end
+	</tbody>
+</table>
+<input type="hidden" id="CODE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot" />
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_deviceList" />
+</div>
+
+
+	<script type="text/javascript">
+		fn_mp_bindEvent_sortHeader("frmSearch", fn_deviceList, "$!{ORDER_FIELD}", "$!{ORDER_TYPE}");
+	</script>

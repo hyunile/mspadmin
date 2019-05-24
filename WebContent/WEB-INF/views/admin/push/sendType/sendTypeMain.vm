@@ -1,0 +1,252 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function fn_sendTypeList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var url = CONTEXT_PATH + "/admin/push/sendType";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM +"&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+	var target = $("#sendTypeTableDiv");
+	fn_getCommonList(url, type, data , target);
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+
+//리시버 적용
+$(document).on("click","#receiverApply",function(){
+    var url = CONTEXT_PATH + "/admin/push/receiverApply";
+    var data = {};
+    jQuery.ajax({
+        url: url,
+        type: "POST",
+        data: data,
+        dataType: "json",
+        success: function (data) {
+//                alert(JSON.stringify(data));
+            if (data.callbackData.resultCode == "0000") {
+                alert('#springMessage("menu.push.user.alert.success")'); //"성공적으로 적용되었습니다."
+            } else {
+                alert(data.callbackData.resultMsg);
+            }
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert(thrownError);
+        }
+    });
+});
+
+//발송유형 등록 화면
+$(document).on("click","#sendTypeWrite",function(){
+	var url = CONTEXT_PATH + "/admin/push/sendType/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var width = 600;
+	var title = '#springMessage("menu.push.setting.sendTypeIn")'; //"발송 유형 등록";
+	fn_getCommonPopupDiv(url, type, data , target, width, title);
+});
+
+//발송자 수정 화면
+$(document).on("click","#sendTypeModify",function(){
+	var PNSID = $(this).parent().parent().find(".PNSID").val();
+	var SERVICECODE = $(this).parent().parent().find(".SERVICECODE").val();
+	var url = CONTEXT_PATH + "/admin/push/sendType/edit";
+	var type = "GET";
+	var data = "PNSID=" + PNSID + "&SERVICECODE=" + SERVICECODE;
+	var target = $("#windowPop");
+	var width = 600;
+	var title = '#springMessage("menu.push.setting.sendTypeUpdate")'; //"발송 유형 수정";
+	fn_getCommonPopupDiv(url, type, data , target, width, title);
+});
+
+//중복 체크
+function fn_check(){
+
+	if( $("form[name=frmSendTypeInfo]").find("select[name=PNSID]").val() == ""){
+		alert("PNS ID"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+		return;
+	} else if($("form[name=frmSendTypeInfo]").find("input[name=SERVICECODE]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.serviceCode")'); //"서비스 코드를 입력해주세요."
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/sendType/check";
+	var data = $("form[name=frmSendTypeInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#CHECK_CODE").val("1");
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//발송자 코드 변경
+function fn_code_change(){
+	$("#CHECK_CODE").val("0");
+}
+
+//발송자 등록
+function fn_sendTypeWrite(){
+
+	if( $("form[name=frmSendTypeInfo]").find("select[name=PNSID]").val() == ""){
+		alert("PNS ID"+'#springMessage("menu.push.appManage.alert.doInput")'); //를 입력해주세요.
+		return;
+	} else if($("form[name=frmSendTypeInfo]").find("input[name=SERVICECODE]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.serviceCode")'); //"서비스 코드를 입력해주세요."
+		return;
+	} else if($("#CHECK_CODE").val() == '0'){
+		alert('#springMessage("menu.push.appManage.alert.doSameCheck")'); //"중복체크를 해주세요."
+		return;
+	} else if($("form[name=frmSendTypeInfo]").find("input[name=SERVICENAME]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.serviceName")'); //서비스 이름을 입력해주세요.
+		return;
+	} else if( $("form[name=frmSendTypeInfo]").find("input[name=MAXRETRYCNT]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.reSendNum")'); //재발송 횟수를 입력해주세요.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/push/sendType/regist";
+	var data = $("form[name=frmSendTypeInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_sendTypeList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//발송자 수정
+function fn_sendTypeModify(){
+	if($("form[name=frmSendTypeInfo]").find("input[name=SERVICENAME]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.serviceName")'); //서비스 이름을 입력해주세요.
+		return;
+	} else if( $("form[name=frmSendTypeInfo]").find("input[name=MAXRETRYCNT]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.reSendNum")'); //재발송 횟수를 입력해주세요.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/sendType/edit";
+	var data = $("form[name=frmSendTypeInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_sendTypeList($("#SENDTYPE_NUM").val());
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//발송자 삭제
+function fn_sendTypeDelete(){
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/push/sendType/delete";
+	var data = $("form[name=frmSendTypeInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_sendTypeList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_sendTypeList(1);
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>						<!-- 푸시 -->
+		<span>#springMessage("menu.push.setting")</span>				<!-- 설정 -->
+		<span>#springMessage("menu.push.setting.sendType")</span>	<!-- 메시지 구분 설정 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.push.setting.sendType")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+	
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="receiverApply">#springMessage("menu.push.setting.receiverApply")</a> <!-- 리시버 적용 -->
+					<a href="javascript:void(0)" class="btn2" id="sendTypeWrite">#springMessage("common.button.regist")</a> 			<!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+        
+		<div id="sendTypeTableDiv">
+			#parse("admin/push/sendType/sendTypeList.vm")
+		</div>
+		
+		
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

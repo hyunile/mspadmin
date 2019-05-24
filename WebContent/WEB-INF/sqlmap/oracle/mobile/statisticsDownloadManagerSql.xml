@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.msp.admin.mobile.statistics.mapper.StatisticsDownloadDao">
+
+    	    
+	<!-- statistics by day -->
+	<resultMap type="kr.msp.admin.mobile.statistics.dto.StatisticsDownloadDto" id="DownloadDto">
+		<result property="APP_IDX"				column = "APP_IDX" />
+		<result property="APP_NM"				column = "APP_NM" 			/>
+		<result property="CNT"						column = "CNT" 				/>
+		<result property="RNUM"					column = "RNUM" 			/>
+		<result property="TOT_CNT"				column = "TOT_CNT" 		/>
+	</resultMap>
+		
+	<resultMap type="kr.msp.admin.mobile.statistics.dto.SvcCodeDto" id="SvcCodeDto">
+		<result property="SVC_ID"				column = "SVC_ID" 			/>
+		<result property="SVC_NM"				column = "SVC_NM" 			/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.mobile.statistics.dto.AppCodeDto" id="AppCodeDto">
+		<result property="APP_IDX"				column = "APP_IDX" 			/>
+		<result property="APP_NM"				column = "APP_NM" 			/>
+	</resultMap>
+			
+    
+    <!-- Begin of paging process part -->
+	<sql id="head">
+        SELECT *
+        FROM
+        (
+            SELECT 
+                ROWNUM RNUM
+           ,    COUNT(*) OVER() TOT_CNT
+           ,    A.*
+           FROM
+           (
+                SELECT *
+                FROM
+                (
+	</sql>
+    
+	<sql id="bottom">
+                 )
+             ) A
+         )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+    <!-- End of paging process part -->
+	
+	
+
+
+	
+    <!-- Select List Of DownloadStatistics -->
+    <select id="selectAppCode"  parameterType="kr.msp.admin.mobile.statistics.dto.StatisticsDownloadParamDto"  resultMap="AppCodeDto">
+		SELECT APP_IDX, APP_NM 
+		FROM    TB_STO_APP
+		WHERE   SVC_ID = #{SVC_ID}
+		ORDER BY APP_NM
+    </select>
+    
+    <!-- Select List Of Service code -->
+    <select id="selectSvcCode"  resultMap="SvcCodeDto">
+			SELECT  A.SVC_ID
+			,            A.SVC_NM
+			FROM    TB_SVC A
+			            INNER JOIN TB_STO_SVC B
+			                ON A.SVC_ID = B.SVC_ID
+			WHERE B.USE_YN = 'Y'
+			ORDER BY SVC_NM
+    </select>
+
+    <!-- 모바일관리 - 서비스목록조회 TODO : common쪽으로 이동하기-->
+    <select id="selectMobServiceList" parameterType="String" resultType="kr.msp.admin.mobile.dto.MobServiceDto">
+	SELECT S1.SVC_ID, S1.SVC_NM, S1.APP_ID
+	FROM TB_SVC S1 ,TB_SVC_AUTH S2,TB_MOB_SVC S3
+	WHERE
+		S1.SVC_ID = S2.SVC_ID
+		AND S1.SVC_ID = S3.SVC_ID
+		AND NVL(S3.USE_YN ,'N') = 'Y'
+		AND S2.AUTH_GRP_ID IN( SELECT AUTH_GRP_ID FROM TB_SYS_USER_AUTH_GRP
+                    									WHERE USER_ID = #{S_ID_USER}
+                    									)
+
+	</select>
+
+    <!-- Select List Of DownloadStatistics -->
+    <select id="selectStatisticsPrevDownload" parameterType="kr.msp.admin.store.statistics.dto.StatisticsDownloadParamDto" resultMap="DownloadDto">
+        <include refid="head"/><!-- include head of paging query-->
+
+			<!--  download count of  prev month -->
+            SELECT C.APP_IDX, C.APP_NM, COUNT(1) CNT
+            FROM    TB_STO_DL A
+                            INNER JOIN TB_STO_APP_PLAT B
+                                ON A.APP_PLAT_IDX = B.APP_PLAT_IDX
+                            INNER JOIN TB_STO_APP C
+                                ON B.APP_IDX = C.APP_IDX
+            WHERE   TO_CHAR(A.REG_DTTM, 'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM')
+	                    AND C.SVC_ID = #{SVC_ID}
+            GROUP BY C.APP_IDX, C.APP_NM
+            ORDER BY C.APP_NM
+
+        <include refid="bottom"/><!-- include tail of paging query-->
+    </select>
+    
+    
+	
+    <!-- Select List Of DownloadStatistics -->
+    <select id="selectStatisticsCurrentDownload" parameterType="kr.msp.admin.store.statistics.dto.StatisticsDownloadParamDto" resultMap="DownloadDto">
+        <include refid="head"/><!-- include head of paging query-->
+
+			<!--  download count of  current month -->
+            SELECT C.APP_IDX, C.APP_NM, COUNT(1) CNT
+            FROM    TB_STO_DL A
+                            INNER JOIN TB_STO_APP_PLAT B
+                                ON A.APP_PLAT_IDX = B.APP_PLAT_IDX
+                            INNER JOIN TB_STO_APP C
+                                ON B.APP_IDX = C.APP_IDX
+            WHERE   TO_CHAR(A.REG_DTTM, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM')
+                    AND C.SVC_ID = #{SVC_ID}
+            GROUP BY C.APP_IDX, C.APP_NM
+            ORDER BY C.APP_IDX
+
+        <include refid="bottom"/><!-- include tail of paging query-->
+    </select>
+    
+    
+    
+        <!-- Select List Of DownloadStatistics -->
+    <select id="selectStatisticsRangeDownload" parameterType="kr.msp.admin.store.statistics.dto.StatisticsDownloadParamDto" resultMap="DownloadDto">
+        <include refid="head"/><!-- include head of paging query-->
+
+			<!--  download count of  range -->
+            SELECT C.APP_IDX, C.APP_NM, COUNT(1) CNT
+            FROM    TB_STO_DL A
+                            INNER JOIN TB_STO_APP_PLAT B
+                                ON A.APP_PLAT_IDX = B.APP_PLAT_IDX
+                               INNER JOIN TB_STO_APP C
+                                   ON B.APP_IDX = C.APP_IDX
+            WHERE   TO_CHAR(A.REG_DTTM, 'YYYY.MM.DD') BETWEEN #{START_DT} AND #{END_DT}
+                <if test="SVC_ID != null and SVC_ID != '' "  >AND C.SVC_ID = #{SVC_ID}</if>
+                <if test="APP_IDX != 0"  >AND C.APP_IDX = #{APP_IDX}</if>
+            GROUP BY C.APP_IDX, C.APP_NM
+            ORDER BY C.APP_IDX
+			
+        
+        <include refid="bottom"/><!-- include tail of paging query-->
+    </select>
+
+
+
+
+
+
+</mapper>

@@ -1,0 +1,95 @@
+<link rel="stylesheet" type="text/css" href="$!{RESOURCES_PATH}/js/chart/style.css" /><!--  챠트관련  -->
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/amcharts.js" ></script> <!--  챠트관련  -->
+
+<script type="text/javascript">
+ 	var chartDataProtocol = null			// chart data
+ 
+    // 차트 데이터를 추가 함
+    function addChartDataProtocol(date, cnt)
+    {
+        if(chartDataProtocol == null)
+        {
+            chartDataProtocol = [{DAY: date, CNT: cnt}];
+        }
+        else
+        {
+            chartDataProtocol.push({DAY: date,	CNT: cnt});
+        }
+    }
+	
+	
+
+    // 차트를 초기하 시킴
+    function initChartProtocol()
+    {
+
+        //console.debug("init chart !!");
+
+        //chart의 타입을 정의..
+        // SERIAL CHART
+        chartProtocol = new AmCharts.AmSerialChart();
+		chartProtocol.id = "test";
+        chartProtocol.dataProvider = chartDataProtocol;
+        chartProtocol.categoryField = "DAY";
+        chartProtocol.startDuration = 0;  //20120615 그래프 액션 없앰 Minwoo.Yoon
+        chartProtocol.balloon.color = "#FFFFFF";
+        chartProtocol.columnWidth = 0.2; //BAR Width.
+
+        // AXES
+        // category
+        var categoryAxisProtocol = chartProtocol.categoryAxis;
+        categoryAxisProtocol.fillAlpha = 1;
+        categoryAxisProtocol.fillColor = "#FAFAFA";
+        categoryAxisProtocol.gridAlpha = 0;
+        categoryAxisProtocol.axisAlpha = 0;
+        categoryAxisProtocol.gridPosition = "start";
+        categoryAxisProtocol.position = "bottom";
+
+        // value
+        var valueAxisProtocol = new AmCharts.ValueAxis();
+        valueAxisProtocol.dashLength = 5;
+        valueAxisProtocol.axisAlpha = 0;
+        valueAxisProtocol.minimum = 0;
+        //valueAxisProtocol.maximum = 900000; //그래프 최대값
+        valueAxisProtocol.integersOnly = true;
+        valueAxisProtocol.gridCount = 10;
+        valueAxisProtocol.reversed = false; // this line makes the value axis reversed
+        chartProtocol.addValueAxis(valueAxisProtocol);
+
+
+        // prev graph
+        var graphProtocol = new AmCharts.AmGraph();
+        graphProtocol.title = '#springMessage("common.text.gunNum")';//"건수";
+        graphProtocol.type = "line";
+        graphProtocol.valueField = "CNT";
+        graphProtocol.hidden = false; 									// this line makes the graph initially hidden
+        graphProtocol.balloonText = "[[value]]";
+        graphProtocol.lineAlpha = 1;
+        graphProtocol.bullet = "triangleUp";
+        graphProtocol.lineColor = "#1B6099";
+        chartProtocol.addGraph(graphProtocol);
+
+        // WRITE
+        chartProtocol.write("chartDivProtocol");
+    }
+    #foreach( $row in $listProtocol)
+    addChartDataProtocol("$!{row.TITLE}", ${row.CNT});
+    #end
+	
+	initChartProtocol();
+</script>
+
+<style>
+
+.chart2 {padding:10px 0;}
+.chart2 div{height:149px;}
+
+</style>
+
+<h2>[#springMessage("menu.mobile")] #springMessage("menu.stats.common.expertUseStat") <small>$strPeriodParam</small></h2> <!-- 모바일관리    전문 사용통계-->
+<a href="javascript:GO_MENU_URL_favori('0000000043','0000000038','/admin/mobile/statistics/protocolStat');" class="more">#springMessage("common.button.moreView")</a> <!-- 더보기 -->
+
+<div class="chart2">
+	<div id="chartDivProtocol"></div>
+</div>
+

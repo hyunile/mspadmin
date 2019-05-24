@@ -1,0 +1,39 @@
+<script type="text/javascript">
+	
+	
+</script>
+<div>
+	<div class="group-list-member">
+		<table class="tbl">
+			<caption>#springMessage("menu.securePush.msgSend.myGrpListMember")</caption> <!-- 나의 그룹 목록 멤버 -->
+			<colgroup>
+				<col style="width:280px">
+			</colgroup>
+			#foreach( $groupUser in $groupUserList )
+				#if($groupUser.Dept)
+			<tr>
+				<td>
+					<div class="belong">
+						<span>$!groupUser.FULL_NM</span>
+						<p>$!groupUser.DEPT_NM</p>
+					</div>
+				</td>
+			</tr>
+				#else
+			<tr>
+				<td>
+					<div class="belong">
+						<span>$!groupUser.USER_FULL_NM</span>
+						<p>$!groupUser.USER_NM</p>
+					</div>
+				</td>
+			</tr>
+				#end
+			
+			#end
+		</table>
+	</div>
+	<div class="btn-wrap">
+		<a href="javascript:fn_goSelectGrpPop();void(0)" class="btn1 type2">#springMessage("menu.securePush.manageAccount.prev")</a> <!-- 이전 -->
+	</div>
+</div>

@@ -1,0 +1,97 @@
+<form name="frmSendTypeInfo" method="POST">
+	
+	<table class="tbl" summary="서비스 코드,PNS ID,서비스 이름,수신 획인 여부,재발송 횟수,읽음 확인 여부,SMS발송 여부">
+		<tr>
+			<th >
+				<label for="PNSID" class="required">PNS ID</label>
+			</th>
+			<td colspan="3">
+			#if($pushSendTypeOne)
+				$!pushSendTypeOne.PNSID
+				<input type="hidden" name="PNSID" value="$!pushSendTypeOne.PNSID" /> 
+			#else
+				<select name="PNSID" onchange="fn_change()" id="PNSID">
+					<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+					#foreach( $PnsSelectVar in $pnsSelectVarList )
+					<option value="$PnsSelectVar.VVALUE">$PnsSelectVar.VNAME</option>
+					#end
+				</select>
+			#end
+			</td>
+		</tr>
+		<tr>
+			<th >
+				<label for="SERVICECODE" class="required">#springMessage("menu.push.setting.serviceCode")</label> <!-- 서비스 코드 -->
+			</th>
+			<td colspan="3">
+			#if($pushSendTypeOne)
+				$!pushSendTypeOne.SERVICECODE
+				<input type="hidden" name="SERVICECODE" value="$pushSendTypeOne.SERVICECODE" />
+			#else
+				<input type="text" id="SERVICECODE" name="SERVICECODE" onchange="fn_change()"/>
+				<input type="hidden" id="CHECK_CODE" value="0"/>
+				<a href="javascript:void(0)" class="btn2" onclick="fn_check()">#springMessage("menu.push.appManage.sameCheck")</a>  <!-- 중복체크 -->
+			#end
+			</td>
+		</tr>
+
+		<tr>
+			<th >
+				<label for="SERVICENAME" class="required">#springMessage("menu.push.setting.serviceName")</label> <!-- 서비스 이름 -->
+			</th>
+			<td colspan="3">
+				<input type="text" id="SERVICENAME" name="SERVICENAME" value="$!pushSendTypeOne.SERVICENAME" class="w292" />
+			</td>
+		</tr>
+		<tr>
+			<th >
+				<label for="RETRYFLAG">#springMessage("menu.push.setting.sendYN")</label> <!-- 수신 획인 여부 -->
+			</th>
+			<td>
+				<select id="RETRYFLAG" name="RETRYFLAG">
+				#if($!pushSendTypeOne.RETRYFLAG == "Y")
+					<option value="Y">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+				#else 
+					<option value="Y" selected="selected">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+				#end
+
+				#if($!pushSendTypeOne.RETRYFLAG == "N")
+					<option value="N" selected="selected">#springMessage("common.header.use_N")</option> <!-- 미사용 -->
+				#else
+					<option value="N" >#springMessage("common.header.use_N")</option> <!-- 미사용 -->
+				#end
+				</select>
+			</td>
+			<th >
+				<label for="RESENDFLAG">#springMessage("menu.push.setting.readYN")</label> <!-- 읽음 확인 여부 -->
+			</th>
+			<td>
+				<select id="RESENDFLAG" name="RESENDFLAG">
+				#if($!pushSendTypeOne.RESENDFLAG == "Y")
+					<option value="Y">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+				#else
+					<option value="Y" selected="selected">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+				#end
+
+				#if($!pushSendTypeOne.RESENDFLAG == "N")
+					<option value="N" selected="selected">#springMessage("common.header.use_N")</option> <!-- 미사용 -->
+				#else
+					<option value="N" >#springMessage("common.header.use_N")</option> <!-- 미사용 -->
+				#end
+				</select>
+			</td>
+		</tr>
+
+	</table>
+	
+	<div class="btn-wrap txtCenter">
+	#if(!$pushSendTypeOne)
+		<a href="javascript:void(0)" onclick="fn_sendTypeWrite();" class="btn1">#springMessage("common.button.save")</a>	<!-- 저장 -->
+	#else
+		<a href="javascript:void(0)" onclick="fn_sendTypeModify();" class="btn1">#springMessage("common.button.modify")</a>	<!--수정  -->
+		<a href="javascript:void(0)" onclick="fn_sendTypeDelete();" class="btn1 type2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+	#end
+		<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div> 
+
+</form>

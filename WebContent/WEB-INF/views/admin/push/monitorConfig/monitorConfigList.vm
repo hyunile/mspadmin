@@ -1,0 +1,90 @@
+<table class="tbList1" summary="서버 종류,서버 이름,IP,PORT,URL">
+		       		<colgroup>
+						<col width="15%"/><col width="20%"/><col width="17%"/><col width="12%"/><col width="auto"/>
+					</colgroup>
+		       		<thead>
+			       		<tr>
+			       			<th scope="cols">
+			       				#springMessage("menu.push.serverType") <!-- 서버 종류 -->
+			       			</th>
+			       			<th scope="cols">
+								#springMessage("menu.push.serverName") <!-- 서버 이름 -->
+							</th>
+							<th scope="cols">
+			       				IP
+			       			</th>
+			       			<th scope="cols">
+								PORT
+							</th>
+							<th scope="cols">
+								URL
+							</th>
+			           	</tr>
+			        </thead>
+			        
+			        <tbody>
+			           	#foreach( $monitorConfig in $monitorConfigList )
+			           		#set($j_tot = $!monitorConfig.TOT_CNT)
+				           	<tr class="no_select">
+				           		<td style="text-align:left;">
+				           			#if($!monitorConfig.SERVERTYPE == "UPNS")
+				           				UPNS
+			           				#elseif($!monitorConfig.SERVERTYPE  == "RECV")
+			           					RECEIVER
+			           				#elseif($!monitorConfig.SERVERTYPE  == "PRVD")
+			           					PROVIDER
+			           				#elseif($!monitorConfig.SERVERTYPE  == "MEDI")
+			           					MEDIATOR
+			           				#end
+			           				<input type="hidden" class="IPADDRESS" value="$!monitorConfig.IPADDRESS">
+			           				<input type="hidden" class="PORT" value="$!monitorConfig.PORT">
+			       				</td>
+			       				#if(!$monitorConfig.SERVERNAME)
+									<td style="text-align:left;">
+										$!monitorConfig.SERVERNAME
+									</td>
+								#else
+			       				<td style="text-align:left;">
+				           			$esc.xml($!monitorConfig.SERVERNAME)
+				           		</td>
+								#end
+				           		<td>
+				           			$esc.xml($!monitorConfig.IPADDRESS)
+				           		</td>
+				           		<td>
+				           			$esc.xml($!monitorConfig.PORT)
+				           		</td>
+								#if(!$!monitorConfig.URL)
+									<td style="text-align:left;">
+										$!monitorConfig.URL
+									</td>
+								#else
+									<td style="text-align:left;">
+										$esc.xml($!monitorConfig.URL)
+									</td>
+								#end
+			           		</tr>
+			       		#end
+			       		#if(!$j_tot)
+							<tr>
+								<td colspan="5">
+									#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+								</td>
+							</tr>
+						#end
+						
+					</tbody>
+		    	</table>
+		   		<input type="hidden" id="MONITER_NUM" value="$!R_PAGE_NUM">
+		      	<div class="j_page_div">
+		         	##현재 페이지
+		         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+		            ##총 개수
+		            <input type="hidden" name="J_tot" value="$!j_tot">
+		            ##한페이지의 로우수
+		            <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+		            ##한페이지수
+		            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+		            ##이밴트
+		            <input type="hidden" name="j_event" value="fn_moniterList">
+		    	</div>

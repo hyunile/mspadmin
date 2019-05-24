@@ -1,0 +1,334 @@
+
+
+<style type="text/css">
+	/* 
+    // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    //		CSS 정의 - 시작
+    // ...................................................................................................................................
+    */
+    
+	/* --------------------------------------------------------------------------------	*/
+	/* |																																			|	*/
+	/* |	(!) 로직에서 사용되는 CSS 명칭 정의																					|	*/
+	/* |																																			|	*/
+	/* |	:: 			conInput_date : 조회 구분에 의해 변경되는 UI의 class명										|	*/
+	/* |																																			|	*/
+	/* --------------------------------------------------------------------------------	*/
+	
+	
+    div.scrollPane												{overflow-x:scroll;overflow-y:hidden;float:left; width:100%;}			/* 결과 화면의 SCROLL 을 위한 DIV Style [ScrollPane] */
+    
+    /* 
+    // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    //		CSS 정의 - 끝
+    // ...................................................................................................................................
+    */
+</style>
+
+
+
+
+<script type="text/javascript">
+
+	$(document).ready(function(){
+
+	
+		//공통 페지징 처리
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+		
+		//레이어 팝업 사용
+		$(".window").css({width:"650px", height:"650px"});
+		
+		
+		//메시지가 있으면 출력 
+		if($("#rtnCd").val() != "empty"){
+			alert($("#rtnMsg").val());
+		}
+
+		//검색 폼 초기화
+		fn_mp_initSelectOptionElement("conSelect_dtType");
+		fn_mp_initSelectOptionElement("conSelect_search");
+
+		/*
+		//달력 구현
+		$("#PIK_BTN_BEGIN").datepicker({
+			regional        : "ko",
+			dateFormat      : "yymmdd",
+			showOn          : "button",
+			buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+			buttonImageOnly : true,
+			altField        : "#START_DT",
+			altFormat       : "yy.mm.dd"
+		});
+	
+		//달력 구현
+		$("#PIK_BTN_END").datepicker({
+			regional        : "ko",
+			dateFormat      : "yymmdd",
+			showOn          : "button",
+			buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+			buttonImageOnly : true,
+			altField        : "#END_DT",
+			altFormat       : "yy.mm.dd"
+		});
+		
+		//달력 초기화
+		fn_mp_init_datePicker_multiForm("PIK_BTN_YYYY_MM", "S_DT_YYYY", "S_DT_MM");
+		fn_mp_init_datePicker("PIK_BTN_BEGIN", "START_DT");
+		fn_mp_init_datePicker("PIK_BTN_END", "END_DT");
+		*/	
+		var defaultDate1 = $.datepicker.formatDate("yy.mm.dd", new Date());
+		var defaultDate2 = $.datepicker.formatDate("yymmdd", new Date());
+	
+	
+		$("#START_DT").val(defaultDate1);
+		$("#END_DT").val(defaultDate1);
+		
+		//$("#PIK_BTN_BEGIN").val(defaultDate2);
+		//$("#PIK_BTN_END").val(defaultDate2);
+
+	});
+	
+    // ----------------------------------------------------
+    //	 함수명 : fn_se_select
+    //	
+    //	설명 : 조회 함
+    //
+    //	param : 
+    //				-	pageNo	: 요청할 page의 번호(최소 1)
+    // ----------------------------------------------------
+	function ch_search(){
+		var sfrm=document.frmSearch;
+    	var sval=$("#conSelect_search").val();
+    	if(sval==0){
+    		if(sfrm.usernm.value.length>0&&sfrm.usernm.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")'); //검색어를 2글자 이상 입력해 주세요.
+    			sfrm.usernm.value="";
+    			sfrm.usernm.focus();
+    			return;
+    		}
+    		
+    	}else if(sval==1){
+    		if(sfrm.userid.value.length>0&&sfrm.userid.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")'); //검색어를 2글자 이상 입력해 주세요.
+    			sfrm.userid.value="";
+    			sfrm.userid.focus();
+    			return;
+    		}
+    	}
+    	
+    	var type = $("#conSelect_dtType").val();
+    	if(type == 0) {
+    		var yyyy = $("#S_DT_YYYY").val();
+    		if(!yyyy) {
+    			alert('#springMessage("menu.stats.mobile.alert.inputYM")');  //"검색 년월을 입력해 주세요."
+    			return;
+    		}
+    		
+	    	var mm = $("#S_DT_MM").val();
+	    	if(!mm) {
+	    		alert('#springMessage("menu.stats.mobile.alert.inputYM")');  //"검색 년월을 입력해 주세요."
+	    		return;
+    		}
+    	} else if(type == 1) {
+    		var startDate = $("#START_DT").val();
+    		if(!startDate) {
+    			alert('#springMessage("menu.stats.mobile.alert.inputStart")'); //"검색 시작일을 입력해 주세요."
+    			return;
+    		}
+    		
+	    	var endDate = $("#END_DT").val();
+	    	if(!endDate) {
+	    		alert('#springMessage("menu.stats.mobile.alert.inputEnd")'); //검색 종료일을 입력해 주세요.
+    			return;
+    		}
+    		
+    		if(startDate > endDate) {
+    			alert('#springMessage("menu.stats.mobile.alert.checkDate")'); //검색 시작일이 종료일 보다 작아야 합니다.
+    			return;
+    		}
+    		
+    		if(startDate.substring(0,8) != endDate.substring(0,8)) {
+    			alert('#springMessage("menu.stats.mobile.alert.limitDay")'); //일별검색은 한달을 초과할 수 없습니다.
+    			return;
+    		}
+    	}
+    	
+    	
+    	
+		fn_se_select(1);
+	}
+	function fn_se_select(pageNo)
+	{
+		var url = CONTEXT_PATH + "/admin/store/statistics/join";
+		var targetDivID = "joinTableDiv";
+		var formName = "frmSearch";
+		
+        var type = "POST";
+		var data = $("form[name="+formName+"]").serialize() + "&PAGE_NUM=" + pageNo;
+        var target = $("#"+targetDivID);
+		
+    	fn_getCommonList( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	}
+	
+	// 조회
+     $(document).on("click","#goSearch",function(){
+		ch_search(1);
+    });
+	
+    //엑셀 다운
+    $(document).on("click","#goExcel",function(){
+		var form = document.frmSearch;
+		
+    	form.action = CONTEXT_PATH + "/admin/store/statistics/excel";
+     	form.submit();
+    });
+	
+    
+
+	// 챠트 팝업
+    $(document).on("click","#goGraph",function(){
+
+        var url = CONTEXT_PATH + "/admin/store/statistics/graph";
+    	var type = "POST";
+    	var data = $("form[name=frmSearch]").serialize();
+    	var target = $("#windowPop");
+    	var width = 1000;
+    	var title = '#springMessage("menu.stats.mobile.joinStatus")';//"가입자 현황 통계";
+		
+		// 요청해서 띄움...
+    	fn_getCommonPopupDiv( url, type, data , target , width, title);
+		
+		// 차트를 로드함..
+		// 이 함수는 joinGraph.vm 안에 있음..
+		initChart();
+    });
+
+</script>
+
+
+<!--  calendar frame  -->
+<!-- 
+<div id="dialogPop" title="플랫폼 관리" style="display:none;"></div>
+ -->
+
+<div class="contents-area">
+
+	#### S : 프로그램 위치 기술 부분  ####
+    <div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>
+    #### E : 프로그램 위치 기술 부분  ####
+	
+   #### S : 조회 폼 부분  ####
+   <form name="frmSearch" method="post">
+		<input type="hidden" id="rtnCd" value="$!rtnCd" />
+		<input type="hidden" id="rtnMsg" value="$!rtnMsg" />
+		
+				<table class="tbl-search">
+					<colgroup>
+						<col width="100px"/>
+						<col width="400px"/>
+						<col width="auto"/>
+					</colgroup>
+					
+					<thead>
+					## 1
+					<tr>
+						<th>#springMessage("menu.mobile.record.appService")</th> <!--앱서비스명-->
+						<td >
+							<select id="SVC_ID" name="SVC_ID">
+							#foreach( $row in $svcCodeList  )
+        		          	<option value="$!{row.SVC_ID}" #if($!searchParam.SVC_ID==$!{row.SVC_ID}) selected='selected' #end>$!{row.SVC_NM}</option>
+							#end								
+            			    </select>
+						</td>
+						<td></td>
+                    </tr>
+					##2
+					<tr>
+						<th>#springMessage("menu.stats.mobile.recordNum")</th> <!-- 레코드갯수 -->
+						<td><input type="text"  name="RECORD_CNT" value="$!searchParam.RECORD_CNT" /></td>
+						<td></td>
+					</tr>
+					##3
+					<tr>
+						<th>#springMessage("menu.stats.mobile.viewType")</th> <!-- 조회구분 -->
+						<td>
+							<select name="SC_GBN_DATE" id="conSelect_dtType" valueClass="conInput_date" class="w90 mar_5" style="float: left">	<!--  target에 지정한 input class들을 control함)  -->
+            		          	<option value="0">#springMessage("menu.stats.mobile.month")</option> <!-- 월별 -->
+                               	<option value="1">#springMessage("menu.stats.mobile.day")</option> <!-- 일별 -->
+            			    </select>
+							<div class="conInput_date">
+								<input type="text" name="S_DT_YYYY" id="S_DT_YYYY" value="$!searchParam.S_DT_YYYY" maxlength="4" class="w90"/>
+								<select name="S_DT_MM" id="S_DT_MM" class="w90">	<!--  target에 지정한 input class들을 control함)  -->
+                		          	<option value="01" #if($!searchParam.S_DT_MM=='01') selected='selected' #end>1#springMessage("common.text.month")</option> <!-- 월 -->
+                		          	<option value="02" #if($!searchParam.S_DT_MM=='02') selected='selected' #end>2#springMessage("common.text.month")</option>
+                            		<option value="03" #if($!searchParam.S_DT_MM=='03') selected='selected' #end>3#springMessage("common.text.month")</option>
+                            		<option value="04" #if($!searchParam.S_DT_MM=='04') selected='selected' #end>4#springMessage("common.text.month")</option>
+                            		<option value="05" #if($!searchParam.S_DT_MM=='05') selected='selected' #end>5#springMessage("common.text.month")</option>
+                            		<option value="06" #if($!searchParam.S_DT_MM=='06') selected='selected' #end>6#springMessage("common.text.month")</option>
+                            		<option value="07" #if($!searchParam.S_DT_MM=='07') selected='selected' #end>7#springMessage("common.text.month")</option>
+                            		<option value="08" #if($!searchParam.S_DT_MM=='08') selected='selected' #end>8#springMessage("common.text.month")</option>
+                            		<option value="09" #if($!searchParam.S_DT_MM=='09') selected='selected' #end>9#springMessage("common.text.month")</option>
+                            		<option value="10" #if($!searchParam.S_DT_MM=='10') selected='selected' #end>10#springMessage("common.text.month")</option>
+                            		<option value="11" #if($!searchParam.S_DT_MM=='11') selected='selected' #end>11#springMessage("common.text.month")</option>
+                            		<option value="12" #if($!searchParam.S_DT_MM=='12') selected='selected' #end>12#springMessage("common.text.month")</option>
+                			    </select>	
+                			   
+							</div>
+							<div class="conInput_date">
+								<input type="text" id="START_DT" name="START_DT" class="datepicker sDate" readonly placeholder="날짜선택" value="$!searchParam.START_DT" maxlength="8">
+		        				 <label for="START_DT"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+		                         &nbsp;&nbsp;~&nbsp;&nbsp;
+		                         <input type="text" id="END_DT" name="END_DT" class="datepicker sDate" readonly placeholder="날짜선택" value="$!searchParam.END_DT" maxlength="8">
+		        				 <label for="END_DT"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+							</div>
+						</td>
+						<td></td>
+					</tr>
+					## 4
+					<tr>
+						<th>#springMessage("menu.stats.mobile.searchType")</th> <!-- 검색조건 -->
+						<td>
+							<select name="SC_GBN_KEYWORD" id="conSelect_search" valueClass="conInput_search" class="w120">	<!--  target에 지정한 input class들을 control함)  -->
+            		          	<option value="0">#springMessage("common.text.userName")</option> <!-- 사용자명 -->
+                        		<option value="1">#springMessage("common.text.user")ID</option> <!-- 사용자 -->
+            			    </select>										
+							<input class="text conInput_search w120" type="text" id="usernm" name="USER_NM" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+							<input class="text conInput_search w120" type="text" id="userid" name="USER_ID" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+						</td>
+						<td>
+							<a href="javascript:void(0)" id="goSearch" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+						</td>
+                    </tr>
+                    </thead>
+				</table>
+				
+	</form>
+	
+	<form class="frmList" name="frmJoinList" method="post">
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td class="txtRight">
+					<a href="javascript:void(0)" id="goExcel" class="tbl-btn1">EXCEL</a>
+					<a href="javascript:void(0)" id="goGraph" class="tbl-btn1">#springMessage("menu.stats.mobile.graph")</a>	<!-- 그래프 -->
+				</td>
+			</tr>
+		</table>
+		
+		#### S : 리스트  폼 부분  ####
+		
+        <div id="joinTableDiv">
+			<!--  templete vm include  -->					
+			#parse ("/admin/store/statistics/joinList.vm")
+        </div>	
+
+    #### E : 리스트  폼 부분  ####
+	</form>
+</div>

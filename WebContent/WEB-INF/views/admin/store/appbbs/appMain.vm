@@ -1,0 +1,376 @@
+#if($type=="NOTICE")
+    #set($boardName = "#springMessage('menu.system.notice')")  
+#else
+    #set($boardName = "Q&A")  
+#end
+
+<script type="text/javascript">
+	//탭 클릭, 검색버튼 클릭, 페이징 클릭시 데이터 테이블 그리기
+	var array = new Array();
+	function drawTable(page){
+		var selectRowSize = document.getElementById('selRowSize');
+        var orderTarget = $("#orderTarget").val();
+        var orderType = $("#orderType").val();
+        
+        var pnum;
+        //검색조건을 입력 후, 엔터치면  page에 값이 들어옴.
+        if(page != undefined){
+            pnum = page;
+        }else{
+            pnum = jQuery('input[name=PAGE_NUM]').val();//다이나믹 오브젝트라 미리 선언하고 들어가야됨...
+		}
+        
+		fn_getCommonList( CONTEXT_PATH + "/admin/store/bbs/main"
+						, "POST"
+						, {
+							 BOARD_TYPE   : jQuery('input[name=BOARD_TYPE]',$('div.detail_searchBox')).val()
+							,SECRET_YN    : jQuery('select[name=SECRET_YN] option:selected',$('div.detail_searchBox')).val()
+							,BOARD_TITLE  : jQuery('input[name=BOARD_TITLE]',$('div.detail_searchBox')).val()
+							,REG_ID  : jQuery('input[name=REG_ID]',$('div.detail_searchBox')).val()
+							,PAGE_NUM     : pnum
+                            ,ORDER_TARGET : orderTarget
+                            ,ORDER_TYPE   : orderType
+							,PAGE_SIZE	  : selectRowSize[selectRowSize.selectedIndex].value
+						  }
+						, jQuery('#datatableDiv') 
+		);
+		fn_page('j_page_div', '${CONTEXT_PATH}');
+    	$(".chkCls").each(function(){
+    		if( jQuery.inArray( $(this).val() , array) >= 0){
+    			var selectBox = $(this)[0];
+    			selectBox.checked = true;
+    			$(this).parent().parent().removeClass().addClass("selected");
+    		}
+    	});
+	}
+    
+	jQuery(document).ready(function(){
+		fn_page('j_page_div', '${CONTEXT_PATH}');
+        ##전체갯수
+        jQuery('#cntTotal').html(jQuery('input[name=PAGE_TOT]').val());
+        
+        jQuery("input[name=BOARD_TITLE]").focus();
+         
+        ##검색버튼 클릭
+        jQuery('#searchBtn').click(function(){
+             $("#orderTarget").val("REF");
+             $("#orderType").val("DESC");
+            
+            ch_search();
+            return false;
+        });
+        
+		//테이블 로우 클릭시 해당 건의 팝업
+		jQuery(document).on('click', 'td.data', function(){
+    		var url = CONTEXT_PATH + "/admin/store/bbs/view";
+        	var type = "POST";
+        	var data = {BOARD_IDX:jQuery(this).attr('board_idx') ,BOARD_TYPE:jQuery('input[name="BOARD_TYPE"]', 'form[name=frmSearch]').val() ,PAGE_NUM:jQuery('input[name="PAGE_NUM"]').val() };
+        	var target = $("#windowPop");
+        	var whideh = 600;
+        	var title = "$boardName "+'#springMessage("menu.store.notice.detailView")'; //상세보기
+        	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+		});
+		
+    	
+        ##등록버튼 보이기(only admin)
+		jQuery('#insertBtn, #chdeleteBtn').hide();
+        if('$!request.getSession().getAttribute("S_ID_USER")'=='admin'){
+            jQuery('#insertBtn, #chdeleteBtn').show();
+        }else if(jQuery('input[name="BOARD_TYPE"]','form[name=frmSearch]').val() == 'QNA'){
+			jQuery('#insertBtn').show();
+		}
+        
+		//등록버튼 클릭
+		jQuery('#insertBtn').click(function(){
+			var url = CONTEXT_PATH +"/admin/store/bbs/view";
+        	var type = "POST";
+        	var data = {BOARD_IDX:"", BOARD_TYPE: jQuery('input[name="BOARD_TYPE"]','form[name=frmSearch]').val() };
+        	var target = $("#windowPop");
+        	var whideh = 600;
+        	var title = "$boardName "+'#springMessage("common.button.regist")'; //등록
+        	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+		});
+		
+		$(document).on("click","#all_check",function(e){
+			if($(this).is(":checked")){
+    				$(".chkCls").each(function(){
+    			var selectBox = $(this)[0];
+    			selectBox.checked = true;
+    			$(this).parent().parent().removeClass().addClass("selected");
+    			if(jQuery.inArray( $(this).val() , array) < 0){
+    				array[array.length] = $(this).val();
+        			}
+        		});
+        	} else {
+        		$(".chkCls").each(function(){
+        			var selectBox = $(this)[0];
+        			selectBox.checked = false;
+        			$(this).parent().parent().removeClass();
+        			if(jQuery.inArray( $(this).val() , array) >= 0){
+        				array.splice(jQuery.inArray( $(this).val() , array),1);
+        			}
+        		});
+        	}
+		});
+		
+		$(document).on("click",".chkCls",function(){
+        	if($(this).is(":checked")){
+        		array[array.length] = $(this).val();
+        		$(this).parent().parent().removeClass().addClass("selected");
+        	} else {
+        		array.splice(jQuery.inArray( $(this).val() , array),1);
+        		$(this).parent().parent().removeClass();
+        	}
+        });
+	
+	
+    	//파일 input 추가하기
+    	jQuery(document).on('click', 'span.ui-icon-plusthick', function(){
+			jQuery(this).closest('div').after('<div style="width:100%;height:24px;"><input style="float:left;" type="file" name="files['+$('input:file').length+']"/><span style="float:right;" class="ui-icon ui-icon-closethick"></span></div>');
+    	});
+    	##삭제하기
+    $(document).on("click",'#chdeleteBtn',function( e ){
+		var cnt = $(".chkCls:checkbox:checked").length;
+		
+        if(cnt < 1){
+             alert('#springMessage("menu.store.notice.alert.chooseOne")'); //"한 개 이상 게시판을 선택하셔야 합니다"
+        }else{
+            if(confirm('#springMessage("common.alert.doDelete")')){ //삭제하시겠습니까?
+				var checkBoxList = [];
+				var refList=[];
+                $('.chkCls:not(#all_check):checkbox:checked').each(function(i) {
+                       checkBoxList.push($(this).val());
+                });
+				
+                var data = "DEL_CHK="+checkBoxList;
+                jQuery.ajax({
+                    url     : CONTEXT_PATH + '/admin/store/bbs/deleteChk',
+                    type    : 'post',
+                    dataType: "json" ,
+                    data    : data ,
+                   success:function(data){
+                            alert(data.msg);
+                            if(data.result > 0){
+                                drawTable(1);
+                            }
+                     }
+                });
+            }
+        }
+	});
+    	//파일 input 삭제하기
+    	jQuery(document).on('click', 'span.ui-icon-closethick', function(){
+    		var fidx = jQuery(this).prev().attr('file_idx');
+    		if(fidx != null){
+				if(confirm('#springMessage("menu.store.notice.alert.deleteFile")')){ //파일을 삭제하시겠습니까? 삭제 후에는 복구가 안됩니다.
+					deleteFile(fidx);
+				}
+    		}else{
+    			jQuery(this).closest('div').remove();
+    		}
+    	});
+    	
+		//첨부화일 한개 삭제하기
+		function deleteFile(idx){
+        	jQuery.ajax({
+        		url      : 'deleteFile',
+        		type     : 'post',
+        		dataType : "json" ,
+        		data     : { FILE_IDX : idx } ,
+        		success  : function(json){
+					if(json.success>0){
+						jQuery('a[file_idx='+idx+']').closest('div').remove();
+					}else{
+						alert('#springMessage("menu.store.notice.alert.fileError")'+' '+'#springMessage("menu.push.sendManage.alert.askAdmin")'); //파일삭제 중 장애가 발생되었습니다. 관리자에게 문의하세요.
+					}
+        		}
+        	});
+		}
+	});
+	
+	
+    //DESC <-> ASC 변경 함수
+    function changeOrderType(){
+        if($("#orderType").val() == "DESC"){
+            $("#orderType").val("ASC");
+        }else{
+            $("#orderType").val("DESC");
+        }
+    }
+    
+    //컬럼 클릭 -> ORDER BY
+    $(document).on("click","#orderSecretYn",function( e ){ //공개여부
+        $("#orderTarget").val("SECRET_YN");
+        changeOrderType();
+        drawTable(jQuery('input[name=PAGE_NUM]').val());
+    });
+    
+    $(document).on("click","#orderBoardTitle",function( e ){ //글제목
+        $("#orderTarget").val("BOARD_TITLE");
+        changeOrderType();
+        drawTable(jQuery('input[name=PAGE_NUM]').val());
+    });
+    
+    $(document).on("click","#orderHit",function( e ){ //조회수
+        $("#orderTarget").val("HIT");
+        changeOrderType();
+        drawTable(jQuery('input[name=PAGE_NUM]').val());
+    });
+    
+    $(document).on("click","#orderRegId",function( e ){ //등록자ID
+        $("#orderTarget").val("REG_ID");
+        changeOrderType();
+        drawTable(1);
+    });
+    
+    $(document).on("click","#orderRegDt",function( e ){ //등록일자
+        $("#orderTarget").val("REG_DT");
+        changeOrderType();
+        drawTable(jQuery('input[name=PAGE_NUM]').val());
+    });
+	
+	 $(document).on("click","#orderModDt",function( e ){ //수정일자
+        $("#orderTarget").val("MOD_DT");
+        changeOrderType();
+        drawTable(jQuery('input[name=PAGE_NUM]').val());
+    });
+    
+   	//페이지이동
+	function fn_appList(page){
+		$('input[name=PAGE_NUM]').val(page);
+		drawTable();
+	}
+	
+	//검색 유효성 체크
+	function ch_search(){
+		var sfrm=document.frmSearch;
+		var sval=$("#conSelect").val();
+    	if(sval==0){
+    		if(sfrm.btitle.value.length>0&&sfrm.btitle.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.btitle.value="";
+    			sfrm.btitle.focus();
+    		}
+    	}else if(sval==1){
+    		if(sfrm.regid.value.length>0&&sfrm.regid.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.regid.value="";
+    			sfrm.regid.focus();
+    		}
+    	}
+		drawTable(1);
+	}
+	//검색구분 select박스 변경
+	jQuery(document).on("change","#conSelect",function(){
+		var su = jQuery(this).val();
+		jQuery(".se_con").hide();
+		jQuery(".se_con").val("");
+		jQuery(".se_con:eq(" + su + ")").show();
+	});
+
+	//저장완료시 서버메세지 출력
+	#if($success)
+		var success = $success;
+		if(success>0){
+			alert('#springMessage("menu.store.device.alert.save")'); //"저장되었습니다."
+		}else{
+			alert('#springMessage("menu.store.device.alert.saveError")'+' '+'#springMessage("menu.push.sendManage.alert.askAdmin")'); //"저장 중 장애가 발생되었습니다. 관리자에게 문의하세요."
+		}
+	#end
+
+	
+	function fn_changeRowSize(){
+    	fn_commonSetRowSize();
+    	drawTable(1);
+    }
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+  	<div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>	
+    #### E : 프로그램 위치 기술 부분  ####
+
+    #### S : 조회 폼 부분  ####
+   
+      <form name="frmSearch" method="post">
+          <table class="tbl-search">
+          	<colgroup>
+				<col style="width:100px">
+				<col style="width:150px">
+				<col style="width:100px">
+				<col style="width:300px">
+				<col>
+			</colgroup>
+			
+			<thead>
+	          	<tr>
+	               <th>#springMessage("menu.store.appManage.showYN")</th> <!-- 공개여부 -->
+	               <td>
+						<select name="SECRET_YN" class="w120">
+	          	            <option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+	          	            <option value="Y">#springMessage("menu.store.appManage.show_Y")</option> <!-- 공개 -->
+	          	          	<option value="N">#springMessage("menu.store.appManage.show_N")</option> <!-- 비공개 -->
+	          		    </select>
+					</td>
+				
+	                <th>#springMessage("menu.stats.mobile.searchType")</th> <!-- 검색조건 -->
+	                <td>
+						<select id="conSelect" class="w120">
+	          	            <option value="0">#springMessage("menu.store.notice.title")</option> <!-- 글제목 -->
+	          	            <option value="1">#springMessage("menu.mobile.deploy.writer")ID</option> <!-- 등록자 -->
+	          		    </select>
+						<input class="se_con" type="text" id="btitle" name="BOARD_TITLE" onkeydown="javascript:if(event.keyCode==13){ch_search(); return false;}" />
+						<input class="se_con" type="text" id="regid" name="REG_ID" style="display:none" onkeydown="javascript:if(event.keyCode==13){ch_search(); return false;}" />
+					</td>
+					<td>
+						<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+					</td>
+	              </tr>
+	          </thead>
+          </table>
+		
+		<div class="detail_searchBox">
+			<input type="hidden" name="BOARD_TYPE" value="$!type"/>
+        </div>
+        
+		<input type="hidden" id="orderTarget" value="REF"/>
+		<input type="hidden" id="orderType" value="DESC"/>
+    </form>
+    
+	
+   	#### S : 리스트  폼 부분  ####
+   	<table class="tbl-info">
+		<caption></caption>
+		<tr>
+			<td>
+				<a href="javascript:void(0)" class="btn2" id="insertBtn">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+				<a href="javascript:void(0)" class="btn2" id="chdeleteBtn">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+			</td>
+			<td class="txtRight">
+				#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+				<div class="tbl-info-select">
+					<label for="num">#springMessage("common.select.options_10")</label>
+					<select id="selRowSize" onchange="fn_changeRowSize()">
+           				<option value="10">#springMessage("common.select.options_10")</option>
+           				<option value="30">#springMessage("common.select.options_30")</option>
+           				<option value="50">#springMessage("common.select.options_50")</option>
+           			</select>
+				</div>
+			</td>
+		</tr>
+	</table>
+		
+		
+	<div id="datatableDiv">
+         #parse ("/admin/store/appbbs/appMain_table.vm")
+     </div>
+	   
+	  
+
+    #### E : 리스트  폼 부분  ####
+</div>	

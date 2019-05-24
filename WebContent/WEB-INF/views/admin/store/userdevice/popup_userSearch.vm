@@ -1,0 +1,108 @@
+<script type="text/javascript">
+jQuery(function(){
+	jQuery(document).on("change","#popupSelect",function(){
+		jQuery("input.se_con", jQuery(this).closest('p'))
+			.hide()
+			.val("");
+		jQuery("input.se_con:eq(" + jQuery(this).val() + ")", jQuery(this).closest('p'))
+			.show();
+	});
+	//검색버튼 클릭
+	jQuery('#popupSearch').click(function(){
+		fn_selectList(1);
+	});
+	//테이블 리스트 갱신페이지 구현
+	function fn_selectList(PAGE_NUM){
+		jQuery.ajax({
+			url     : "userSearch",
+			data    : {
+				EMP_NO : jQuery("#popupSelect").closest('div').find('input[name="EMP_NO"]').val(),
+				EMP_NM : jQuery("#popupSelect").closest('div').find('input[name="EMP_NM"]').val()
+			},
+			type    : "post",
+			dataType: "json" ,
+			success : function(json){
+				jQuery('#pop_now').val(json.R_PAGE_NUM);
+				jQuery('#pop_tot').val(json.J_TOT);
+				jQuery('#pop_row').val(json.R_ROW_SIZE);
+				jQuery('#pop_page').val(json.R_PAGE_SIZE);
+				var txt = "";
+				for(var i=0;i<json.userlist.length;i++){
+					var empNo = json.userlist[i].EMP_NO;
+					var empNm = json.userlist[i].EMP_NM;
+					var grpNm = json.userlist[i].GRP_NM;
+					if(!grpNm)
+					{
+						// null 인 경우...
+						grpNm="";
+					}
+					txt += '<tr><td>'+empNo+'</td><td>'+empNm+'</td><td>'+grpNm+'</td></tr>'
+				}
+				
+				jQuery('#resultTable tbody').html(txt);
+				fn_page('j_page_div', '$!{CONTEXT_PATH}');
+			}
+		});
+	}
+	//테이블로우 클릭시 해당 선택값으로 설정하고 팝업닫기
+	jQuery(document).on('mouseover', "#resultTable tbody tr", function(event) {
+		jQuery(this).css('cursor', 'pointer');
+	}).on('click', "#resultTable tbody tr", function(event) {
+		jQuery('#EMP_NO').val(jQuery('td:eq(0)', this).text());
+		jQuery('#EMP_NM').val(jQuery('td:eq(1)', this).text());
+		jQuery( "#dialogPop" ).dialog('close');
+    });
+});
+</script>
+
+	<table class="tbl-search">
+	 	<colgroup>
+			<col style="width:300px">
+			<col>
+		</colgroup>
+		
+		<thead>
+	 		<tr>
+	            <td>
+					<select id="popupSelect">
+			            <option value="0">#springMessage("menu.store.user.number")</option> <!-- 사번 -->
+			            <option value="1">#springMessage("common.text.name")</option> <!-- 이름 -->
+				    </select>
+				    <input class="se_con" type="text" name="EMP_NO" />
+				    <input class="se_con" type="text" name="EMP_NM" style="display:none;"/>
+				</td>
+				<td>
+					<a href="javascript:void(0)" id="popupSearch" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+				</td>
+	       	</tr>
+	     </thead>
+      </table>
+	
+
+	<table class="tbl-nb" summary="테이블" id="resultTable">
+		<col width="30%"><col width="30%"><col width="auto"/>
+		<thead>
+			<tr> <!-- 사번 이름 소속-->
+				<th>#springMessage("menu.store.user.number")</th>
+				<th>#springMessage("common.text.name")</th>
+				<th>#springMessage("menu.store.userDevice.attach")</th>
+			</tr>
+		</thead> 
+		<tbody>
+		</tbody>
+	</table>	
+
+	
+	<div class="j_page_div">
+		##현재 페이지
+		<input type="hidden" name="j_now" id="pop_now" value="" />
+		##총 개수
+		<input type="hidden" name="J_tot" id="pop_tot" value="" />
+		##한페이지의 로우수
+		<input type="hidden" name="j_row" id="pop_row" value="" />
+		##한페이지수
+		<input type="hidden" name="j_page" id="pop_page" value="" />
+		##이밴트
+		<input type="hidden" name="j_event" value="fn_selectList" />
+	</div>
+

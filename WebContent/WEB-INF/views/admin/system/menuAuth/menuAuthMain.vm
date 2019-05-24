@@ -1,0 +1,321 @@
+#set($sessionAuthGrpID = $request.getSession().getAttribute("S_ID_AUTH_GRP"))
+<script type="text/javascript">
+$(document).ready(function(){
+});
+
+//메뉴리스트 체크
+$(document).on("click",".outCheckTr",function(){
+	if($(this).is(":checked")){
+		$(this).parent().parent().removeClass().addClass("onCheckTr");
+	} else {
+		$(this).parent().parent().removeClass();
+		allCheckBox($("#menuAllCheck"));
+	}
+});
+
+//메뉴권한 리스트 체크
+$(document).on("click",".outCheckAuthTr",function(){
+	if($(this).is(":checked")){
+		$(this).parent().parent().removeClass().addClass("onCheckAuthTr");
+	} else {
+		$(this).parent().parent().removeClass();
+		allCheckBox($("#menuAuthAllCheck"));
+	}
+});
+
+//저제 체크박스 체크
+function allCheckBox( checkBox ){
+	var selectBox = checkBox[0];
+	selectBox.checked = false;
+}
+
+//메뉴 전체 체크
+$(document).on("click","#menuAllCheck",function(){
+	if($(this).is(":checked")){
+		$(".outCheckTr").each(function(){
+			$(this).parent().parent().removeClass().addClass("onCheckTr");
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+		});
+	} else {
+		$(".outCheckTr").each(function(){
+			$(this).parent().parent().removeClass();
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+		});
+	}
+});
+
+//메뉴권한 전체 체크
+$(document).on("click","#menuAuthAllCheck",function(){
+	if($(this).is(":checked")){
+		$(".outCheckAuthTr").each(function(){
+			$(this).parent().parent().removeClass().addClass("onCheckAuthTr");
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+		});
+	} else {
+		$(".outCheckAuthTr").each(function(){
+			$(this).parent().parent().removeClass();
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+		});
+	}
+});
+
+//메뉴 권한 추가
+$(document).on("click","#btn_add",function(){
+	$(".onCheckTr").each(function(){
+		var selectBox = $(this).find("input[type='checkbox']")[0];
+		selectBox.checked = false;
+		var thisClone = $(this).clone();
+		thisClone.find(".outCheckTr").removeClass().addClass("outCheckAuthTr");
+		thisClone.find(".LEFT_ID_MENU").removeClass().addClass("RIGHT_ID_MENU");
+		$("#menuAuthTable").append($("<tr>" + thisClone.html() + "</tr>"));
+		$(this).remove();
+	});
+	target = $("#menuAuthTable");
+	row_sort(target);
+	allCheckBox($("#menuAllCheck"));
+});
+
+//메뉴 권한 삭제
+$(document).on("click","#btn_del",function(){
+	$(".onCheckAuthTr").each(function(){
+		var selectBox = $(this).find("input[type='checkbox']")[0];
+		selectBox.checked = false;
+		var thisClone = $(this).clone();
+		thisClone.find(".onCheckAuthTr").removeClass().addClass("onCheckTr");
+		thisClone.find(".RIGHT_ID_MENU").removeClass().addClass("LEFT_ID_MENU");
+		$("#menuTable").append($("<tr >" + thisClone.html() + "</tr>"));
+		$(this).remove();
+	});
+	target = $("#menuTable");
+	row_sort(target);
+	allCheckBox($("#menuAuthAllCheck"));
+});
+
+//메뉴 권한 호출
+$(document).on("change","#se_authGroup",function(){
+	if($(this).val() == ""){
+		document.location.href=CONTEXT_PATH + "/admin/system/menuAuth"
+		return;
+	}
+	var ID_GROUP = $(this).val();
+	var url = CONTEXT_PATH + "/admin/system/menuAuth/edit";
+	var data="ID_GROUP=" + ID_GROUP;
+	var type = "GET";
+	var target= $("#menuAuthMainFrom");
+	fn_getList(url, type, data, target );
+});
+
+//화면 호출 (공통)
+function fn_getList( url, type, data, target ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false ,
+		cache:false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+//메뉴 등록
+function fn_newWrite(){
+	
+
+	var ID_GROUP = $("#se_authGroup").val();
+	if(ID_GROUP == ""){
+		alert('#springMessage("menu.system.alert.selectMenuAuth")');  //관리자 권한을 선택해주세요.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){	//등록하시겠습니까?
+		return;
+	}
+	
+	$(".RIGHT_ID_MENU").each(function(i){
+		$(this).attr("name","menuAuthList[" + i + "].ID_MENU");
+	});
+	var url = CONTEXT_PATH + "/admin/system/menuAuth/delete";
+	var data = $("form[name=frmList]").serialize() + "&ID_GROUP=" +  ID_GROUP;
+
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+
+            if(ID_GROUP=="$sessionAuthGrpID"){		//수정한 그룹아이디가 로그인한 그룹아이디일경우 로그인 다시 유도
+                alert(data.msg + '\n\n' + '#springMessage("menu.system.alert.reloginForMenuAuthChange")');  //메뉴권한이 변경되어 재 로그인 해주세요.
+                document.location.href=CONTEXT_PATH+"/logOut";
+            }else{
+                alert(data.msg);
+            }
+
+			if(data.result > 0){
+			}
+		}
+	});
+	$(".RIGHT_ID_MENU").each(function(i){
+		$(this).attr("name","");
+	});
+}
+
+function row_sort(target){
+	var rows = target.find('tbody>tr').get();
+
+  	rows.sort(function (a, b) {
+    	var keyA = Number($(a).find(".ROWSU").val());
+        var keyB = Number($(b).find(".ROWSU").val());
+       	if (keyA > keyB) return 1;
+        if (keyA < keyB) return -1;
+        return 0;
+ 	});
+
+
+	jQuery(rows).each(function(index)
+		{
+			target.children('tbody').append(this);
+		}
+	);
+	
+}
+</script>
+
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.system")</span>
+		<span>#springMessage("menu.system.menuAuthManage")</span>				### 메뉴 권한관리 ###
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.menuAuthManage")</h2>	### 메뉴 권한관리 ###
+	#### E : 프로그램 위치 기술 부분  ####
+
+	
+	#### S : 조회 폼 부분  ####
+	<form name="frmList" method="get">
+		
+		<table class="tbl-search">
+			<caption>#springMessage("menu.system.menuAuthManage")</caption>		### 메뉴 권한관리 ###
+			<thead>
+				<tr>
+					<th>
+						관리자 그룹
+                    </th>
+					<td>
+						<div class="tbl-select">
+							<label for="se_authGroup">#springMessage("common.select.choose")</label>
+							<select id="se_authGroup" class="w120">
+      								<option value="">#springMessage("common.select.choose")</option>
+      							#foreach( $authGroup in $authGroupList )
+      								<option value="$!authGroup.ID_GROUP">$esc.xml($!authGroup.NM_GROUP)</option>
+      							#end
+      						</select>
+						</div>
+					</td>
+				</tr>
+			</thead>
+		</table>		
+		#### E : 조회 폼 부분  ####
+
+		#### S : 리스트  폼 부분  ####		
+		<div class="scroll-area" id="menuAuthMainFrom">
+		
+			<table class="full-width">
+				<caption></caption>
+				<colgroup>
+					<col>
+					<col style="width:120px">
+					<col>
+				</colgroup>
+				<tr>
+					<td class="tbl-wrap valignTop">
+					
+						<h2 class="tbl-title">#springMessage("menu.system.noRightMenuAuth")</h2>		### 권한이 없는 메뉴 ###
+						<table class="tbl full-width">
+							<colgroup>
+								<col width="19%"/>
+								<col width="auto%"/>
+							</colgroup>
+							<thead>
+								<tr>
+									<th>
+										<input type="checkbox" id=""/><label for=""></label>
+									</th>
+									<th>
+										#springMessage("common.header.menuName")				### 메뉴명 ###
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td colspan="2" class="tb_subCon">
+										<div class="menu_list_div">
+											#springMessage("menu.system.alert.selectManagerGroup")				### 관리자 그룹을 선택해주세요. ###
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						
+					</td>
+					
+					<td class="txtCenter">
+						<a id="btn_add" class="btn-arrow">#springMessage("common.button.add")</a>		### 추가 ###
+						<br />
+						<br />
+						<a id="btn_del" class="btn-arrow reverse">#springMessage("common.button.delete")</a>	### 삭제 ###
+					</td>
+					
+					<td class="tbl-wrap valignTop">
+						
+						<h2 class="tbl-title">#springMessage("menu.system.hadRightMenuAuth")</h2>	### 권한이 있는 메뉴 ###
+						<table class="tbl full-width">
+							<colgroup>
+								<col width="19%"/>
+								<col width="auto"/>
+							</colgroup>
+							<thead>
+								<tr>
+									<th>
+										<input type="checkbox" id=""/><label for=""></label>
+									</th>
+									<th>
+										#springMessage("common.header.menuName")				### 메뉴명 ###
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td colspan="2" class="tb_subCon">
+										<div class="menu_list_div">
+											#springMessage("menu.system.alert.selectManagerGroup")				### 관리자 그룹을 선택해주세요. ###
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						
+					</td>
+				</tr>
+			</table>
+			
+		</div>
+		
+		<a href="javascript:fn_newWrite();void(0)" class="btn1 fr">#springMessage("common.button.apply")</a>	### 적용 ###
+		
+	</div>
+	#### E : 리스트  폼 부분  ####
+	
+	</form>
+	
+	
+	
+	
+</div>
+

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.securepush.manageAccount.mapper.ManageAccountSysUserDao">
+
+	<resultMap type="kr.msp.admin.securepush.manageAccount.dto.ManageAccountSysUserDto" id="ManageAccountSysUserDto">
+		<result property="ID_USER" 		column="USER_ID"/>
+		<result property="NM_USER" 		column="USER_NM"/>
+		<result property="PASSWORD" 	column="USER_PW"/>
+		<result property="YN_USE" 		column="USE_YN"/>
+		<result property="ID_INSERT" 	column="REG_ID"/>
+		<result property="DT_INSERT" 	column="REG_DTTM"/>
+		<result property="ID_UPDATE" 	column="MOD_ID"/>
+		<result property="DT_UPDATE" 	column="MOD_DTTM"/>
+		<result property="DT_LOGIN" 	column="LOGIN_DTTM"/>
+		<result property="REMOTE_IP" 	column="REMOTE_IP"/>
+		<result property="ID_GROUP" 	column="AUTH_GRP_ID"/>
+		<result property="NM_GROUP" 	column="AUTH_GRP_NM"/>
+		<result property="EMAIL" 	column="EMAIL"/>
+		<result property="TP_USER" 	column="USER_TP"/>
+		<result property="RNUM" 		column="RNUM"/>
+		<result property="TOT_CNT" 		column="TOT_CNT"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.system.user.dto.AuthUserGroup" id="AuthUserGroup">
+		<result property="ID_GROUP" column="AUTH_GRP_ID"/>
+		<result property="NM_GROUP" column="AUTH_GRP_NM"/>
+		<result property="AUTH_CHK" column="AUTH_CHK"/>
+	</resultMap>
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT *
+, @RN TOT_CNT
+FROM
+(
+	SELECT A.*
+	,	(@RN := @RN + 1) AS RNUM
+	FROM
+	(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+	) A
+	, (SELECT @RN := 0, @TOT := 0) R
+) A
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	<!-- 관리자 계정 목록 조회 -->
+	<select id="selectSysUserList" parameterType="kr.msp.admin.securepush.manageAccount.dto.ManageAccountParamDto" resultMap="ManageAccountSysUserDto">
+        <include refid="head"/>
+		SELECT
+             A.USER_ID
+            ,A.USER_NM
+            ,A.USER_PW
+            ,A.USE_YN
+            ,A.REG_ID
+            ,DATE_FORMAT(A.REG_DTTM, '%Y.%m.%d') AS REG_DTTM
+            ,A.MOD_ID
+            ,DATE_FORMAT(A.MOD_DTTM, '%Y.%m.%d') AS MOD_DTTM
+            ,B.AUTH_GRP_ID
+            ,C.AUTH_GRP_NM
+            ,DATE_FORMAT(D.LOGIN_DTTM, '%Y.%m.%d %H:%i:%s') AS LOGIN_DTTM
+            ,D.REMOTE_IP
+        FROM TB_SYS_USER A
+        LEFT JOIN TB_SYS_USER_AUTH_GRP B
+        ON A.USER_ID = B.USER_ID
+        LEFT JOIN TB_SYS_AUTH_GRP C
+        ON B.AUTH_GRP_ID = C.AUTH_GRP_ID
+        LEFT OUTER JOIN (
+        	SELECT DISTINCT T1.LOGIN_DTTM, T2.REMOTE_IP, T1.USER_ID
+            FROM(
+                SELECT MAX(LOGIN_DTTM) AS LOGIN_DTTM, USER_ID 
+                FROM TB_SYS_LOGIN_HIST 
+                GROUP BY USER_ID
+            )T1
+            INNER JOIN TB_SYS_LOGIN_HIST T2 
+            ON T1.USER_ID=T2.USER_ID AND T1.LOGIN_DTTM=T2.LOGIN_DTTM
+        ) D 
+        ON A.USER_ID = D.USER_ID
+        <where>
+        	B.AUTH_GRP_ID IN (
+        		SELECT CD_ID FROM TB_SYS_CD_INFO WHERE CD_GRP_ID = 'SP001'
+        	)
+        	<if test="SE_ID_USER != null and SE_ID_USER != '' ">
+                AND A.USER_ID LIKE CONCAT('%', #{SE_ID_USER}, '%')
+            </if>
+            <if test="SE_NM_USER != null and SE_NM_USER != '' ">
+                AND A.USER_NM LIKE CONCAT('%', #{SE_NM_USER}, '%')
+            </if>
+            <if test="SE_ID_GROUP != null and SE_ID_GROUP != '' ">
+            	AND B.AUTH_GRP_ID = #{SE_ID_GROUP}
+            </if>
+        </where>
+         ORDER BY A.USER_ID ASC
+		<include refid="bottom"/>
+    </select>
+    
+    <!-- 관리자 계정 정보 조회. -->
+    <select id="selectSysUserInfo" parameterType="kr.msp.admin.securepush.manageAccount.dto.ManageAccountParamDto" resultMap="ManageAccountSysUserDto">
+		SELECT
+             A.USER_ID
+            ,A.USER_NM
+            ,A.USER_PW
+            ,A.USE_YN
+            ,A.REG_ID
+            ,A.EMAIL
+            ,A.USER_TP
+            ,DATE_FORMAT(A.REG_DTTM, '%Y.%m.%d') AS REG_DTTM
+            ,A.MOD_ID
+            ,DATE_FORMAT(A.MOD_DTTM, '%Y.%m.%d') AS MOD_DTTM
+            ,B.AUTH_GRP_ID
+            ,C.AUTH_GRP_NM
+            ,DATE_FORMAT(D.LOGIN_DTTM, '%Y.%m.%d %H:%i:%s') AS LOGIN_DTTM
+            ,D.REMOTE_IP
+        FROM TB_SYS_USER A
+        LEFT JOIN TB_SYS_USER_AUTH_GRP B
+        ON A.USER_ID = B.USER_ID
+        LEFT JOIN TB_SYS_AUTH_GRP C
+        ON B.AUTH_GRP_ID = C.AUTH_GRP_ID
+        LEFT OUTER JOIN (
+        	SELECT DISTINCT T1.LOGIN_DTTM, T2.REMOTE_IP, T1.USER_ID
+            FROM(
+                SELECT MAX(LOGIN_DTTM) AS LOGIN_DTTM, USER_ID 
+                FROM TB_SYS_LOGIN_HIST 
+                GROUP BY USER_ID
+            )T1
+            INNER JOIN TB_SYS_LOGIN_HIST T2 
+            ON T1.USER_ID=T2.USER_ID AND T1.LOGIN_DTTM=T2.LOGIN_DTTM
+        ) D 
+        ON A.USER_ID = D.USER_ID
+        WHERE
+        	B.AUTH_GRP_ID IN (
+        		SELECT CD_ID FROM TB_SYS_CD_INFO WHERE CD_GRP_ID = 'SP001'
+        	)
+        	AND A.USER_ID = #{USER_ID}
+        LIMIT 0,1
+    </select>
+	
+</mapper>

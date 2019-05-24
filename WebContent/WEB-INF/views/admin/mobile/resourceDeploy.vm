@@ -1,0 +1,100 @@
+<!-- 
+화면 : 모바일관리 : 배포정보입력
+url : admin/mobile/rsc/deploy
+작성자 : 장문규
+ -->
+
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="headerBg">
+		<div class="innerNavi">
+			<a href="#"><img src="/resources/img/icon/icon_home.gif" alt="home"/></a> <span>#springMessage("menu.mobile")</span> <span>#springMessage("menu.mobile.upload")</span> <strong>#springMessage("menu.mobile.deployInfo")</strong><!-- 모바일 관리 / 리소스업로드 / 배포정보입력-->
+		</div>
+		<div class="tb_tit">
+			<h3>#springMessage("menu.mobile.deployInfo")</h3><!-- 배포정보입력 -->
+		</div>
+	</div>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<div class="contents">
+		<form name="frmMain" method="post">
+			<input type="hidden"  name="SVC_ID" value="$!SVC_ID" />
+			<input type="hidden"  name="DEPLOY_ADD_LIST" value="" />
+			<input type="hidden"  name="DEPLOY_DEL_LIST" value="" />
+
+			<div class="tb_con">
+				<table class="tbType1" summary="앱 서비스명,배포 버전,제목,배포모드,암호화여부,설명">
+					<colgroup>
+						<col  width="20%"/><col  width="80%"/>
+					</colgroup>
+					<tr>
+						<th scope="row"><label for="SVC_NM">#springMessage("common.text.appname")</label></th> <!-- App. 명 -->
+						<td><input type="text" value="$SVC_NM" name="SVC_NM" id="SVC_NM" class="inputField"  readonly="readonly" /></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="DPLY_VER">#springMessage("menu.mobile.manage.deployVersion")</label></th> <!-- 배포 버전 -->
+						<td><input type="text" value="$DPLY_VER" name="DPLY_VER" id="DPLY_VER" class="inputField" /></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="DPLY_NM">#springMessage("common.header.title")</label></th> <!-- 제목 -->
+						<td><input type="text" name="DPLY_NM" id="DPLY_NM" class="inputField" /></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="DPLY_TP">#springMessage("menu.mobile.deploy.mode")</label></th> <!-- 배포 모드 -->
+						<td>
+							<select id="DPLY_TP" name="DPLY_TP">
+								<option  value="0">#springMessage("menu.mobile.deploy.develop")</option> <!-- 개발 -->
+								<option  value="1">#springMessage("menu.mobile.deploy.operate")</option> <!-- 운영 -->
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="DEPLOY_FULL_ENC">#springMessage("menu.mobile.manage.encYN")</label></th> <!-- 암호화여부 -->
+						<td title="#springMessage('menu.mobile.manage.encDesc')">  <!-- 해당 배포할 리소스들을 암호화 합니다. -->
+							<input id="DEPLOY_FULL_ENC" name="DEPLOY_FULL_ENC" type="checkbox" value="Y"/> <label for="DEPLOY_FULL_ENC">#springMessage("menu.mobile.manage.enc")</label> <!-- 암호화 -->
+						</td>
+					</tr>
+					<tr>
+						<th><label for="DPLY_DESC">#springMessage("common.header.desc")</label></th><!-- 설명 -->
+						<td><textarea id="DPLY_DESC" name="DPLY_DESC" class="width95" style="height:100px;"></textarea></td>
+					</tr>
+				</table>
+
+				<div class="btnArea ta_r"  id="deployDiv" >
+					<button type="button" id="resDeploy" class="btn_style1"><strong>#springMessage("common.button.save")</strong></button> <!-- 저장 -->
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function () {
+
+	$("#resDeploy").click(function(){
+		if($("#DPLY_VER").val() == ""){
+			alert('#springMessage("menu.mobile.deploy.alertVersion")');  //"배포 버전을 입력해 주십시오."
+			$("#DPLY_VER").focus();
+			return;
+		}
+		if($("#DPLY_NM").val() == ""){
+			alert('#springMessage("menu.mobile.deploy.alertTitle")'); //"배포 제목을 입력해 주십시오." 
+			$("#DPLY_NM").focus();
+			return;
+		}
+		if($("#DPLY_DESC").val() == ""){
+			alert('#springMessage("menu.mobile.deploy.alertDesc")'); //"배포 설명을 입력해 주십시오." 
+			$("#DPLY_DESC").focus();
+			return;
+		}
+
+		//form안에 input hidden으로 바로 value에 세팅시 []가 하나더 감쌈... 그래서 아래와 같이 submit
+        document.frmMain.DEPLOY_ADD_LIST.value = $DEPLOY_ADD_LIST;
+        document.frmMain.DEPLOY_DEL_LIST.value = $DEPLOY_DEL_LIST;
+        document.frmMain.action         = "/admin/mobile/rsc/deploy/doprocess";
+        document.frmMain.submit();
+	});
+
+
+});	//end ready
+</script>

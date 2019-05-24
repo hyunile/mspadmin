@@ -1,0 +1,66 @@
+<script type="text/javascript">
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span></span>
+		<span></span>
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl">
+			<caption>#springMessage("menu.securePush.myProfile")</caption> <!-- 내 정보 -->
+			<colgroup>
+				<col style="width:112px">
+				<col>
+			</colgroup>
+			<tr>
+				<th>#springMessage("common.text.name")</th> <!-- 이름 -->
+				<td>$!itemInfo.USER_NM</td>
+			</tr>
+			<tr>
+				<th>#springMessage("menu.securePush.myProfile.picture")</th> <!-- 사진 -->
+				<td>
+					<div class="my-img">
+						<img src="$!itemInfo.PHOTO_PATH" >
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<th>#springMessage("menu.securePush.myProfile.userId")</th> <!-- 사용자 아이디 -->
+				<td>$!itemInfo.USER_ID</td>
+			</tr>
+			<tr>
+				<th>#springMessage("common.text.dept")</th> <!-- 부서 -->
+				<td>$!itemInfo.FULL_NM</td>
+			</tr>
+			<tr>
+				<th>#springMessage("menu.securePush.myProfile.position") / #springMessage("menu.securePush.myProfile.resp")</th> <!-- 직급/직책 -->
+				<td>$!itemInfo.POS_NM / $!itemInfo.RESP_NM</td>
+			</tr>
+			<tr>
+				<th>#springMessage("common.header.phoneNumber")</th> <!-- 연락처 -->
+				<td>$!itemInfo.CELL_NO</td>
+			</tr>
+			<tr>
+				<th>#springMessage("common.header.email")</th> <!-- 이메일 -->
+				<td>$!itemInfo.EMAIL</td>
+			</tr>
+			<tr>
+				<th>#springMessage("menu.securePush.manageAccount.auth")</th> <!-- 권한 -->
+				<td>$!itemInfo.GROUP_NM</td>
+			</tr>
+			<tr>
+				<th>#springMessage("menu.securePush.manageAccount.adminId")</th> <!-- 관리자 아이디 -->
+				<td>$!itemInfo.ADMIN_ID</td>
+			</tr>
+		</table>
+		#### E : 리스트  폼 부분  ####
+
+	</form>
+</div>

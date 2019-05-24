@@ -1,0 +1,157 @@
+<script type="text/javascript">
+$(document).ready(function () {
+    // order by 관련 화면 그리기
+    var target = $("#orderTarget").val();
+    var type = $("#orderType").val();
+    
+    if(target == "APP_NM"){ //App 명
+        if(type == "DESC"){
+            $("#orderAppNm").text('#springMessage("common.text.appname")'+" ▽"); //App 명
+        }else{
+            $("#orderAppNm").text('#springMessage("common.text.appname")'+" △");
+        }
+    }else if(target == "PLATFORM"){ //플랫폼
+        if(type == "DESC"){
+            $("#orderPlatform").text('#springMessage("menu.store.appManage.platform")'+" ▽"); //플랫폼
+        }else{
+            $("#orderPlatform").text('#springMessage("menu.store.appManage.platform")'+" △"); //플랫폼
+        }
+    }else if(target == "PAKG_ID"){ //App ID
+        if(type == "DESC"){
+            $("#orderPakgId").text("App ID ▽");
+        }else{
+            $("#orderPakgId").text("App ID △");
+        }
+    }else if(target == "USER_NM"){ //등록자
+        if(type == "DESC"){
+            $("#orderUserNm").text('#springMessage("menu.mobile.deploy.writer")'+" ▽"); //등록자
+        }else{
+            $("#orderUserNm").text('#springMessage("menu.mobile.deploy.writer")'+" △"); //등록자
+        }
+    
+    }else if(target == "STS_CD"){ //상태
+        if(type == "DESC"){
+            $("#orderStsCd").text('#springMessage("menu.mobile.deploy.status")'+" ▽"); //상태
+        }else{
+            $("#orderStsCd").text('#springMessage("menu.mobile.deploy.status")'+" △"); //상태
+        }
+     }else if(target == "REG_DT"){ //등록일
+        if(type == "DESC"){
+            $("#orderRegDt").text('#springMessage("menu.mobile.deploy.date")'+" ▽"); //등록일
+        }else{
+            $("#orderRegDt").text('#springMessage("menu.mobile.deploy.date")'+" △"); //등록일
+        }
+    }    
+});
+
+ // check box all select event
+ $(document).on("click","#checkAll",function( e ){     
+    $(".chkCls").prop('checked', $(this).is(":checked"));  //class는 먹는데, id,name은 안먹음;;
+});
+</script>
+
+
+<table class="tbl-nb" >
+    <colgroup>
+        <col width="5%"></col>
+        <col width="5%"></col>
+        <col width="20%"></col>
+        <col width="auto"></col>
+        <col width="15%"></col>
+        <col width="8%"></col>
+        <col width="10%"></col>
+        <col width="8%"></col>
+    </colgroup>
+    
+    <thead>
+        <tr>
+            <th><input type="checkbox" id="checkAll" title="#springMessage('common.title.selectAll')" /><label for="checkAll"></label></th> <!-- 전체선택 -->
+            <th>#springMessage("menu.store.appManage.show_Y")</th> <!-- 공개 -->
+            <th class="ORDER_TH" id="OR_CATG_NM">#springMessage("menu.store.userGroup.category")</th> <!-- 카테고리 -->
+            <th class="ORDER_TH" id="OR_APP_NM"  style="cursor:pointer;">#springMessage("common.text.appname")</th> <!-- App 명 -->
+            <th class="ORDER_TH" id="OR_PLATFORM"  style="cursor:pointer;">#springMessage("menu.store.appManage.platform")</th> <!-- 플랫폼 -->
+            <th>#springMessage("menu.store.appManage.userNum")</th> <!-- 사용자수 -->
+            <th class="ORDER_TH" id="OR_REG_DT" >#springMessage("menu.mobile.deploy.date") </th> <!-- 등록일 -->
+            <th> </th>
+        </tr>
+    </thead>
+    
+    <tbody >
+        #set($cnt = 0)
+        #foreach( $info in $platformList )
+            #set($j_tot = $info.TOT_CNT)
+				
+            <tr>
+                <td>
+					#if($!info.PUB_YN == "Y")
+                    <input type="checkbox" id="$info.APP_IDX" value="$info.APP_IDX" title="#springMessage('menu.store.appManage.useShow_Y')APP" disabled/> <!-- 공개용 -->
+                    <label for="$info.APP_IDX"></label>
+					#else
+                    <input type="checkbox" class="chkCls" id="$info.APP_IDX" value="$info.APP_IDX" title="#springMessage('menu.store.appManage.useShow_N')APP"/> <!-- 비공개용 -->
+                    <label for="$info.APP_IDX"></label>
+					#end
+                </td>
+                <td>
+                	$!info.PUB_YN
+                </td>
+                <td style="text-align:center;">
+                	$!info.CATG_NM
+                </td>
+                <td style="text-align:center;">
+                     $!info.APP_NM
+                </td>
+                <td style="text-align:center;">
+                    $!info.PLATFORM<!-- 플랫폼 -->
+                </td>
+                <td>
+                	$!info.USER_COUNT
+                </td>
+                <td>
+                    $!info.REG_DT<!-- 등록일 -->
+                </td>
+                <td>
+					#if($!info.PUB_YN == "N")
+                	<button type="button" class="btn2" id="userList">#springMessage("common.button.modify")</button> <!-- 수정 -->
+					#end
+                </td>
+            </tr>
+            #set($cnt = $cnt + 1)
+        #end
+        #if(!$j_tot)
+            <tr >
+                <td align="center" colspan="8">
+                   #springMessage("menu.store.user.noSearch") <!-- 검색된 정보가 없습니다. -->
+                </td>
+            </tr>
+        #end
+    </tbody>
+</table>
+<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+    ##현재 페이지
+    <input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot" />
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_appList" />
+</div>
+
+<script type="text/javascript">
+	$(document).ready(function () {
+	    // order by 관련 화면 그리기
+	    var target = $("#orderTarget").val();
+	    var type = $("#orderType").val();
+	    
+		if(type == "DESC"){
+	 		$("#OR_" + target).text( $("#OR_" + target).text() + " ▽");
+	  	}else{
+	  		$("#OR_" + target).text( $("#OR_" + target).text() + " △");
+	   	}
+	});
+</script>
+
+  

@@ -1,0 +1,176 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery-te-1.4.0.css" >
+<style>
+.jqte_editor, .jqte_source {
+	height: 400px; /*에디터 높이 재정의*/
+	padding:10px;
+	background:#FFF;
+	min-height:100px;
+	max-height:900px;
+	overflow:auto;
+	outline:none;
+	word-wrap:break-word; -ms-word-wrap:break-word;
+	resize:vertical
+}
+
+</style>
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery-te-1.4.0.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+	jQuery("textarea[name=CONT]").jqte();
+});
+
+//등록 처리.
+function fn_write(){
+	
+	if(!confirm('#springMessage("common.alert.apply")')){    //적용하시겠습니까?
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/securepush/agreement/register";
+	var data = $("form[name=frmWrite]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.push.user.alert.success")'); // 성공적으로 적용되었습니다.
+				window.location.reload(true);
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		}
+	});
+}
+
+// 입력 폼 추가.
+function fn_addRow(){
+	// 마지막 agreement div의 아이디에 표시된 시퀀스를 가져와 1을 더하여 생성.
+	var _agreementId = jQuery(".agreement").last().attr('id');
+	var _seq = parseInt(_agreementId.split('_')[1]) + 1;
+	
+	var formElem = '<div class="agreement" id="agreement_'+_seq+'">'
+		+'<div>'
+			+'<input type="text" name="TITLE" id="TITLE" style="width:75%;" class="title" placeholder="#springMessage("common.header.title")" value="$!itemInfo.TITLE" />' //제목
+			+'<div class="tbl-select">'
+				+'<label for="USE_YN">#springMessage("common.header.use_Y")</label>'
+				+'<select name="USE_YN" id="USE_YN">'
+					+'<option value="Y" selected="selected">#springMessage("common.header.use_Y")</option>' //사용
+					+'<option value="N">#springMessage("common.select.stop")</option>' // 중지
+				+'</select>'
+			+'</div>'
+			+'<a href="javascript:fn_delete(\''+'$!itemInfo.CONT_ID'+'\',\'agreement_'+_seq+'\');void(0)" style="height:25px;line-height:25px;" class="btn1 type2" id="pageDeletePop">#springMessage("common.button.delete")</a>' // 삭제
+			+'</div>'
+			+'<input type="hidden" name="CONT_ID" value="" />'
+			+'<div style="height:430px;">'
+				+'<textarea name="CONT" id="CONT" cols="105" rows="45"></textarea>'
+			+'</div>'
+		+'</div>';
+	$(".inputArea").append(formElem);
+	jQuery("textarea[name=CONT]").last().jqte();
+}
+
+// 삭제 처리.
+function fn_delete(contId, _id){
+	if(!confirm('#springMessage("common.alert.doDelete")')){  //삭제하시겠습니까?
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/securepush/agreement/delete";
+	var data = "CONT_ID=" + contId;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.manageSend.successDelete")'); // 삭제되었습니다.
+				$('#'+_id).remove();
+			}else{
+				alert(data.msg);
+			}
+		},
+     error: function(jqXHR, textStatus, errorThrown) {
+         alert(errorThrown);
+     }
+	});
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span></span>
+		<span></span>
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<form name="frmWrite" method="post">
+	#### S : 리스트  폼 부분  ####
+		<div class="scroll-area">
+			<div class="inputArea">
+		#set( $_idx = 0 )
+		#foreach( $itemInfo in $itemList )
+		#set($j_tot = 1)
+			<div class="agreement" id="agreement_$_idx">
+				<div>
+				<input type="text" name="TITLE" id="TITLE" style="width:75%;" class="title" placeholder="#springMessage('common.header.title')" value="$!itemInfo.TITLE" />  <!-- 제목 -->
+				<div class="tbl-select">
+					#if($!itemInfo.USE_YN == "Y")
+					<label for="USE_YN">#springMessage("common.header.use_Y")</label>
+					<select name="USE_YN" id="USE_YN">
+						<option value="Y" selected="selected">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+						<option value="N">#springMessage("common.select.stop")</option> <!-- 중지 -->
+					</select>
+					#else
+					<label for="USE_YN">#springMessage("common.select.stop")</label>
+					<select name="USE_YN" id="USE_YN">
+						<option value="Y">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+						<option value="N" selected="selected">#springMessage("common.select.stop")</option> <!-- 중지 -->
+					</select>
+					#end
+				</div>
+				<a href="javascript:fn_delete('$!itemInfo.CONT_ID','agreement_$_idx');void(0)" style="height:25px;line-height:25px;" class="btn1 type2" id="pageDeletePop">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+				</div>
+				<input type="hidden" name="CONT_ID" value="$!itemInfo.CONT_ID" />
+				<div style="height:430px;">
+					<textarea name="CONT" id="CONT" cols="105" rows="45">$!itemInfo.CONT</textarea>
+				</div>
+			</div>
+			#set( $_idx = $_idx + 1)
+		#end
+		
+		#if(!$j_tot)
+			<div class="agreement" id="agreement_0">
+				<div>
+				<input type="text" name="TITLE" id="TITLE" style="width:75%;" class="title" placeholder="#springMessage('common.header.title')" value="$!itemInfo.TITLE" />  <!-- 제목 -->
+				<div class="tbl-select">
+					<label for="USE_YN">#springMessage("common.header.use_Y")</label>
+					<select name="USE_YN" id="USE_YN">
+						<option value="Y" selected="selected">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+						<option value="N">#springMessage("common.select.stop")</option> <!-- 중지 -->
+					</select>
+				</div>
+				<a href="javascript:fn_delete('$!itemInfo.CONT_ID','agreement_0');void(0)" style="height:25px;line-height:25px;" class="btn1 type2" id="pageDeletePop">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+				</div>
+				<input type="hidden" name="CONT_ID" value="" />
+				<div style="height:430px;">
+					<textarea name="CONT" id="CONT" cols="105" rows="45"></textarea>
+				</div>
+			</div>
+		#end
+			</div>
+			<div class="btn-wrap txtCenter">
+				<a href="javascript:fn_addRow();void(0)" class="btn1 type2" id="pageDeletePop">#springMessage("common.button.add")</a> <!-- 추가 -->
+				<a href="javascript:fn_write();void(0);" class="btn1">#springMessage("common.header.apply")</a> <!-- 적용 -->
+			</div>
+		</div>
+	#### E : 리스트  폼 부분  ####
+
+	</form>
+</div>

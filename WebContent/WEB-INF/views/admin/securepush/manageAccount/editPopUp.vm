@@ -1,0 +1,60 @@
+<script type="text/javascript">
+	
+	
+</script>
+<div>
+	<form name="frmEditUserInfo" method="POST">
+	<table class="tbl">
+		<caption>#springMessage("menu.system.adminUserModify")</caption> <!-- 관리자 수정 -->
+		<colgroup>
+			<col style="width:140px">
+			<col style="width:300px">
+		</colgroup>
+		<tr>
+			<th>#springMessage("common.text.name")</th> <!-- 이름 -->
+			<td>$!itemInfo.USER_NM
+				<input type="hidden" name="USER_NM" value="$!itemInfo.USER_NM"/>
+				<input type="hidden" name="USER_ID" value="$!itemInfo.USER_ID"/>
+				<input type="hidden" name="EMAIL" value="$!itemInfo.EMAIL"/>
+			</td>
+		</tr>
+		<tr>
+			<th>#springMessage("common.text.dept")</th> <!-- 부서 -->
+			<td>$!itemInfo.FULL_NM</td>
+		</tr>
+		<tr>
+			<th>#springMessage("common.header.phoneNumber")</th> <!-- 연락처 -->
+			<td>$!itemInfo.CELL_NO<input type="hidden" name="CELL_NO" value="$!itemInfo.CELL_NO"/></td>
+		</tr>
+		<tr>
+			<th><label for="adminID">#springMessage("menu.securePush.manageAccount.adminId")</label></th> <!-- 관리자 아이디 -->
+			<td>$!itemInfo.ADMIN_ID
+				<input type="hidden" name="ADMIN_ID" value="$!itemInfo.ADMIN_ID" />
+			</td>
+		</tr>
+		<tr>
+			<th><label for="adminPw">#springMessage("menu.securePush.manageAccount.adminPwd")</label></th> <!-- 관리자 비밀번호 -->
+			<td><input type="password" name="PASSWORD" id="adminPw" class="full-width" placeholder="#springMessage('common.text.pwdPlaceholder')"></td> <!-- 특수문자,숫자와 영문자 조합으로 10~20자리 -->
+		</tr>
+		<tr>
+			<th>#springMessage("menu.securePush.manageAccount.auth")</th> <!-- 권한 -->
+			<td>
+				<select id="GROUP_ID" name="GROUP_ID"  class="width50">
+					<option value="">#springMessage("common.select.choose")</option>
+					#foreach( $authGroup in $authGroupList )
+						#if($authGroup.ID_GROUP == $itemInfo.GROUP_ID)
+						<option value="$!authGroup.ID_GROUP" selected="selected">$esc.xml($!authGroup.NM_GROUP)</option>
+						#else
+						<option value="$!authGroup.ID_GROUP" >$esc.xml($!authGroup.NM_GROUP)</option>
+						#end
+					#end
+				</select>
+			</td>
+		</tr>
+	</table>
+	</form>
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:fn_userModify();void(0);" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+		<a href="javascript:fn_userDelete();void(0);" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+	</div>
+</div>

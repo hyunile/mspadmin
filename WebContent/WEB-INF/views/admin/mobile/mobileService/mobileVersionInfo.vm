@@ -1,0 +1,121 @@
+<form name="versionInsertform" method="post">
+
+		<table class="tbl" summary="코드,코드명,코드설명,우선순위,변경구분">
+			<colgroup>
+				<col width="30%"/><col width="auto"/>
+			</colgroup>
+			<tr>
+				<th>
+					<label for="DEVICE_TYPE" class="required">#springMessage("menu.mobile.version.platform")</label> <!-- 플랫폼 유형 -->
+				</th>
+				<td>
+					#if($moblileServiceUpdateOne)
+						#if($moblileServiceUpdateOne.DEVICE_TYPE == "A")
+							#springMessage("common.text.android") <!-- 안드로이드 -->
+						#else
+							iOS
+						#end
+						<input type="hidden" name="DEVICE_TYPE" value="$moblileServiceUpdateOne.DEVICE_TYPE">
+					#else
+						<select name="DEVICE_TYPE" id="DEVICE_TYPE">
+							<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							<option value="A">#springMessage("common.text.android")</option> <!-- 안드로이드 -->
+							<option value="I">iOS</option>
+						</select>
+					#end
+				</td>
+			</tr>
+			
+			<!-- 
+			<tr>
+				<th>
+					<label for="CHOICE_APP_VERSION">선택 바이너리 버전</label>
+				</th>
+				<td >
+					#if($moblileServiceUpdateOne)
+						$moblileServiceUpdateOne.CHOICE_APP_VERSION
+					#else
+						<select id="CHOICE_APP_VERSION" name="CHOICE_APP_VERSION" style="width:210px">
+							<option value="">버전을 선택해 주세요.</option>
+						</select>
+					#end
+				</td>
+			</tr>
+			 -->
+			<tr style="display: none">
+				<th>
+					<label for="REQUIRED_APP_VERSION">#springMessage("menu.mobile.version.deviceBinary")</label><!-- 단말 바이너리 버전 -->
+				</th>
+				<td>
+					#if($moblileServiceUpdateOne)
+						$moblileServiceUpdateOne.REQUIRED_APP_VERSION
+					#else
+						<select id="REQUIRED_APP_VERSION" name="REQUIRED_APP_VERSION" style="width:210px">
+							<option value="">#springMessage("menu.mobile.version.text.selectVersion")</option> <!-- 버전을 선택해 주세요. -->
+						</select>
+					#end
+				</td>
+			</tr>
+			<tr> 
+				<th>
+					<label for="CURRENT_APP_VERSION" class="required">#springMessage("menu.mobile.version.forceUpdate")</label> <!-- 강제 업데이트 버전 -->
+				</th>
+				<td>
+					#if($moblileServiceUpdateOne)
+						$moblileServiceUpdateOne.CURRENT_APP_VERSION
+						<input type="hidden" name="APP_UP_IDX" value="$moblileServiceUpdateOne.APP_UP_IDX" >
+					#else
+						<select id="CURRENT_APP_VERSION" name="CURRENT_APP_VERSION" style="width:210px">
+							<option value="">#springMessage("menu.mobile.version.text.selectVersion")</option><!-- 버전을 선택해 주세요. -->
+						</select>
+						<!-- <button type="button" onclick="fn_versionCheck()" class="btn_style2"><span>중복검사</span></button> -->
+						<input type="hidden" id="CUID_CHECK" value="1" />
+					#end
+				</td>
+			</tr>
+			<tr>
+				<th>
+					<label for="DOWNLOAD_MARKET_URL" class="required">#springMessage("menu.mobile.version.updateAddr")</label><!-- 업데이트 주소 -->
+				</th>
+				<td>
+					<input type="text" name="DOWNLOAD_MARKET_URL" id="DOWNLOAD_MARKET_URL" value="$!moblileServiceUpdateOne.DOWNLOAD_MARKET_URL"/>
+				</td>
+			</tr>
+			<tr>
+				<th>
+					<label for="MEMO">#springMessage("menu.mobile.version.updateNotice")</label><!-- 업데이트 공지 -->
+				</th>
+				<td>
+                    <textArea class="nonScroll" type="text" name="MEMO">$!moblileServiceUpdateOne.MEMO</textArea>
+				</td>
+			</tr>
+				<tr>
+					<th>
+						#springMessage("common.header.useYN") <!-- 사용 여부 -->
+					</th>
+					<td>
+						<select name="USE_YN">
+							#if($!moblileServiceUpdateOne.USE_YN == "Y")
+								<option value="Y" selected="selected">#springMessage("menu.mobile.deploy.use")</option> <!-- 사용 -->
+								<option value="N">#springMessage("menu.mobile.deploy.noUse")</option> <!-- 사용 안함 -->
+							#else
+								<option value="Y">#springMessage("menu.mobile.deploy.use")</option> <!-- 사용 -->
+								<option value="N" selected="selected">#springMessage("menu.mobile.deploy.noUse")</option> <!-- 사용 안함 -->
+							#end
+						</select>
+					</td>
+				</tr>
+		</table>
+
+
+	<div class="btn-wrap txtCenter">
+	#if(!$moblileServiceUpdateOne)
+		<a href="javascript:void(0);" onclick="fn_versionWrite();" class="btn1">#springMessage("common.button.regist")</a> <!-- 등록 -->
+	#else
+		<a href="javascript:void(0);" onclick="fn_versionModify();" class="btn1">#springMessage("common.button.modify")</a> <!-- 수정 -->
+		<a href="javascript:void(0);" onclick="fn_versionDelete();" class="btn1 type2">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+	#end
+		<a href="javascript:void(0)" onClick="fn_closePopup()" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div>
+
+</form>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.groupReserveSend.mapper.GroupReserveSendManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+	<sql id="head">
+		SELECT viewC.*
+		FROM (
+		SELECT
+		(ROW_NUMBER() OVER()) AS "RNUM"
+		,COUNT(*) OVER() AS "TOT_CNT"
+		,viewB.*
+		FROM (SELECT viewA.* FROM (
+	</sql>
+
+	<sql id="bottom">
+		) AS viewA
+		) AS viewB
+		) AS viewC
+		WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+	
+	
+	<!-- 그룹 발송 조회 리스트 -->
+    <select id="SelectGroupReserveSendList" resultType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+        <include refid="head"/>
+            SELECT 
+			    A."MSGGRPSEQNO"
+			   ,A."SEQNO"
+			   ,TO_CHAR(A."RESERVEDATE", 'YYYY.MM.DD HH24:MI') AS "RESERVEDATE"
+			   ,A."APPID"
+			   ,A."GROUPSEQ"
+			   ,A."SENDERSEQ"
+			   ,(SELECT "SENDERCODE"
+			       FROM "T_PUSH_SENDER_INFO" B
+			      WHERE A."SENDERSEQ" = B."SENDERSEQ") AS "SENDERCODE"
+			   ,A."MESSAGE"
+			   ,TO_CHAR(A."REGDATE", 'YYYY.MM.DD HH24:MI') AS "REGDATE"
+			   ,A."STATE"
+			FROM "T_PUSH_MESSAGE_GROUP" AS A
+			WHERE A."RESERVEDATE" != A."REGDATE"
+			      AND A."RESERVEDATE" > now()
+			      AND A."RESERVEDATE" BETWEEN TO_DATE(#{RESERVEDATE_S}, 'YYYY.MM.DD HH24MI') AND TO_DATE(#{RESERVEDATE_E}, 'YYYY.MM.DD HH24MI')
+                  AND A."APPID" = #{APPID}
+                  <if test="SENDERSEQ != '' and SENDERSEQ != null">
+                  	AND A.SENDERSEQ = CAST(#{SENDERSEQ} AS INTEGER)
+                  </if>
+                  <if test="GROUPSEQ != '' and GROUPSEQ != null">
+                  	AND A."GROUPSEQ" = CAST(#{GROUPSEQ} AS INTEGER)
+                  </if>
+			ORDER BY A."RESERVEDATE" ASC
+	       <include refid="bottom"/>
+    </select>
+    
+    <!-- 그룹 발송 조회  -->
+    <select id="SelectGroupReserveSendOne" resultType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+            SELECT 
+			    A."MSGGRPSEQNO"
+			   ,A."SEQNO"
+			   ,TO_CHAR(A."RESERVEDATE", 'YYYY.MM.DD HH24:MI') AS "RESERVEDATE"
+			   ,A."APPID"
+			   ,A."GROUPSEQ"
+			   ,A."SENDERSEQ"
+			   ,(SELECT "SENDERCODE"
+			       FROM "T_PUSH_SENDER_INFO" AS B
+			      WHERE A."SENDERSEQ" = B."SENDERSEQ") AS "SENDERCODE"
+			   ,A."MESSAGE"
+			   ,TO_CHAR(A."REGDATE", 'YYYY.MM.DD HH24:MI') AS "REGDATE"
+			   ,A."STATE"
+			FROM "T_PUSH_MESSAGE_GROUP" AS A
+			WHERE "MSGGRPSEQNO" = #{MSGGRPSEQNO}
+    </select>
+    
+    <!-- 그룹 사용자 발송조회 상세 리스트 -->   
+    <select id="SelectGroupUserSendList" resultType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+         <include refid="head"/>
+           SELECT 
+			    A."SEQNO"
+				,TO_CHAR(A."RESERVEDATE", 'YYYY.MM.DD HH24:MI') AS "RESERVEDATE"
+			   ,A."APPID"
+			   ,A."CUID"
+			   ,A."SENDERSEQ"
+			   ,(SELECT "SENDERCODE"
+			      FROM "T_PUSH_SENDER_INFO" AS B
+			      WHERE A."SENDERSEQ" = B."SENDERSEQ") AS "SENDERCODE"
+			   ,A."MESSAGE"
+			   ,TO_CHAR(A."REGDATE", 'YYYY.MM.DD HH24:MI') AS "REGDATE"
+			FROM "T_PUSH_MESSAGE" AS A
+			WHERE "SEQNO" = CAST(#{SEQNO} AS BIGINT)
+			ORDER BY "RESERVEDATE" ASC, "REGDATE" DESC
+           <include refid="bottom"/>
+    </select>
+    
+    <!-- 메시지 예약 취소 가능 여부 체크 -->   
+    <select id="SelectMsgDeleteCheck" resultType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+        SELECT 
+		       CASE WHEN "RESERVEDATE" - 5/24/60 > now()
+		            THEN 'Y'
+		            ELSE 'N'
+		        END AS "DELETE_CHK"
+		       ,TO_CHAR("RESERVEDATE", 'YYYY.MM.DD HH24:MI:SS') AS "RESERVEDATE"
+		       ,"GROUPSEQ"
+		FROM "T_PUSH_MESSAGE_GROUP"
+		WHERE "MSGGRPSEQNO" = CAST(#{MSGGRPSEQNO} AS INTEGER)
+    </select>
+    
+    <delete id="DeleteMessage" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+        DELETE FROM "T_PUSH_MESSAGE"
+        WHERE "SEQNO" = CAST(#{SEQNO} AS BIGINT)
+    </delete>
+    
+    <delete id="DeleteGroupMessage" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+        DELETE FROM "T_PUSH_MESSAGE_GROUP"
+        WHERE "MSGGRPSEQNO" = CAST(#{MSGGRPSEQNO} AS INTEGER)
+    </delete>
+	
+	
+	
+</mapper>

@@ -1,0 +1,197 @@
+<script type="text/javascript">
+    jQuery(document).ready(function(){
+		fn_setSummaryView();
+    });
+	
+    /*
+	요약뷰 세팅.
+    */
+    function fn_setSummaryView(){
+		var arrSummaryView = $jsonSummaryView;
+		for (var i = 0; i < arrSummaryView.length; i++) {
+			var url = CONTEXT_PATH + arrSummaryView[i];
+			
+    		var data = "";
+    		var type = "POST";
+    		fn_getPage( url, type, data, i );
+        }
+		
+		
+/*
+	// 테스트 푸시
+	fn_getPushSendStat(0)
+	fn_getPushReserveStat(1)
+	fn_getPushSendTotStat(2)
+/**/
+
+/*
+	// 테스트 스토어
+	fn_getStoreAppListStat(0);
+	fn_getStoreAppDownloadStat(1);
+	fn_getStoreQABoard(2);
+/**/
+
+/*
+	//테스트 모바일
+	fn_getMobileResourceDeployList(0)
+	fn_getMobileProtocolStatus(1)
+	fn_getMobilePeriodStat(2)
+/**/	
+    }
+	
+	
+	/*
+	PUSH - 발송현황
+	*/
+	function fn_getPushSendStat(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/pushSendStat";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	/*
+	PUSH - 예약현황
+	*/
+	function fn_getPushReserveStat(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/pushReserveStat";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	/*
+	PUSH - 발송통계
+	*/
+	function fn_getPushSendTotStat(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/pushSendTotStat";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	/*
+	App - 등록현황
+	*/
+	function fn_getStoreAppListStat(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/storeAppListStat";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	/*
+	App - 다운로드 현황
+	*/
+	function fn_getStoreAppDownloadStat(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/storeAppDownloadStat";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	/*
+	App - Q&A 게시판
+	*/
+	function fn_getStoreQABoard(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/storeQABoard";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	/*
+	모바일 관리 - 리소스 등록현황.
+	*/
+	function fn_getMobileResourceDeployList(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/mobileResourceDeployList";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	/*
+	모바일 관리 - 리소스 다운로드 현황
+	*/
+	function fn_getMobileResourceDownloadList(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/mobileResourceDownloadList";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	/*
+	모바일 관리 - 기간별 사용통계
+	*/
+	function fn_getMobilePeriodStat(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/mobilePeriodStat";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	/*
+	모바일 관리 - 전문 통계
+	*/
+	function fn_getMobileProtocolStatus(viewIdx){
+		var url = CONTEXT_PATH + "/admin/mainHome/mobileProtocolStatus";
+		var data = "";
+		var type = "POST";
+		fn_getPage( url, type, data, viewIdx );
+	}
+	
+	//페이지 호출
+	function fn_getPage( url, type, data, viewIdx ){
+		var target;
+		if(viewIdx == 0){
+			target =  $("#summary1");
+		}else if(viewIdx == 1){
+			target = $("#summary2");
+		}else if(viewIdx == 2){
+			target =  $("#summary3");
+		}
+	
+	
+		var AjaxHTML = jQuery.ajax({
+			url: url ,
+			type: type ,
+			data: data ,
+			dataType: "html" ,
+			async: false ,
+			cache:false
+		}).responseText;
+
+		target.html(AjaxHTML);
+	}
+	
+	function fn_MainNoticePop(NO_NOTICE){
+		var data = "NO_NOTICE=" + NO_NOTICE;
+		var url = CONTEXT_PATH + "/admin/main";
+		var type = "POST";
+		var target = $("#windowPop");
+		var whideh = 550;
+		var title = '#springMessage("menu.system.noticeDetail")';//"공지 상세";
+		fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+</script>
+
+
+<div class="container">
+
+	<div class="mainVisual">
+		<ul>
+			#set($linkIdx = 1)
+			#foreach($linkInfo in $linkList)
+			<li class="favori$linkIdx"><a href="javascript:GO_MENU_URL_favori('$linkInfo.ID_MENU','$linkInfo.ID_MENU_PARENT','$linkInfo.MENU_URL');">$linkInfo.NM_MENU<span></span></a></li>
+				#set($linkIdx = ($linkIdx + 1) % 5)
+			#end
+		</ul>
+	</div>
+
+	<div class="mainfl">
+		
+		<div id="summary1" style="padding:15px 30px 15px 30px;"></div>
+		<div id="summary2" style="padding:15px 30px 15px 30px;"></div>
+		
+		
+	</div> <!--  End: mainfl  -->
+			
+			
+	<div class="mainfr">
+		
+		<div id="summary3" style="height:472px;"></div>
+		
+	</div>	<!--  End: mainfr  -->
+
+</div> <!--  End: container  -->

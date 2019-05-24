@@ -1,0 +1,306 @@
+## 달력구현
+<script type="text/javascript">
+
+    $(document).ready(function() {
+        //공통 페지징 처리
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+        //검색메뉴 hide
+        $(".se_con").each(function(i) {
+            if(i != 0) {
+                $(this).hide();
+            }
+        });
+
+        $.datepicker.setDefaults($.datepicker.regional['ko']);
+
+        //달력 구현
+        $("#DATE_VIEW_S").datepicker( {
+            regional        : "ko",
+            dateFormat      : "yy.mm.dd",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true,
+            altField        : "#DATE_VIEW_S",
+            altFormat       : "yy.mm.dd"
+        });
+
+        //달력 구현
+        $("#DATE_VIEW_E").datepicker( {
+            regional        : "ko",
+            dateFormat      : "yy.mm.dd",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true,
+            altField        : "#DATE_VIEW_E",
+            altFormat       : "yy.mm.dd"
+        });
+        $("#DATE_VIEW_S").val($.datepicker.formatDate("yy.mm.dd", new Date(new Date().setDate(1))));
+        $("#DATE_VIEW_E").val($.datepicker.formatDate("yy.mm.dd", new Date()));
+    });
+
+    //조회버튼 클릭 시 실행 함
+    function fn_se_select() {
+        if($("#DATE_VIEW_S").val() == "" ){
+        	alert('#springMessage("common.alert.startDate")');  //시작 일자를 입력해 주세요. 
+            return;
+        }
+        if($("#DATE_VIEW_E").val() == "" ){
+        	alert('#springMessage("common.alert.endDate")'); //끝 일자를 입력해 주세요.
+            return;
+        }
+        if( $("#DATE_VIEW_S").val() > $("#DATE_VIEW_E").val()){
+        	alert('#springMessage("common.alert.dateError")');  //시작 일자가 끝 일자보다 큽니다.
+            return;
+        }
+
+        var url    = CONTEXT_PATH + "/admin/push/msgSendStatus";
+        var type   = "POST";
+        var data   = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + 1 ;
+        var target = $("#statisticsTableDiv");
+        fn_getCommonList( url, type, data , target );
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+    
+    //공통코드 페이지 호출(공통)
+    function fn_getCommonList( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+
+    //페이징
+    function fn_goPage(PAGE_NUM){
+        var url    = CONTEXT_PATH + "/admin/push/msgSendStatus";
+        var type   = "POST";
+        var data   = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM ;
+        var target = $("#statisticsTableDiv");
+        fn_getCommonList( url, type, data , target );
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+
+    //발송정보 상세
+    function sendDetailInfoPop(SEQNO){
+        var url = CONTEXT_PATH + "/admin/push/sendDatailPop?SEQNO="+SEQNO;
+        var type = "POST";
+        var data = "SHOWPROGRESS=N";
+        var target = $("#windowPop");
+        var whideh = 800;
+        var title = '#springMessage("menu.push.sendManage.sendInfoDetail")';//"발송정보 상세";
+        fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+    }
+    var FAIL_REQ_SEQNO = "";
+    //Fail 리스트 상세
+    function failListPop(SEQNO){
+        FAIL_REQ_SEQNO = SEQNO;
+        var url = CONTEXT_PATH + "/admin/push/failListPop?SEQNO="+SEQNO;
+        var type = "GET";
+        var data = "";
+        var target = $("#windowPop");
+        var whideh = 850;
+        var title = '#springMessage("menu.push.sendManage.sendFailList")';//"발송실패 리스트";
+        fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+        fn_page('j_page_pop_div', '$!{CONTEXT_PATH}');
+    }
+    //Fail 리스트 페이징
+    function fn_failPop_goPage(PAGE_NUM){
+        var url    = CONTEXT_PATH + "/admin/push/failListPop";
+        var type   = "GET";
+        var data   = "PAGE_NUM=" + PAGE_NUM+"&SEQNO="+FAIL_REQ_SEQNO;
+        var target = $("#windowPop");
+        fn_getCommonList( url, type, data , target );
+        fn_page('j_page_pop_div', '$!{CONTEXT_PATH}');
+    }
+    function csvDown(sendate,seqno){
+        if(confirm('#springMessage("menu.stats.push.alert.csvDown1")'+'('+sendate+')'+'#springMessage("menu.stats.push.alert.csvDown2")')){ // 선택된 날짜     //로 발송된 발송정보 CSV파일을 다운 받으시겠습니까?
+            document.location.href="$!{DEFAULT_RECEIVER_HOST}/rcv_sentLogDownLoad.ctl?SENDATE="+sendate+"&SEQNO="+seqno;
+        }
+    }
+	
+    function fn_changeRowSize(){
+    	fn_commonSetRowSize();
+    	fn_goPage(1);
+    }
+    
+    function fn_resend(seqno, retry_type_id, message){
+		var retry_type = $("#"+retry_type_id).val();
+		if(retry_type == "" ){
+            alert('#springMessage("menu.push.sendManage.alert.reSendType")');  //재발송 티입을 선택하세요.
+            return;
+        }
+        
+		var retry_type_name=''
+		console.log('retry_type:'+retry_type);
+		if(retry_type=='CON_FAIL' ) {
+			retry_type_name='#springMessage("menu.push.sendManage.sendError")';  //발송장애
+		} else if(retry_type=='NOT_RECV' ) {
+			retry_type_name='#springMessage("menu.push.sendManage.noSeeCheck")'; //미수신확인
+		} else if(retry_type=='NOT_READ' ) {
+			retry_type_name='#springMessage("menu.push.sendManage.noReadCheck")'; //미읽음확인
+		}
+		
+		if(!confirm('#springMessage("menu.stats.push.message")'+message+'#springMessage("menu.push.sendManage.word1")'+retry_type_name+'#springMessage("menu.push.sendManage.alert.reSend")')){  // 메시지   의   메시지를 재발송을 하시겠습니까?
+            return;
+        }
+        
+	 	
+        var url = CONTEXT_PATH + "/admin/push/msgRetry/retry";
+       	var data = "RETRY_TYPE=" + retry_type + "&" + "SEQNO=" + seqno;
+		jQuery.ajax({
+	        url:url,
+	        type:"POST",
+	        cache: false,
+	        data:data,
+	        dataType:"json",
+	        success:function(returnData){
+	            document.getElementById("loading-indicator").style.display="none";
+	            console.log("resultCode="+returnData.resultCode);
+	            if(returnData.resultCode=="0000"){ //성공
+                    var ReceiverHostUrl = "";
+                    if(returnData.bodyData.HOST_URL!=undefined){
+                        ReceiverHostUrl = returnData.bodyData.HOST_URL;
+                    }
+                    sendDetailInfoPop(returnData.bodyData.SENDMSG_SEQNO,ReceiverHostUrl);
+	            }else{ //실패
+	                alert(returnData.resultMsg);
+	            }
+	        },
+	        error: function(jqXHR, textStatus, errorThrown) {
+	            document.getElementById("loading-indicator").style.display="none";
+	            alert(errorThrown);
+	        }
+	    });
+	}
+		
+	//발송정보 상세
+	function sendDetailInfoPop(SEQNO,HOST_URL){
+	    var url = CONTEXT_PATH + "/admin/push/sendDatailPop";
+	    var type = "POST";
+	    var data = "SEQNO=" + SEQNO + "&HOST_URL=" + HOST_URL;
+	    var target = $("#windowPop");
+	    var whideh = 800;
+	    var title = '#springMessage("menu.push.sendManage.sendInfoDetail")';//"발송정보 상세";
+	    fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+	
+	function fn_getReSendPopUp(){
+        var url = CONTEXT_PATH + "/admin/commonPush/popup/msgReSend";
+    	var type = "POST";
+    	 var data = "";
+    	var target = $("#windowPop");
+    	var whideh = 600;
+    	var title = '#springMessage("menu.push.sendManage.messageResend")';//"메세지 재 전송";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+</script>
+<style>
+    .backgroundPopupDiv{
+        display:none;
+        position:fixed;
+        _position:absolute; /* hack for internet explorer 6*/
+        height:100%;
+        width:100%;
+        top:0px;
+        left:0px;
+        z-index:100;
+        text-align: center;
+    }
+</style>
+
+<div id="loading-indicator" class="backgroundPopupDiv">
+    <img alt="loading" src= "$RESOURCES_PATH/images/loading.gif" style="margin-top: 15%";/>
+</div>
+
+<div class="contents-area">
+#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.push.sendManage")</span>			<!-- 발송 관리 -->
+		<span>PUSH #springMessage("menu.push.sendManage.sendStat")</span>	<!-- 발송현황 -->
+	</div>
+	<h2 class="page-title">PUSH #springMessage("menu.push.sendManage.sendStat")</h2>
+#### E : 프로그램 위치 기술 부분  ####
+
+#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		
+		<table class="tbl-search">
+			<caption></caption>
+			<colgroup>
+				<col style="width:100px">
+				<col style="width:270px">
+				<col>
+			</colgroup>
+			<thead>
+				<tr>
+					<th>#springMessage("menu.mobile.manage.term")</th>	<!-- 기간 -->
+					<td>
+						<input type="text" name="DATE_VIEW_S" id="DATE_VIEW_S" readonly="readonly" class="datepicker sDate" placeholder="날짜선택">
+						<label for="sDate"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+						<span>~</span>
+						<input type="text" name="DATE_VIEW_E" id="DATE_VIEW_E" class="datepicker eDate" readonly placeholder="날짜선택">
+						<label for="eDate"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+					</td>
+					<td>
+						<a href="javascript:void(0)" onclick="fn_se_select();" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+					</td>
+				</tr>
+				<tr>
+					<th>APP ID</th>
+					<td>
+						
+						<select name="APPID">
+							#foreach($pushService in $pushServiceList)
+	                              <option value="$pushService.APPID">$pushService.APPID</option>
+							#end
+	                     </select>
+						
+					</td>
+					<td>
+												
+					</td>
+				</tr>
+			</thead>
+		</table>
+		
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+			
+	</form>
+
+    <form name="frmList" method="post">
+    #### S : 리스트  폼 부분  ####
+		
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+           
+        <div id="statisticsTableDiv">
+        	#parse("admin/push/msgSendStatus/msgSendStatusList.vm")
+        </div>
+        
+    #### E : 리스트  폼 부분  ####
+    </form>
+</div>

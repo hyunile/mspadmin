@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.campaign.campaignPush.mapper.CampaignPushPDao">
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+    <!--타게팅 조건 리스트 조회 -->
+	<select id="selectExtensionTargetingCuidList" parameterType="kr.msp.admin.campaign.campaignPush.dto.TargetConditionPDTO" resultType="java.lang.String" >
+		SELECT A.*
+		FROM(
+			SELECT CUID 
+		    FROM T_PUSH_USER
+		    <where>
+				<foreach item="LISTEXTENSTIONPDTO" index="index" collection="LISTEXTENSTIONPDTO">
+					<if test="LISTEXTENSTIONPDTO.KEY == 'VAL1'">
+					OR VAL1 = #{LISTEXTENSTIONPDTO.VALUE}
+					</if>		
+					<if test="LISTEXTENSTIONPDTO.KEY == 'VAL2'">
+					OR VAL2 = #{LISTEXTENSTIONPDTO.VALUE}
+					</if>		
+					<if test="LISTEXTENSTIONPDTO.KEY == 'VAL3'">
+					OR VAL3 = #{LISTEXTENSTIONPDTO.VALUE}
+					</if>		
+					<if test="LISTEXTENSTIONPDTO.KEY == 'VAL4'">
+					OR VAL4 = #{LISTEXTENSTIONPDTO.VALUE}
+					</if>		
+					<if test="LISTEXTENSTIONPDTO.KEY == 'VAL5'">
+					OR VAL5 = #{LISTEXTENSTIONPDTO.VALUE}
+					</if>		
+					<if test="LISTEXTENSTIONPDTO.KEY == 'VAL6'">
+					OR VAL6 = #{LISTEXTENSTIONPDTO.VALUE}
+					</if>		
+					<if test="LISTEXTENSTIONPDTO.KEY == 'VAL7'">
+					OR VAL7 = #{LISTEXTENSTIONPDTO.VALUE}
+					</if>		
+					<if test="LISTEXTENSTIONPDTO.KEY == 'VAL8'">
+					OR VAL8 = #{LISTEXTENSTIONPDTO.VALUE}
+					</if>		
+					<if test="LISTEXTENSTIONPDTO.KEY == 'VAL9'">
+					OR VAL9 = #{LISTEXTENSTIONPDTO.VALUE}
+					</if>		
+				</foreach>
+		    </where>
+		    ) A
+		    INNER JOIN(
+		              SELECT * 
+		              FROM T_PUSH_USER_INFO
+		              WHERE APPID = #{APPID}
+		              ) B
+		    ON A.CUID = B.CUID
+	</select>
+	
+	<select id="selectBaseEntryDateTargetingCuidList" parameterType="kr.msp.admin.campaign.campaignPush.dto.TargetConditionBPDTO" resultType="java.lang.String" >
+		SELECT CUID 
+		FROM T_PUSH_USER_INFO
+		WHERE APPID = #{APPID} AND REGDATE BETWEEN TO_DATE(#{DATE}, '%Y.%m.%d') AND CURRENT
+	</select>
+	
+	<select id="selectBaseReadRateTargetingCuidList" parameterType="kr.msp.admin.campaign.campaignPush.dto.TargetConditionBPDTO" resultType="java.lang.String" >
+		SELECT A.CUID
+		FROM(
+		    SELECT A.CUID, B.CNT/A.CNT * 100 AS RATE
+		    FROM(
+		        SELECT CUID, COUNT(*) AS CNT
+		        FROM T_PUSH_SUCCESS
+		        WHERE APPID = #{APPID}
+		        GROUP BY CUID
+		        ) A
+		        LEFT OUTER JOIN(
+		                       SELECT CUID, COUNT(*) AS CNT
+		                       FROM T_PUSH_SUCCESS
+		                       WHERE STATUS = 3 AND APPID = #{APPID}
+		                       GROUP BY CUID
+		                       ) B
+		        ON A.CUID = B.CUID
+		    ) A        
+		WHERE A.RATE > #{RATE}
+	</select>
+	
+	<select id="selectAppVersionTargetingCuidList" parameterType="kr.msp.admin.campaign.campaignPush.dto.TargetConditionBPDTO" resultType="java.lang.String" >
+		SELECT DISTINCT CUID 
+		FROM T_PUSH_USER_INFO 
+		WHERE APP_VER = #{CONDITION} AND APPID = #{APPID}
+	</select>
+	<select id="selectOsVersionTargetingCuidList" parameterType="kr.msp.admin.campaign.campaignPush.dto.TargetConditionBPDTO" resultType="java.lang.String" >
+		SELECT DISTINCT CUID 
+		FROM T_PUSH_USER_INFO 
+		WHERE OS_VER = #{CONDITION} AND APPID = #{APPID}
+	</select>
+	<select id="selectDeviceMdListTargetingCuidList" parameterType="kr.msp.admin.campaign.campaignPush.dto.TargetConditionBPDTO" resultType="java.lang.String" >
+		SELECT DISTINCT CUID 
+		FROM T_PUSH_USER_INFO 
+		WHERE DEVICE_MD = #{CONDITION} AND APPID = #{APPID}
+	</select>
+	
+	<select id="selectAppVersionList" parameterType="kr.msp.admin.campaign.campaignPush.dto.CampaignPushParamDTO" resultType="kr.msp.admin.campaign.campaignPush.dto.TargetConditionDTO" >
+		SELECT DISTINCT APP_VER AS TRG_NM 
+		FROM T_PUSH_USER_INFO
+		WHERE APP_VER IS NOT NULL
+		<if test="APP_ID != null and APP_ID != ''">
+        	AND APP_ID = #{APP_ID, jdbcType=VARCHAR}
+		</if>
+	</select>
+	
+	<select id="selectOsVersionList" parameterType="kr.msp.admin.campaign.campaignPush.dto.CampaignPushParamDTO" resultType="kr.msp.admin.campaign.campaignPush.dto.TargetConditionDTO" >
+		SELECT DISTINCT OS_VER AS TRG_NM 
+		FROM T_PUSH_USER_INFO 
+		WHERE OS_VER IS NOT NULL
+		<if test="APP_ID != null and APP_ID != ''">
+        	AND APP_ID = #{APP_ID, jdbcType=VARCHAR}
+		</if>
+	</select>
+	
+	<select id="selectDeviceMdList" parameterType="kr.msp.admin.campaign.campaignPush.dto.CampaignPushParamDTO" resultType="kr.msp.admin.campaign.campaignPush.dto.TargetConditionDTO" >
+		SELECT DISTINCT DEVICE_MD AS TRG_NM 
+		FROM T_PUSH_USER_INFO 
+		WHERE DEVICE_MD IS NOT NULL
+		<if test="APP_ID != null and APP_ID != ''">
+        	AND APP_ID = #{APP_ID, jdbcType=VARCHAR}
+		</if>
+	</select>
+	
+	<insert id="insertAdminRsrvCampaignPush" parameterType="kr.msp.admin.campaign.campaignPush.dto.CampaignPushAdminRsrvDTO">
+		INSERT INTO T_PUSH_RESERVE_MSG(APP_ID, MESSAGE, SOUNDFILE, BADGENO, PRIORITY, EXT, SENDERCODE, SERVICECODE, RESERVEDATE, TYPE, DB_IN, ATTACHFILE, GROUPSEQ, CUID, REGDATE, RESERVETYPE, ISCONDITION) 
+		VALUES (#{APP_ID}, #{MESSAGE}, #{SOUNDFILE}, #{BADGENO}, #{PRIORITY}, #{EXT}, #{SENDERCODE}, #{SERVICECODE}, TO_DATE(#{RESERVEDATE}, '%Y%m%d %H%M%S'), #{TYPE}, #{DB_IN}, #{ATTACHFILE}, #{GROUPSEQ}, #{CUID}, CURRENT, #{RESERVETYPE}, #{ISCONDITION})
+	</insert>
+	
+</mapper>

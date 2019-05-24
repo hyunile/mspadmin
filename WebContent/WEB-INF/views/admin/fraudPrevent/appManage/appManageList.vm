@@ -1,0 +1,63 @@
+<table class="tbl-nb"  id="sortableTable" summary="항목선택,리소스ID,파일명,확장자,크기">
+	<colgroup >
+		<col  width="15%"/>
+		<col  width="10%"/>
+		<col  width="7%"/>
+		<col  width="AUTO"/>
+		<col  width="15%"/>
+		<col  width="10%"/>
+		<col  width="10%"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th>#springMessage("menu.mobile.record.appService")</th> <!-- 앱서비스명 -->
+			<th>OS</th>
+			<th>#springMessage("menu.mobile.deploy.version")</th> <!-- 버전 -->
+			<th>#springMessage("common.header.desc")</th> <!-- 설명 -->
+			<th>#springMessage("common.text.date")</th> <!-- 날짜 -->
+			<th>#springMessage("common.button.down")</th> <!-- 다운 -->
+			<th>#springMessage("common.header.detail")</th> <!-- 상세 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $fraService in $fraServiceList )
+		#set($j_tot = $!fraService.TOT_CNT)
+		<tr>
+			<td style="text-align:left;">$fraService.SVC_NM</td>
+			<td style="text-align:left;">
+				#if($fraService.OS_TYPE == 'A')
+					Android
+				#elseif($fraService.OS_TYPE == 'I')
+					IOS
+				#else
+					Undefined
+				#end
+			</td>
+			<td style="text-align:left;">$fraService.APP_VER</td>
+			<td style="text-align:left;">$fraService.FRA_DESC</td>
+            <td>$fraService.MOD_DTTM</td>
+            <td><a href="$!{CONTEXT_PATH}/admin/fraudPrevent/download?APP_ID=$fraService.APP_ID&APP_VER=$fraService.APP_VER&OS_TYPE=$fraService.OS_TYPE" ><img src="$!{CONTEXT_PATH}/resources/img/icon/icon_file.gif" alt="첨부파일"/></a></td>
+            <td><button class="btn2" id="appManageModify" onclick="fn_getAppManageDetailModify('$fraService.APP_ID', '$fraService.APP_VER', '$fraService.OS_TYPE')">#springMessage("common.header.detail")</button></td> <!-- 상세 -->
+		</tr>	
+		#end	
+		
+		#if(!$j_tot)
+		<tr>
+			<td colspan="7" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+		#end
+	</tbody>
+</table>
+
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_appManageList"/>
+</div>

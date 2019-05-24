@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.sender.mapper.PushSenderManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+    <sql id="head">
+    SELECT viewC.*
+    FROM (
+      SELECT
+            (ROW_NUMBER() OVER()) AS "RNUM"
+            ,COUNT(*) OVER() AS "TOT_CNT"
+            ,viewB.*
+      FROM (SELECT viewA.* FROM (
+    </sql>
+
+    <sql id="bottom">
+        ) AS viewA
+      ) AS viewB
+    ) AS viewC
+    WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+    </sql>
+	
+	 <!-- 발송자 리스트 조회 -->
+    <select id="SelectSenderList" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto" resultType="kr.msp.admin.push.sender.dto.PushSenderDto">
+        <include refid="head"/>
+	        SELECT 
+			    "SENDERSEQ"
+			   ,"SENDERCODE"
+			   ,"SENDERNAME"
+			   ,"SENDERDESC"
+			   ,"REGID"
+			   ,TO_CHAR("REGDT", 'YYYY-MM-DD')
+			   ,"MODID"
+			   ,TO_CHAR("MODDT", 'YYYY-MM-DD')
+			FROM t_push_sender_info
+			WHERE "ISDELETED" = 'N'
+			ORDER BY "SENDERSEQ" DESC
+        <include refid="bottom"/>
+    </select>
+    
+    <!-- 발송자 조회 -->
+    <select id="SelectSenderOne" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto" resultType="kr.msp.admin.push.sender.dto.PushSenderDto">
+    	SELECT 
+			    "SENDERSEQ"
+			   ,"SENDERCODE"
+			   ,"SENDERNAME"
+			   ,"SENDERDESC"
+			   ,"REGID"
+			   ,TO_CHAR("REGDT", 'YYYY-MM-DD')
+			   ,"MODID"
+			   ,TO_CHAR("MODDT", 'YYYY-MM-DD')
+			FROM t_push_sender_info
+			WHERE "ISDELETED" = 'N'
+			AND "SENDERSEQ" = CAST(#{SENDERSEQ} AS BIGINT)
+    </select>
+    
+    <!-- 발송자 코드 중복 조회 -->
+    <select id="SelectSenderDupCheck" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto" resultType="java.lang.Integer">
+        SELECT COUNT(*) AS "COUNT"
+		FROM t_push_sender_info
+		WHERE "ISDELETED" = 'N' AND "SENDERCODE" = #{SENDERCODE}
+    </select>
+    
+    <!-- 발송자 등록 -->
+    <insert id="InsertSender" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto">
+        INSERT INTO t_push_sender_info (
+                                    "SENDERSEQ"
+                                   ,"SENDERCODE"
+                                   ,"SENDERNAME"
+                                   ,"ISDELETED"
+                                   ,"SENDERDESC"
+                                   ,"REGID"
+                                   ,"REGDT"
+                                ) VALUES (
+                                    NEXTVAL('s_push_sender_info')
+                                   ,#{SENDERCODE}
+                                   ,#{SENDERNAME}
+                                   ,'N'
+                                   ,#{SENDERDESC}
+                                   ,#{REGID}
+                                   ,now()
+                                )
+    </insert>
+    
+    <!-- 발송자 수정 -->
+    <update id="UpdateSender" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto">
+        UPDATE t_push_sender_info
+		   SET "SENDERCODE" = #{SENDERCODE}
+			  ,"SENDERNAME" = #{SENDERNAME}
+			  ,"SENDERDESC" = #{SENDERDESC}
+			  ,"MODID" = #{MODID}
+			  ,"MODDT" = now()
+		   WHERE "SENDERSEQ" = CAST(#{SENDERSEQ} AS BIGINT)
+    </update>
+    
+    <!-- 발송자 수정 - 삭제-->
+    <update id="UpdateSenderDelete" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto">
+        UPDATE t_push_sender_info
+		   SET "ISDELETED" = 'Y'
+	     WHERE "SENDERSEQ" = CAST(#{SENDERSEQ} AS BIGINT)
+    </update>
+    
+</mapper>

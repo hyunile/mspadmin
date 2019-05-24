@@ -1,0 +1,54 @@
+<!-- 
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery.treeview.css" />
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery.treeview.js"></script>   
+ -->
+ 
+<table class="tbl-nb full-width">
+	<!-- 
+	<tr class="menu_row">
+		<td class="menu_level_0">
+			STORE
+			<input type="hidden" class="ID_MENU" value="STORE" />
+		</td>
+	</tr>
+	 -->
+	<tr catg_cd="STORE" catg_nm="STORE" #if($categoryTreeList) last_chk="0" #else last_chk="1" #end>
+		<td class="menu_level_0" style="text-align:left;">
+			STORE
+			<input type="hidden" class="ID_MENU" value="STORE" />
+		</td>
+	</tr>
+#foreach( $category in $categoryTreeList )
+	<tr class="menu_row treenode" id="mu$!category.ID_MENU" catg_cd="$!category.CATG_CD" catg_nm="$!category.CATG_NM" last_chk="$!category.LAST_CHK" >
+		<td class="menu_level_$!category.MENU_LEVEL" style="cursor:pointer; text-align:left;">
+			<img src="$!{CONTEXT_PATH}/resources/img/icon_menu2.gif" alt=""/> $!category.CATG_NM
+			<input type="hidden" class="ID_MENU" value="$!category.CATG_CD" />
+		</td>
+	</tr>
+#end
+</table>
+						
+#if($!flag == 'appInfo')  
+<div class="btn_pop"  id="deployDiv" >
+	<button type="button"  id="closeBtn" class="btn2"  onclick="fn_closePopup();"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+</div>
+#end
+	<!-- 
+<ul id="browser"   class="filetree treeview-gray" >
+  <li><span class="file"  catg_cd="STORE"  last_chk="" >스토어</span></li>   
+   
+                 #set( $compare_level = 0 )
+                  #foreach( $category in $categoryTreeList )  
+                      <li><span class="file"  catg_cd="$!category.CATG_CD"  last_chk="$!category.LAST_CHK" >$!category.CATG_NM</span></li>   
+				  #set( $compare_level = $category.MENU_LEVEL )
+              #end  
+ 
+    </ul>    
+    
+#if($!flag == 'appInfo')  
+<div class="btnArea ta_c"  id="deployDiv" >
+<button type="button"  id="closeBtn" class="btn_style1"  onclick="fn_closePopup();"><span>닫기</span></button>
+</div>
+#end
+
+ -->

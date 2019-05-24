@@ -1,0 +1,147 @@
+<script type="text/javascript">
+    $(document).ready(function(){
+		//공통 페지징 처리
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    	
+    	 $.datepicker.setDefaults($.datepicker.regional['ko']);
+
+        //달력 구현
+        $("#DATE_VIEW_S").datepicker( {
+            regional        : "ko",
+            dateFormat      : "yy.mm.dd",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true,
+            altField        : "#DATE_VIEW_S",
+            altFormat       : "yy.mm.dd"
+        });
+
+        //달력 구현
+        $("#DATE_VIEW_E").datepicker( {
+            regional        : "ko",
+            dateFormat      : "yy.mm.dd",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true,
+            altField        : "#DATE_VIEW_E",
+            altFormat       : "yy.mm.dd"
+        });
+        
+        $("#DATE_VIEW_S").val($.datepicker.formatDate("yy.mm.dd", new Date(new Date().setDate(1))));
+        $("#DATE_VIEW_E").val($.datepicker.formatDate("yy.mm.dd", new Date()));
+    });
+    
+    function fn_dspTotStaticsMsg(){
+    
+    }
+    
+    //조회 검색
+    function ch_search(){
+		fn_getStaticsMsgList(1);
+    }
+    
+    //조회
+    function fn_getStaticsMsgList(PAGE_NUM){
+		var selectRowSize = document.getElementById('selRowSize');
+    	var appId = $(selPushService).val();
+    	var fromDate = $("#DATE_VIEW_S").val();
+    	var toDate = $("#DATE_VIEW_E").val();
+    	var url = CONTEXT_PATH + "/admin/push/staticsMsg";
+    	var type = "POST";
+    	var data ="APPID=" + appId + "&" + 
+    			  "FROM_DATE=" + fromDate + "&" + 
+    			  "TO_DATE=" + toDate + "&" + 
+    			  "PAGE_NUM=" + PAGE_NUM +
+				  "&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+    	var target = $("#divList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+    
+    //공통코드 페이지 호출(공통)
+    function fn_getPage( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+	
+	function fn_changeRowSize(){
+    	fn_commonSetRowSize();
+    	fn_getStaticsMsgList(1);
+	}
+	
+	function fn_statMsgDetail(seqNo, date){
+		var url = CONTEXT_PATH + "/admin/push/staticsMsgDetail";
+    	var type = "GET";
+    	var data = "SEQNO=" + seqNo + "&" +
+    			   "DATE=" + date;
+    	var target = $("#windowPop");
+    	var whideh = 600;
+    	var title = '#springMessage("menu.stats.push.msgStatsDetail")';//"메세지별 통계 상세";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+</script>
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.stats")</span>		<!-- 통계 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	
+		<table class="tbl-search" >
+			<colgroup>
+				<col style="width:100px">
+				<col style="width:100px">
+				<col style="width:100px">
+				<col>
+				<col style="80px">
+			</colgroup>
+			
+			<thead>
+			<tr>
+				<th>#springMessage("common.text.app")</th> <!-- 앱 -->
+				<td>
+					<select id="selPushService">
+						<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+						#foreach($pushService in $pushServiceList)
+						<option value="$!pushService.APPID">$!pushService.APPNAME</option>
+						#end
+					</select>
+				</td>
+                <th>#springMessage("menu.mobile.manage.term")</th> <!-- 기간 -->
+                <td>
+			
+					<input type="text" name="DATE_VIEW_S" id="DATE_VIEW_S" class="datepicker sDate" readonly maxlength="8">
+       				<label for="START_DT"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+                        &nbsp;&nbsp;~&nbsp;&nbsp;
+                    <input type="text" name="DATE_VIEW_E" id="DATE_VIEW_E" class="datepicker sDate" readonly maxlength="8">
+       				<label for="START_DT"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+
+				</td>
+				<td>
+					<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+				</td>
+            </tr>
+            </thead>
+        </table>
+		
+	
+	#### E : 조회 폼 부분  ####
+	<div id="divList">
+		#parse("admin/push/staticsMsg/staticsMsgList.vm")
+	</div>
+	
+	<br><br>
+</div>

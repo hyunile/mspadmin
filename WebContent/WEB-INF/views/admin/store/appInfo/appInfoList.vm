@@ -1,0 +1,144 @@
+<script type="text/javascript">
+function fn_goList(){
+    location.href = CONTEXT_PATH + "/admin/store/appInfo";
+};
+
+$(document).ready(function () {
+    // order by 관련 화면 그리기
+    var target = $("#orderTarget").val();
+    var type = $("#orderType").val();
+    
+    if(target == "APP_NM"){ //App 명
+        if(type == "DESC"){
+            $("#orderAppNm").text('#springMessage("common.text.appname")'+" ▽"); //App 명
+        }else{
+            $("#orderAppNm").text('#springMessage("common.text.appname")'+" △");
+        }
+    }else if(target == "PLATFORM"){ //플랫폼
+        if(type == "DESC"){
+            $("#orderPlatform").text('#springMessage("menu.store.appManage.platform")'+" ▽"); //플랫폼
+        }else{
+            $("#orderPlatform").text('#springMessage("menu.store.appManage.platform")'+" △");
+        }
+    }else if(target == "PAKG_ID"){ //App ID
+        if(type == "DESC"){
+            $("#orderPakgId").text("App ID ▽");
+        }else{
+            $("#orderPakgId").text("App ID △");
+        }
+    }else if(target == "USER_NM"){ //등록자
+        if(type == "DESC"){
+            $("#orderUserNm").text('#springMessage("menu.mobile.deploy.writer")'+" ▽"); //등록자
+        }else{
+            $("#orderUserNm").text('#springMessage("menu.mobile.deploy.writer")'+" △");
+        }
+    
+    }else if(target == "STS_CD"){ //상태
+        if(type == "DESC"){
+            $("#orderStsCd").text('#springMessage("menu.mobile.deploy.status")'+" ▽"); //상태
+        }else{
+            $("#orderStsCd").text('#springMessage("menu.mobile.deploy.status")'+" △");
+        }
+     }else if(target == "REG_DT"){ //등록일
+        if(type == "DESC"){
+            $("#orderRegDt").text('#springMessage("menu.mobile.deploy.date")'+" ▽"); //등록일
+        }else{
+            $("#orderRegDt").text('#springMessage("menu.mobile.deploy.date")'+" △");
+        }
+    }    
+    
+});
+
+// check box all select event
+$(document).on("click","#checkAll",function( e ){     
+	$(".chkCls").prop('checked', $(this).is(":checked"));  //class는 먹는데, id,name은 안먹음;;
+});
+</script>
+#if( $appInfoList.size() > 0)
+    
+#end
+<table class="tbl-nb" >
+    <colgroup>
+        <col width="5%"></col>
+        <col width="5%"></col>
+        <col width="30%"></col>
+        <col width="23%"></col>
+        <col width="10%"></col>
+        <col width="15%"></col>
+        <col width="12%"></col>
+    </colgroup>
+    
+    <thead>
+        <tr>
+            <th><input type="checkbox" id="checkAll" title="#springMessage('common.title.selectAll')" /><label for="checkAll"></label></th>  <!-- 전체선택 -->
+            <th>NO</th>
+            <th id="orderAppNm"  style="cursor:pointer;">#springMessage("common.text.appname")</th> <!-- App 명 -->
+            <th id="orderPlatform"  style="cursor:pointer;">#springMessage("menu.store.appManage.platform")</th> <!-- 플랫폼 -->
+            <th id="orderUserNm" >#springMessage("menu.mobile.deploy.writer") </th> <!-- 등록자 -->
+            <th id="orderStsCd">#springMessage("menu.mobile.deploy.status")</th> <!-- 상태 -->
+            <th id="orderRegDt" >#springMessage("menu.mobile.deploy.date") </th> <!-- 등록일 -->
+        </tr>
+    </thead>
+    <tbody >
+        #set($cnt = 0)
+        #foreach( $info in $appInfoList )
+            #set($j_tot = $info.TOT_CNT)
+            
+            <tr class="addInfoDiv" >
+                <td>
+                	<input type="hidden" id="APP_IDX" value="$info.APP_IDX"><!-- 일련번호 -->
+                    <input type="checkbox" class="chkCls" id="$info.APP_IDX" value="$info.APP_IDX" title="항목선택"/>
+                    <label for="$info.APP_IDX"></label>
+                </td>
+                <td>
+                    $!info.RNUM
+                </td>
+                <td style="cursor:pointer;">
+                     <span class="groupModify">$esc.xml($!info.APP_NM)</span><!-- App 명 -->
+                </td>
+                <td style="text-align:center;">
+                    $!info.PLATFORM<!-- 플랫폼 -->
+                </td>
+
+                <td style="text-align:center;">
+                    $!info.USER_NM<!-- 등록자 -->
+                </td>
+                <td>
+                    #if($!info.PLATFORM)    
+                        <input type="radio" value="Y" sts_cd="Y" id="stsCdY" name="stsCd$cnt" app_idx="$info.APP_IDX" #if($!info.USE_YN == 'Y') checked="checked" #end /><label for="stsCdY">#springMessage("menu.mobile.deploy.use")</label> <!-- 사용 -->
+                        <input type="radio" value="N" sts_cd="N" id="stsCdN" name="stsCd$cnt" app_idx="$info.APP_IDX" #if($!info.USE_YN == 'N') checked="checked" #end /><label for="stsCdN">#springMessage("menu.mobile.deploy.stop")</label> <!-- 중지 -->
+                    #else
+                            #springMessage("menu.store.appManage.binaryNotIn") <!-- 바이너리 미등록 -->
+                    #end         
+                        
+                </td>
+                <td>
+                    $!info.REG_DT<!-- 등록일 -->
+                </td>
+            </tr>
+            #set($cnt = $cnt + 1)
+        #end
+        #if(!$j_tot)
+            <tr >
+                <td align="center" colspan="8">
+                    #springMessage("menu.store.user.noSearch") <!-- 검색된 정보가 없습니다. -->
+                </td>
+            </tr>
+        #end
+    </tbody>
+</table>
+<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+    ##현재 페이지
+    <input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot" />
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_appInfoList" />
+</div>
+<br/>
+  

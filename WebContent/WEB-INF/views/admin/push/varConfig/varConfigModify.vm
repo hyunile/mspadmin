@@ -1,0 +1,43 @@
+<form name="frmVarConfigInfo" method="POST">
+	
+	<table class="tbl" summary="KEY,VALUE">
+		<colgroup><!--  2cell  -->
+			<col width="20%"/>
+			<col width="80%"/>
+		</colgroup>
+		<tr>
+			<th scope="row">
+				<label for="VNAME" class="required">KEY</label>
+			</th>
+			<td>
+			#if($varConfigOne)
+				$!varConfigOne.VNAME
+				<input type="hidden" name="VNAME" value="$!varConfigOne.VNAME" />
+			#else
+				<input type="hidden" id="CHECK_CODE" value="0" />
+				<input type="text" id="VNAME" name="VNAME" onchange="fn_var_change()" style="width:160px;" />
+				<a href="javascript:void(0)" class="btn2" onclick="fn_var_check()">#springMessage("menu.push.appManage.sameCheck")</a>  <!-- 중복체크 -->
+			#end
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="VVALUE" class="required">VALUE</label>
+			</th>
+			<td>
+				<input type="text" id="VVALUE" name="VVALUE" style="width:310px;" value="$!varConfigOne.VVALUE" />
+			</td>
+		</tr>
+	</table>
+		
+	<div class="btn-wrap txtCenter">
+	#if(!$varConfigOne)
+		<a href="javascript:void(0)" onclick="fn_varWrite();" class="btn1">#springMessage("common.button.save")</a>	<!-- 저장 -->
+	#else
+		<a href="javascript:void(0)" onclick="fn_varModify();" class="btn1">#springMessage("common.button.modify")</a>	<!--수정  -->
+		<a href="javascript:void(0)" onclick="fn_varDelete();" class="btn1 type2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+	#end
+		<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div> 
+	
+</form>

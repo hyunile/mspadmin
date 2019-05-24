@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.securepush.apn.mapper.ApnDao">
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	<!-- APN IP 조회 -->
+    <select id="getApn" resultType="hashmap">
+        SELECT APN_NAME AS "APN_NAME", APN_IP AS "APN_IP", USE_YN AS "USE_YN" 
+        FROM TB_SPUSH_APN
+    </select>
+    
+    <!-- APN IP 등록 -->
+    <insert id="insertApnIp" parameterType="hashmap">
+        INSERT INTO TB_SPUSH_APN(APN_NAME, APN_IP, USE_YN) 
+        VALUES(#{apnName},#{apnIp},#{USE_YN})
+ 	</insert>
+    
+    <!-- APN IP 업데이트 -->
+    <update id="updateApnIp" parameterType="hashmap">
+ 		UPDATE TB_SPUSH_APN
+		SET 
+		    APN_NAME = #{apnName},
+		    APN_IP = #{apnIp},
+		    USE_YN = #{USE_YN}
+ 	</update>
+	
+</mapper>

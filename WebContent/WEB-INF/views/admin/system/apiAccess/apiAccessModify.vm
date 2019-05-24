@@ -1,0 +1,64 @@
+<form name="apiAccessform" method="post">
+<div class="popup_content">
+	<fieldset>
+		<legend>#springMessage("menu.system.registForm")</legend> <!-- 등록 폼 -->
+		<table class="tbType1" summary="코드,코드명,코드설명,우선순위,변경구분">
+			<colgroup><!--  4cell  -->
+				<col width="30%"/><col width="auto"/>
+			</colgroup>
+			<tr>
+				<th>
+					<label for="ACCESS_KEY">#springMessage("menu.system.accessKeyAutoCreate")</label> <!--ACCESS KEY(자동생성)-->
+				</th>
+				<td>
+					#if($authAccessOne)
+						$esc.xml($!authAccessOne.ACCESS_KEY)
+						<input type="hidden"  name="AUTH_IDX" value="$!authAccessOne.AUTH_IDX"/>
+					#else
+						<input type="text" id="auth_idx_input" name="ACCESS_KEY" style="width:90%"/>
+						<input type="checkbox" id="ch_access" checked="checked">
+						#springMessage("menu.system.accessKeyAdvice")<!-- ex) 체크박스 해제 시 Access Key가 자동생성 됩니다. -->
+					#end
+				</td>
+			</tr>
+			<tr>
+				<th>
+					<label for="CONSUMER_KEY">* #springMessage("menu.system.consumerKey")</label> <!-- 사용자 식별코드 -->
+				</th>
+				<td>
+					<input type="text" name="CONSUMER_KEY" value="$!authAccessOne.CONSUMER_KEY"/>
+				</td>
+			</tr>
+			<tr>
+				<th>
+					#springMessage("menu.system.useYN")<!-- 사용 여부 -->
+				</th>
+				<td>
+					<select name="USE_YN">
+						#if($!authAccessOne.USE_YN == "Y")
+							<option value="Y" selected="selected">#springMessage("menu.mobile.deploy.use")</option><!-- 사용 -->
+						#else
+							<option value="Y">#springMessage("menu.mobile.deploy.use")</option><!-- 사용 -->
+						#end
+						#if($!authAccessOne.USE_YN == "N")
+							<option value="N" selected="selected">#springMessage("menu.mobile.deploy.noUse")</option><!-- 사용 안함 -->
+						#else
+							<option value="N">#springMessage("menu.mobile.deploy.noUse")</option> <!-- 사용 안함 -->
+						#end
+					</select>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<div class="btnArea ta_r">
+	#if(!$authAccessOne)
+		<button type="button" onclick="fn_apiAccessWrite();" class="btn_style1"><strong>#springMessage("common.button.regist")</strong></button> <!-- 등록 -->
+	#else
+		<button type="button" onclick="fn_apiAccessModify();" class="btn_style1"><span>#springMessage("common.button.modify")</span></button><!-- 수정 -->
+		<button type="button" onclick="fn_apiAccessDelete();" class="btn_style1"><span><em class="icon del">#springMessage("common.button.delete")</em></span></button><!-- 삭제 -->
+	#end
+		<button type="button" id="dialogPop" class="btn_style1"><span>#springMessage("common.button.close")</span></button><!-- 닫기 -->
+	</div>
+</div>
+</form>

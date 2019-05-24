@@ -1,0 +1,64 @@
+<td colspan="8" class="tb_subCon" >
+	<div class="contents">
+		<div class="tbCon">
+			<h4 class="title">#springMessage("menu.push.userSendDetail")</h4> <!-- 사용자 발송 상세 -->
+			<table class="tbList1">
+				<thead>
+					<tr>
+						<th>
+							CUID
+				       	</th>
+				       	<th>
+				       		PNSID
+						</th>
+						<th>
+							#springMessage("menu.push.sendManage.seeCheck") <!--수신확인-->
+				       	</th>
+				       	<th>
+					    	#springMessage("menu.push.seeDate") <!--수신일시-->
+    					</th>
+				       	<th>
+				       		#springMessage("menu.push.sendManage.readCheck") <!--읽음확인-->	
+					    </th>
+					    <th>
+					    	#springMessage("menu.push.readDate") <!--읽은일시-->
+    					</th>
+				   	</tr>
+			   	</thead>
+			   	<tbody>
+			   		#set($j_tot = 0)
+				   	#foreach( $pushUserSend in $pushUserSendInfoList )
+				   		#set($j_tot = $j_tot + 1)
+				       	<tr>
+				       		<td>
+				       			$esc.xml($pushUserSend.CUID)
+				   			</td>
+				   			<td>
+				   				$esc.xml($pushUserSend.PNSID)
+				       		</td>
+				       		<td>
+				       			$esc.xml($pushUserSend.SEND_YN)
+		       				</td>
+		       				<td>
+								$!esc.xml($pushUserSend.SENDDATE)
+							</td>
+				   			<td>
+								$esc.xml($pushUserSend.READ_YN)
+							</td>
+							<td>
+								$!esc.xml($pushUserSend.READDATE)
+							</td>
+				   		</tr>
+					#end
+					#if($j_tot == 0)
+						<tr>
+							<td colspan="6">
+								#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+							</td>
+						</tr>
+					#end
+				</tbody>
+			</table>
+		</div>
+	</div>
+</th>

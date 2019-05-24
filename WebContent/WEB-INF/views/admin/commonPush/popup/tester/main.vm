@@ -1,0 +1,139 @@
+<script type="text/javascript">
+    $(document).ready(function(){
+		//공통 페지징 처리
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+		
+    	//검색메뉴 hide
+    	$(".se_con").each(function(i){
+    		if(i != 0){
+    			$(this).hide();
+    		}
+    	});
+    });
+
+    
+	//공통코드 페이지 호출(공통)
+    function fn_getPage( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+	
+	// 검색
+    function ch_search(){
+    	var sfrm=document.popupFrmSearch;
+    	var schKey=sfrm.searchKey.options[sfrm.searchKey.selectedIndex].value;
+		var schWord = sfrm.searchWord.value;
+//		alert("schKey : "+schKey+"  schWord: "+schWord);
+    	if(schKey!=""){
+    		if(schWord.length>0 && schWord.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.searchWord.value="";
+    			sfrm.searchWord.focus();
+				return false;
+    		}
+    	}else{
+			if(schWord.length>0){
+				alert('#springMessage("menu.push.sendManage.alert.chooseSearchType")!'); //검색종류를 선택해 주세요
+                sfrm.searchKey.focus();
+				return false;
+			}
+		}
+        fn_getTesterList(1);
+    }
+
+	
+
+    //메뉴 전체 체크
+    $(document).on("click","#checkAllTestUser",function(){
+        if($(this).is(":checked")){
+            $(".checkTestUser").each(function(){
+                var selectBox = $(this)[0];
+                selectBox.checked = true;
+            });
+        } else {
+            $(".checkTestUser").each(function(){
+                var selectBox = $(this)[0];
+                selectBox.checked = false;
+            });
+        }
+    });
+
+    //페이징 처리
+    function fn_getTesterList(PAGE_NUM){
+    	var url = CONTEXT_PATH + "/admin/commonPush/popup/tester";
+    	var type = "POST";
+    	var data = $("form[name=popupFrmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+		var target = $("#divPopupList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+    }
+    
+    // 테스트 발송
+    function fn_testSend(){
+		var chkboxTestUserObj = document.getElementsByName("cb_testuser");
+		var hddCuids = document.getElementsByName("hddCuid");
+		var chkLen = chkboxTestUserObj.length;
+		var psidArr = new Array();
+		var cuidArr = new Array();
+		for(var i=0; i<chkLen; i++){
+			if(chkboxTestUserObj[i].checked==true){
+				//TODO : 부모창에 선택된 PSID정보를 넘겨 주거나.. 부모창에 정의된 테스트 발송 메소드를 호출한다
+                psidArr.push(chkboxTestUserObj[i].value);
+                cuidArr.push(hddCuids[i].value);
+			}
+		}
+		if(chkLen == 0){
+			alert('#springMessage("menu.push.sendManage.alert.chooseTestUser")'); //테스트 유저를 선택해 주세요.
+			return;
+		}
+		fn_sendTestPush(psidArr, cuidArr);
+	}
+	
+</script>
+
+	<div>
+		<form name="popupFrmSearch" method="post">
+			<table>
+				<tr>
+					<td>
+						<div class="tbl-select">
+							<label for="pnsidSelect">#springMessage("menu.pushServerType")</label> <!-- 푸시서버종류 -->
+                            <select name="PNSID" id="pnsidSelect" title="OS" >
+                                <option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+                                <option value="GCM">GCM</option>
+                                <option value="APNS">APNS</option>
+                                <option value="UPNS">UPNS</option>
+                            </select>
+                        </div>
+                        <div class="tbl-select">
+                        	<label for="conSelect">#springMessage("common.text.searchType")</label> <!-- 검색종류 -->
+							<select name="searchKey" id="conSelect" title="#springMessage('menu.mobile.notice.title.selectSearch')" > <!-- 검색항목선택 -->
+								<option value="CUID">UserID</option>
+                                <option value="CNAME">#springMessage("common.text.name")</option> <!-- 이름 -->
+                                <option value="PHONENO">#springMessage("common.text.phoneNum")</option> <!-- 전화번호 -->
+							</select>
+						</div>
+						<input class="se_con inp_wd200" type="text" name="searchWord" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+						<a class="btn2" href="javascript:ch_search();void(0);" onClick="ch_search()"><span>#springMessage("common.button.view")</span></a> <!-- 조회  -->
+					</td>
+				</tr>
+			</table>
+		</form>
+		
+		<div id="divPopupList" style="margin-top:10px;margin-bottom:10px;">
+			#parse("admin/commonPush/popup/tester/list.vm")
+		</div>
+		
+		<div class="btn-wrap txtCenter">
+            <a href="javascript:fn_testSend();void(0);" class="btn1"><span>#springMessage("menu.push.sendManage.doTestSend")</span></a> <!-- 테스트 발송하기 -->
+			<a href="javascript:fn_closePopup();void(0);" class="btn1 type2"><span>#springMessage("common.button.close")</span></a> <!-- 닫기 -->
+		</div>
+	</div>

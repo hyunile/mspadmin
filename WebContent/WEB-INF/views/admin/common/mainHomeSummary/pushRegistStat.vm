@@ -1,0 +1,99 @@
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/amcharts.js" ></script>
+<script type="text/javascript">
+	var chartData3 = null;		// chart data
+	// 차트 데이터를 추가 함
+	function addChartData3(regDt, userCnt)
+	{
+	
+	    if(chartData3 == null)
+	    {
+	        chartData3 	= [{DAY: regDt,	USER_CNT: userCnt}];
+	    }
+	    else
+	    {
+	        chartData3.push({DAY: regDt, USER_CNT: userCnt});
+	    }
+	}
+	
+	// 차트를 초기화 시킴
+	function initChart3()
+	{
+	
+	    //chart의 타입을 정의..
+	    // SERIAL CHART
+	    var chart = new AmCharts.AmSerialChart();
+	    chart.dataProvider = chartData3;
+	    chart.categoryField = "DAY";
+	    chart.startDuration = 0;  //20120615 그래프 액션 없앰 Minwoo.Yoon
+	    chart.balloon.color = "#FFFFFF";
+	    chart.columnWidth = 0.2; //BAR Width.
+	
+	    // AXES
+	    // category
+	    var categoryAxis = chart.categoryAxis;
+	    categoryAxis.fillAlpha = 1;
+	    categoryAxis.fillColor = "#FAFAFA";
+	    categoryAxis.gridAlpha = 0;
+	    categoryAxis.axisAlpha = 0;
+	    categoryAxis.gridPosition = "start";
+	    categoryAxis.position = "bottom";
+	
+	    // value
+	    var valueAxis = new AmCharts.ValueAxis();
+	    valueAxis.dashLength = 5;
+	    valueAxis.axisAlpha = 0;
+	    valueAxis.minimum = 0;
+	    //valueAxis.maximum = 900000; //그래프 최대값
+	    valueAxis.integersOnly = true;
+	    valueAxis.gridCount = 10;
+	    valueAxis.reversed = false; // this line makes the value axis reversed
+	    chart.addValueAxis(valueAxis);
+	
+	
+	    // prev graph
+	    var graph = new AmCharts.AmGraph();
+	    graph.title = '#springMessage("menu.stats.push.joinNum")';//"가입자 수";
+	    graph.type = "line";
+	    graph.valueField = "USER_CNT";
+	    graph.hidden = false; 									// this line makes the graph initially hidden
+	    graph.balloonText = "([[title]])[[category]]: [[value]]";
+	    graph.lineAlpha = 1;
+	    graph.fillAlphas = 0.2;
+	    graph.bullet = "triangleUp";
+	    graph.lineColor = "#52A4BF";
+	    chart.addGraph(graph);
+	
+	    // LEGEND
+	    var legend = new AmCharts.AmLegend();
+	    legend.markerType = "circle";
+	    legend.autoMargins = true;
+	    
+	    //chart.addLegend(legend);
+	
+	
+	    // WRITE
+	    chart.write("chartDivRegist");
+	    
+	}
+	
+#foreach( $row in $listDto)
+addChartData3("$!{row.DT}", "$!{row.CNT}");
+#end
+    
+    initChart3();
+</script>
+
+<style>
+
+.chart2 {padding:10px 0;}
+.chart2 div{height:149px;}
+
+</style>
+
+<h2>[Push] #springMessage("menu.push.joinStat") <small>$strPeriodParam</small></h2> <!-- 가입현황 -->
+<a href="javascript:GO_MENU_URL_favori('0000000080','0000000013','/admin/push/regUserStat');" class="more">#springMessage("common.button.moreView")</a> <!-- 더보기 -->
+
+<div class="chart2">
+	<div id="chartDivRegist"></div>
+</div>
+

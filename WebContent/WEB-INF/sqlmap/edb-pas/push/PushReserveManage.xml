@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.ReserveServiceDao">
+
+    <!--  ================================================================================================= -->
+    <!-- begin of paging query -->
+    <!--  ================================================================================================= -->
+    <sql id="head">
+        SELECT viewC.*
+        FROM (
+        SELECT
+        (ROW_NUMBER() OVER()) AS "RNUM"
+        ,COUNT(*) OVER() AS "TOT_CNT"
+        ,viewB.*
+        FROM (SELECT viewA.* FROM (
+    </sql>
+
+    <sql id="bottom">
+        ) AS viewA
+      ) AS viewB
+    ) AS viewC
+    WHERE "RNUM" BETWEEN (CAST(#{PAGE_NUM} AS INTEGER) -1) * CAST(#{PAGE_SIZE} AS INTEGER) + 1 AND CAST(#{PAGE_NUM} AS INTEGER) * CAST(#{PAGE_SIZE} AS INTEGER)
+    </sql>
+    <!--  ================================================================================================= -->
+    <!-- end of paging query -->
+    <!--  ================================================================================================= -->
+
+    <!-- 예약발송 리스트 -->
+    <select id="selectReserveMsg" parameterType="hashmap" resultType="kr.msp.admin.push.reserve.dto.ReserveMsgDto">
+        <include refid="head"/>
+        SELECT
+        "RESERVE_SEQNO",
+        "APP_ID",
+        "MESSAGE",
+        "SOUNDFILE",
+        "BADGENO",
+        "PRIORITY",
+        "EXT",
+        "SENDERCODE",
+        "SERVICECODE",
+        TO_CHAR("RESERVEDATE", 'YYYY.MM.DD hh24:mi') as "RESERVEDATE",
+        "TYPE",
+        "ATTACHFILE",
+        "GROUPSEQ",
+        "CUID",
+        TO_CHAR("REGDATE", 'YYYY.MM.DD hh24:mi') as "REGDATE",
+        "PROCESS_FLAG"
+        FROM "T_PUSH_RESERVE_MSG"
+        <where>
+            <if test="RESERVEDATE_S != null and RESERVEDATE_S != '' and RESERVEDATE_E != null">
+                "RESERVEDATE" BETWEEN TO_DATE(#{RESERVEDATE_S}, 'YYYY.MM.DD hh24:mi') AND TO_DATE(#{RESERVEDATE_E}, 'YYYY.MM.DD hh24:mi')
+            </if>
+            <if test="APPID != null and APPID!=''">
+                AND "APP_ID"=#{APPID}
+            </if>
+        </where>
+        ORDER BY "RESERVEDATE" DESC
+        <include refid="bottom"/>
+    </select>
+</mapper>

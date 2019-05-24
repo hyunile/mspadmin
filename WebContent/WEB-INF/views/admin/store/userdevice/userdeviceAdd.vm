@@ -1,0 +1,87 @@
+
+	<form id="content_frm">
+   		<table class="tbl" summary="제목,내용" id="frmTable">
+   			<colgroup>
+   				<col width="20%"/>
+   				<col width="30%"/>
+   				<col width="20%"/>
+   				<col width="auto"/>
+   			</colgroup>
+   			<tr>
+   				<th scope="row">
+   					<label for="subject"class="redNotice"> #springMessage("common.text.user")#springMessage("menu.store.user.number")</label> <!-- 사용자사번 -->
+   				</th>
+   				<td>
+   					#if($userdevice)
+   						$!userdevice.EMP_NO
+   						<input type="hidden" name="USERDEVC_IDX" value="$!userdevice.USERDEVC_IDX" >
+   						<input type="hidden" id="EMP_NO" name="EMP_NO" value="$!userdevice.EMP_NO" >
+   					#else
+   						<input type="hidden" name="USERDEVC_IDX" #if($userdevice) value="$!userdevice.USERDEVC_IDX" #end/>
+   						<input type="text" class="input_txt btn_left" style="width:70px;" id="EMP_NO" name="EMP_NO" valid_name="사용자" valid_type="s,x" #if($userdevice) value="$!userdevice.EMP_NO" #end readonly="readonly"/>
+						<a href="javascript:void(0);" id="userSearch" onclick="fn_userSearchPopup()" class="tbl-btn1 fr">#springMessage("menu.store.userDevice.search")</a> <!-- 사용자검색 -->
+   					#end
+   					
+   					
+   				</td>					
+   				<th scope="row">
+   					<label for="subject"class="redNotice"> #springMessage("common.text.userName")</label> <!-- 사용자명 -->
+   				</th>
+   				<td style="position:relative;">
+   					
+   				#if($userdevice)
+   					$!userdevice.EMP_NM
+   					<input type="hidden" id="EMP_NM"  name="EMP_NM" value="$!userdevice.EMP_NM" valid_name="사용자" valid_type="s,x"/>
+   				#else
+   					<input type="text" class="input_txt" id="EMP_NM"  name="EMP_NM" valid_name="사용자" valid_type="s,x" #if($userdevice) value="$!userdevice.EMP_NM" #end style="width:100px;" readonly="readonly" /> 	
+                   	<div class="btnArea ta_r" style="width:200px;padding:0px;position:absolute;top:10px;right:10px;">
+                   	</div>
+   				#end
+   				</td>					
+   			</tr>
+   			<tr>
+   				<th scope="row">
+   					<label for="subject"class="redNotice"> #springMessage("menu.store.device")</label> <!-- 단말기 -->
+   				</th>
+   				<td>
+   					<select name="DEVC_IDX" valid_name="단말기" valid_type="x">
+   						<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+                       	#foreach( $devc in $devcList )
+       						<option value="$!devc.DEVC_IDX" #if($!devc.DEVC_IDX==$!userdevice.DEVC_IDX) selected="selected" #end>$esc.xml($!devc.BRD_NM) $esc.xml($!devc.MFG_NM)</option>
+                   		#end
+                       </select>
+   				</td>
+   				<th scope="row">
+   					<label for="subject"class="redNotice"> #springMessage("menu.store.userDevice.deviceType")</label> <!-- 단말기구분 -->
+   				</th>
+   				<td>
+   					<select name="GUBUN_CD"  valid_name="단말기구분" valid_type="x">
+   						<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+                   	#foreach( $gubun in $gubunList )
+   						<option value="$!gubun.CD_ID" #if($!gubun.CD_ID==$!userdevice.GUBUN_CD) selected="selected" #end>$!gubun.CD_NM</option>
+               		#end
+                       </select>
+   				</td>
+   			</tr>
+   			<tr>
+   				<th scope="row">
+   					<label for="subject"class="redNotice"> #springMessage("common.text.phoneNum")</label> <!-- 전화번호 -->
+   				</th>
+   				<td>
+   					<input type="text" class="input_txt" id="PHONE_NO" name="PHONE_NO" valid_name="전화번호" valid_type="l:14,x" #if($userdevice) value="$!userdevice.PHONE_NO" #end />
+   				</td>
+   				<td colspan="2">
+   				</td>				
+   			</tr>
+   		</table><br/>
+	</form>
+
+	<div class="btn-wrap txtCenter">
+		#if(!$userdevice)
+		<a href="javascript:void(0);" id="userdeviceSave" onclick="fn_saveDevice()" class="btn1"><strong>#springMessage("common.button.regist")</strong></a>	<!-- 등록 -->
+		#else
+		<a href="javascript:void(0);" id="userdeviceUpdate" onclick="fn_updateDevice()" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+		<a href="javascript:void(0);" id="userdeviceDelete" onclick="fn_delete('$!userdevice.DEV_CNT', '$!userdevice.GUBUN_CD');" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+		#end
+		<a href="javascript:void(0);" id="cancel" onclick="fn_closePopup()" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div>

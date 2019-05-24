@@ -1,0 +1,29 @@
+
+<h2>[#springMessage("menu.mobile")] #springMessage("menu.mobile.config.rscRegistStat")</h2> <!-- 모바일관리    리소스 등록 현황-->
+<a href="javascript:GO_MENU_URL_favori('0000000004','0000000001','/admin/mobile/rsc/deployList');" class="more">#springMessage("common.button.moreView")</a> <!-- 더보기 -->
+
+<table class="tbl-nb">
+	<caption>모바일 관리: 리소스 등록 현황</caption>
+	<colgroup>
+		<col style="width:auto">
+		<col style="width:auto">
+		<col style="width:38%">
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("common.text.serviceName")</th> <!-- 서비스명 -->
+			<th scope="col">#springMessage("menu.mobile.manage.rscName")</th> <!-- 리소스명 -->
+			<th scope="col" class="last">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $dto in $listDto)
+		<tr>
+			<td class="first">$dto.SVC_NM</td>
+			<td class="first">$dto.DPLY_NM</td>
+			<td class="last">$dto.REG_DTTM</td>
+		</tr>
+		#end
+	</tbody>
+</table>
+

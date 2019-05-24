@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.mobile.dummy.mapper.DummyDao">
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+	
+
+
+	
+	<!-- 조회 -->
+	<select id="getDummyList" parameterType="kr.msp.admin.mobile.dummy.dto.DummyParamDto" resultType="kr.msp.admin.mobile.dummy.dto.DummyDto" >
+		<include refid="head"/>
+		SELECT 	C.DUMMY_IDX as "dummyIdx", 
+    		   	C.API_URL as "apiUrl",
+    		   	C.API_NM as "apiNm",  
+    		  	TO_CHAR(C.REG_DTTM, 'YYYY.MM.DD') AS "regDttm", 
+    			C.SVC_ID as "svcId",
+    			D.SVC_NM as "svcNm",
+    			C.RSP_BODY as "rspBody",
+				C.USE_YN as "useYn"   			
+    	FROM 	
+    			TB_MOB_DUMMY C
+	    		, (
+		    		SELECT 
+			       		A.SVC_ID 
+			           	, A.SVC_NM
+			           	, A.APP_ID
+			      	FROM 
+			       		TB_SVC A ,
+			          	TB_MOB_SVC B ,
+			           	TB_SVC_AUTH  C , 
+			          	TB_SYS_USER_AUTH_GRP D 
+			    	WHERE 
+			      		A.SVC_ID = B.SVC_ID
+			         	AND B.USE_YN = 'Y'
+			       		AND B.SVC_ID = C.SVC_ID
+			         	AND C.AUTH_GRP_ID = D.AUTH_GRP_ID
+			            AND D.USER_ID = #{userId}
+	            ) D
+		WHERE C.SVC_ID = D.SVC_ID
+			<if test="svcId != null and svcId != ''">
+				AND D.SVC_ID = #{svcId}
+			</if>
+			<if test="apiUrl != null and apiUrl != ''">
+				AND C.API_URL LIKE '%' || #{apiUrl} || '%'
+			</if>
+			<if test="apiNm != null and apiNm != ''">
+				AND C.API_NM LIKE '%' || #{apiNm} || '%'
+			</if>
+
+		ORDER BY C.DUMMY_IDX DESC
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- 서비스 조회 -->
+	<select id="getMobileSvc" parameterType="kr.msp.admin.mobile.notice.dto.MobileSvcDto" resultType="kr.msp.admin.mobile.notice.dto.MobileSvcDto" >
+		SELECT 
+       		A.SVC_ID 
+           	, A.SVC_NM
+           	, A.APP_ID
+      	FROM 
+       		TB_SVC A ,
+          	TB_MOB_SVC B ,
+           	TB_SVC_AUTH  C , 
+          	TB_SYS_USER_AUTH_GRP D 
+    	WHERE 
+      		A.SVC_ID = B.SVC_ID
+         	AND B.USE_YN = 'Y'
+       		AND B.SVC_ID = C.SVC_ID
+         	AND C.AUTH_GRP_ID = D.AUTH_GRP_ID
+            AND D.USER_ID = #{USER_ID}
+	</select>
+	
+	<!-- 조회 단건 -->
+	<select id="getDummyInfo" parameterType="kr.msp.admin.mobile.dummy.dto.DummyDto" resultType="kr.msp.admin.mobile.dummy.dto.DummyDto" >
+		SELECT 	A.DUMMY_IDX as "dummyIdx", 
+    		   	A.API_URL as "apiUrl",
+    		   	A.API_NM as "apiNm",   
+    		  	TO_CHAR(A.REG_DTTM, 'YYYY.MM.DD') AS "regDttm",
+    			A.SVC_ID as "svcId",
+    			B.SVC_NM as "svcNm",
+    			A.RSP_BODY as "rspBody"
+    	FROM 
+    		  TB_MOB_DUMMY A
+    		, TB_SVC B
+    	WHERE 
+    			A.SVC_ID = B.SVC_ID
+    		AND A.DUMMY_IDX = #{dummyIdx}
+	</select>
+	
+	<!-- 공지사항 등록 -->
+	<insert id="insertDummyInfo" parameterType="kr.msp.admin.mobile.dummy.dto.DummyDto">
+		INSERT INTO TB_MOB_DUMMY ( 
+			  DUMMY_IDX
+			, SVC_ID
+			, API_URL
+			, API_NM
+			, RSP_BODY
+			, REG_DTTM 
+		)VALUES ( 
+			SEQ_TB_MOB_DUMMY.NEXTVAL 
+			, #{svcId}
+			, #{apiUrl}
+			, #{apiNm}
+			, #{rspBody}
+			, (CURRENT TIMESTAMP)
+		)
+	</insert>
+	
+	<!-- dummy update-->
+	<update id="updateDummyInfo" parameterType="kr.msp.admin.mobile.dummy.dto.DummyDto">
+		UPDATE TB_MOB_DUMMY
+		SET 
+			SVC_ID = #{svcId}
+			, API_URL = #{apiUrl}
+			, API_NM = #{apiNm}
+			, RSP_BODY = #{rspBody}
+			, REG_DTTM = (CURRENT TIMESTAMP) 
+		WHERE DUMMY_IDX = #{dummyIdx}
+	</update>
+	
+	<!-- 공지사항 삭제 -->
+	<delete id="deleteDummyInfo" parameterType="kr.msp.admin.mobile.dummy.dto.DummyDto">
+		DELETE FROM TB_MOB_DUMMY 
+		WHERE DUMMY_IDX = #{dummyIdx}
+	</delete>
+</mapper>

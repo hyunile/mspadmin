@@ -1,0 +1,80 @@
+<script type="text/javascript">
+	fn_mp_bindEvent_sortHeader("frmSearch", fn_userList, "$!{ORDER_FIELD}", "$!{ORDER_TYPE}");
+</script>
+
+<table class="tbl-nb" >
+	<colgroup>
+		<col width="15%"></col>
+		<col width="20%"></col>
+		<col width="20%"></col>
+		<col width="20%"></col>
+		<col width="10%"></col>
+	</colgroup>
+
+	<thead>
+		<tr>
+			<th class="sort" fname="EMP_NO">
+				#springMessage("menu.store.user.number")<a class="mark" /> <!-- 사번 -->
+			</th>
+			<th class="sort" fname="EMP_NM">
+				#springMessage("common.text.name")<a class="mark" /> <!-- 이름 -->
+			</th>
+			<th class="sort" fname="GRP_NM">
+				#springMessage("common.text.group")<a class="mark" /> <!-- 그룹 -->
+			</th>
+			<th class="sort" fname="USE_YN">
+				#springMessage("menu.store.user.useStopYN")<a class="mark" /> <!-- 사용중지 여부 -->
+			</th>
+			<th>
+			</th>
+		</tr>
+	</thead>
+
+	<tbody>
+		#foreach( $record in $userList )
+			#set($j_tot = $record.TOT_CNT)
+				<tr>
+					<input type="hidden" id="EMP_NO" value="$record.EMP_NO">
+					<td>
+						$!record.EMP_NO
+					</td>
+					<td>
+					    $!record.EMP_NM
+					</td>
+					<td>
+					    $!record.GRP_NM
+					</td>
+					<td>
+						<input type="radio" value="Y" name="$record.EMP_NO"  #if($!record.USE_YN == 'Y') checked="checked" #end onclick="javascript:fn_modifyUseYN('$record.EMP_NO', true);" id="USE_Y"/><label for="USE_Y">#springMessage("common.header.use_Y")</label> <!-- 사용 -->
+						<input type="radio" value="N" name="$!record.EMP_NO" #if($!record.USE_YN == 'N') checked="checked" #end onclick="javascript:fn_modifyUseYN('$record.EMP_NO', false);"  id="USE_N"/><label for="USE_N">#springMessage("menu.mobile.deploy.stop")</label> <!-- 중지 -->
+					</td>
+					<td>
+						<a href="javascript:void(0)" class="btn2 clsDetailPopup" id="codeModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+					</td>
+				</tr>
+		#end
+		#if(!$j_tot)
+			<tr>
+				<td align="center" colspan="5">
+					#springMessage("common.alert.noInUser") <!-- 등록된 사용자가 없습니다. -->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+					
+					
+					
+<input type="hidden" id="user_num" value="$!R_PAGE_NUM">
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot">
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_userList">
+</div>

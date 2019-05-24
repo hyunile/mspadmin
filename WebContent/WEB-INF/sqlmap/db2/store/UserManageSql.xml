@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.msp.admin.store.user.mapper.StoreUserDao">
+
+    	    
+    <!-- user information -->
+	<resultMap type="kr.msp.admin.store.user.dto.UserDto" id="UserDto">
+		<result property="EMP_NO"				column = "EMP_NO" 			/>
+		<result property="EMP_NM"				column = "EMP_NM" 			/>
+		<result property="EMP_CD"				column = "EMP_CD" 			/>
+		<result property="WORK_CD"			column = "WORK_CD"			/>
+		<result property="EMAIL"					column = "EMAIL"	 				/>
+		<!-- <result property="PHONE_NO"		column = "PHONE_NO"				/> -->
+		<result property="GRP_ID"				column = "GRP_ID"	/>
+		<result property="GRP_NM"				column = "GRP_NM"	/>
+		<result property="EMP_CD_NM"		column = "EMP_CD_NM"	/>
+		<result property="WORK_CD_NM"		column = "WORK_CD_NM"	/>
+		<result property="TOTAL_COUNT" 	column = "TOTAL_COUNT"	/>
+		<result property="DIVISION_ID" 	column = "DIVISION_ID"	/>
+		<result property="USERID" 	column = "USERID"	/>
+		<result property="PASSWD" 	column = "PASSWD"	/>
+	</resultMap>
+	
+
+	
+	<!-- workcd information -->
+	<resultMap type="kr.msp.admin.store.user.dto.EmpCdDto" id="EmpCdDto">
+		<result property="EMP_CD"				column = "EMP_CD" 		/>
+		<result property="CD_NM"				column = "CD_NM" 				/>
+	</resultMap>
+    
+	<!-- workcd information -->
+	<resultMap type="kr.msp.admin.store.user.dto.WorkCdDto" id="WorkCdDto">
+		<result property="CD_ID"					column = "CD_ID" 		/>
+		<result property="CD_NM"				column = "CD_NM" 				/>
+	</resultMap>
+
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+
+
+
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of sort Query -->
+	<!--  ================================================================================================= -->
+	<sql id="order">
+		<if test="ORDER_FIELD != null and ORDER_FIELD != ''">   
+			ORDER BY ${ORDER_FIELD} ${ORDER_TYPE} 
+		</if>
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of sort -->
+	<!--  ================================================================================================= -->
+
+	
+	
+    <!-- Select List Of StoreMember -->
+    <select id="selectUserList" parameterType="kr.msp.admin.store.user.dto.UserParamDto" resultMap="UserDto">
+        <include refid="head"/><!-- include head of paging query-->
+                        SELECT     A.EMP_NO
+                        ,                A.EMP_NM
+                        ,                A.EMP_CD
+                        ,                B.GRP_ID
+                        ,                C.GRP_NM
+                        ,                A.WORK_CD
+                        ,                A.EMAIL
+                        ,                A.USE_YN
+                        ,                D.CD_NM EMP_CD_NM
+                        FROM TB_STO_USER A
+                                    LEFT JOIN 
+                                    (
+                                        /* dupplicate check */
+                                        SELECT EMP_NO,  MAX(GRP_ID) GRP_ID
+                                        FROM    TB_STO_USERGROUP UG
+                                        WHERE   USE_YN = 'Y'
+                                        GROUP BY EMP_NO
+                                    ) B
+                                    ON A.EMP_NO = B.EMP_NO
+                                    LEFT JOIN TB_STO_GROUP C
+                                        ON B.GRP_ID = C.GRP_ID AND C.USE_YN = 'Y'
+                                    LEFT JOIN TB_STO_EMP_CODE D
+                                        ON A.EMP_CD = D.EMP_CD AND D.KIND=#{KIND}
+			<trim prefix="WHERE"  prefixOverrides="AND|OR" >
+				<if test="GRP_ID != null and GRP_ID != '' " >
+					AND A.GRP_ID = #{GRP_ID}
+				</if>
+				<if test="EMP_CD != null and EMP_CD != '' " >
+					AND A.EMP_CD = #{EMP_CD}
+				</if>
+				<if test="EMP_NO != null and EMP_NO != '' ">
+			        AND A.EMP_NO LIKE '%' || #{EMP_NO} || '%'
+				</if>
+				<if test="EMP_NM != null and EMP_NM != '' " >
+				     AND A.EMP_NM LIKE '%' || #{EMP_NM} || '%'
+				</if>
+			</trim>
+			
+        	<include refid="order"/><!-- include order query-->
+        	
+        	
+        	<include refid="bottom"/><!-- include tail of paging query-->
+    </select>
+    
+    
+    <!-- Select Info Of StoreMember -->
+    <select id="selectOneUser" parameterType="kr.msp.admin.store.user.dto.UserParamDto" resultMap="UserDto">
+                        SELECT    A.EMP_NO
+                        ,                A.EMP_NM
+                        ,                A.EMP_CD
+                        ,                A.WORK_CD
+                        ,                A.EMAIL
+                        ,				 A.USE_YN
+                        , 				A.DIVISION_ID
+                    	, 				A.USERID
+                    	,				A.PASSWD
+                        FROM        TB_STO_USER A
+                        WHERE      A.EMP_NO = #{EMP_NO}
+    </select>
+    
+    <select id="selectDivisonList" resultType="kr.msp.admin.store.user.dto.UserDivisionDto">
+        SELECT
+					A.DIVISION_ID
+		    ,		A.DIVISION_NM
+            ,		A.SORT_KEY
+		FROM TABLE(FN_STO_DVISION_ID_LIST('0')) A
+		ORDER BY A.SORT_KEY
+    </select>
+    
+    
+        
+    
+    <select id="selectWorkCdList" resultMap="WorkCdDto">
+				    SELECT  CD_ID,  CD_NM 
+					FROM    TB_SYS_CD_INFO
+					WHERE USE_YN = 'Y'
+					    AND CD_GRP_ID = 'ST999'
+					ORDER BY SORT_NO
+	</select>
+    
+    
+    <select id="selectEmpCdList" parameterType="kr.msp.admin.store.user.dto.EmpCdDto" resultMap="EmpCdDto">
+					SELECT  EMP_CD, CD_NM
+					FROM    TB_STO_EMP_CODE
+					WHERE   KIND=#{KIND}
+					ORDER BY SORT_NO
+	</select>
+    
+
+
+    <!-- Duplicate Check  -->
+    <select id="selectUserCount" parameterType="kr.msp.admin.store.user.dto.UserDto" resultType="java.lang.Integer">
+                    SELECT    COUNT(1) TOTAL_COUNT
+                    FROM       TB_STO_USER
+                    WHERE     EMP_NM = #{EMP_NM}
+    </select>
+    
+    
+    
+    
+    <!-- Insert Data -->
+    <insert id="insertUsers" parameterType="kr.msp.admin.store.user.dto.UserDto">
+                    INSERT INTO TB_STO_USER
+                    (
+                         EMP_NO
+                    ,    EMP_NM
+                    ,    EMP_CD
+                    ,    WORK_CD
+                    ,    EMAIL
+                    ,	USE_YN
+                    , 	DIVISION_ID
+                    , 	USERID
+                    ,   PASSWD
+                    )
+                    VALUES
+                    (
+                         #{EMP_NO}
+                    ,    #{EMP_NM}
+                    ,    #{EMP_CD}
+                    ,    #{WORK_CD}
+                    ,    #{EMAIL}
+                    ,	'Y'
+                    , 	#{DIVISION_ID}
+                    , 	#{USERID}
+                    ,   #{PASSWD}
+                    )
+    </insert>
+
+
+ 
+   <!-- Update Data -->
+    <update id="updateUsers" parameterType="kr.msp.admin.store.user.dto.UserDto">
+                    UPDATE    TB_STO_USER
+                    SET           WORK_CD  		= #{WORK_CD}
+                    ,				EMP_NM		= #{EMP_NM}
+                    ,                EMP_CD         	= #{EMP_CD}
+                    ,                EMAIL         		= #{EMAIL}
+                    , 			DIVISION_ID				= #{DIVISION_ID}
+					<if test="PASSWD != null and PASSWD != '' ">
+                    	,   PASSWD = #{PASSWD}
+                    </if>
+                    WHERE     EMP_NO     		= #{EMP_NO}
+    </update>
+
+    
+    <!-- 
+	<update id="updateUseYN" parameterType="kr.msp.admin.store.user.dto.UserParamDto">
+	 -->
+	<update id="updateUseyn" parameterType="kr.msp.admin.store.user.dto.UserParamDto">
+	    	    UPDATE 	TB_STO_USER
+	    	     SET 		USE_YN = #{USE_YN}
+				WHERE 	EMP_NO = #{TMP_EMP_NO}
+    </update>
+    
+        
+    <!-- Delete Data -->
+    <delete id="deleteUsers" parameterType="kr.msp.admin.store.user.dto.UserDto">
+                    DELETE
+                    FROM    TB_STO_USER
+                    WHERE  EMP_NO = #{EMP_NO}
+    </delete>
+    
+    <select id="selectUserCnt" parameterType="kr.msp.admin.store.user.dto.UserDto" resultType="Integer">
+        SELECT COUNT(*) FROM TB_STO_USER WHERE USERID = #{USERID}
+    </select>
+    
+    <select id="selectEmpCnt" parameterType="kr.msp.admin.store.user.dto.UserDto" resultType="Integer">
+        SELECT COUNT(*) FROM TB_STO_USER WHERE EMP_NO = #{EMP_NO}
+    </select>
+</mapper>

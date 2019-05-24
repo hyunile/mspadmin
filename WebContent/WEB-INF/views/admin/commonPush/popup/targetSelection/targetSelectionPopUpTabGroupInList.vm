@@ -1,0 +1,18 @@
+<h2 class="tbl-title">#springMessage("menu.push.addedGroup")</h2><!-- 추가 그룹 -->
+
+<div style="height:350px; overflow-x:hidden; overflow-y:scroll;">
+	<table id="tblInGroup" class="tbl-nb full-width">
+		<thead>
+			<tr>
+                <th scope="col" style="width: 30%">#springMessage("menu.push.user.groupName")</th> <!-- 그룹명 -->
+                <th scope="col" style="width: 30%">#springMessage("common.header.desc")</th> <!-- 설명 -->
+                <th scope="col" style="width: AUTO">#springMessage("common.text.people")</th> <!-- 인원 -->
+			</tr>
+		</thead>
+		<tbody>
+			<tr id="default_text_group">
+				<td colspan="3">#springMessage("menu.push.user.alert.groupChoose")</td> <!-- 그룹을 선택해 주세요. -->
+	        </tr>
+        </tbody>
+	</table>
+</div>	

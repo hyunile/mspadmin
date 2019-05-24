@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.varConfig.mapper.VarConfigManageDao">
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 단말 변수 리스트 조회 -->
+    <select id="SelectVarList" parameterType="kr.msp.admin.push.varConfig.dto.VarConfigDto" resultType="kr.msp.admin.push.varConfig.dto.VarConfigDto">
+        <include refid="head"/>
+	        SELECT 	VNAME, 
+	        		VVALUE
+			FROM 	T_PUSH_VARIABLES
+			WHERE 	VGROUP = 'UPNS'
+			ORDER BY VNAME
+        <include refid="bottom"/>
+    </select>
+    
+    <!-- 단말 변수 조회 -->
+    <select id="SelectVarOne" parameterType="kr.msp.admin.push.varConfig.dto.VarConfigDto" resultType="kr.msp.admin.push.varConfig.dto.VarConfigDto">
+    	SELECT 	VNAME, 
+    			VVALUE
+		FROM 	T_PUSH_VARIABLES
+		WHERE 	VGROUP = 'UPNS'
+		AND 	VNAME = #{VNAME}
+    </select>
+    
+    <!-- 단말 변수 키 중복 조회 -->
+    <select id="SelectVarDupCheck" parameterType="kr.msp.admin.push.varConfig.dto.VarConfigDto" resultType="java.lang.Integer">
+        SELECT COUNT(*) AS COUNT
+		FROM T_PUSH_VARIABLES
+		WHERE VGROUP = 'UPNS' AND VNAME = #{VNAME}
+    </select>
+    
+    <!-- 단말 변수 등록 -->
+    <insert id="InsertVar" parameterType="kr.msp.admin.push.varConfig.dto.VarConfigDto">
+        INSERT INTO T_PUSH_VARIABLES (
+                                VGROUP
+                               ,VNAME
+                               ,VVALUE
+                             ) VALUES (
+                                'UPNS'
+                               ,#{VNAME}
+                               ,#{VVALUE}
+                             )
+    </insert>
+    
+    <!-- 단말 변수 수정 -->
+    <update id="UpdateVar" parameterType="kr.msp.admin.push.varConfig.dto.VarConfigDto">
+        UPDATE T_PUSH_VARIABLES
+		   SET VVALUE = #{VVALUE}
+		WHERE VGROUP = 'UPNS' AND VNAME = #{VNAME}
+    </update>
+    
+    <!-- 단말 변수 삭제-->
+    <delete id="DeleteVar" parameterType="kr.msp.admin.push.varConfig.dto.VarConfigDto">
+       DELETE FROM T_PUSH_VARIABLES
+       WHERE VGROUP = 'UPNS' AND VNAME = #{VNAME}
+    </delete>
+	
+</mapper>

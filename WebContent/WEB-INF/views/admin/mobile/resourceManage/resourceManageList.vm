@@ -1,0 +1,71 @@
+<script type="text/javascript">
+	$(document).ready(function () {
+	    // order by 관련 화면 그리기
+	    var target = $("#orderTarget").val();
+	    var type = $("#orderType").val();
+	    
+		if(type == "DESC"){
+	 		$("#OR_" + target).text( $("#OR_" + target).text() + " ▽");
+	  	}else{
+	  		$("#OR_" + target).text( $("#OR_" + target).text() + " △");
+	   	}
+	});
+</script>
+		
+<table class="tbl-nb">
+	<colgroup><!--  2cell  -->
+			<col width="50px"/><col width="25%"/><col width="auto"/><col width="160px"/><col width="60px"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col"> <input type="checkbox" id="all_check" ><label for="all_check"></label></th>
+			<th class="ORDER_TH" id="OR_FILE_NM" scope="col" style="cursor:pointer;">#springMessage("menu.mobile.manage.fileName")</th><!-- 파일명 -->
+			<th scope="col">#springMessage("menu.mobile.manage.filePath")</th> <!-- 파일경로 -->
+			<th class="ORDER_TH" id="OR_MOD_DTTM" scope="col" style="cursor:pointer;">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+			<th scope="col"> </th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $mobService in $mobServiceList )
+			#set($j_tot = $!mobService.TOT_CNT)
+				<tr>
+					<th>
+						<input type="checkbox" class="CH_RSC_FILE_IDX" name="RSC_FILE_IDX" id="$!mobService.RSC_FILE_IDX" value="$!mobService.RSC_FILE_IDX"><label for="$!mobService.RSC_FILE_IDX"></label>
+						<input type="hidden" id="RSC_ID" value="$!mobService.RSC_ID">				
+					</th>
+					<td style="text-align:left;">
+						$esc.xml($!mobService.FILE_NM)
+					</td>
+					<td style="text-align:left;">
+						$esc.xml($!mobService.FILE_PATH)
+					</td>
+					<td>
+						$esc.xml($!mobService.MOD_DTTM)
+					</td>
+					<td>
+						<a href="javascript:void(0)" class="btn2" id="RscConfigModify">#springMessage("common.button.detail")</a> <!-- 상세 -->
+						
+					</td>
+				</tr>
+			#end
+			#if(!$j_tot)
+				<tr>
+					<td colspan="5" >#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+				</tr>
+			#end
+	</tbody>
+</table>
+<input type="hidden" id="RESOURCE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_resourceList" />
+</div>
+<br><br>

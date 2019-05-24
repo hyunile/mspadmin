@@ -1,0 +1,285 @@
+<style type="text/css">
+	/* 
+    // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    //		CSS 정의 - 시작
+    // ...................................................................................................................................
+    */
+    
+	/* --------------------------------------------------------------------------------	*/
+	/* |																																			|	*/
+	/* |	(!) 로직에서 사용되는 CSS 명칭 정의																					|	*/
+	/* |																																			|	*/
+	/* |	:: 			conInput_date : 조회 구분에 의해 변경되는 UI의 class명										|	*/
+	/* |																																			|	*/
+	/* --------------------------------------------------------------------------------	*/
+	
+	
+    div.scrollPane												{overflow-x:scroll;overflow-y:hidden;float:left; width:100%;}			/* 결과 화면의 SCROLL 을 위한 DIV Style [ScrollPane] */
+    
+    /* 
+    // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    //		CSS 정의 - 끝
+    // ...................................................................................................................................
+    */
+</style>
+
+<script type="text/javascript">
+
+	$(document).ready(function(){
+
+		//공통 페지징 처리
+		fn_page("j_prev_page_div");
+    	fn_page("j_cur_page_div");
+    	fn_page("j_range_page_div");
+		
+		//레이어 팝업 사용
+		$(".window").css({width:"650px", height:"650px"});
+		
+		//메시지가 있으면 출력 
+		if($("#rtnCd").val() != "empty"){
+			alert($("#rtnMsg").val());
+		}
+		
+		//달력 구현
+		$("#PIK_BTN_BEGIN").datepicker({
+			regional        : "ko",
+			dateFormat      : "yymmdd",
+			showOn          : "button",
+			buttonImage     : CONTEXT_PATH + "/resources/img/btn/btn_calendar.gif",
+			buttonImageOnly : true,
+			altField        : "#S_DT",
+			altFormat       : "yy.mm.dd"
+		});
+	
+		//달력 구현
+		$("#PIK_BTN_END").datepicker({
+			regional        : "ko",
+			dateFormat      : "yymmdd",
+			showOn          : "button",
+			buttonImage     : CONTEXT_PATH + "/resources/img/btn/btn_calendar.gif",
+			buttonImageOnly : true,
+			altField        : "#E_DT",
+			altFormat       : "yy.mm.dd"
+		});
+		
+		//달력 초기화
+		fn_mp_init_datePicker("PIK_BTN_BEGIN", "S_DT");
+		fn_mp_init_datePicker("PIK_BTN_END",   "E_DT");
+		
+		var defaultDate1 = $.datepicker.formatDate("yy.mm.dd", new Date());
+		var defaultDate2 = $.datepicker.formatDate("yymmdd", new Date());
+	
+		$("#S_DT").val(defaultDate1);
+		$("#E_DT").val(defaultDate1);
+		
+		$("#PIK_BTN_BEGIN").val(defaultDate2);
+		$("#PIK_BTN_END").val(defaultDate2);
+	});
+	
+    // ----------------------------------------------------
+    //	함수명 : fn_select_prevData
+    //	
+    //	설명 : 기간별 다운로드 횟수를 조회 함.
+    //
+    //	param : 
+    //				-	pageNo	: 요청할 page의 번호(최소 1)
+    // ----------------------------------------------------
+    
+	function fn_select_prevData(pageNo) {
+		// 파라메터 옮김
+
+		$("#PAGE_NUM").val(pageNo);
+		
+		$("#PAGE_NUM").val($("#R_PREV_PAGE_NUM").val());
+		$("#PAGE_SIZE").val($("#R_PREV_PAGE_SIZE").val());
+		
+		// request
+		var url         = CONTEXT_PATH + "/admin/store/statistics/downListPrev";
+		var targetDivID = "prevListTableDiv";
+		var formName    = "frmSearch";
+		
+        var type   = "POST";
+		var data   = $("form[name="+formName+"]").serialize();
+        var target = $("#"+targetDivID);
+		
+    	fn_getCommonList( url, type, data , target );
+    	fn_page("j_prev_page_div");
+	}
+	
+    // ----------------------------------------------------
+    //	함수명 : fn_select_curData
+    //	
+    //	설명 : 기간별 다운로드 횟수를 조회 함.
+    //
+    //	param : 
+    //				-	pageNo	: 요청할 page의 번호(최소 1)
+    // ----------------------------------------------------
+    
+	function fn_select_curData(pageNo) {
+		// 파라메터 옮김
+
+		$("#PAGE_NUM").val(pageNo);
+		
+		$("#PAGE_NUM").val($("#R_CUR_PAGE_NUM").val());
+		$("#PAGE_SIZE").val($("#R_CUR_PAGE_SIZE").val());
+					
+
+		// request
+		var url         = CONTEXT_PATH + "/admin/store/statistics/downListCurrent";
+		var targetDivID = "curListTableDiv";
+		var formName    = "frmSearch";
+		
+        var type   = "POST";
+		var data   = $("form[name="+formName+"]").serialize();
+        var target = $("#"+targetDivID);
+		
+    	fn_getCommonList( url, type, data , target );
+    	fn_page("j_cur_page_div");
+	}
+	
+    // ----------------------------------------------------
+    //	함수명 : fn_select_rangeData ***** datepicker 참고 함수
+    //	
+    //	설명 : 기간별 다운로드 횟수를 조회 함.
+    //
+    //	param : 
+    //				-	pageNo	: 요청할 page의 번호(최소 1)
+    // ----------------------------------------------------
+	
+	function fn_select_rangeData(pageNo) {
+		// 파라메터 옮김
+
+		$("#APP_IDX").val($("#AP_IDX").val());
+		$("#START_DT").val($("#S_DT").val());
+		$("#END_DT").val($("#E_DT").val());
+		$("#PAGE_NUM").val(pageNo);
+		
+		$("#PAGE_NUM").val($("#R_RANGE_PAGE_NUM").val());
+		$("#PAGE_SIZE").val($("#R_RANGE_PAGE_SIZE").val());
+		
+		// request
+		var url         = CONTEXT_PATH + "/admin/store/statistics/downListRange";
+		var targetDivID = "rangeListTableDiv";
+		var formName    = "frmSearch";
+		
+        var type   = "POST";
+		var data   = $("form[name="+formName+"]").serialize();
+        var target = $("#"+targetDivID);
+
+    	fn_getCommonList( url, type, data , target );
+    	fn_page("j_range_page_div");
+	}
+	
+    // ----------------------------------------------------
+    //	 함수명 : fn_se_select
+    //	
+    //	설명 : 조회 함
+    //
+    //	param : 
+    //				-	pageNo	: 요청할 page의 번호(최소 1)
+    // ----------------------------------------------------
+	
+	function fn_se_select(pageNo) {
+		var url           = CONTEXT_PATH + "/admin/store/statistics/download";
+		var targetDivID   = "downloadTableDiv";
+		//var targetDivID = "conWrap"
+		var formName      = "frmSearch";
+		
+		$("#PAGE_NUM").val(pageNo);
+		$("#PAGE_SIZE").val(0);
+		
+        var type   = "POST";
+		var data   = $("form[name="+formName+"]").serialize() ;
+        var target = $("#"+targetDivID);
+		
+    	fn_getCommonList( url, type, data , target );
+    	fn_page("j_prev_page_div");
+    	fn_page("j_cur_page_div");
+    	fn_page("j_range_page_div");
+	}
+	
+	// 조회
+     $(document).on("click","#goSearch",function() {
+		fn_se_select(1);
+    });
+	
+    //엑셀 다운
+    $(document).on("click","#goExcel",function() {
+		var form = document.frmSearch;
+		
+    	form.action = CONTEXT_PATH + "/admin/store/statistics/excel";
+     	form.submit();
+    });
+   
+	// bind onChange event to select object
+	$(document).on("change", "#SVC_ID", function() {
+		fn_se_select(1);
+	});
+	
+</script>
+
+<!--  calendar frame  -->
+<!-- 
+<div id="dialogPop" title="플랫폼 관리" style="display:none;"></div>
+ -->
+
+<div id="conWrap">
+
+	#### S : 프로그램 위치 기술 부분  ####
+    <div class="headerBg">
+    	<div class="innerNavi"><!--  NAVIGATOR  --></div>
+		<div class="tb_tit"><!--  TITLE  --></div>
+	</div>
+	
+    #### E : 프로그램 위치 기술 부분  ####
+	
+   	#### S : 조회 폼 부분  ####
+   	<form name="frmSearch" method="post">
+		<input type="hidden" id="rtnCd"     value="$!rtnCd" />
+		<input type="hidden" id="rtnMsg"    value="$!rtnMsg" />
+		<input type="hidden" id="PAGE_NUM"  name="PAGE_NUM"  value="$!R_PAGE_NUM" />
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE" value="$!R_PAGE_SIZE" />
+		
+		<!--  추가 파라메터  -->
+		<input type="hidden" id="APP_IDX"  name="APP_IDX"  value="$!searchParam.APP_IDX" />
+		<input type="hidden" id="START_DT" name="START_DT" value="$!searchParam.START_DT" />
+		<input type="hidden" id="END_DT"   name="END_DT"   value="$!searchParam.END_DT" />
+		
+		<div class="detail_searchBox">
+			<p>
+				<table class="search">
+					<tr>
+						<th>#springMessage("menu.mobile.record.appService")</th> <!--앱서비스명-->
+						<td>&nbsp;&nbsp;
+							<select id="SVC_ID" name="SVC_ID">
+								#foreach( $row in $svcCodeList )
+                    		    	<option value="$!{row.SVC_ID}" #if($!searchParam.SVC_ID==$!{row.SVC_ID}) selected='selected' #end>$!{row.SVC_NM}</option>
+								#end								
+            			    </select>
+						</td>
+					</tr>
+				</table>
+			</p>
+		</div>
+	</form>
+	
+	<form class="frmList" name="frmJownloadList" method="post">
+	<div class="contents">
+		
+		#### S : 리스트  폼 부분  ####
+		<div class="tbCon">
+			
+             	<div id="downloadTableDiv">
+					#parse ("/admin/store/statistics/downloadLayout.vm")
+	            </div>	<!-- <div id="downloadTableDiv"> -->
+	            <!-- 
+	           	<div class="btnArea ta_l">
+            		<button type="button" class="btn_style1" onclick="fn_newWrite();"><strong>등록</strong></button>
+            	</div>
+				 -->
+	    </div>
+	  
+    </div>
+    #### E : 리스트  폼 부분  ####
+	</form>
+</div>

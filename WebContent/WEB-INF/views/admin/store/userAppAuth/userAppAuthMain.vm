@@ -1,0 +1,295 @@
+<script type="text/javascript">
+
+var array = new Array();
+
+$(document).ready(function(){
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	ch_search();
+});
+
+function ch_search(){
+	var sfrm=document.frmSearch.searchval;
+	if(sfrm.value.length>0&&sfrm.value.length<2){
+		alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.value="";
+			sfrm.focus();
+	}
+	fn_appList(1);
+}
+//페이징
+function fn_appList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var url = CONTEXT_PATH + "/admin/store/userAppAuth";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM +"&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+	var target = $("#appTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	
+	$(".chkCls").each(function(){
+		if( jQuery.inArray( $(this).val() , array) >= 0){
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+			$(this).parent().parent().removeClass().addClass("selected");
+		}
+	});
+}
+
+//리스트 삭제
+    $(document).on("click","#deleteSelected",function(e){ 
+       
+		var cnt = $(".chkCls:checkbox:checked").length;
+       
+        if(cnt < 1){
+             alert('#springMessage("menu.store.appManage.alert.chooseOneApp")'); //한 개 이상 App을 선택하셔야 합니다
+        }else{
+             if(confirm('#springMessage("common.alert.doDelete")')){ //'삭제 하시겠습니까?'
+                var checkBoxList = [];
+                $('.chkCls:not(#checkAll):checkbox:checked').each(function(i) {
+                       checkBoxList.push($(this).val());
+                });
+
+                var data = "DEL_LIST="+checkBoxList;
+
+                jQuery.ajax({
+                        url: CONTEXT_PATH +"/admin/store/appInfo/deleteList"
+                        ,type:"post"
+                        ,data:data
+                        ,dataType:"json"
+                        ,success:function(data){
+                            alert(data.msg);
+                            if(data.result > 0){
+                                 document.location.href= CONTEXT_PATH + '/admin/store/appInfo';
+                            }
+                     }
+                })
+            }
+        }
+    });
+
+jQuery(document).on('click','.chkCls', function(){
+	if($(this).is(":checked")){
+		array[array.length] = $(this).val();
+		$(this).parent().parent().removeClass().addClass("selected");
+	} else {
+		array.splice(jQuery.inArray( $(this).val() , array),1);
+		$(this).parent().parent().removeClass();
+	}
+});
+
+$(document).on("click","#checkAll",function(){
+	if($(this).is(":checked")){
+		$(".chkCls").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+			$(this).parent().parent().removeClass().addClass("selected");
+			if(jQuery.inArray( $(this).val() , array) < 0){
+				array[array.length] = $(this).val();
+			}
+		});
+	} else {
+		$(".chkCls").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+			$(this).parent().parent().removeClass();
+			if(jQuery.inArray( $(this).val() , array) >= 0){
+				array.splice(jQuery.inArray( $(this).val() , array),1);
+			}
+		});
+	}
+});
+
+$(document).on("click",".ORDER_TH",function(){
+	var orderTarget = $(this).attr("id");
+	var order = orderTarget.split("OR_");
+	if($("#orderTarget").val() == order[1]){
+	 	if( $("#orderType").val() == "DESC") {
+	 		$("#orderType").val("ASC");
+	 	} else {
+	 		$("#orderType").val("DESC");
+	 	}
+	} else {
+		$("#orderTarget").val(order[1]);
+		$("#orderType").val("DESC");
+	}
+	fn_appList(1);
+});
+
+$(document).on("click","#appWrite",function(){
+	if(array.length <= 0){
+		alert("App"+'#springMessage("menu.store.appManage.alert.choose")'); //"App를 선택해 주세요."
+		return;
+	}
+	$("#APP_ARRAY").val( array );
+   	document.frmSearch.action = CONTEXT_PATH + "/admin/store/userAppAuth/Auth";
+   	document.frmSearch.submit();
+});
+
+$(document).on("click","#userList",function(){
+	$("#CH_APP_IDX").val( $(this).parent().parent().find(".chkCls").val() );
+	fn_appAuthList(1);
+});
+
+function fn_appAuthList(PAGE_NUM){
+	var APP_IDX = $("#CH_APP_IDX").val();
+	var url = CONTEXT_PATH + "/admin/store/userAppAuth/edit";
+	var type = "GET";
+	var data = "APP_IDX=" + APP_IDX + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#windowPop");
+	var whideh = 500;
+	var title = '#springMessage("menu.push.userList")';//"사용자 리스트";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+jQuery(document).on('click','.del_user', function(){
+	if($(this).is(":checked")){
+		$(this).parent().parent().removeClass().addClass("selected");
+	} else {
+		$(this).parent().parent().removeClass();
+	}
+});
+
+$(document).on("click","#all_user",function(){
+	if($(this).is(":checked")){
+		$(".del_user").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+			$(this).parent().parent().removeClass().addClass("selected");
+		});
+	} else {
+		$(".del_user").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+			$(this).parent().parent().removeClass();
+		});
+	}
+});
+
+function fn_go_delete_user(){
+	
+	var con = 0;
+	
+	$(".del_user").each(function(){
+		if($(this).is(":checked")){
+			con = 1;
+		}
+	});
+	
+	if(con == 0){
+		alert('#springMessage("menu.store.appManage.alert.deleteNoUser")'); //삭제 할 사용자가 없습니다.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //'삭제 하시겠습니까?'
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/store/userAppAuth/delete";
+	var data = $("form[name=frmPopUser]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_appList($("#PAGE_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_appList(1);
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	
+    	<form name="frmSearch" method="post">
+			<table class="tbl-search">
+				<colgroup>
+					<col style="width:60px">
+					<col style="width:160px">
+					<col style="width:60px">
+					<col style="width:160px">
+					<col>
+				</colgroup>
+				
+				<thead>
+				<tr>
+					<th>#springMessage("menu.store.userGroup.category")</th> <!-- 카테고리 -->
+                    <td>
+						<select name="CATG_CD"  id="CATG_CD" class="w90">
+		                    <option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+		                    #foreach( $category in $categoryList )
+	                        <option value="$!category.CATG_CD">$!category.CATG_NM</option>
+		                    #end
+    		      		</select>
+					</td>
+					
+					<th>#springMessage("common.text.appname")</th> <!-- App 명 -->
+                    <td>
+						<input type="text" id="searchval" name="APP_NM" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+    		      		<input type="hidden" name="ORDER_TARGET" id="orderTarget" value="APP_IDX"/>
+        				<input type="hidden" name="ORDER_TYPE" id="orderType" value="DESC"/>
+        				<input type="hidden" name="APP_ARRAY" id="APP_ARRAY" value=""/>
+        				<input type="hidden" id="CH_APP_IDX" value=""/>
+					</td>
+					<td>
+						<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+					</td>
+                </tr>
+                </thead>
+            </table>
+    		           
+    	</form>
+    
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="appWrite" title="#springMessage("common.button.regist")">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+					<a href="javascript:void(0)" class="btn2" id="deleteSelected" >#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+	           				<option value="10">#springMessage("common.select.options_10")</option>
+	           				<option value="30">#springMessage("common.select.options_30")</option>
+	           				<option value="50">#springMessage("common.select.options_50")</option>
+	           			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+			
+			
+		<div class="tbCon" id="appTableDiv">
+			#parse ("/admin/store/userAppAuth/userAppAuthList.vm")
+		</div>
+		
+		
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

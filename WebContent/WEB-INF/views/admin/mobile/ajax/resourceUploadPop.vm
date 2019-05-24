@@ -1,0 +1,41 @@
+<!-- 
+화면 : 업로드 관리에서 삭제할 목록찾기시 팝업화면
+url : admin/mobile/rsc/uploadPop
+		( resourceUpload.vm 에서 ajax통신후 리스트 구현)
+tree : JEasyUiTree 사용함 [참고: http://www.jeasyui.com/documentation/tree.php ]
+작성자 : 장문규
+ -->
+<div class="popup_content" >
+	<form name="frmPop" method="post">
+		<ul id="resTree" class="easyui-tree" >
+		</ul>
+	</form>
+	<div class="btnArea ta_r">
+		<button type="button" id="selectDelResource" class="btn_style1"><span>#springMessage("common.select.choose")</span></button> <!-- 선택 -->
+		<button type="button" onclick="fn_closePopup();" class="btn_style1"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+	</div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function () {
+	
+	$('#resTree').tree({
+   		checkbox:true,
+    	data: $resTot
+	});
+});
+
+$('#resTree').tree({
+	onClick: function(node){
+		//alert(node.text);  // alert node text property when clicked
+		
+		if(node.checked){	//체크여부
+			$("#resTree").tree('uncheck',node.target);	//체크해제
+		}else{
+			$("#resTree").tree('check',node.target);	//체크
+		}
+	}
+});
+
+</script>
+

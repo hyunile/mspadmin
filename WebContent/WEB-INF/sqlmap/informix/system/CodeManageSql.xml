@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.system.code.mapper.SystemCodeDao">
+	<resultMap type="kr.msp.admin.system.code.dto.CodeGroupDto" id="CodeGroupDto">
+		<result property="CD_GRP" column="cd_grp_id" />
+		<result property="FG_LANG" column="lang_cd" />
+		<result property="NM_GRP" column="grp_nm" />
+		<result property="DESC_GRP" column="grp_desc" />
+		<result property="YN_USE" column="use_yn" />
+		<result property="YN_UPDATE" column="mod_yn" />
+		<result property="ID_INSERT" column="reg_id" />
+		<result property="DT_INSERT" column="reg_dttm" />
+		<result property="ID_UPDATE" column="mod_id" />
+		<result property="DT_UPDATE" column="mod_dttm" />
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.system.code.dto.CodeSubDto" id="CodeSubDto">
+		<result property="CD_GRP" column="cd_grp_id"/>
+		<result property="NO_CD" column="cd_id"/>
+		<result property="NM_CD" column="cd_nm"/>
+		<result property="YN_USE" column="use_yn"/>
+		<result property="NO_ORDER" column="sort_no"/>
+		<result property="ID_INSERT" column="reg_id"/>
+		<result property="DT_INSERT" column="reg_dttm"/>
+		<result property="ID_UPDATE" column="mod_id"/>
+		<result property="DT_UPDATE" column="mod_dttm"/>
+		<result property="DESC_CD" column="cd_desc"/>
+		<result property="FG_LANG" column="lang_cd"/>
+	</resultMap>
+
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+	<!-- 공통코드그룹 조회 -->
+    <select id="SelectCodeGroup" parameterType="kr.msp.admin.system.code.dto.CodeGroupParamDto" resultMap="CodeGroupDto">
+        <include refid="head"/>
+		SELECT
+		     CD_GRP_ID
+		    ,GRP_NM
+		    ,GRP_DESC
+		    ,MOD_YN
+		    ,REG_ID
+		    ,CAST(REG_DTTM AS DATE) AS REG_DTTM
+		    ,MOD_ID
+		    ,CAST(MOD_DTTM AS DATE) AS MOD_DTTM
+		FROM TB_SYS_CD_GRP
+		<where>
+			1 = 1
+			<if test="CD_GRP != null">
+				AND CD_GRP_ID LIKE '%' || #{CD_GRP} || '%'
+			</if>
+			<if test="NM_GRP != null">
+				AND GRP_NM LIKE '%' || #{NM_GRP} || '%'
+			</if>
+		</where>
+		ORDER BY CD_GRP_ID ASC  
+        <include refid="bottom"/>
+    </select><!-- 완료 -->
+    
+    <!-- 공통코드그룹 삭제 -->
+    <delete id="DeleteCodeGroup" parameterType="kr.msp.admin.system.code.dto.CodeGroupParamDto">
+        DELETE FROM TB_SYS_CD_GRP
+        WHERE CD_GRP_ID = #{CD_GRP}
+    </delete><!-- 완료 -->
+    
+    <!-- 공통코드 전체 삭제 -->
+    <delete id="DeleteCodeAll" parameterType="kr.msp.admin.system.code.dto.CodeGroupParamDto">
+        DELETE FROM TB_SYS_CD_INFO
+        WHERE CD_GRP_ID = #{CD_GRP}
+    </delete><!-- 완료 -->
+    
+    <!-- 공통코드 상세 조회 -->
+    <select id="SelectOneCodeGroup" parameterType="kr.msp.admin.system.code.dto.CodeGroupParamDto" resultMap="CodeGroupDto">
+    	SELECT
+		     CD_GRP_ID
+		    ,GRP_NM
+		    ,GRP_DESC
+		    ,MOD_YN
+		    ,REG_ID
+		    ,CAST(REG_DTTM AS DATE) AS REG_DTTM
+		    ,MOD_ID
+		    ,CAST(MOD_DTTM AS DATE) AS MOD_DTTM
+		FROM TB_SYS_CD_GRP
+		WHERE CD_GRP_ID = #{CD_GRP}
+    </select><!-- 완료 -->
+    
+    <insert id="InsertCodeGroup" parameterType="kr.msp.admin.system.code.dto.CodeGroupDto">
+		INSERT INTO TB_SYS_CD_GRP(
+		             CD_GRP_ID
+		            ,GRP_NM
+		            ,GRP_DESC
+		            ,MOD_YN
+		            ,USE_YN
+		            ,LANG_CD
+		            ,REG_ID
+		            ,REG_DTTM
+		            ,MOD_DTTM
+		        )VALUES(
+		        	#{CD_GRP}
+		            ,#{NM_GRP}
+		            ,#{DESC_GRP}
+		            ,#{YN_UPDATE}
+		            ,'Y'
+		            ,'KR'
+		            ,#{ID_INSERT}
+		            ,CURRENT
+		            ,CURRENT
+		        )
+    </insert><!-- 완료 -->
+    
+    <!-- 공통코드그룹 수정-->
+    <update id="UpdateCodeGroup" parameterType="kr.msp.admin.system.code.dto.CodeGroupDto">
+		UPDATE TB_SYS_CD_GRP
+		    SET GRP_NM    = #{NM_GRP}
+		       ,GRP_DESC  = #{DESC_GRP}
+		       ,MOD_YN = #{YN_UPDATE}
+		       ,MOD_ID = #{ID_UPDATE}
+		       ,MOD_DTTM = CURRENT
+		WHERE CD_GRP_ID = #{CD_GRP}
+    </update><!-- 완료 -->
+    
+    <!-- 공통코드 조회 -->
+    <select id="SelectCode" parameterType="kr.msp.admin.system.code.dto.CodeSubParamDto" resultMap="CodeSubDto">
+		SELECT
+		     CD_ID
+		    ,CD_NM
+		    ,CD_DESC
+		    ,SORT_NO
+		    ,USE_YN
+		    ,REG_ID
+		    ,CAST(REG_DTTM AS DATE) AS REG_DTTM
+		    ,MOD_ID
+		    ,CAST(MOD_DTTM AS DATE) AS MOD_DTTM
+		FROM TB_SYS_CD_INFO
+        WHERE CD_GRP_ID = #{CD_GRP}
+        ORDER BY SORT_NO ASC
+    </select><!-- 완료 -->
+    
+    <!-- 공통코드 등록-->
+    <insert id="InsertCode" parameterType="kr.msp.admin.system.code.dto.CodeSubDto">
+		INSERT INTO TB_SYS_CD_INFO(
+		             CD_GRP_ID
+		            ,CD_ID
+		            ,CD_NM
+		            ,CD_DESC
+		            ,SORT_NO
+		            ,USE_YN
+		            ,LANG_CD
+		            ,REG_ID
+		            ,REG_DTTM
+		        )VALUES(
+		             #{CD_GRP}
+		            ,#{NO_CD}
+		            ,#{NM_CD}
+		            ,#{DESC_CD}
+		            ,#{NO_ORDER}
+		            ,#{YN_USE}
+		            ,'KR'
+		            ,#{ID_INSERT}
+		            ,CURRENT
+		        )
+    </insert><!-- 완료 -->
+    
+    <!-- 공통코드 조회 -->
+    <select id="SelectOneCode" parameterType="kr.msp.admin.system.code.dto.CodeSubParamDto" resultMap="CodeSubDto">
+		SELECT
+		     CD_ID
+		    ,CD_NM
+		    ,CD_DESC
+		    ,SORT_NO
+		    ,USE_YN
+		    ,REG_ID
+		    ,CAST(REG_DTTM AS DATE) AS REG_DTTM
+		    ,MOD_ID
+		    ,CAST(MOD_DTTM AS DATE) AS MOD_DTTM
+		FROM TB_SYS_CD_INFO
+        WHERE CD_GRP_ID = #{CD_GRP}
+          AND CD_ID = #{NO_CD}
+    </select><!-- 완료 -->
+    
+    <!-- 공통코드 수정 -->
+    <update id="UpdateCode" parameterType="kr.msp.admin.system.code.dto.CodeSubDto">
+		UPDATE TB_SYS_CD_INFO
+		    SET CD_NM     = #{NM_CD}
+		       ,CD_DESC   = #{DESC_CD}
+		       ,SORT_NO  = #{NO_ORDER}
+		       ,USE_YN    = #{YN_USE}
+		       ,MOD_ID = #{ID_UPDATE}
+		       ,MOD_DTTM = CURRENT
+		WHERE CD_GRP_ID = #{CD_GRP}
+		  AND CD_ID  = #{NO_CD}
+    </update><!-- 완료 -->
+    
+    <!-- 공통코드 삭제 -->
+    <delete id="DeleteCode" parameterType="kr.msp.admin.system.code.dto.CodeSubParamDto">
+        DELETE FROM TB_SYS_CD_INFO
+		WHERE CD_GRP_ID = #{CD_GRP}
+		  AND CD_ID  = #{NO_CD}
+    </delete><!-- 완료 -->
+    
+</mapper>

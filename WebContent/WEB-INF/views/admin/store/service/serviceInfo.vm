@@ -1,0 +1,59 @@
+<form name="frmServiceInfo" method=post">
+       
+        <div style="float:left;">
+             <h4 class="title"> #springMessage("menu.system.serviceInfo")</h4> <!-- 서비스정보 -->
+        </div>
+       
+        <table class="tbType1">
+            <colgroup>
+                <col width="15%">
+                <col width="35%">
+                <col width="15%">
+                <col width="35%">
+            </colgroup>
+            <tr>
+                <th>
+                    APP ID
+                </th>
+                <td colspan="3">
+                	#if($!serviceInfo.APP_ID == "" )
+                		<input type="text" class="input_txt" id="APP_ID"  name="APP_ID" style="width:300px;"  maxlength="50" value=""/>
+                	#else
+                		$!serviceInfo.APP_ID
+                		<input type="hidden"  id="APP_ID"  name="APP_ID"  value="$!serviceInfo.APP_ID"/>
+                	#end
+                </td>
+           </tr>
+            <tr>
+                <th>
+                                    #springMessage("menu.system.serviceName") <!-- 서비스명 -->
+                </th>
+                <td>
+                	<input type="hidden" name="SVC_ID"   value="$!serviceInfo.SVC_ID">
+                	
+                	#if($!serviceInfo.SVC_NM == "" )
+                		<input type="text" class="input_txt" id="SVC_NM"  name="SVC_NM" style="width:150px;"   value=""/>
+                	#else
+                		$!serviceInfo.SVC_NM
+                		<input type="hidden"  id="SVC_NM"  name="SVC_NM"  value="$!serviceInfo.SVC_NM"/>
+                	#end
+                </td>
+                <th>
+                                    #springMessage("menu.push.appManage.insertDate") <!-- 등록일자 -->
+                </th>
+                <td>
+                	$!serviceInfo.REG_DTTM
+                    <input type="hidden" name="REG_DTTM"  value="$!serviceInfo.REG_DTTM">
+                </td>
+            </tr>
+            <tr>
+                <th>
+                                    #springMessage("menu.system.serviceCont") <!-- 서비스 내용 -->
+                </th>
+                <td colspan="3">
+                    <textarea style="width:600px; height: 60px; overflow-y:auto" id="SVC_DTL" name="SVC_DTL" width="100%">$!serviceInfo.SVC_DTL</textarea>
+                </td>
+            </tr>
+        </table>
+        
+ </form> 

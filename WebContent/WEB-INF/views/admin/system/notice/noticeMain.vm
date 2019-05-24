@@ -1,0 +1,404 @@
+<script type="text/javascript">
+	$(document).ready(function(){
+		//공통 페지징 처리
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+		//검색메뉴 hide
+		$(".se_con").each(function(i){
+			if(i != 0){
+				$(this).hide();
+			}
+		});
+	});
+
+	$(document).on("change","#conSelect",function(){
+		var su = $(this).val();
+		$(".se_con").hide();
+		$(".se_con").val("");
+	    $(".se_con:eq(" + su + ")").show();
+	});
+
+
+	$(document).on("click",".noticeDiv",function(){
+
+		var NO_NOTICE = $(this).find("#NO_NOTICE").val();
+
+		//$(".select").removeClass().addClass("noticeDiv");
+		//$(this).removeClass().addClass("select");
+		//$(this).addClass("on");
+
+		$("#CH_NO_NOTICE").val( NO_NOTICE );
+
+		get_authGroup();
+	});
+
+	//권한 그룹 가져오기
+	function get_authGroup(){
+		var url = CONTEXT_PATH + "/admin/system/notice/auth";
+		var data = "NO_NOTICE=" + $("#CH_NO_NOTICE").val();
+		var target = $("#authGroupDiv");
+		var type = "GET";
+		fn_getPage(url, type, data, target);
+	}
+
+	//팝업 권한 정보 수정 삭제
+	$(document).on("click",".AUTH_CHK",function(){
+		var ID_GROUP= $(this).parent().find("#ID_GROUP").val();
+		var NO_NOTICE = $("#CH_NO_NOTICE").val();
+
+		var COMMAND = "";
+		if($("#AUTH_CHK_" + ID_GROUP).is(":checked")){
+			COMMAND = "insert";
+		} else {
+			COMMAND = "delete";
+		}
+
+		var url = CONTEXT_PATH + "/admin/system/notice/auth";
+		var data = "COMMAND=" + COMMAND + "&ID_GROUP=" + ID_GROUP + "&NO_NOTICE=" + NO_NOTICE;
+
+		jQuery.ajax({
+			url:url,
+			type:"POST",
+			data:data,
+			dataType:"json",
+			success:function(data){
+				alert(data.msg);
+				if(data.result > 0){
+
+				}
+			}
+		});
+	});
+
+	//팝업리스트 페이지 구현
+	function fn_noticeList(PAGE_NUM){
+		var url = CONTEXT_PATH + "/admin/system/notice";
+		var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+		var target = $("#noticeTableDiv");
+		var type = "POST";
+		fn_getPage( url, type, data, target );
+		$("#CH_NO_NOTICE").val("");
+		get_authGroup()
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	}
+
+	//팝업 등록 (화면)
+	function fn_newWrite(){		
+		var data = "";
+		var url = CONTEXT_PATH + "/admin/system/notice/regist";
+		var type = "GET";
+		var target = $("#windowPop");
+		var width = 550;
+		var title = "#springMessage("menu.system.noticeRegist")";  //공지사항 등록
+		fn_getCommonPopupDiv( url, type, data , target , width, title );
+		
+
+	}
+
+	//팝업 등록
+	function fn_save(){
+		if( $("form[name=frmNotice]").find("input[name=NM_TITLE]").val() == ""){
+			alert("#springMessage("menu.system.notice") #springMessage("common.alert.inputTitle")"); //공지사항 제목을 입력해주세요.
+			return;
+
+		}else if (fc_chk_byte($("form[name=frmNotice]").find("input[name=NM_TITLE]").val()) > 100){
+			alert("#springMessage("common.alert.limitTitle")"); //제목은 50글자를 넘길수 없습니다. 다시 입력해 주세요.
+	        return;
+
+		}else if( $("form[name=frmNotice]").find("textarea[name=CONTENTS]").val() == "" ){
+		 	alert("#springMessage("menu.system.notice") #springMessage("common.alert.inputContents")"); //공지사항 내용을 입력해주세요.
+		    return;
+		}
+
+		if(! confirm("#springMessage("common.alert.doSave")")){  //저장하시겠습니까?
+			return;
+		}
+
+		var url = CONTEXT_PATH + "/admin/system/notice/regist";
+		var data = $("form[name=frmNotice]").serialize();
+
+		jQuery.ajax({
+			url:url,
+			type:"POST",
+			data:data,
+			dataType:"json",
+			success:function(data){
+				alert(data.msg);
+				if(data.result > 0){
+					fn_noticeList(1);
+					fn_closePopup();
+				}
+			}
+		});
+	}
+
+	//팝업 수정
+	function fn_modify(){
+		if( $("form[name=frmNotice]").find("input[name=NM_TITLE]").val() == ""){
+			alert("#springMessage("menu.system.notice") #springMessage("common.alert.inputTitle")"); //공지사항 제목을 입력해주세요.
+			return;
+		}else if (fc_chk_byte($("form[name=frmNotice]").find("input[name=NM_TITLE]").val()) > 100){
+			alert("#springMessage("common.alert.limitTitle")"); //제목은 50글자를 넘길수 없습니다. 다시 입력해 주세요.
+	        return;
+		}else if( $("form[name=frmNotice]").find("textarea[name=CONTENTS]").val() == "" ){
+		 	alert("#springMessage("menu.system.notice") #springMessage("common.alert.inputContents")"); //공지사항 내용을 입력해주세요.
+		    return;
+		}
+
+		if(! confirm("#springMessage("common.alert.doModify")")){  //수정하시겠습니까?
+			return;
+		}
+
+		var url = CONTEXT_PATH + "/admin/system/notice/edit";
+		var data = $("form[name=frmNotice]").serialize();
+
+		jQuery.ajax({
+			url:url,
+			type:"POST",
+			data:data,
+			dataType:"json",
+			success:function(data){
+				alert(data.msg);
+				if(data.result > 0){
+					fn_noticeList($("#notice_num").val());
+					fn_closePopup();
+				}
+			}
+		});
+	}
+
+	//팝업 삭제
+	function fn_delete(){
+		if(! confirm("#springMessage("common.alert.doDelete")")){  //삭제하시겠습니까?
+			return;
+		}
+		var url = CONTEXT_PATH + "/admin/system/notice/delete";
+		var data = $("form[name=frmNotice]").serialize();
+
+		jQuery.ajax({
+			url:url,
+			type:"POST",
+			data:data,
+			dataType:"json",
+			success:function(data){
+				alert(data.msg);
+				if(data.result > 0){
+					fn_noticeList(1);
+					fn_closePopup();
+				}
+			}
+		});
+	}
+
+	//팝업 상세 (화면)
+	$(document).on("click","#groupModify", function(){
+		var data = "NO_NOTICE=" + $(this).parent().parent().find("#NO_NOTICE").val();
+		var url = CONTEXT_PATH + "/admin/system/notice/edit";
+		var type = "GET";
+		var target = $("#windowPop");
+		var width = 550;
+		var title = "#springMessage("menu.system.noticeModify")"; //공지사항 수정
+		fn_getCommonPopupDiv( url, type, data , target , width, title );
+
+	});
+
+	//공통코드 페이지 호출(공통)
+	function fn_getPage( url, type, data, target ){
+		var AjaxHTML = jQuery.ajax({
+			url: url ,
+			type: type ,
+			data: data ,
+			dataType: "html" ,
+			async: false ,
+			cache:false
+		}).responseText;
+
+		target.html(AjaxHTML);
+	}
+	
+	function ch_search(){
+		var sval=$("#conSelect").val();
+		var sfrm=document.frmSearch;
+				
+		if(sval==0){
+    		if(sfrm.searchnm.value.length>0 && sfrm.searchnm.value.length<2){
+    			alert("#springMessage("common.alert.lowerlimitSeachKeyword")");  //검색어를 2글자 이상 입력해 주세요.
+    			sfrm.searchnm.value="";
+    			sfrm.searchnm.focus();
+    		}
+    	}else if(sval==1){
+    		if(sfrm.searchct.value.length>0 && sfrm.searchct.value.length<2){
+    			alert("#springMessage("common.alert.lowerlimitSeachKeyword")");
+    			sfrm.searchct.value="";
+    			sfrm.searchct.focus();
+    		}
+    	}
+		fn_noticeList(1);
+	}
+	// 마스크 및 파업창 닫기
+	$(document).on("click","#maskClose",function( e ){
+		e.preventDefault();
+		$("#layerpopup .mask").hide();
+		$("#layerpopup .window").hide();
+	});
+</script>
+
+<div class="contents-area">
+
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.system")</span>
+		<span>#springMessage("menu.system.noticeManage")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.noticeManage")</h2>
+	
+    #### E : 프로그램 위치 기술 부분  ####
+
+	<div class="scroll-area">
+	
+   	#### S : 조회 폼 부분  ####
+   	<form name="frmSearch" method="post">
+   	
+   		<table class="tbl-search">
+			<caption>#springMessage("menu.system.noticeManage")</caption>
+			<colgroup>
+				<col style="width:480px">
+				<col>
+			</colgroup>
+			<thead>
+				<tr>
+					<td>
+						<div class="tbl-select">
+							<label for="conSelect">#springMessage("common.header.title")</label>
+							<select name="conSelect" id="conSelect">
+								<option value="0">#springMessage("common.header.title")</option>
+        						<option value="1">#springMessage("common.header.contents")</option>
+							</select>
+						</div>
+						<input type="text" size="20" id="searchnm" class="se_con" name="SEARCH_NM_TITLE"  onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+						<input type="text" id="searchct" style="display:none" class="se_con" name="SEARCH_CONTENTS" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+					</td>
+					<td>
+						<a href="javascript:ch_search();" class="tbl-btn2">#springMessage("common.button.view")</a> <!-- 조회 -->
+					</td>
+				</tr>
+			</thead>
+		</table>
+ 
+	</form>
+
+	<form class="frmList" name="frmList" method="post">
+		<input type="hidden" id="CH_NO_NOTICE" />
+	
+		#### S : 리스트 폼 부분  ####
+		<table class="full-width">
+			<caption></caption>
+			<colgroup>
+				<col>
+				<col style="width:10px">
+				<col style="width:400px">
+			</colgroup>
+			<tr>
+				<td class="tbl-wrap valignTop">
+					<div id="noticeTableDiv">
+					
+						#### S : 왼쪽 부분  ####
+						<h2 class="tbl-title">#springMessage("menu.system.noticeList") <a href="javascript:fn_newWrite();" class="tbl-btn1 fr">#springMessage("common.button.regist")</a></h2>
+						<table class="tbl full-width">
+							<caption>#springMessage("menu.system.noticeList")</caption>
+							<colgroup>
+								<col>
+								<col style="width:100px">
+								<col style="width:100px">
+								<col style="width:70px">
+							</colgroup>
+							<thead>
+								<tr>
+									<th scope="col">#springMessage("common.header.title")</th>
+									<th scope="col">#springMessage("common.header.author")</th>
+									<th scope="col">#springMessage("common.header.registDate")</th>
+									<th scope="col"></th>
+								</tr>
+							</thead>
+							<tbody>
+							#foreach( $notice in $noticeList )
+    					       	#set($j_tot = $notice.TOT_CNT)
+    							<tr class="noticeDiv" style="cursor:pointer;">
+    								<td style="text-align:left;">
+    									<input type="hidden" id="NO_NOTICE" value="$notice.NO_NOTICE" />
+    									$esc.xml($!notice.NM_TITLE)
+    								</td>
+    								<td>
+    									$!notice.ID_INSERT
+    								</td>
+    								<td>
+    									$!notice.DT_INSERT
+    								</td>
+    								<td>
+    									<a href="javascript:void(0);" id="groupModify" class="tbl-btn1 fr">#springMessage("common.button.modify")</a>
+    								</td>
+    							</tr>
+    			           	#end
+    			           	#if(!$j_tot)
+    							<tr >
+    								<td colspan="4" >#springMessage("menu.system.alert.noNotice")</td>
+    							</tr>
+    					   	#end
+							
+							</tbody>
+						</table>
+					
+						<input type="hidden" id="notice_num" value="$!R_PAGE_NUM" />
+    					<div class="j_page_div">
+    						##현재 페이지
+    						<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    						##총 개수
+    						<input type="hidden" name="J_tot" value="$!j_tot" />
+    						##한페이지의 로우수
+    						<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    						##한페이지수
+    						<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    						##이밴트
+    						<input type="hidden" name="j_event" value="fn_noticeList" />
+    					</div>
+    					#### E : 왼쪽 부분  ####
+    				
+    				</div> <!-- noticeTableDiv -->
+				</td> 
+				
+				<td></td>
+				
+				<td class="tbl-wrap valignTop">
+					#### S : 오른쪽 부분  ####
+					<div id="authGroupDiv">
+						<h2 class="tbl-title">#springMessage("menu.system.noticeGroupList")</h2>
+						<table class="tbl full-width">
+							<caption>#springMessage("menu.system.noticeGroupList")</caption>
+							<colgroup>
+								<col width="20%" />
+								<col width="80%" />
+							</colgroup>
+							<thead>
+								<tr>
+									<th scope="col">#springMessage("common.header.apply")</th>
+									<th scope="col">#springMessage("common.header.authGroup")</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td colspan="2">
+										#springMessage("menu.system.alert.selectNotice")
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					#### E : 오른쪽 부분  ####
+				</td>
+			</tr>
+		</table>	
+	
+	</form>
+	</div> <!-- scroll-area end -->
+	
+</div>

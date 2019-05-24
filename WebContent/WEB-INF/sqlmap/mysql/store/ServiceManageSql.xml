@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.service.mapper.ServiceManageDao">
+	
+	<!-- 서비스 리스트 조회 -->
+	<select id="selectStoreServiceInfo"   parameterType="kr.msp.admin.store.service.dto.ServiceDto"   resultType="kr.msp.admin.store.service.dto.ServiceDto">
+        /* ServiceManageSql   SelectStoreServiceInfo */
+	    SELECT 
+            A.SVC_ID,
+            B.SVC_NM,
+            B.SVC_DTL,
+            A.USE_YN,
+            A.REG_ID,
+            DATE_FORMAT(A.REG_DTTM, '%Y.%m.%d') AS REG_DTTM, 
+            A.MOD_ID,
+            DATE_FORMAT(A.MOD_DTTM, '%Y.%m.%d') AS MOD_DTTM,
+            B.APP_ID
+        FROM TB_STO_SVC A, TB_SVC B
+        WHERE A.SVC_ID = B.SVC_ID 
+        AND A.USE_YN = 'Y'
+    </select>
+    
+	<!-- APP_ID 중복 체크 -->	  
+	<select id="selectServiceInfo" parameterType="kr.msp.admin.store.service.dto.ServiceDto"  resultType="kr.msp.admin.store.service.dto.ServiceDto">
+		/* ServiceManageSql   SelectServiceInfo */
+	    SELECT
+	       A.SVC_ID,
+	       A.SVC_NM,
+	       A.SVC_DTL,
+	       A.APP_ID,
+	       DATE_FORMAT(A.REG_DTTM, '%Y.%m.%d') AS REG_DTTM
+	    FROM TB_SVC A
+	    WHERE  A.APP_ID = #{APP_ID}
+    </select>
+    
+    <!-- 앱정보일련번호 SELECT -->
+    <select id="selectSvcId"  resultType="java.lang.Integer">
+         /* AppInfoManageSql > SelectSvcId */
+        SELECT	IFNULL(MAX(SVC_ID), 0) + 1
+		FROM	TB_SVC
+    </select>
+    
+    <!-- SERVICE INSERT -->
+    <insert id="insertService" parameterType="kr.msp.admin.store.service.dto.ServiceDto">
+        /* ServiceManageSql insertService   */
+        INSERT INTO TB_SVC (
+            SVC_ID , SVC_NM, SVC_DTL ,  REG_DTTM, APP_ID
+        ) VALUES (
+           #{SVC_ID} , #{SVC_NM}, #{SVC_DTL} , NOW(), #{APP_ID} 
+        )
+    </insert>
+    
+    <!-- APP STORE SERVICE INSERT -->
+    <insert id="insertStoreService" parameterType="kr.msp.admin.store.service.dto.ServiceDto">
+     	/* ServiceManageSql insertStoreService   */
+        INSERT INTO TB_STO_SVC (
+            SVC_ID ,  USE_YN ,  REG_DTTM,  REG_ID
+        ) VALUES (
+            #{SVC_ID},  'Y'  , NOW(), #{REG_ID} 
+        )
+    </insert>
+    
+    <!-- APP STORE SERVICE DELETE -->
+    <update id="deleteStoreService" parameterType="kr.msp.admin.store.service.dto.ServiceDto">
+        /* ServiceManageSql  deleteStoreService */
+        UPDATE TB_STO_SVC
+        SET USE_YN = 'N'
+        , MOD_ID     = #{MOD_ID} 
+        , MOD_DTTM = NOW()
+    </update>
+    
+    <!-- APP STORE SERVICE UPDATE -->
+    <update id="updateStoreService" parameterType="kr.msp.admin.store.service.dto.ServiceDto">
+       /* ServiceManageSql   updateStoreService */
+        UPDATE TB_SVC
+        SET SVC_DTL = #{SVC_DTL},
+              SVC_NM = #{SVC_NM}
+        WHERE  SVC_ID = #{SVC_ID}
+    </update>
+   
+</mapper>

@@ -1,0 +1,96 @@
+<style>
+.backgroundPopupDiv{
+    display:none;
+    position:fixed;
+    _position:absolute; /* hack for internet explorer 6*/
+    height:100%;
+    width:100%;
+    top:0px;
+    left:0px;
+    z-index:100;
+    text-align: center;
+}
+</style>
+<script type="text/javascript">
+$(document).ready(function() {
+	
+});
+
+//등록 처리.
+function fn_write(){
+	
+	if(!confirm('#springMessage("common.alert.apply")')){    //적용하시겠습니까?
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/securepush/registerHR/register";
+	document.getElementById("loading-indicator").style.display="block";
+	var data = new FormData($("form[name=frmWrite]")[0]);
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		cache: false,
+        contentType: false,
+        processData: false,
+		data:data,
+		dataType:"json",
+		success:function(data){
+			document.getElementById("loading-indicator").style.display="none";
+			if(data.result > 0){
+				alert('적용되었습니다.조직도조회 메뉴에서 적용 결과를 확인할 수 있습니다.');
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			document.getElementById("loading-indicator").style.display="none";
+		    alert(errorThrown);
+		}
+	});
+}
+
+</script>
+
+<div id="loading-indicator" class="backgroundPopupDiv">
+    <img alt="loading" src="$RESOURCES_PATH/images/loading.gif" style="margin-top: 15%"/>
+</div>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span></span>
+		<span></span>
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<form name="frmWrite" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl">
+			<colgroup>
+				<col style="width:130px">
+				<col>
+			</colgroup>
+			<tr>
+				<th>설명</th> <!-- 설명 -->
+				<td>
+					- 엑셀 파일에 인사 데이터를 기입하여 등록합니다. <br/> 
+					- 아래 다운로드 링크를 통하여 샘플 엑셀 파일을 다운로드 할 수 있습니다. <br/>
+					- 인사 DB 테이블에 등록할 데이터를 엑셀에 기입한 후 업로드하여 적용합니다.
+				</td>
+			</tr>
+			<tr>
+				<th>샘플 엑셀 다운로드</th> <!-- 샘플 엑셀 다운로드 -->
+				<td><a href="$!{CONTEXT_PATH}/spushExcelSample.xlsx"><img src="$!{CONTEXT_PATH}/resources/img/icon/icon_file.gif" /></a></td>
+			</tr>
+			<tr>
+				<th>엑셀 업로드</th> <!-- 엑셀 업로드 -->
+				<td>
+					<input type="file" name="ATTACH_FILE"  id="ATTACH_FILE" />
+				</td>
+			</tr>
+		</table>
+		<a href="javascript:fn_write();void(0);" class="btn1 fr">#springMessage("common.header.apply")</a> <!-- 적용 -->
+		#### E : 리스트  폼 부분  ####
+
+	</form>
+</div>

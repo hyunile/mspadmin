@@ -1,0 +1,81 @@
+<table class="tbl-nb" summary="사용자ID,사용자명,연락처,이메일,권한,사용,등록자,등록일,수정자,수정일,상세">
+				<colgroup><!--  11cell  -->
+					<col width="9%"/><col width="auto"/><col width="auto"/>
+					<col width="9%"/><col width="9%"/><col width="9%"/><col width="9%"/><col width="9%"/>
+					<col width="9%"/>
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("common.header.adminUserId")</th>  		### 관리자 ID ###
+						<th scope="col">#springMessage("common.header.adminUserName")</th>		### 관리자명 ###
+						<th scope="col">#springMessage("common.header.adminGroup")</th>			### 그룹명 ###
+						<th scope="col">#springMessage("common.header.useYN")</th>				### 사용 ###
+						<th scope="col">#springMessage("common.header.author")</th>				### 등록자 ###
+						<th scope="col">#springMessage("common.header.registDate")</th>			### 등록일 ###
+						<th scope="col">#springMessage("common.header.modifyUser")</th>			### 수정자 ###
+						<th scope="col">#springMessage("common.header.modifyDate")</th>			### 수정일 ###
+						<th scope="col"> </th>
+					</tr>
+				</thead>
+				<tbody>
+					#foreach( $users in $usersList )
+						#set($j_tot = $!users.TOT_CNT)
+						<tr>
+							<td >
+								$!users.ID_USER
+								<input type="hidden" class="ID_USER" value="$!users.ID_USER" />
+							</td>
+							<td >
+								$esc.xml($!users.NM_USER)
+							</td>
+							#if(!$users.NM_GROUP)
+							<td >
+								$!users.NM_GROUP
+							</td>
+							#else
+								<td >
+								$esc.xml($!users.NM_GROUP)
+							</td>
+							#end
+							<td>
+								$!users.YN_USE
+							</td>
+							<td>
+								$!users.ID_INSERT
+							</td>
+							<td>
+								$!users.DT_INSERT
+							</td>
+							<td>
+								$!users.ID_UPDATE
+							</td>
+							<td>
+								$!users.DT_UPDATE
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="btn2" id="userModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+							</td>
+						</tr>
+					#end
+
+					#if(!$j_tot)
+						<tr>
+							<td colspan="9" class="ta_c">#springMessage("common.alert.nodata")</td>			### 데이터가 없습니다. ###
+						</tr>
+					#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="USER_NUM" value="$!R_PAGE_NUM" />
+			<div class="j_page_div">
+					##현재 페이지
+					<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+					##총 개수
+					<input type="hidden" name="J_tot" value="$!j_tot" />
+					##한페이지의 로우수
+					<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+					##한페이지수
+					<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+					##이밴트
+					<input type="hidden" name="j_event" value="fn_userList" />
+			</div>

@@ -1,0 +1,51 @@
+	<h2 class="tbl-title">#springMessage("menu.system.noticeGroupList")</h2>	<!-- 그룹 목록 -->
+
+	<table class="tbl-nb full-width" summary="항목선택,아이디,구분,디바이스ID">
+		<thead>
+			<tr>
+				<th scope="col" style="width: 10%"><input type="checkbox" id="checkAllOutGroup" onClick="fn_checkAllOutGroup($(this))"/><label for="checkAllOutGroup"></label></th>
+                <th scope="col" style="width: 30%">#springMessage("menu.push.user.groupName")</th> <!-- 그룹명 -->
+                <th scope="col" style="width: 40%">#springMessage("common.header.desc")</th> <!-- 설명 -->
+                <th scope="col" style="width: AUTO">#springMessage("common.text.people")</th> <!-- 인원 -->
+			</tr>
+		</thead>
+		<tbody>
+		#foreach( $group in $groupList )
+			#set($j_tot = $!group.TOT_CNT)
+			<tr class="check_tr">
+				<td>
+					<input type="checkbox" onClick="fn_fnOutGroupKeyClickHandler($(this))" class="outGroupKey" id="$!group.GROUPSEQ" value="$!group.GROUPSEQ" title="#springMessage('common.title.selectOne')" /> <!-- 항목선택 -->
+					<label for="$!group.GROUPSEQ"></label>
+				</td>
+				<td id="td_out_group_check" onClick="fn_tdOutGroupCheckOnClickHandler($(this).parent())" class="tdOutGroupGROUPNAME" style="overflow:hidden;">
+					$!group.GROUPNAME
+				</td>
+				<td id="td_out_group_check" onClick="fn_tdOutGroupCheckOnClickHandler($(this).parent())" class="tdOutGroupGROUPDESC" style="overflow:hidden;">
+					$!group.GROUPDESC
+				</td>
+				<td id="td_out_group_check" onClick="fn_tdOutGroupCheckOnClickHandler($(this).parent())" class="tdOutGroupGROUPCNT" style="overflow:hidden;">
+					$!group.GROUPCNT
+				</td>
+			</tr>
+		#end
+		#if(!$j_tot)
+			<tr>
+				<td colspan="4" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+			</tr>
+		#end
+		</tbody>
+	</table>
+
+	<input type="hidden" id="OUT_GROUP_NUM" value="$!R_PAGE_NUM" />
+	<div class="j_page_div">
+		##현재 페이지
+		<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+		##총 개수
+		<input type="hidden" name="J_tot" value="$!j_tot" />
+		##한페이지의 로우수
+		<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+		##한페이지수
+		<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+		##이밴트
+		<input type="hidden" name="j_event" value="fn_groupSearch" />
+	</div>

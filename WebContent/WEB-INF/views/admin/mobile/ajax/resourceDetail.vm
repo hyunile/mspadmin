@@ -1,0 +1,186 @@
+<!-- 
+화면 : 리소스 리스트 상세
+url : admin/mobile/ajax/resourceDetail
+	( resourceList.vm 에서 ajax통신후 리스트 구현)
+작성자 : 장문규
+ -->
+#set($count =0)
+#if( $resourceList.size() > 0)
+	#set($count = $resourceList.size())
+#end
+<table class="tbl-nb"  id="sortableTable" summary="항목선택,리소스ID,파일명,확장자,크기">
+	<colgroup >
+		<col width="5%"/>
+		<col width="13%"/>
+		<col width="AUTO"/>
+		<col width="5%"/>
+		<col width="10%"/>
+		<col width="10%"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col"><input type="checkbox" id="checkAll" title="#springMessage('common.title.selectAll')" /><label for="checkAll"></label></th> <!-- 전체선택 -->
+			<th scope="col" id="orderRscid" title="#springMessage('common.title.click')">#springMessage("menu.mobile.record.resource")ID ▽</th> <!-- 클릭하여 정렬변경  리소스-->
+			<th scope="col" id="orderName" title="#springMessage('common.title.click')">#springMessage("menu.mobile.manage.fileName")</th> <!-- 클릭하여 정렬변경   파일명-->
+			<th scope="col" id="orderExt" title="#springMessage('common.title.click')">#springMessage("menu.mobile.record.extension")</th> <!-- 클릭하여 정렬변경   확장자-->
+			<th scope="col" id="orderSize" title="#springMessage('common.title.click')">#springMessage("menu.mobile.record.size")(byte)</th> <!-- 클릭하여 정렬변경    크기-->
+			<th scope="col">#springMessage("common.button.detail")</th><!-- 상세 -->
+		</tr>
+	</thead>
+	<tbody>
+	#if($count > 0)
+		#foreach($rsc in $resourceList )
+		#set($j_tot = $rsc.TOT_CNT)
+		<tr>
+			<td><input type="checkbox" class="chkCls" id="$rsc.RSC_ID" value="$rsc.RSC_ID" title="#springMessage('common.title.selectOne')"/><label for="$rsc.RSC_ID"></label></td><!-- 항목선택 -->
+			<td style="text-align:center;">$!rsc.RSC_ID</td>
+			<td style="text-align:left;">$!rsc.FILE_NM</td>
+			<td style="text-align:center;">$!rsc.FILE_EXT</td>
+			<td style="text-align:center;">$!rsc.FILE_SIZE</td>
+			<td>
+				<a href="javascript:void(0)" class="btn2"  id="detail">#springMessage("common.button.detail")</a> <!-- 상세 -->
+				<input type="hidden" name="RSC_ID" id="RSC_ID" value="$rsc.RSC_ID" />
+			</td>
+		</tr>
+			#end
+		#else
+		<tr>
+			<td colspan="6" class="ta_c">#springMessage("common.text.noResource")</td> <!-- 리소스가 하나도 없습니다. -->
+		</tr>
+	#end
+	</tbody>
+</table>
+
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_noticeList"/>
+</div>
+
+<br><br>
+
+
+<script type="text/javascript">
+function fn_goList(service_id){
+	location.href = "$!{CONTEXT_PATH}/admin/mobile/rsc?SVC_ID="+service_id;
+};
+
+
+$(document).ready(function () {
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	// order by 관련 화면 그리기
+	var target = $("#orderTarget").val();
+	var type = $("#orderType").val();
+
+	if(target == "RSC_ID"){
+		$("#orderName").text('#springMessage("menu.mobile.manage.fileName")');  //파일명
+		$("#orderExt").text('#springMessage("menu.mobile.record.extension")');   //확장자
+		$("#orderSize").text('#springMessage("menu.mobile.record.size")'+"(byte)");  //크기
+
+		if(type == "DESC"){
+    		$("#orderRscid").text('#springMessage("menu.mobile.record.resource")'+"ID ▽");  //리소스
+		}else{
+    		$("#orderRscid").text('#springMessage("menu.mobile.record.resource")'+"ID △");  //리소스
+		}
+	}else if(target == "FILE_NM"){
+		$("#orderRscid").text('#springMessage("menu.mobile.record.resource")'+"ID");      //리소스
+		$("#orderExt").text('#springMessage("menu.mobile.record.extension")');   		  //확장자
+		$("#orderSize").text('#springMessage("menu.mobile.record.size")'+"(byte)");    //크기
+
+		if(type == "DESC"){
+    		$("#orderName").text('#springMessage("menu.mobile.manage.fileName")'+" ▽");  //파일명
+		}else{
+    		$("#orderName").text('#springMessage("menu.mobile.manage.fileName")'+" △");  //파일명
+		}
+	}else if(target == "FILE_EXT"){
+		$("#orderRscid").text('#springMessage("menu.mobile.record.resource")'+"ID");  //리소스
+		$("#orderName").text('#springMessage("menu.mobile.manage.fileName")');    //파일명
+		$("#orderSize").text('#springMessage("menu.mobile.record.size")'+"(byte)"); //크기
+
+		if(type == "DESC"){
+    		$("#orderExt").text('#springMessage("menu.mobile.record.extension")'+" ▽");  //확장자
+		}else{
+    		$("#orderExt").text('#springMessage("menu.mobile.record.extension")'+" △");  //확장자
+		}
+	}else if(target == "FILE_SIZE"){
+		$("#orderRscid").text('#springMessage("menu.mobile.record.resource")'+"ID");  //리소스
+		$("#orderName").text('#springMessage("menu.mobile.manage.fileName")');  //파일명
+		$("#orderExt").text('#springMessage("menu.mobile.record.extension")');   //확장자
+
+		if(type == "DESC"){
+    		$("#orderSize").text('#springMessage("menu.mobile.record.size")'+" ▽");  //크기
+		}else{
+    		$("#orderSize").text('#springMessage("menu.mobile.record.size")'+" △");  //크기
+		}
+	}
+
+	//3. check box all select event
+	$("#checkAll").click(function(){
+		 $(".chkCls").prop('checked', $(this).is(":checked"));	//class는 먹는데, id,name은 안먹음;;
+
+	});
+
+	//4. delete event
+	$("#deleteSelected").click(function(){
+
+
+		var cnt = $(".chkCls:checkbox:checked").length;
+		
+        if(cnt < 1){
+             alert('#springMessage("menu.mobile.record.alert.limitRscOne")');  //한 개 이상의 리소스를 선택하셔야 합니다
+			 return;
+        }else{
+			if(confirm('#springMessage("menu.mobile.record.alert.deleteRsc")')){  //선택한 리소스들을 삭제하시겠습니까?
+				var checkBoxList = [];
+				$('.chkCls:not(#checkAll):checkbox:checked').each(function(i) {
+                       checkBoxList.push($(this).val());
+                });
+
+				var data = "RSC_DEL_LIST="+checkBoxList;
+				data += "&SVC_ID=" + $("#selectSvc option:selected").val();
+
+        		var AjaxHTML =	jQuery.ajax({
+            			url:"$!{CONTEXT_PATH}/admin/mobile/rsc/resourceDelete"
+            			,type:"post"
+            			,data:data
+        				,dataType:"json"
+        				,success:function(data){
+            				alert(data.msg);
+        					if(data.result > 0){
+        						fn_goList(data.SVC_ID);
+        					}
+        				}
+            	}).responseText;
+			}
+        }
+
+	});
+
+
+});
+
+//5. 상세정보
+$(document).on("click","#detail",function( e ){
+
+	//alert($(this).parent().find("#RSC_ID").val());
+	//return;
+
+	var data = "RSC_ID="+$(this).parent().find("#RSC_ID").val();
+	var url = "$!{CONTEXT_PATH}/admin/mobile/ajax/resourceDetailPop";
+	var type = "post";
+	var target = $("#windowPop");
+	var width = 650;
+	var height = 660;
+	var title = '#springMessage("menu.mobile.manage.resourceDetail")';//"리소스 상세 이력";
+	fn_getCommonPopupDivY( url, type, data , target , width, height, title );
+});
+
+</script>

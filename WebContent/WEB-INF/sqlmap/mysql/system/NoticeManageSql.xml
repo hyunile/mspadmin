@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.system.notice.mapper.NoticeManageDao">
+
+	<resultMap type="kr.msp.admin.system.notice.dto.NoticeDto" id="NoticeDto">
+		<result property="NO_NOTICE" column="NOTC_IDX"/>
+		<result property="NM_TITLE" column="TITLE"/>
+		<result property="CONTENTS" column="CONT"/>
+		<result property="ID_INSERT" column="REG_ID"/>
+		<result property="DT_INSERT" column="REG_DTTM"/>
+		<result property="ID_UPDATE" column="MOD_ID"/>
+		<result property="DT_UPDATE" column="MOD_DTTM"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.system.notice.dto.NoticeAuthGroupDto" id="NoticeAuthGroupDto">
+		<result property="NO_NOTICE" column="NOTC_IDX"/>
+		<result property="ID_GROUP" column="AUTH_GRP_ID"/>
+		<result property="NM_GROUP" column="AUTH_GRP_NM"/>
+		<result property="AUTH_CHK" column="AUTH_CHK"/>
+	</resultMap>
+	
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT *
+, @RN TOT_CNT
+FROM
+(
+	SELECT A.*
+	,	(@RN := @RN + 1) AS RNUM
+	FROM
+	(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+	) A
+	, (SELECT @RN := 0, @TOT := 0) R
+) A
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+	<select id="SelectMainNoticeList" parameterType="java.lang.String" resultMap="NoticeDto">
+		SELECT 
+		          A.NOTC_IDX
+		         ,A.TITLE
+		         ,DATE_FORMAT(A.REG_DTTM, '%Y.%m.%d') AS REG_DTTM
+		         ,A.REG_ID
+		         ,A.MOD_ID
+		         ,DATE_FORMAT(A.MOD_DTTM, '%Y.%m.%d') AS MOD_DTTM
+	     FROM TB_SYS_NOTC A
+		     INNER JOIN TB_SYS_NOTC_AUTH B ON (A.NOTC_IDX = B.NOTC_IDX) 
+		     INNER JOIN TB_SYS_USER_AUTH_GRP C   ON (B.AUTH_GRP_ID   = C.AUTH_GRP_ID)
+		     WHERE C.USER_ID = #{S_ID_USER}
+	     ORDER BY A.REG_DTTM DESC
+	 	LIMIT 0, 10
+	</select><!-- 완료 -->
+	
+	<select id="SelectMainNoticePopData" parameterType="java.lang.String" resultMap="NoticeDto">
+		SELECT
+	         A.NOTC_IDX
+	        ,A.TITLE
+	        ,A.CONT
+	    FROM TB_SYS_NOTC A
+	    WHERE NOTC_IDX  = #{NO_NOTICE}
+	</select><!-- 완료 -->
+	
+	<!-- 공지사항 조회 -->
+    <select id="SelectNoticeList" parameterType="kr.msp.admin.system.notice.dto.NoticeDto" resultMap="NoticeDto" >
+        <include refid="head"/>
+		SELECT
+		     NOTC_IDX
+		    ,TITLE
+	        ,CASE WHEN LENGTH(CONT) >25
+	              THEN CONCAT(SUBSTRING(CONT, 0, 25), '...')
+	              ELSE CONT
+	         END AS CONT
+	        ,CONT AS CONTENTS_ORG
+		    ,REG_ID
+		    ,DATE_FORMAT(REG_DTTM, '%Y.%m.%d') AS REG_DTTM
+		    ,MOD_ID
+		    ,DATE_FORMAT(MOD_DTTM, '%Y.%m.%d') AS MOD_DTTM
+		    ,REG_DTTM AS INSERT_DATE 
+		FROM TB_SYS_NOTC
+		<where>
+			1 = 1
+			<if test="NM_TITLE != null">
+				AND TITLE LIKE CONCAT('%', #{NM_TITLE}, '%')
+			</if>
+			<if test="CONTENTS != null">
+				AND CONT LIKE CONCAT('%', #{CONTENTS}, '%')
+			</if>
+		</where>
+        ORDER BY INSERT_DATE DESC 
+        <include refid="bottom"/>
+    </select><!-- 완료 -->
+    
+	<!-- 공지사항 권한정보 조회 -->
+    <select id="SelectNoticeAuthGroupList" parameterType="kr.msp.admin.system.notice.dto.NoticeAuthGroupParamDto"
+    	resultMap="NoticeAuthGroupDto">
+		SELECT
+		     A.AUTH_GRP_ID
+		    ,A.AUTH_GRP_NM
+		    ,CASE WHEN B.NOTC_IDX IS NOT NULL 
+		          THEN 'T'
+		          ELSE 'F'
+		     END AUTH_CHK
+		FROM TB_SYS_AUTH_GRP A
+		LEFT OUTER JOIN TB_SYS_NOTC_AUTH B ON ( A.AUTH_GRP_ID = B.AUTH_GRP_ID 
+		                                             AND B.NOTC_IDX = #{NO_NOTICE})
+    </select><!-- 완료 -->
+    
+    <!-- 신규번호 조회 -->
+    <select id="SelectNewNoNotice" resultType="java.lang.String">
+        <!-- 
+        SELECT
+             LPAD(IFNULL(MAX(NOTC_IDX), 0)+1, 10 , '0') AS NO_NOTCIE
+        FROM TB_SYS_NOTC
+         -->
+        SELECT  LPAD(CAST((IFNULL(MAX(NOTC_IDX), 0)+1) AS CHAR),  10, '0')
+	    FROM TB_SYS_NOTC
+    </select><!-- 완료 -->
+    
+    <!-- 공지사항 등록-->
+    <insert id="InsertNotice" parameterType="kr.msp.admin.system.notice.dto.NoticeDto">
+		INSERT INTO TB_SYS_NOTC(
+		             NOTC_IDX
+		            ,TITLE
+		            ,CONT
+		            ,REG_ID
+		            ,REG_DTTM
+		        )VALUES(
+		             #{NO_NOTICE}
+		            ,#{NM_TITLE}
+		            ,#{CONTENTS}
+		            ,#{ID_INSERT}
+		            ,NOW()
+		        )
+    </insert><!-- 완료 -->
+    
+    <!-- 팝업 수정 -->
+    <update id="UpdateNotice" parameterType="kr.msp.admin.system.notice.dto.NoticeDto">
+		UPDATE TB_SYS_NOTC
+		    SET TITLE  = #{NM_TITLE}
+		       ,CONT  = #{CONTENTS}
+		       ,MOD_ID = #{ID_UPDATE}
+		       ,MOD_DTTM = NOW()
+		WHERE NOTC_IDX = #{NO_NOTICE}
+    </update><!-- 완료 -->
+    
+    <!-- 공지사항 권한정보 삭제 -->
+    <delete id="DeleteNoticeAuthGroup" parameterType="kr.msp.admin.system.notice.dto.NoticeAuthGroupDto">
+        DELETE FROM TB_SYS_NOTC_AUTH
+        WHERE NOTC_IDX = #{NO_NOTICE}
+          AND AUTH_GRP_ID = #{ID_GROUP}
+    </delete><!-- 완료 -->
+    
+    <!-- 공지사항 권한정보 등록-->
+    <insert id="InsertNoticeAuthGroup" parameterType="kr.msp.admin.system.notice.dto.NoticeAuthGroupDto">
+		INSERT INTO TB_SYS_NOTC_AUTH(
+		             NOTC_IDX
+		            ,AUTH_GRP_ID
+		        )VALUES(
+		             #{NO_NOTICE}
+		            ,#{ID_GROUP}
+		        )
+    </insert><!-- 완료 -->
+    
+     <!-- 공지사항삭제 -->
+    <delete id="DeleteNotice" parameterType="kr.msp.admin.system.notice.dto.NoticeDto">
+        DELETE FROM TB_SYS_NOTC
+        WHERE NOTC_IDX = #{NO_NOTICE}
+    </delete><!-- 완료 -->
+    
+    <!-- 공지사항 권한정보 삭제(전체) -->
+    <delete id="DeleteNoticeAuthGroupAll" parameterType="kr.msp.admin.system.notice.dto.NoticeDto">
+        DELETE FROM TB_SYS_NOTC_AUTH
+        WHERE NOTC_IDX = #{NO_NOTICE}
+    </delete><!-- 완료 -->
+</mapper>

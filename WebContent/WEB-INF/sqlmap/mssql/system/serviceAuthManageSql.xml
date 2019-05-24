@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.system.serviceAuth.mapper.SystemServiceAuthDao">
+	
+	<resultMap type="kr.msp.admin.system.notice.dto.NoticeAuthGroupDto" id="NoticeAuthGroupDto">
+		<result property="NO_NOTICE" column="NOTC_IDX"/>
+		<result property="ID_GROUP" column="AUTH_GRP_ID"/>
+		<result property="NM_GROUP" column="AUTH_GRP_NM"/>
+		<result property="AUTH_CHK" column="AUTH_CHK"/>
+	</resultMap>
+	
+	<!--  공지사항 권한정보 조회  -->
+    <select id="SelectServiceAuthGroupList" parameterType="kr.msp.admin.system.serviceAuth.dto.ServiceAuthDto"
+    	resultMap="NoticeAuthGroupDto">
+		SELECT
+             A.AUTH_GRP_ID
+            ,A.AUTH_GRP_NM
+            ,CASE WHEN B.SVC_ID IS NOT NULL 
+                  THEN 'T'
+                  ELSE 'F'
+             END AUTH_CHK
+        FROM TB_SYS_AUTH_GRP A
+        LEFT OUTER JOIN TB_SVC_AUTH B ON ( A.AUTH_GRP_ID = B.AUTH_GRP_ID 
+                                                     AND B.SVC_ID = #{SVC_ID})
+	</select>
+	
+	<!--  서비스 권한 등록  -->
+	<insert id="InsertServiceAuth" parameterType="kr.msp.admin.system.serviceAuth.dto.ServiceAuthDto">
+		INSERT INTO TB_SVC_AUTH(
+			SVC_ID
+		   	,AUTH_GRP_ID
+		)VALUES(
+		  	#{SVC_ID}
+			,#{AUTH_GRP_ID}
+		)
+	</insert>
+	
+	<!--  서비스 권한 삭제  -->
+	<delete id="DelectServiceAuth" parameterType="kr.msp.admin.system.serviceAuth.dto.ServiceAuthDto">
+		DELETE FROM TB_SVC_AUTH
+        WHERE AUTH_GRP_ID = #{AUTH_GRP_ID} AND SVC_ID = #{SVC_ID}
+	</delete>
+	
+</mapper>

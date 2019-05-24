@@ -1,0 +1,71 @@
+<table class="full-width">
+	<caption></caption>
+	<colgroup>
+		<col>
+		<col style="width:10px">
+		<col>
+	</colgroup>
+	<tr>
+		<td class="tbl-wrap valignTop">
+			
+			<!--  count of prev month  -->
+			<div id="prevListTableDiv">
+               	#parse ("/admin/store/statistics/downloadPrevList.vm")
+			</div>
+
+			
+			<!--  count of current month  -->
+			<div id="curListTableDiv">
+               	#parse ("/admin/store/statistics/downloadCurrentList.vm")
+			</div>
+			
+		</td>
+		
+		
+		<td></td>
+		
+		<td class="tbl-wrap valignTop">
+			<table class="tbl-search full-width">
+				<colgroup>
+					<col width="100px"/>
+					<col width="300px"/>
+					<col width="auto"/>
+				</colgroup>
+				
+				<thead>	
+				<tr>
+					<th>#springMessage("menu.stats.store.dayChoose")</th> <!-- 기간선택 -->
+					<td>
+					
+						<input type="text" id="S_DT" name="S_DT" class="datepicker sDate" readonly placeholder="날짜선택" value="$!searchParam.START_DT" maxlength="8">
+        				 <label for="S_DT"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+                         &nbsp;&nbsp;~&nbsp;&nbsp;
+                         <input type="text" id="E_DT" name="E_DT" class="datepicker sDate" readonly placeholder="날짜선택" value="$!searchParam.END_DT" maxlength="8">
+        				 <label for="E_DT"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+        				 
+					</td>
+					<td></td>
+				</tr>											
+				<tr>
+					<th>#springMessage("common.text.appname")</th> <!-- App명 -->
+					<td>
+						<select id="AP_IDX">
+       					    	#foreach( $row in $appCodeList )
+                   		          	<option value="$!{row.APP_IDX}" #if($!searchParam.APP_IDX==$!{row.APP_IDX}) selected='selected' #end>$!{row.APP_NM}</option>
+								#end								
+           			    </select>
+					</td>
+                     <td >
+                     	<a href="javascript:void(0)" onclick="fn_select_rangeData(1)" class="tbl-btn2">#springMessage("common.button.search")</a><!-- 검색 -->
+                     </td>
+				</tr>
+				</thead>
+            </table>
+                        				
+			<div id="rangeListTableDiv">
+				#parse ("/admin/store/statistics/downloadRangeList.vm")
+			</div>
+			
+		</td>
+	</tr>
+</table>

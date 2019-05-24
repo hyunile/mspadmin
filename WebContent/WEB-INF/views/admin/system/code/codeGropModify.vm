@@ -1,0 +1,79 @@
+		<form name="frmGrpInfo" method="POST">
+		<!--  popup  -->
+				<div >
+    				<table  class="tbl">
+    					<colgroup>
+    						<col width="25%"/><col width="75%"/>
+    					</colgroup>
+    					<tr>
+    						<th scope="row">
+    							<label class="redNotice" for="CD_GRP">#springMessage("common.header.groupCode")</label> <!-- 그룹코드 -->
+    						</th>
+    						<td>
+    						#if( !$codeGroup )
+    							<input type="text" class="input_txt" id="CD_GRP"  name="CD_GRP" maxlength="5" />
+    						#else
+    							$!codeGroup.CD_GRP
+    							<input type="hidden" name="CD_GRP" value="$!codeGroup.CD_GRP"/>
+    						#end
+    						</td>
+    					</tr>
+    					<tr>
+    						<th scope="row">
+    							<label class="redNotice" for="NM_GRP">#springMessage("common.header.groupCodeName")</label> <!-- 그룹명 -->
+    						</th>
+    						<td>
+    							<input type="text" class="input_txt" id="NM_GRP" name="NM_GRP" value="$!codeGroup.NM_GRP"/>
+    						</td>
+    					</tr>
+    					<tr>
+    						<th scope="row">
+    							<label for="DESC_GRP">#springMessage("common.header.groupCodeDesc")</label> <!-- 그룹코드 설명 -->
+    						</th>
+    						<td>
+    							<input type="text" class="input_txt" id="DESC_GRP" name="DESC_GRP" value="$!codeGroup.DESC_GRP"/>
+    						</td>
+    					</tr>
+    					
+    					<tr>
+    						<th >
+    							<label class="redNotice" for="YN_UPDATE">#springMessage("common.header.updateYN")</label> <!-- 변경구분 -->
+    						</th>
+    						<td>
+   
+    							
+    								<select id="YN_UPDATE" name="YN_UPDATE" >
+    									<option value="">#springMessage("common.select.choose")</option>
+    
+    									#if($codeGroup.YN_UPDATE == "Y")
+    										<option value="Y" selected="selected">#springMessage("common.header.update_Y")</option> 
+    									#else
+    										<option value="Y">#springMessage("common.header.update_Y")</option>
+    									#end
+    
+    
+    									#if($codeGroup.YN_UPDATE == "N")
+    										<option value="N" selected="selected">#springMessage("common.header.update_N")</option>
+    									#else
+    										<option value="N">#springMessage("common.header.update_N")</option>
+    									#end
+    								</select>
+    						
+    						</td>
+    					</tr>
+    				</table>
+			</div>
+
+			<div class="btn-wrap txtCenter">
+			#if(!$codeGroup)
+				<a href="javascript:fn_codeGrpWrite();void(0);" class="btn1"><strong>#springMessage("common.button.regist")</strong></a> <!-- 등록 -->
+			#else
+				<a href="javascript:fn_codeGrpModify();void(0);" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+				<a href="javascript:fn_codeGrpDelete();void(0);" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+			#end
+				<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a>
+				
+			</div>
+			
+    
+</form>

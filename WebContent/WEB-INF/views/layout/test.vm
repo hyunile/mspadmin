@@ -1,0 +1,119 @@
+$response.setContentType("text/html")
+<html>
+<head>
+<title>Insert title here</title>
+<link rel="stylesheet" href="/resources/css/reset.css" />
+<link rel="stylesheet" href="/resources/css/style.css" />
+<link rel="stylesheet" href="/resources/css/newStyle.css"/>
+<script src="/resources/js/jquery.js"></script>
+<script type="text/javascript" src="/resources/js/common.js"></script>
+<style type="text/css">
+	.burimage {margin:0; padding:0 ;padding-top:12px; float:left;}
+    .accordion {width:180px; border:1px solid #ccc; float:left;}
+    .accordion ul {margin:0; padding:0; list-style-type:none;}
+    .accordion li {margin:0; padding:0; list-style-type:none;}
+    .accordion p {margin:0; padding:2px;}
+    .accordion p {cursor:pointer;}
+    .accordion a {display:block; text-indent:20px; padding:3px 0; border-bottom:1px solid #ccc; text-decoration:none;background:#eee;}
+</style>
+<script type="text/javascript">
+$(function(){
+    $(".submenu").hide();
+    $(".left").click(function(){
+        $(".submenu:visible").slideUp("middle");
+        $(this).next('.submenu:hidden').slideDown("middle");
+        return false;
+    });
+    $("#buttest").click(function(){
+    	
+    	if($(".accordion").css("display") != "none"){
+    		$(".accordion").hide();
+    		$("#buttest").attr("src","/resources/images/btn_asideClose.gif");
+    		$("#contentArea").css({'margin-left':'80px'});
+    	} else {
+    		$(".accordion").show();
+    		$("#buttest").attr("src","/resources/images/btn_asideOpen.gif");
+    		$("#contentArea").css({'margin-left':'265px'});
+    	}
+    });
+});
+
+function fn_logOut(){
+	document.location.href = "/logOut";
+}
+
+function GO_MENU_URL(goMenuId,goMenuUrl){
+	if(goMenuUrl != ""){
+		var goMenuTopId = $("#Left_MenuTop_Id").val();
+		document.location.href = "/common/go_menu_url?goMenuUrl="+ goMenuUrl + "&goMenuId=" + goMenuId + "&goMenuTopId=" + goMenuTopId;
+	}
+}
+
+function GO_TOP_URL(goMenuTopId){
+	document.location.href = "/common/go_menu_url?goMenuUrl=&goMenuId=&goMenuTopId=" + goMenuTopId;
+}
+
+function fn_goHome(){
+	var goMenuTopId = $("#Left_MenuTop_Id").val();
+	document.location.href = "/common/go_menu_url?goMenuUrl=&goMenuId=&goMenuTopId=" + goMenuTopId;
+}
+
+</script>
+
+</head>
+<body>
+	<div id="header">
+		<h1 onclick="javascript:fn_goHome();" title="#springMessage('login.btn.goHome')"><img src="/resources/images/morpheus.gif"/> <!-- 홈으로 -->
+	    </h1>
+	    <nav>
+            <ul>
+            	#foreach( $top_map in $menuMap.topList )
+                	<li>
+                		<a href="javascript:GO_TOP_URL('$!top_map.ID_MENU')">$top_map.NM_MENU</a>
+                	</li>
+                #end
+            </ul>
+	    </nav>
+        <p><strong>$S_NM_USER</strong> #springMessage("login.welcome.message")</p> <!-- 님 안녕하세요 -->
+        <p><button type="button" class="btnHeader" onclick="fn_logOut()"><span>#springMessage("login.btn.logout")</span></button></p> <!-- 로그아웃 -->
+	</div>
+	
+	<aside id="aside" style="">
+	<div class="burimage">
+		<img alt="#" id="buttest" src="/resources/images/btn_asideOpen.gif">
+	</div>
+	
+	<div class="accordion">
+		#set( $left_su = 0 )
+		#foreach( $layoutLeftMenu in $menuMap.leftList )
+			#if($layoutLeftMenu.MENU_LEVEL == 1)
+				<input type="hidden" id="Left_MenuTop_Id" value="$!layoutLeftMenu.ID_MENU">
+			#end
+			#if($layoutLeftMenu.MENU_LEVEL == 2)
+				#if($left_su != 0)
+					</ul>
+				#end
+				<p class="left" onclick="GO_MENU_URL('$!layoutLeftMenu.ID_MENU','$!layoutLeftMenu.MENU_URL')">
+					$!layoutLeftMenu.NM_MENU
+					<input type="hidden" class="Left_Menu_Url" value="$!layoutLeftMenu.MENU_URL">
+				</p>
+				<ul class="submenu">
+				#set( $left_su = $left_su + 1 )
+			#end
+			#if($layoutLeftMenu.MENU_LEVEL == 3)
+				<li>
+					<a href="javascript:GO_MENU_URL('$!layoutLeftMenu.ID_MENU','$!layoutLeftMenu.MENU_URL');">$!layoutLeftMenu.NM_MENU</a>
+					<input type="hidden" class="Left_Menu_Url" value="$!layoutLeftMenu.MENU_URL">
+				</li>
+				#set( $left_su = $left_su + 1 )
+			#end
+		#end
+		#if($left_su != 0)
+			</ul>
+		#end
+	</div>
+	</aside>
+	${screen_content}
+</body>
+</html>
+

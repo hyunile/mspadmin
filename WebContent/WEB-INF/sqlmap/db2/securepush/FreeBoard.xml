@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.securepush.freeBoard.mapper.FreeBoardDao">
+
+	<resultMap type="kr.msp.admin.securepush.freeBoard.dto.BoardDto" id="BoardDto">
+		<result property="BOARD_ID"	column="BOARD_ID"/>
+		<result property="CATG_ID"	column="CATG_ID"/>
+		<result property="CATG_NM"	column="CATG_NM"/>
+		<result property="BOARD_TYPE"	column="BOARD_TYPE"/>
+		<result property="TITLE"	column="TITLE"/>
+		<result property="CONT"	column="CONT"/>
+		<result property="CONT_TYPE"	column="CONT_TYPE"/>
+		<result property="ATTACH_YN"	column="ATTACH_YN"/>
+		<result property="REG_ID"	column="REG_ID"/>
+		<result property="USER_NM"	column="USER_NM"/>
+		<result property="DEPT_NM"	column="DEPT_NM"/>
+		<result property="FULL_NM"	column="FULL_NM"/>
+		<result property="REG_DT"	column="REG_DT"/>
+		<result property="MOD_ID"	column="MOD_ID"/>
+		<result property="MOD_DT"	column="MOD_DT"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.securepush.freeBoard.dto.BoardCatgDto" id="BoardCatgDto">
+		<result property="CATG_ID"	column="CATG_ID"/>
+		<result property="CATG_NM"	column="CATG_NM"/>
+		<result property="REG_ID"	column="REG_ID"/>
+		<result property="REG_NM"	column="REG_NM"/>
+		<result property="REG_DT"	column="REG_DT"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.securepush.freeBoard.dto.BoardFileDto" id="BoardFileDto">
+		<result property="FILE_ID"	column="FILE_ID"/>
+		<result property="BOARD_ID"	column="BOARD_ID"/>
+		<result property="FILE_NM"	column="FILE_NM"/>
+		<result property="FILE_EXT"	column="FILE_EXT"/>
+		<result property="FILE_PATH"	column="FILE_PATH"/>
+		<result property="FILE_SIZE"	column="FILE_SIZE"/>
+		<result property="FILE_TYPE"	column="FILE_TYPE"/>
+		<result property="THUMB_PATH"	column="THUMB_PATH"/>
+		<result property="REG_DT"	column="REG_DT"/>
+	</resultMap>
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+	<select id="selectBoardCatgList" parameterType="hashmap" resultMap="BoardCatgDto">
+		SELECT
+			T1.CATG_ID
+			, T1.CATG_NM
+			, T1.REG_ID
+			, T2.USER_NM AS REG_NM
+			, TO_CHAR(T1.REG_DT, 'YYYY.MM.DD HH24:MI:SS') AS REG_DT
+		FROM TB_SPUSH_BOARD_CATEGORY T1
+		LEFT OUTER JOIN TB_SPUSH_USER T2
+        ON T1.REG_ID = T2.USER_ID
+		ORDER BY T1.CATG_NM 
+    </select>
+    
+    <select id="getBoardCatg" parameterType="string" resultMap="BoardCatgDto">
+		SELECT
+			T1.CATG_ID
+			, T1.CATG_NM
+			, T1.REG_ID
+			, T2.USER_NM AS REG_NM
+			, TO_CHAR(T1.REG_DT, 'YYYY.MM.DD HH24:MI:SS') AS REG_DT
+		FROM TB_SPUSH_BOARD_CATEGORY T1
+		LEFT OUTER JOIN TB_SPUSH_USER T2
+        ON T1.REG_ID = T2.USER_ID
+		WHERE T1.CATG_ID = #{CATG_ID} 
+		FETCH FIRST 1 ROWS ONLY
+    </select>
+ 	
+ 	<select id="selectBoardList" parameterType="kr.msp.admin.securepush.freeBoard.dto.FreeBoardParamDto" resultMap="BoardDto">
+		<include refid="head"/>
+		SELECT 
+	       T1.BOARD_ID,
+		   T1.BOARD_TYPE,
+		   T1.CATG_ID,
+		   T2.CATG_NM,
+		   T1.TITLE,
+		   T1.CONT_TYPE,
+		   T1.REG_ID,
+		   T3.USER_NM,
+		   T4.DEPT_NM,
+		   T4.FULL_NM,
+		   TO_CHAR(T1.REG_DT, 'YYYY.MM.DD HH24:MI:SS') AS REG_DT,
+		   TO_CHAR(T1.MOD_DT, 'YYYY.MM.DD HH24:MI:SS') AS MOD_DT,
+		   T1.ATTACH_YN
+		FROM TB_SPUSH_BOARD T1
+		LEFT OUTER JOIN TB_SPUSH_BOARD_CATEGORY T2
+		ON T1.CATG_ID = T2.CATG_ID
+		LEFT OUTER JOIN TB_SPUSH_USER T3
+        ON T1.REG_ID = T3.USER_ID
+        LEFT OUTER JOIN TB_SPUSH_DEPT T4
+        ON T3.DEPT_CD = T4.DEPT_CD 
+		WHERE T1.BOARD_TYPE = #{BOARD_TYPE}
+		<if test="CONT != null and CONT != ''">
+		    AND T1.CONT LIKE '%' || #{CONT} || '%'
+		</if>
+		<if test="TITLE != null and TITLE != ''">
+		    AND T1.TITLE LIKE '%' || #{TITLE} || '%' 
+		</if>
+		<if test="USER_NM != null and USER_NM != ''">
+		    AND T3.USER_NM LIKE '%' || #{USER_NM} || '%' 
+		</if>
+		<if test="CATG_ID != null and CATG_ID != ''">
+			AND T1.CATG_ID = #{CATG_ID}
+		</if>
+		<if test="REG_START_DATE != null and REG_START_DATE != '' and REG_END_DATE != null and REG_END_DATE != ''">
+        	AND T1.REG_DT BETWEEN TO_DATE(#{REG_START_DATE}, 'YYYYMMDDHH24MISS') 
+        		AND TO_DATE(#{REG_END_DATE}, 'YYYYMMDDHH24MISS')
+        </if>
+		ORDER BY T1.REG_DT DESC
+       <include refid="bottom"/>
+ 	</select>
+ 	
+ 	<select id="getBoardCntByCatgId" parameterType="string" resultType="int">
+		SELECT 
+	       COUNT(BOARD_ID) AS CNT
+		FROM TB_SPUSH_BOARD
+		WHERE 
+			CATG_ID = #{CATG_ID}
+ 	</select>
+ 	
+ 	<select id="getBoard" parameterType="string" resultMap="BoardDto">
+ 		SELECT T1.BOARD_ID,
+ 			   T1.BOARD_TYPE,
+ 			   T1.CATG_ID,
+ 			   T2.CATG_NM,
+ 			   T1.TITLE,
+ 			   T1.CONT,
+ 			   T1.CONT_TYPE,
+ 			   T1.REG_ID,
+ 			   T3.USER_NM,
+			   T4.DEPT_NM,
+			   T4.FULL_NM,
+ 			   TO_CHAR(T1.REG_DT, 'YYYY.MM.DD HH24:MI:SS') AS REG_DT,
+ 			   TO_CHAR(T1.MOD_DT, 'YYYY.MM.DD HH24:MI:SS') AS MOD_DT,
+ 			   T1.ATTACH_YN
+		FROM TB_SPUSH_BOARD T1 
+		LEFT OUTER JOIN TB_SPUSH_BOARD_CATEGORY T2
+		ON T1.CATG_ID = T2.CATG_ID
+		LEFT OUTER JOIN TB_SPUSH_USER T3
+        ON T1.REG_ID = T3.USER_ID
+        LEFT OUTER JOIN TB_SPUSH_DEPT T4
+        ON T3.DEPT_CD = T4.DEPT_CD 
+		WHERE T1.BOARD_ID = #{BOARD_ID}
+ 	</select>
+ 	
+ 	<select id="selectBoardFileList" parameterType="hashmap" resultMap="BoardFileDto">
+		SELECT 
+			FILE_ID
+			,BOARD_ID
+            ,FILE_NM
+            ,FILE_EXT
+            ,FILE_PATH
+            ,FILE_SIZE
+            ,FILE_TYPE
+            ,THUMB_PATH
+            ,TO_CHAR(REG_DT, 'YYYY.MM.DD HH24:MI:SS') AS REG_DT
+		FROM TB_SPUSH_BOARD_FILE
+		<where>
+			<if test="BOARD_ID != null and BOARD_ID != ''">
+			BOARD_ID = #{BOARD_ID}
+			</if>
+			<if test="FILE_ID != null and FILE_ID != ''">
+			AND FILE_ID = #{FILE_ID}
+			</if>
+		</where>
+	</select>
+	
+	<insert id="insertBoard" parameterType="kr.msp.admin.securepush.freeBoard.dto.BoardDto">
+        INSERT INTO TB_SPUSH_BOARD
+		(BOARD_ID, BOARD_TYPE, CATG_ID, TITLE, CONT, CONT_TYPE, ATTACH_YN, REG_ID, REG_DT) 
+		VALUES(
+			SEQ_TB_SPUSH_BOARD.NEXTVAL,
+			#{BOARD_TYPE,jdbcType=VARCHAR},
+			#{CATG_ID,jdbcType=INTEGER},
+			#{TITLE,jdbcType=VARCHAR},
+			#{CONT,jdbcType=VARCHAR},
+			#{CONT_TYPE,jdbcType=VARCHAR},
+			#{ATTACH_YN,jdbcType=CHAR},
+			#{REG_ID,jdbcType=VARCHAR},
+			(CURRENT TIMESTAMP)
+		) 
+		<selectKey keyProperty="BOARD_ID" resultType="String" order="AFTER">
+		 	SELECT SEQ_TB_SPUSH_BOARD.currval as BOARD_ID FROM SYSIBM.SYSDUMMY1
+		</selectKey>
+    </insert>
+    
+    <insert id="insertBoardCatg" parameterType="kr.msp.admin.securepush.freeBoard.dto.BoardCatgDto">
+        INSERT INTO TB_SPUSH_BOARD_CATEGORY
+		(CATG_ID, CATG_NM, REG_ID, REG_DT) 
+		VALUES(
+			SEQ_TB_SPUSH_BOARD_CATEGORY.NEXTVAL,
+			#{CATG_NM,jdbcType=VARCHAR},
+			#{REG_ID,jdbcType=VARCHAR},
+			(CURRENT TIMESTAMP)
+		) 
+		<selectKey keyProperty="CATG_ID" resultType="String" order="AFTER">
+		 	SELECT SEQ_TB_SPUSH_BOARD_CATEGORY.currval as CATG_ID FROM SYSIBM.SYSDUMMY1
+		</selectKey>
+    </insert>
+ 	
+ 	<insert id="insertBoardFile" parameterType="kr.msp.admin.securepush.freeBoard.dto.BoardFileDto">
+        INSERT INTO TB_SPUSH_BOARD_FILE(FILE_ID, BOARD_ID, FILE_NM, FILE_EXT, FILE_PATH, FILE_SIZE, FILE_TYPE, THUMB_PATH, REG_DT) 
+        VALUES (SEQ_TB_SPUSH_BOARD_FILE.NEXTVAL, #{BOARD_ID,jdbcType=VARCHAR}, #{FILE_NM,jdbcType=VARCHAR}, #{FILE_EXT,jdbcType=VARCHAR}
+        	, #{FILE_PATH,jdbcType=VARCHAR}, #{FILE_SIZE,jdbcType=VARCHAR}, #{FILE_TYPE,jdbcType=CHAR}, #{THUMB_PATH,jdbcType=VARCHAR}, (CURRENT TIMESTAMP))
+ 	</insert>
+ 	
+ 	<update id="updateBoard" parameterType="kr.msp.admin.securepush.freeBoard.dto.BoardDto">
+ 		UPDATE TB_SPUSH_BOARD 
+		SET 
+		    MOD_ID = #{MOD_ID,jdbcType=VARCHAR}, 
+		    MOD_DT = (CURRENT TIMESTAMP),
+		    TITLE = #{TITLE,jdbcType=VARCHAR}, 
+		    CONT = #{CONT,jdbcType=VARCHAR}, 
+		    CONT_TYPE = #{CONT_TYPE,jdbcType=VARCHAR},
+		    ATTACH_YN = #{ATTACH_YN,jdbcType=CHAR}
+		WHERE BOARD_ID = #{BOARD_ID}
+ 	</update>
+ 	
+ 	<update id="updateBoardCatg" parameterType="kr.msp.admin.securepush.freeBoard.dto.BoardCatgDto">
+ 		UPDATE TB_SPUSH_BOARD_CATEGORY 
+		SET 
+		    CATG_NM = #{CATG_NM,jdbcType=VARCHAR},
+		    REG_ID = #{REG_ID,jdbcType=VARCHAR}, 
+		    REG_DT = (CURRENT TIMESTAMP)
+		WHERE CATG_ID = #{CATG_ID}
+ 	</update>
+ 	
+ 	<delete id="deleteBoard" parameterType="string">
+	 	DELETE FROM TB_SPUSH_BOARD
+		WHERE BOARD_ID = #{BOARD_ID}
+ 	</delete>
+ 	
+ 	<delete id="deleteBoardCatg" parameterType="string">
+	 	DELETE FROM TB_SPUSH_BOARD_CATEGORY
+		WHERE CATG_ID = #{CATG_ID}
+ 	</delete>
+ 	
+ 	<delete id="deleteBoardFile" parameterType="hashmap">
+ 		DELETE FROM TB_SPUSH_BOARD_FILE
+ 		WHERE BOARD_ID = #{BOARD_ID}
+ 		<if test="FILE_ID_LIST != null">
+        	AND FILE_ID IN
+	        <foreach item="item" index="index" collection="FILE_ID_LIST" open="(" separator="," close=")">
+	 		 	#{item} 
+	 		</foreach>
+ 		</if>
+ 	</delete>
+	
+</mapper>

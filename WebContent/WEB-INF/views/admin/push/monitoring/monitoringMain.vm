@@ -1,0 +1,180 @@
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+//서버 리스트 페이징
+function fn_monitoringList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var url = CONTEXT_PATH + "/admin/push/monitoring";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM +"&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+	var target = $("#monitoringTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//서버 장애리스트 화면
+$(document).on("click","#monitoringInfo",function(){
+	var IPADDRESS = $(this).parent().parent().find(".IPADDRESS").val();
+	var PORT = $(this).parent().parent().find(".PORT").val();
+	var url = CONTEXT_PATH + "/admin/push/monitoring/info";
+	var type = "GET";
+	var data = "IPADDRESS=" + IPADDRESS + "&PORT=" + PORT + "&PAGE_NUM=1";
+	var target = $("#windowPop");
+	var whideh = 850;
+	var title = '#springMessage("menu.push.monitoring.serverErrorList")';//"서버 장애 리스트";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+//서버 장애리스트 페이징
+function fn_monitoringInfoList(PAGE_NUM){
+	var IPADDRESS = $("#R_IPADDRESS").val();
+	var PORT = $("#R_PORT").val();
+	var url = CONTEXT_PATH + "/admin/push/monitoring/info";
+	var type = "GET";
+	var data = "IPADDRESS=" + IPADDRESS + "&PORT=" + PORT + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#windowPop");
+	var whideh = 850;
+	var title = '#springMessage("menu.push.monitoring.serverErrorList")';//"서버 장애 리스트";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_monitoringList(1);
+}
+
+</script>
+
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="header_bg">
+    	<div class="inner_navi"></div>
+		<div class="tb_tit"></div>
+	</div>
+    #### E : 프로그램 위치 기술 부분  ####
+
+    <form name="frmList" method="post">
+    #### S : 리스트  폼 부분  ####
+    <div class="content">
+		<div class="btn_sel_group">
+        	<div class="fl"></div>
+        	<div class="fr">
+				<p>#springMessage("common.header.searchResult") <span id="spaTotCnt"></span></p>  <!-- 검색결과  -->
+        		<select id="selRowSize" title="#springMessage('common.title.selectOne')" onchange="fn_changeRowSize()"> <!-- 항목선택 -->
+        			<option value="10">#springMessage("common.select.options_10")</option> <!-- 10개씩 보기 -->
+            		<option value="30">#springMessage("common.select.options_30")</option> <!-- 30개씩 보기 -->
+            		<option value="50">#springMessage("common.select.options_50")</option> <!-- 50개씩 보기 -->
+        		</select>
+			</div>
+        </div>
+    	<div class="tbCon">
+		    <div id="monitoringTableDiv">
+		       	<table class="tb_list">
+					<colgroup><!--  6cell  -->
+						<col width="20%"/>
+						<col width="auto"/>
+						<col width="15%"/>
+						<col width="10%"/>
+						<col width="10%"/>
+						<col width="100px"/>
+					</colgroup>
+		       		<thead>
+			       		<tr>
+			       			<th>
+			       				#springMessage("menu.push.serverType") <!-- 서버 종류 -->
+			       			</th>
+			       			<th>
+								#springMessage("menu.push.serverName") <!-- 서버 이름 -->
+							</th>
+							<th>
+								IP
+							</th>
+							<th>
+								PORT
+							</th>
+							<th>
+								#springMessage("menu.mobile.deploy.status") <!-- 상태 -->
+							</th>
+							<th>
+								#springMessage("menu.push.monitoring.errorList") <!-- 장애 리스트 -->
+							</th>
+			           	</tr>
+			        </thead>
+
+			        <tbody>
+			           	#foreach( $monitoring in $monitoringList )
+			           		#set($j_tot = $!monitoring.TOT_CNT)
+				           	<tr>
+				           		<td style="text-align:left;">
+				           			#if($!monitoring.SERVERTYPE == "UPNS")
+				           				UPNS
+			           				#elseif($!monitoring.SERVERTYPE  == "RECV")
+			           					RECEIVER
+			           				#elseif($!monitoring.SERVERTYPE  == "PRVD")
+			           					PROVIDER
+			           				#elseif($!monitoring.SERVERTYPE  == "MEDI")
+			           					MEDIATOR
+			           				#end
+				           			<input type="hidden" class="IPADDRESS" value="$!monitoring.IPADDRESS">
+				           			<input type="hidden" class="PORT" value="$!monitoring.PORT">
+			       				</td>
+			       				
+			       				#if(!$!monitoring.SERVERNAME)
+									<td style="text-align:left;">
+										$!monitorConfig.URL
+									</td>
+								#else
+									<td style="text-align:left;">
+										$esc.xml($!monitoring.SERVERNAME)
+									</td>
+								#end
+								
+				           		<td>
+				           			$esc.xml($!monitoring.IPADDRESS)
+				           		</td>
+				           		<td>
+				           			$esc.xml($!monitoring.PORT)
+				           		</td>
+				           		<td>
+				           			$!monitoring.STATUS
+				           		</td>
+			       				<td>
+				           			<button type="button" id="monitoringInfo" class="sbtn">#springMessage("common.header.detail")</button> <!-- 상세 -->
+			       				</td>
+			           		</tr>
+			       		#end
+			       		#if(!$j_tot)
+							<tr>
+								<td colspan="6">
+									#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+								</td>
+							</tr>
+						#end
+					</tbody>
+		    	</table>
+		   		<input type="hidden" id="MONITORING_NUM" value="$!R_PAGE_NUM">
+		      	<div class="j_page_div">
+		         	##현재 페이지
+		         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+		            ##총 개수
+		            <input type="hidden" name="J_tot" value="$!j_tot">
+		            ##한페이지의 로우수
+		            <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+		            ##한페이지수
+		            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+		            ##이밴트
+		            <input type="hidden" name="j_event" value="fn_monitoringList">
+		    	</div>
+			</div>
+		</div>
+    </div>
+	#### E : 리스트  폼 부분  ####
+</form>
+</div>

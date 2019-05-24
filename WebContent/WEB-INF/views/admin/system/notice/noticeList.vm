@@ -1,0 +1,58 @@
+						<h2 class="tbl-title">#springMessage("menu.system.noticeList") <a href="javascript:fn_newWrite();" class="tbl-btn1 fr">#springMessage("common.button.regist")</a></h2>
+						<table class="tbl full-width">
+							<caption>#springMessage("menu.system.noticeList")</caption>
+							<colgroup>
+								<col>
+								<col style="width:100px">
+								<col style="width:100px">
+								<col style="width:70px">
+							</colgroup>
+							<thead>
+								<tr>
+									<th scope="col">#springMessage("common.header.title")</th>
+									<th scope="col">#springMessage("common.header.author")</th>
+									<th scope="col">#springMessage("common.header.registDate")</th>
+									<th scope="col"></th>
+								</tr>
+							</thead>
+							<tbody>
+							#foreach( $notice in $noticeList )
+    					       	#set($j_tot = $notice.TOT_CNT)
+    							<tr class="noticeDiv" style="cursor:pointer;">
+    								<td style="text-align:left;">
+    									<input type="hidden" id="NO_NOTICE" value="$notice.NO_NOTICE" />
+    									$esc.xml($!notice.NM_TITLE)
+    								</td>
+    								<td>
+    									$!notice.ID_INSERT
+    								</td>
+    								<td>
+    									$!notice.DT_INSERT
+    								</td>
+    								<td>
+    									<a href="javascript:void(0);" id="groupModify" class="tbl-btn1 fr">#springMessage("common.button.modify")</a>
+    								</td>
+    							</tr>
+    			           	#end
+    			           	#if(!$j_tot)
+    							<tr >
+    								<td colspan="4" >#springMessage("menu.system.alert.noNotice")</td>
+    							</tr>
+    					   	#end
+							
+							</tbody>
+						</table>
+					
+						<input type="hidden" id="notice_num" value="$!R_PAGE_NUM" />
+    					<div class="j_page_div">
+    						##현재 페이지
+    						<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    						##총 개수
+    						<input type="hidden" name="J_tot" value="$!j_tot" />
+    						##한페이지의 로우수
+    						<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    						##한페이지수
+    						<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    						##이밴트
+    						<input type="hidden" name="j_event" value="fn_noticeList" />
+    					</div>

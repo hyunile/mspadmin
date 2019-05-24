@@ -1,0 +1,92 @@
+<link rel="stylesheet" type="text/css" href="$!{RESOURCES_PATH}/js/chart/style.css" /><!--  챠트관련  -->
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/amcharts.js" ></script> <!--  챠트관련  -->
+<script type="text/javascript">
+ 	var charDataMsgByHour = null;			// chart data
+ 
+    // 차트 데이터를 추가 함
+    function addChartDataMsgByHour(key, val)
+    {
+        if(charDataMsgByHour == null)
+        {
+            charDataMsgByHour = [{KEY: key, VAL: val}];
+        }
+        else
+        {
+            charDataMsgByHour.push({KEY: key,	VAL: val});
+        }
+    }
+
+    // 차트를 초기하 시킴
+    function initcharMsgByHour()
+    {
+
+        //chart의 타입을 정의..
+        // SERIAL CHART
+        charMsgByHour = new AmCharts.AmSerialChart();
+		charMsgByHour.id = "test";
+        charMsgByHour.dataProvider = charDataMsgByHour;
+        charMsgByHour.categoryField = "KEY";
+        charMsgByHour.startDuration = 0;  //20120615 그래프 액션 없앰 Minwoo.Yoon
+        charMsgByHour.balloon.color = "#FFFFFF";
+        charMsgByHour.columnWidth = 0.2; //BAR Width.
+
+        // AXES
+        // category
+        var categoryAxisProtocol = charMsgByHour.categoryAxis;
+        categoryAxisProtocol.fillAlpha = 1;
+        categoryAxisProtocol.fillColor = "#FAFAFA";
+        categoryAxisProtocol.gridAlpha = 0;
+        categoryAxisProtocol.axisAlpha = 0;
+        categoryAxisProtocol.gridPosition = "start";
+        categoryAxisProtocol.position = "bottom";
+
+        // value
+        var valueAxisProtocol = new AmCharts.ValueAxis();
+        valueAxisProtocol.dashLength = 5;
+        valueAxisProtocol.axisAlpha = 0;
+        valueAxisProtocol.minimum = 0;
+        //valueAxisProtocol.maximum = 900000; //그래프 최대값
+        valueAxisProtocol.integersOnly = true;
+        valueAxisProtocol.gridCount = 10;
+        valueAxisProtocol.reversed = false; // this line makes the value axis reversed
+        charMsgByHour.addValueAxis(valueAxisProtocol);
+
+        // prev graph
+        var graphProtocol = new AmCharts.AmGraph();
+        graphProtocol.title = '#springMessage("common.text.gunNum")'; //"건수";
+        graphProtocol.type = "line";
+        graphProtocol.valueField = "VAL";
+        graphProtocol.hidden = false; 									// this line makes the graph initially hidden
+        graphProtocol.balloonText = "[[value]]";
+        graphProtocol.lineAlpha = 1;
+        graphProtocol.bullet = "triangleUp";
+        graphProtocol.lineColor = "#1B6099";
+        charMsgByHour.addGraph(graphProtocol);
+
+        // WRITE
+        charMsgByHour.write("chartDivByHour");
+    }
+    #foreach( $row in $listMsgByHour)
+	addChartDataMsgByHour("$!{row.key}", ${row.val});
+    #end
+	
+	initcharMsgByHour();
+</script>
+
+<div class="popup_content">
+	
+		<div class="btn_sel_group stats_group">
+			<div class="fl">
+				<h4>#springMessage("menu.stats.push.OpenGraph")</h4> <!-- 푸시 오픈 그래프 -->
+			</div>
+			<div class="fr">
+			</div>
+		</div>
+		<div class="btn_pop">
+			<button type="button" onclick="fn_closePopup();" class="btn_basic"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+		</div>
+		<div class="chart2">
+			<div id="chartDivByHour"></div>
+		</div>
+	
+</div>

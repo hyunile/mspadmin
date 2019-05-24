@@ -1,0 +1,438 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페이징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+});
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+	if(su == 2){
+		$("#DIV_SE_ID_GROUP").show();  //관리자그룹 선택박스 보이기
+	}else{
+		$("#DIV_SE_ID_GROUP").hide(); //관리자그룹 선택박스 감추기
+	}
+});
+
+//검색
+function ch_search(){
+	var sfrm=document.frmSearch;
+	var sval=$("#conSelect").val();
+	if(sval==0){
+		if(sfrm.usernm.value.length>0 && sfrm.usernm.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //검색어를 2글자 이상 입력해 주세요.
+			sfrm.usernm.value="";
+			sfrm.usernm.focus();
+			return;
+		}
+	}else if(sval==1){
+		if(sfrm.userid.value.length>0 && sfrm.userid.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //검색어를 2글자 이상 입력해 주세요.
+			sfrm.userid.value="";
+			sfrm.userid.focus();
+			return;
+		}
+	}
+	fn_pageList(1);
+}
+
+//페이지 처리
+function fn_pageList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/securepush/manageAccount";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#listTableDiv");
+	fn_getList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//수정 화면
+$(document).on("click","#pageModify",function(){
+	
+	// 관리자 아이디 중복 체크 플래그 초기화.
+	$("#ID_DUPLICATE_CHK").val('N');
+	
+	var _ID = $(this).parent().parent().find(".ID_USER").val();
+	var url = CONTEXT_PATH + "/admin/securepush/manageAccount/editUser";
+	var type = "POST";
+	var data = "USER_ID=" + _ID;
+	var target = $("#windowPop");
+	var whideh = 550;
+	var title = '#springMessage("menu.system.adminUserModify")';   // 관리자 수정 
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//등록 화면 (조직도 검색)
+$(document).on("click","#pageWrite",function(){
+	fn_goSelectOrgPop();
+});
+
+// 조직도 검색 팝업 호출.
+function fn_goSelectOrgPop(){
+	var url = CONTEXT_PATH + "/admin/securepush/manageAccount/registOrg";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 800;
+	var title = '#springMessage("menu.securePush.manageAccount.orgSearch")';  // 조직도 검색
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+//공통코드 리스트 페이지 호출(공통)
+function fn_getList( url, type, data, target ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false ,
+		cache:false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+// 관리자 등록 팝업 호출.
+function fn_goRegistUserPop(){
+	var USER_ID = $("#SELECTED_USER_ID").val();
+	if(USER_ID == null || USER_ID == ''){
+		alert('#springMessage("menu.securePush.manageAccount.alert.selectMember")'); //관리자로 추가할 조직원을 선택해 주세요.
+		return;
+	}
+	// 관리자 아이디 중복 체크 플래그 초기화.
+	$("#ID_DUPLICATE_CHK").val('N');
+	
+	var url = CONTEXT_PATH + "/admin/securepush/manageAccount/registUser";
+	var type = "POST";
+	var data = "USER_ID=" + USER_ID;
+	var target = $("#windowPop");
+	var whideh = 550;
+	var title = '#springMessage("menu.securePush.manageAccount.grantPrivilege")';   //관리자 권한 부여
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+//관리자 등록
+function fn_pageWrite(){
+	if( $("form[name=frmWriteUserInfo]").find("input[name=ADMIN_ID]").val() == ""){
+		alert('#springMessage("menu.securePush.manageAccount.alert.inputAdminId")'); //관리자 아이디를 입력해 주세요.
+		$("form[name=frmWriteUserInfo]").find("input[name=ADMIN_ID]").focus();
+		return;
+	}else if( $("form[name=frmWriteUserInfo]").find("input[name=PASSWORD]").val() == ""){
+		alert('#springMessage("common.alert.noPasswd")');  //비밀번호을 입력해주세요.
+		$("form[name=frmWriteUserInfo]").find("input[name=PASSWORD]").focus();
+		return;
+    } else if($("form[name=frmWriteUserInfo]").find("input[name=PASSWORD]").val().length<10 || $("form[name=frmWriteUserInfo]").find("input[name=PASSWORD]").val().length>20){
+        alert('#springMessage("common.alert.inadequatePasswd")');  //비밀번호는 특수문자,숫자와 영문자 조합으로 10~20자리를 사용해야 합니다.
+        $("form[name=frmWriteUserInfo]").find("input[name=PASSWORD]").focus();
+        return;
+    } else if( !$("form[name=frmWriteUserInfo]").find("input[name=PASSWORD]").val().match(/([a-zA-Z0-9].*[!,@,#,$,%,^,&,*,?,_,~])|([!,@,#,$,%,^,&,*,?,_,~].*[a-zA-Z0-9])/)){
+        alert('#springMessage("common.alert.inadequatePasswd")');  //비밀번호는 특수문자,숫자와 영문자 조합으로 10~20자리를 사용해야 합니다.
+        $("form[name=frmWriteUserInfo]").find("input[name=PASSWORD]").focus();
+        return;
+	} else if( $("form[name=frmWriteUserInfo]").find("select[name=GROUP_ID]").val() == ""){
+		alert('#springMessage("menu.system.alert.selectMenuAuth")'); // 관리자 권한을 선택해 주세요.
+		$("form[name=frmWriteUserInfo]").find("select[name=GROUP_ID]").focus();
+		return;
+	}
+	
+	if($("#ID_DUPLICATE_CHK").val() != 'Y'){
+		alert('#springMessage("menu.securePush.manageAccount.alert.idDupCheck")'); //아이디 중복체크를 해주세요.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doSave")')){    //저장하시겠습니까?
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/securepush/manageAccount/regist";
+	var data = $("form[name=frmWriteUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_pageList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//관리자 수정
+function fn_userModify(){
+
+	if( $("form[name=frmEditUserInfo]").find("input[name=PASSWORD]").val() == ""){
+		alert('#springMessage("common.alert.noPasswd")');  //비밀번호을 입력해주세요.
+		$("form[name=frmEditUserInfo]").find("input[name=PASSWORD]").focus();
+		return;
+    } else if($("form[name=frmEditUserInfo]").find("input[name=PASSWORD]").val().length<10 || $("form[name=frmEditUserInfo]").find("input[name=PASSWORD]").val().length>20){
+        alert('#springMessage("common.alert.inadequatePasswd")');  //비밀번호는 특수문자,숫자와 영문자 조합으로 10~20자리를 사용해야 합니다.
+        $("form[name=frmEditUserInfo]").find("input[name=PASSWORD]").focus();
+        return;
+    } else if( !$("form[name=frmEditUserInfo]").find("input[name=PASSWORD]").val().match(/([a-zA-Z0-9].*[!,@,#,$,%,^,&,*,?,_,~])|([!,@,#,$,%,^,&,*,?,_,~].*[a-zA-Z0-9])/)){
+        alert('#springMessage("common.alert.inadequatePasswd")');  //비밀번호는 특수문자,숫자와 영문자 조합으로 10~20자리를 사용해야 합니다.
+        $("form[name=frmEditUserInfo]").find("input[name=PASSWORD]").focus();
+        return;
+	} else if( $("form[name=frmEditUserInfo]").find("select[name=GROUP_ID]").val() == ""){
+		alert('#springMessage("menu.system.alert.selectMenuAuth")'); // 관리자 권한을 선택해 주세요.
+		$("form[name=frmEditUserInfo]").find("select[name=GROUP_ID]").focus();
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){		//수정하시겠습니까?
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/securepush/manageAccount/edit";
+	var data = $("form[name=frmEditUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_pageList($("#PAGE_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//관리자 삭제
+function fn_userDelete(){
+	if(! confirm('#springMessage("common.alert.doDelete")')){  //삭제하시겠습니까?
+		return;
+	}
+		
+	var PAGE_NUM = $("#PAGE_NUM").val();
+
+	if($(".ID_USER").size() == 1){
+		PAGE_NUM = PAGE_NUM - 1;
+	}
+
+	if(PAGE_NUM < 1){
+		PAGE_NUM = 1;
+	}
+
+	var url = CONTEXT_PATH + "/admin/securepush/manageAccount/delete";
+	var data = $("form[name=frmEditUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_pageList( PAGE_NUM );
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//아이디 체크
+function fn_idCheck(){
+	
+	if( $("form[name=frmWriteUserInfo]").find("input[name=ADMIN_ID]").val() == ""){
+		alert('#springMessage("menu.securePush.manageAccount.alert.inputAdminId")'); //관리자 아이디를 입력해 주세요.
+		$("form[name=frmWriteUserInfo]").find("input[name=ADMIN_ID]").focus();
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/securepush/manageAccount/idcheck";
+	var data = $("form[name=frmWriteUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#ID_DUPLICATE_CHK").val('Y');
+			}else{
+				$("#windowPop").find("input[name=ADMIN_ID]").focus();
+			}
+		}
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_pageList(1);
+}
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span></span>
+		<span></span>
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+				
+		<table class="tbl-search">
+			<caption>#springMessage("menu.securePush.manageAccount")</caption> <!-- 관리자계정 관리 -->
+			<colgroup>
+				<col style="width:480px">
+				<col>
+			</colgroup>
+			<thead>
+				<tr>
+					<td>
+						<div class="tbl-select">
+							<label for="conSelect">#springMessage("common.text.name")</label><!-- 이름 -->
+							<select id="conSelect" >
+								<option value="0">#springMessage("common.text.name")</option><!-- 이름 -->
+								<option value="1">#springMessage("common.text.id")</option><!-- 아이디 -->
+        						<option value="2">#springMessage("common.header.authGroup")</option><!-- 권한그룹명 -->
+        					</select>
+        				</div>
+						<input class="se_con" type="text" id="usernm" name="SE_NM_USER" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+						<input class="se_con" type="text" id="userid" name="SE_ID_USER" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+						<div id="DIV_SE_ID_GROUP" class="tbl-select" style="display:none;">
+							<label for="SE_ID_GROUP">#springMessage("common.select.choose")</label>   ### 선택 ###
+							<select class="se_con" name="SE_ID_GROUP" onchange="fn_pageList(1)">
+        						<option value="">#springMessage("common.select.choose")</option>
+        						#foreach( $searchGroup in $searchGroupList )
+        							<option value="$!searchGroup.ID_GROUP" onkeydown="javascript:if(event.keyCode==13){fn_pageList(1);return false;}">$!searchGroup.NM_GROUP</option>
+        						#end
+        					</select>
+        				</div>
+					</td>
+					<td>
+						<a href="javascript:ch_search();" class="tbl-btn2">#springMessage("common.button.view")</a> <!-- 조회 -->
+						<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+						
+					</td>
+				</tr>
+			</thead>
+		</table>
+		
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="pageWrite">#springMessage("common.button.regist")</a> <!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+			
+		<div id="listTableDiv">
+		
+			<table class="tbl-nb" summary="사용자명,사용자ID,권한,최근로그인,접속IP,사용,등록일,수정일,상세">
+				<colgroup>
+					<col width="auto" /><col width="auto" /><col width="11%" /><col width="14%" />
+					<col width="11%" /><col width="8%" /><col width="11%" /><col width="11%" />
+					<col width="8%" />
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("common.text.name")</th> <!-- 이름 -->
+						<th scope="col">#springMessage("common.text.id")</th> <!-- 아이디 -->
+						<th scope="col">#springMessage("common.header.authGroup")</th> <!-- 권한그룹명 -->
+						<th scope="col">#springMessage("menu.securePush.manageAccount.lastLoginTime")</th> <!-- 최근 로그인 일시 -->
+						<th scope="col">#springMessage("menu.securePush.manageAccount.accessIp")</th> <!-- 접속 IP -->
+						<th scope="col">#springMessage("common.header.useYN")</th> <!-- 사용여부 -->
+						<th scope="col">#springMessage("common.text.registDate")</th> <!-- 등록일시 -->
+						<th scope="col">#springMessage("common.text.updateDate")</th>	<!-- 수정일시 -->
+						<th scope="col"> </th>
+					</tr>
+				</thead>
+				<tbody>
+					#foreach( $itemInfo in $itemList )
+						#set($j_tot = $!itemInfo.TOT_CNT)
+						<tr>
+							<td >
+								$esc.xml($!itemInfo.NM_USER)
+								<input type="hidden" class="ID_USER" value="$!itemInfo.ID_USER" />
+							</td>
+							<td >
+								$!itemInfo.ID_USER
+							</td>
+							<td>
+								$!itemInfo.NM_GROUP
+							</td>
+							<td>
+								$!itemInfo.DT_LOGIN
+							</td>
+							<td>
+								$!itemInfo.REMOTE_IP
+							</td>
+							<td>
+								$!itemInfo.YN_USE
+							</td>
+							<td>
+								$!itemInfo.DT_INSERT
+							</td>
+							<td>
+								$!itemInfo.DT_UPDATE
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="btn2" id="pageModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+							</td>
+						</tr>
+					#end
+					#if(!$j_tot)
+						<tr>
+							<td colspan="9" class="ta_c">#springMessage("common.alert.nodata")</td>		### 데이터가 없습니다 ###
+						</tr>
+					#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+		
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot" />
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_pageList" />
+			</div>
+				
+		</div>
+		#### E : 리스트  폼 부분  ####
+
+	</form>
+	<input type="hidden" id="ID_DUPLICATE_CHK" value="N" />
+</div>

@@ -1,0 +1,66 @@
+<table class="tbl-nb" >
+				<colgroup><!--  8cell  -->
+					<col width="22%" /><col width="auto" /><col width="10%" /><col width="11%" />
+					<col width="11%" /><col width="11%" /><col width="70px" />
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("common.header.authGroup")</th>  		### 권한그룹명 ###
+						<th scope="col">#springMessage("common.header.initialMainMenu")</th>	### 첫화면메뉴 ###
+						<th scope="col">#springMessage("common.header.author")</th> 			### 작성자 ###
+						<th scope="col">#springMessage("common.header.registDate")</th> 		### 작성일 ###
+						<th scope="col">#springMessage("common.header.modifyUser")</th> 		### 수정자 ###
+						<th scope="col">#springMessage("common.header.modifyDate")</th>			### 수정일 ###
+						<th scope="col"> </th>
+					</tr>
+				</thead>
+				<tbody>
+					#foreach( $authGroup in $authGroupList )
+						#set($j_tot = $!authGroup.TOT_CNT)
+						<tr>
+							<td >
+								$esc.xml($!authGroup.NM_GROUP)
+								<input type="hidden" class="ID_GROUP" value="$!authGroup.ID_GROUP" />
+							</td>
+							<td >
+								$!authGroup.NM_FIRST_MENU
+							</td>
+							<td>
+								$!authGroup.ID_INSERT
+							</td>
+							<td>
+								$!authGroup.DT_INSERT
+							</td>
+							<td>
+								$!authGroup.ID_UPDATE
+							</td>
+							<td>
+								$!authGroup.DT_UPDATE
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="btn2" id="groupModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+							</td>
+						</tr>
+					#end
+					#if(!$j_tot)
+						<tr>
+							<td colspan="7" class="ta_c">#springMessage("common.alert.nodata")</td>		### 데이터가 없습니다 ###
+						</tr>
+					#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="GROUP_NUM" value="$!R_PAGE_NUM" />
+		
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot" />
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_groupList" />
+			</div>

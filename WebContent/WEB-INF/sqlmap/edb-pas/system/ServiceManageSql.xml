@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.system.service.mapper.ServiceManageDao">
+    <sql id="head">
+        SELECT viewC.*
+        FROM (
+            SELECT
+                (ROW_NUMBER() OVER()) AS "RNUM"
+                ,COUNT(*) OVER() AS "TOT_CNT"
+                ,viewB.*
+            FROM (SELECT viewA.* FROM (
+    </sql>
+
+    <sql id="bottom">
+                ) AS viewA
+            ) AS viewB
+        ) AS viewC
+        WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+    </sql>
+
+	
+	<!-- 서비스 리스트 조회 -->
+	<select id="SelectServiceList" parameterType="kr.msp.admin.system.service.dto.ServiceParamDto" resultType="kr.msp.admin.system.service.dto.ServiceDto">
+        <include refid="head"/>
+			SELECT
+            	"A"."SVC_ID",
+            	"A"."SVC_NM",
+            	"A"."SVC_TP",
+            	to_char("A"."REG_DTTM", 'YYYY.MM.DD') AS "REG_DTTM",
+            	"A"."APP_ID",
+            	"A"."SVC_DTL",
+            	coalesce("B"."USE_YN", 'X') AS "MOB_YN",
+            	coalesce("D"."USE_YN", 'X') AS "STO_YN"
+        	FROM "TB_SVC"  "A"
+       		LEFT JOIN "TB_MOB_SVC" "B"
+        	ON "A"."SVC_ID" = "B"."SVC_ID"
+          	LEFT JOIN "TB_STO_SVC" "D"
+        	ON "A"."SVC_ID" = "D"."SVC_ID"
+	   <where>
+	   		<if test="SVC_NM != null and SVC_NM != ''">
+       			"SVC_NM"	LIKE '%' || #{SVC_NM} || '%'
+       		</if>
+       </where>
+	    ORDER BY "REG_DTTM" DESC 
+        <include refid="bottom"/>
+    </select>
+    
+    <select id="SelectPushUse" parameterType="kr.msp.admin.system.service.dto.ServiceDto" resultType="java.lang.String">
+    	SELECT coalesce( ( SELECT "ISDELETED" FROM "T_PUSH_APPLICATION" WHERE "APPID" = #{APP_ID}  ), 'X'  ) AS "PUSH_YN"
+    </select>
+    
+    <!-- 서비스 상세 화면 -->
+    <select id="SelectServiceOne" parameterType="kr.msp.admin.system.service.dto.ServiceParamDto" resultType="kr.msp.admin.system.service.dto.ServiceDto">
+    	SELECT
+           	"A"."SVC_ID",
+           	"A"."SVC_NM",
+           	"A"."SVC_TP",
+           	to_char("A"."REG_DTTM", 'YYYY.MM.DD') AS "REG_DTTM",
+           	"A"."APP_ID",
+           	"A"."SVC_DTL",
+           	coalesce("B"."USE_YN", 'X') AS "MOB_YN",
+           	coalesce("C"."ISDELETED", 'X') AS "PUSH_YN",
+           	coalesce("D"."USE_YN", 'X') AS "STO_YN"
+        FROM "TB_SVC"  "A"
+       	LEFT JOIN "TB_MOB_SVC" "B"
+        ON "A"."SVC_ID" = "B"."SVC_ID"
+        LEFT JOIN "T_PUSH_APPLICATION" "C"
+        ON "A"."SVC_ID" = "C"."SVC_ID"
+        LEFT JOIN "TB_STO_SVC" "D"
+        ON "A"."SVC_ID" = "D"."SVC_ID"
+	   	WHERE "A"."SVC_ID" = CAST(#{SVC_ID} AS INTEGER)
+    </select>
+    
+    <!-- 서비스 수정 -->
+    <update id="UpdateService" parameterType="kr.msp.admin.system.service.dto.ServiceDto">
+    	UPDATE "TB_SVC"
+		    SET "SVC_NM"  = #{SVC_NM}
+		       ,"SVC_DTL"  = #{SVC_DTL}
+		WHERE "SVC_ID" = CAST(#{SVC_ID} AS INTEGER)
+    </update>
+    
+    <!-- 앱아이디 중복체크 -->
+    <select id="SelectAppIdCheck" parameterType="kr.msp.admin.system.service.dto.ServiceParamDto" resultType="int">
+    	SELECT COUNT("APP_ID") AS "APP_CON" FROM "TB_SVC" WHERE "APP_ID" = #{APP_ID}
+    </select>
+    
+    <!-- 서비스 등록 -->
+    <insert id="InsertService" parameterType="kr.msp.admin.system.service.dto.ServiceDto">
+    	INSERT INTO "TB_SVC"(
+			"SVC_ID",
+  			"SVC_NM",
+  			"REG_DTTM",
+  			"APP_ID",
+  			"SVC_DTL"
+		)VALUES(
+		  	nextval('"SEQ_TB_SVC"')
+			,#{SVC_NM}
+			,now()
+			,#{APP_ID}
+			,#{SVC_DTL}
+		)
+		<selectKey keyProperty="SVC_ID" resultType="string" order="AFTER">
+		 	SELECT currval('"SEQ_TB_SVC"') as "SVC_ID"
+		</selectKey>
+    </insert>
+    
+    <!-- 모바일 서비스 등록 -->
+    <insert id="InsertMobService" parameterType="kr.msp.admin.system.service.dto.ServiceSubDto">
+    	INSERT INTO "TB_MOB_SVC"(
+			"SVC_ID" ,
+			"SVC_DTL",
+  			"USE_YN" ,
+  			"REG_DTTM"
+		)VALUES(
+		  	CAST(#{SVC_ID} AS INTEGER) ,
+		  	#{SVC_DTL} ,
+		  	#{USE_YN} ,
+		  	now()
+		)
+    </insert>
+    
+    <!-- 앱서비스 서비스 등록 -->
+    <insert id="InsertStoService" parameterType="kr.msp.admin.system.service.dto.ServiceSubDto">
+    	INSERT INTO "TB_STO_SVC"(
+			"SVC_ID" ,
+			"USE_YN" ,
+  			"REG_DTTM"
+		)VALUES(
+		  	CAST(#{SVC_ID} AS INTEGER) ,
+		  	#{USE_YN} ,
+		  	now()
+		)
+    </insert>
+    
+    <!-- PUSH 서비스 등록 -->
+    <insert id="InsertPushService" parameterType="kr.msp.admin.system.service.dto.PushServiceDto">
+    	INSERT INTO "T_PUSH_APPLICATION" (
+				                            "APPID"
+				                           ,"APPNAME"
+				                           ,"ISDELETED"
+				                           ,"REGDATE"
+				                           ,"MODDATE"
+				                           ,"SVC_ID"
+				                           ,"SVC_DTL"
+				                        ) VALUES (
+				                            #{APP_ID}
+				                           ,#{APPNAME}
+				                           ,#{USE_YN}
+				                           ,now()
+				                           ,now()
+				                           ,CAST(#{SVC_ID} AS INTEGER)
+				                           ,#{SVC_DTL}
+				                        )
+    </insert>
+    
+    <!-- 모비일 서비스 수정 -->
+    <update id="UpdateMobService" parameterType="kr.msp.admin.system.service.dto.ServiceSubDto">
+    	UPDATE "TB_MOB_SVC" SET
+		    "USE_YN" = #{USE_YN}
+		WHERE "SVC_ID" = #{SVC_ID}
+    </update>
+    
+    <!-- 앱 서비스 수정 -->
+    <update id="UpdateStoService" parameterType="kr.msp.admin.system.service.dto.ServiceSubDto">
+    	UPDATE "TB_STO_SVC" SET
+		    "USE_YN" = #{USE_YN}
+		WHERE "SVC_ID" = CAST(#{SVC_ID} AS INTEGER)
+    </update>
+    
+    <select id="getUseStoreServiceCount" resultType="int">
+    	SELECT COUNT(*) AS COUNT
+    	FROM
+    		  "TB_SVC" "SVC"
+    		, "TB_STO_SVC" "STO"
+    	WHERE  "SVC"."SVC_ID" = "STO"."SVC_ID"
+    		AND "STO"."USE_YN" = 'Y'
+    </select>
+    
+    <!-- PUSH 서비스 수정 -->
+    <update id="UpdatePushService" parameterType="kr.msp.admin.system.service.dto.ServiceSubDto">
+    	UPDATE "T_PUSH_APPLICATION" SET
+		    "ISDELETED" = #{USE_YN}
+		WHERE "SVC_ID" = #{SVC_ID}
+    </update>
+	
+</mapper>

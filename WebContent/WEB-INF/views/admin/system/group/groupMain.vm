@@ -1,0 +1,319 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+});
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+//검색
+function ch_search(){
+	var sfrm=document.frmSearch.grpnm;
+	if(sfrm.value.length>0&&sfrm.value.length<2){
+			alert("#springMessage("common.alert.lowerlimitSeachKeyword")");  //검색어를 2글자 이상 입력해 주세요
+			sfrm.value="";
+			sfrm.focus();
+	}
+	fn_groupList(1);
+}
+
+//페이지 처리
+function fn_groupList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/system/group";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#groupTableDiv");
+	fn_getList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//그룹 수정 화면
+$(document).on("click","#groupModify",function(){
+	var ID_GROUP = $(this).parent().parent().find(".ID_GROUP").val();
+	var url = CONTEXT_PATH + "/admin/system/group/edit";
+	var type = "GET";
+	var data = "ID_GROUP=" + ID_GROUP;
+	var target = $("#windowPop");
+	var whideh = 600;
+	var title = "#springMessage("menu.system.authGroupModify")";   #### 권한그룹 수정 ###
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//그룹 등록 화면
+$(document).on("click","#groupWrite",function(){
+	var url = CONTEXT_PATH + "/admin/system/group/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 600;
+	var title = "#springMessage("menu.system.authGroupRegist")";  #### 권한그룹 등록 ###
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//공통코드 리스트 페이지 호출(공통)
+function fn_getList( url, type, data, target ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false ,
+		cache:false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+//그룹 등록
+function fn_groupWrite(){
+	if( $("form[name=frmGroupInfo]").find("input[name=NM_GROUP]").val() == ""){
+		alert("#springMessage("menu.system.alert.noAuthGroupName")");  		#### 권한그룹명을 입력해주세요. ####
+		$("form[name=frmGroupInfo]").find("input[name=NM_GROUP]").focus();
+		return;
+	}else if( $("form[name=frmGroupInfo]").find("select[name=ID_FIRST_MENU]").val() == "" ){
+	 	alert("#springMessage("menu.system.alert.noInitialMainMenu")");	### 첫화면메뉴를 입력해주세요. ####
+	    $("form[name=frmGroupInfo]").find("select[name=ID_FIRST_MENU]").focus();
+	    return;
+	}
+	if(! confirm("#springMessage("common.alert.doSave")")){    #### 저장하시겠습니까? ####
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/system/group/regist";
+	var data = $("form[name=frmGroupInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_groupList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//그룹 수정
+function fn_groupModify(){
+
+	if( $("form[name=frmGroupInfo]").find("input[name=NM_GROUP]").val() == ""){
+		alert("#springMessage("menu.system.alert.noAuthGroupName")");  		#### 권한그룹명을 입력해주세요. ####
+		$("form[name=frmGroupInfo]").find("input[name=NM_GROUP]").focus();
+		return;
+	}else if( $("form[name=frmGroupInfo]").find("select[name=ID_FIRST_MENU]").val() == "" ){
+	 	alert("#springMessage("menu.system.alert.noInitialMainMenu")");	### 첫화면메뉴를 입력해주세요. ####
+	    $("form[name=frmGroupInfo]").find("select[name=ID_FIRST_MENU]").focus();
+	    return;
+	}
+	
+	if(! confirm("#springMessage("common.alert.doModify")")){		### 수정하시겠습니까? ###
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/system/group/edit";
+	var data = $("form[name=frmGroupInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_groupList($("#GROUP_NUM").val());
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//그룹 삭제
+function fn_groupDelete(){
+	if(! confirm("#springMessage("common.alert.doDelete")")){  #### 삭제하시겠습니까? ####
+		return;
+	}
+		
+	var PAGE_NUM = $("#GROUP_NUM").val();
+
+	if($(".ID_GROUP").size() == 1){
+		PAGE_NUM = PAGE_NUM - 1;
+	}
+
+	if(PAGE_NUM < 1){
+		PAGE_NUM = 1;
+	}
+
+	var url = CONTEXT_PATH + "/admin/system/group/delete";
+	var data = $("form[name=frmGroupInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_groupList( PAGE_NUM );
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_groupList(1);
+}
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.system")</span>
+		<span>#springMessage("menu.system.authGroupManage")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.authGroupManage")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+				
+		<table class="tbl-search">
+			<caption>#springMessage("menu.system.authGroupManage")</caption>
+			<colgroup>
+				<col style="width:480px">
+				<col>
+			</colgroup>
+			<thead>
+				<tr>
+					<td>
+						<div class="tbl-select">
+							<label for="conSelect">#springMessage("common.header.authGroup")</label>
+							<select id="conSelect" >
+        						<option value="0">#springMessage("common.header.authGroup")</option>
+        					</select>
+        				</div>
+						<input type="text" id="grpnm" name="SE_NM_GROUP" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+					</td>
+					<td>
+						<a href="javascript:ch_search();" class="tbl-btn2">#springMessage("common.button.view")</a> <!-- 조회 -->
+						<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+						
+					</td>
+				</tr>
+			</thead>
+		</table>
+		
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="groupWrite">#springMessage("common.button.regist")</a> <!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+			
+		<div id="groupTableDiv">
+		
+			<table class="tbl-nb" >
+				<colgroup><!--  8cell  -->
+					<col width="22%" /><col width="auto" /><col width="10%" /><col width="11%" />
+					<col width="11%" /><col width="11%" /><col width="70px" />
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("common.header.authGroup")</th>  		### 권한그룹명 ###
+						<th scope="col">#springMessage("common.header.initialMainMenu")</th>	### 첫화면메뉴 ###
+						<th scope="col">#springMessage("common.header.author")</th> 			### 작성자 ###
+						<th scope="col">#springMessage("common.header.registDate")</th> 		### 작성일 ###
+						<th scope="col">#springMessage("common.header.modifyUser")</th> 		### 수정자 ###
+						<th scope="col">#springMessage("common.header.modifyDate")</th>			### 수정일 ###
+						<th scope="col"> </th>
+					</tr>
+				</thead>
+				<tbody>
+					#foreach( $authGroup in $authGroupList )
+						#set($j_tot = $!authGroup.TOT_CNT)
+						<tr>
+							<td >
+								$esc.xml($!authGroup.NM_GROUP)
+								<input type="hidden" class="ID_GROUP" value="$!authGroup.ID_GROUP" />
+							</td>
+							<td >
+								$!authGroup.NM_FIRST_MENU
+							</td>
+							<td>
+								$!authGroup.ID_INSERT
+							</td>
+							<td>
+								$!authGroup.DT_INSERT
+							</td>
+							<td>
+								$!authGroup.ID_UPDATE
+							</td>
+							<td>
+								$!authGroup.DT_UPDATE
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="btn2" id="groupModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+							</td>
+						</tr>
+					#end
+					#if(!$j_tot)
+						<tr>
+							<td colspan="7" class="ta_c">#springMessage("common.alert.nodata")</td>		### 데이터가 없습니다 ###
+						</tr>
+					#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="GROUP_NUM" value="$!R_PAGE_NUM" />
+		
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot" />
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_groupList" />
+			</div>
+				
+		</div>
+		#### E : 리스트  폼 부분  ####
+
+	</form>
+</div>

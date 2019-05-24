@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.template.mapper.TemplateManageDao">
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT CONVERT(integer, #{PAGE_SIZE}) PAGE_SIZE
+	, CONVERT(integer, #{PAGE_NUM}) PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	
+	<!-- 템플릿 리스트 조회 -->
+    <select id="SelectTemplateList" parameterType="kr.msp.admin.push.template.dto.TemplateDto" resultType="kr.msp.admin.push.template.dto.TemplateDto">
+        <include refid="head"/>
+        	SELECT TEMPLATE_CODE
+					,TEMPLATE_TITLE
+					,MESSAGE
+					,SUB_MESSAGE
+					,WEBEDIT
+					,IMAGE_URL
+					,VIDEO_URL
+					,REPLACE_YN
+					,CATEGORY_TYPE
+					,REPLACE(CONVERT(VARCHAR(13), REG_DT, 120), '-' , '.') AS REG_DT
+					,REPLACE(CONVERT(VARCHAR(13), MOD_DT, 120), '-' , '.') AS MOD_DT
+					,REG_ID
+					,MOD_ID
+					,ROW_NUMBER() OVER(ORDER BY REG_DT DESC, TEMPLATE_CODE DESC) PAGE_KEY
+			FROM TB_CMP_TEMPLATE
+			<where>
+				<if test="TEMPLATE_TITLE != null and TEMPLATE_TITLE != ''">
+	           	TEMPLATE_TITLE LIKE '%' + #{TEMPLATE_TITLE}+ '%'
+	           	</if>
+	           	<if test="CATEGORY_TYPE != null and CATEGORY_TYPE != ''">
+	           	AND CATEGORY_TYPE = #{CATEGORY_TYPE}
+	           	</if>
+           	</where>
+        <include refid="bottom"/>
+    </select>
+    
+    <!-- 템플릿 조회 -->
+    <select id="SelectTemplateOne" parameterType="kr.msp.admin.push.template.dto.TemplateDto" resultType="kr.msp.admin.push.template.dto.TemplateDto">
+    	SELECT TEMPLATE_CODE
+				,TEMPLATE_TITLE
+				,MESSAGE
+				,SUB_MESSAGE
+				,WEBEDIT
+				,IMAGE_URL
+				,VIDEO_URL
+				,REPLACE_YN
+				,CATEGORY_TYPE
+				,REPLACE(CONVERT(VARCHAR(13), REG_DT, 120), '-' , '.') AS REG_DT
+				,REPLACE(CONVERT(VARCHAR(13), MOD_DT, 120), '-' , '.') AS MOD_DT
+				,REG_ID
+				,MOD_ID  
+		FROM TB_CMP_TEMPLATE
+		WHERE TEMPLATE_CODE = #{TEMPLATE_CODE}
+    </select>
+    
+    <!-- 템플릿 키 중복 조회 -->
+    <select id="SelectTemplateDupCheck" parameterType="kr.msp.admin.push.template.dto.TemplateDto" resultType="java.lang.Integer">
+        SELECT COUNT(*) AS COUNT
+		FROM TB_CMP_TEMPLATE
+		WHERE TEMPLATE_TITLE = #{TEMPLATE_TITLE}
+    </select>
+    
+    <!-- 템플릿 등록 -->
+    <insert id="InsertTemplate" parameterType="kr.msp.admin.push.template.dto.TemplateDto">
+        INSERT INTO TB_CMP_TEMPLATE(
+        	TEMPLATE_CODE
+        	,TEMPLATE_TITLE
+        	,MESSAGE
+        	,SUB_MESSAGE
+        	,WEBEDIT
+        	,IMAGE_URL
+        	,VIDEO_URL
+        	,REPLACE_YN
+        	,CATEGORY_TYPE
+        	,REG_ID
+        	,REG_DT
+        	,MOD_ID
+        	,MOD_DT
+        ) VALUES (
+        	#{TEMPLATE_CODE}
+        	,#{TEMPLATE_TITLE}
+        	,#{MESSAGE}
+        	,#{SUB_MESSAGE}
+        	,#{WEBEDIT}
+        	,#{IMAGE_URL}
+        	,#{VIDEO_URL}
+        	,#{REPLACE_YN}
+        	,#{CATEGORY_TYPE}
+        	,#{REG_ID}
+        	,GETDATE()
+        	,null
+        	,null
+        )
+    </insert>
+    
+    <!-- 템플릿 수정 -->
+    <update id="UpdateTemplate" parameterType="kr.msp.admin.push.template.dto.TemplateDto">
+        UPDATE TB_CMP_TEMPLATE
+		   SET MOD_DT = GETDATE()
+		   	   ,MOD_ID = #{MOD_ID}
+		<if test="TEMPLATE_TITLE != null and TEMPLATE_TITLE != ''">
+			  ,TEMPLATE_TITLE = #{TEMPLATE_TITLE}
+		</if>
+		<if test="MESSAGE != null and MESSAGE != ''">
+			  ,MESSAGE = #{MESSAGE}
+		</if>
+		<if test="SUB_MESSAGE != null and SUB_MESSAGE != ''">
+			  ,SUB_MESSAGE = #{SUB_MESSAGE}
+		</if>
+		<if test="WEBEDIT != null and WEBEDIT != ''">
+			  ,WEBEDIT = #{WEBEDIT}
+		</if>
+		<if test="IMAGE_URL != null and IMAGE_URL != ''">
+			  ,IMAGE_URL = #{IMAGE_URL}
+		</if>
+		<if test="VIDEO_URL != null and VIDEO_URL != ''">
+			  ,VIDEO_URL = #{VIDEO_URL}
+		</if>
+		<if test="REPLACE_YN != null and REPLACE_YN != ''">
+			  ,REPLACE_YN = #{REPLACE_YN}
+		</if>
+		<if test="CATEGORY_TYPE != null and CATEGORY_TYPE != ''">
+			  ,CATEGORY_TYPE = #{CATEGORY_TYPE}
+		</if>
+		WHERE TEMPLATE_CODE = #{TEMPLATE_CODE}
+    </update>
+    
+    <!-- 템플릿 삭제-->
+    <delete id="DeleteTemplate" parameterType="kr.msp.admin.push.template.dto.TemplateDto">
+       DELETE FROM TB_CMP_TEMPLATE
+       WHERE TEMPLATE_CODE = #{TEMPLATE_CODE}
+    </delete>
+	
+</mapper>

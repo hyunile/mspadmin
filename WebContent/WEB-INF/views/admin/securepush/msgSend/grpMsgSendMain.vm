@@ -1,0 +1,603 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery-te-1.4.0.css" >
+<style>
+.jqte_editor, .jqte_source {
+	height: 460px; /*에디터 높이 재정의*/
+	padding:10px;
+	background:#FFF;
+	min-height:100px;
+	max-height:900px;
+	overflow:auto;
+	outline:none;
+	word-wrap:break-word; -ms-word-wrap:break-word;
+	resize:vertical
+}
+.backgroundPopupDiv{
+    display:none;
+    position:fixed;
+    _position:absolute; /* hack for internet explorer 6*/
+    height:100%;
+    width:100%;
+    top:0px;
+    left:0px;
+    z-index:100;
+    text-align: center;
+}
+</style>
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery-te-1.4.0.js"></script>
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+	jQuery("textarea[name=MSG_CONT]").jqte();
+	
+	fn_setCurrDate();
+});
+
+//파일 선택 시 업로드.
+$(document).on("change","#ATTACH_FILE",function(){
+	
+	fn_uploadAttachFile();
+});
+
+//파일 업로드 후 첨부된 파일 목록에 표시.
+function fn_uploadAttachFile(){
+	var data = "";
+	var url = CONTEXT_PATH + "/admin/securepush/msgSend/attachUpload";
+	jQuery.ajaxFileUpload({
+		url           : url,
+		secureuri     : false,
+		cache: false,
+		fileElementId :'ATTACH_FILE',
+		dataType	  : 'json', 
+		data          : data,
+		contentType   : 'multipart/form-data',
+		success:function(json){
+			if(json.result > 0){
+				fn_addFileList(json.fileKey, json.fileName, json.fileSize);
+			}else{
+				alert(json.msg);
+			}
+		}
+	});
+}
+
+// 업로드한 파일 추가.
+function fn_addFileList(fileKey, fileName, fileSize){
+	
+	var fileDiv = '<div id="'+fileKey+'"><span class="file-name">'+fileName
+		+'('+fn_formatBytes(Number(fileSize))+')</span><a href="javascript:fn_removeFile(\''+fileKey+'\');" class="tbl-xbtn"></a></div>';
+	$(".file-list").append(fileDiv);
+}
+
+// 파일 목록에서 삭제.
+function fn_removeFile(fileKey){
+	$(".file-list").find("#" + fileKey).remove();
+}
+
+// 파일 사이즈를 단위 변환.
+function fn_formatBytes(bytes, decimals){
+	if(bytes == 0) return '0 Bytes';
+	var k = 1000,
+		dm = decimals + 1 || 3,
+		sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+		i = Math.floor(Math.log(bytes) / Math.log(k));
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// 메시지 유형 셀렉트 박스 핸들러.
+$(document).on("change","#MSG_TYPE",function(){
+	var _val = $(this).val();
+	if(_val == "VOLATILE")
+		fn_enableVolatile(true);
+	else
+		fn_enableVolatile(false);
+});
+
+//휘발성 메시지 삭제일자 컨트롤 활성화.
+function fn_enableVolatile(enableYn){
+	if(enableYn){
+		$("#VOLATILE_DATE").removeAttr("disabled");
+		$("#VOLATILE_DATE").parent().removeClass("disabled");
+		$("#VOLATILE_HOUR").removeAttr("disabled");
+		$("#VOLATILE_MIN").removeAttr("disabled");
+	}else{
+		$("#VOLATILE_DATE").val("");
+		$("#VOLATILE_DATE").attr("disabled", true);
+		$("#VOLATILE_DATE").parent().addClass("disabled");
+		$("#VOLATILE_HOUR").val("");
+		$("#VOLATILE_HOUR").attr("disabled", true);
+		$("#VOLATILE_MIN").val("");
+		$("#VOLATILE_MIN").attr("disabled", true);
+	}
+}
+
+//발송 시간 라디오 버튼 핸들러.
+$(document).on("change","input[name='RESERVED']",function(){
+	var _val = $(this).val();
+	if(_val == "Y")
+		fn_enableReserv(true);
+	else
+		fn_enableReserv(false);
+});
+
+//예약 시간 컨트롤 활성화.
+function fn_enableReserv(enableYn){
+	if(enableYn){
+		$("#RESERV_DATE").removeAttr("disabled");
+		$("#RESERV_HOUR").removeAttr("disabled");
+		$("#RESERV_MIN").removeAttr("disabled");
+	}else{
+		$("#RESERV_DATE").val("");
+		$("#RESERV_DATE").attr("disabled", true);
+		$("#RESERV_HOUR").val("");
+		$("#RESERV_HOUR").attr("disabled", true);
+		$("#RESERV_MIN").val("");
+		$("#RESERV_MIN").attr("disabled", true);
+	}
+}
+
+function fn_setCurrDate() {
+	var now = new Date();
+	var res = now.toISOString().slice(0,10);
+	$("#tdRegDt").html(res);
+}
+
+// 페이지 컨트롤 초기화.(리프레쉬)
+function fn_initPage(){
+	window.location.reload(true);
+}
+
+
+//초기화 버튼 클릭 핸들러.
+$(document).on("click","#pageInit",function(){
+	fn_initPage();
+});
+
+// 그룹 선택 팝업 호출.
+function fn_goSelectGrpPop(){
+	var SENDER_ID = $("#SENDER_ID").val();
+	var url = CONTEXT_PATH + "/admin/securepush/msgSend/selectGroup";
+	var type = "POST";
+	var data = "SENDER_ID=" + SENDER_ID;
+	var target = $("#windowPop");
+	var whideh = 350;
+	var title = '#springMessage("menu.securePush.msgSend.myGrpList")';  // 나의 그룹 목록
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	fn_scrollToSelected();
+}
+
+//보내기 버튼 클릭 핸들러.
+$(document).on("click","#pageWrite",function(){
+	fn_pageWrite();
+});
+
+// 휘발성 메시지 삭제 시간을 yyyymmddhhmi 포맷으로 변경.
+function fn_formatVolatileDate(){
+	var _volatileSelDate = $("form[name=frmWrite]").find("select[name=VOLATILE_DATE]").val();
+	var _volatileDate = '';
+	var _date = new Date();
+	if(_volatileSelDate == 'd_1'){
+		_date.setDate(_date.getDate() + 1);
+	}else if(_volatileSelDate == 'd_3'){
+		_date.setDate(_date.getDate() + 3);
+	}else if(_volatileSelDate == 'd_5'){
+		_date.setDate(_date.getDate() + 5);
+	}else if(_volatileSelDate == 'w_1'){
+		_date.setDate(_date.getDate() + 7);
+	}else if(_volatileSelDate == 'm_1'){
+		_date.setMonth(_date.getMonth() + 1);
+	}else if(_volatileSelDate == 'm_3'){
+		_date.setMonth(_date.getMonth() + 3);
+	}else if(_volatileSelDate == 'm_6'){
+		_date.setMonth(_date.getMonth() + 6);
+	}
+	_volatileDate = _date.getFullYear()+ '' + ((_date.getMonth()+1)<10?'0'+(_date.getMonth()+1):(_date.getMonth()+1)) 
+		+ '' + (_date.getDate()<10?'0'+_date.getDate():_date.getDate());
+	var _volatileHour = $("form[name=frmWrite]").find("input[name=VOLATILE_HOUR]").val();
+	var _volatileMin = $("form[name=frmWrite]").find("input[name=VOLATILE_MIN]").val();
+	return _volatileDate + _volatileHour + _volatileMin;
+}
+
+//예약 메시지 발신 시간을 yyyymmddhhmi 포맷으로 변경.
+function fn_formatReservDate(){
+	var _reservDate = $("form[name=frmWrite]").find("input[name=RESERV_DATE]").val();
+	_reservDate = _reservDate.replace(/\./g, "");
+	var _reservHour = $("form[name=frmWrite]").find("input[name=RESERV_HOUR]").val();
+	var _reservMin = $("form[name=frmWrite]").find("input[name=RESERV_MIN]").val();
+	return _reservDate + _reservHour + _reservMin;
+}
+
+// 입력 폼 validation.
+function fn_validate(){
+	
+	if( $("form[name=frmWrite]").find("input[name=GROUP_ID]").val() == ""){
+		alert('#springMessage("menu.securePush.msgSend.alert.selectGrp")'); //그룹을 선택해 주세요.
+		$("form[name=frmWrite]").find("input[name=GROUP_NAME]").focus();
+		return false;
+	}
+	
+	if( $("form[name=frmWrite]").find("select[name=MSG_TYPE]").val() == "VOLATILE"){
+		if( $("form[name=frmWrite]").find("select[name=VOLATILE_DATE]").val() == ""){
+			alert('#springMessage("menu.securePush.msgSend.alert.selectDelDate")'); // 삭제 날짜를 선택해 주세요.
+			$("form[name=frmWrite]").find("select[name=VOLATILE_DATE]").focus();
+			return false;
+		}else if($("form[name=frmWrite]").find("input[name=VOLATILE_HOUR]").val() == ""){
+	        alert('#springMessage("menu.securePush.msgSend.alert.inputDelTime")');  //삭제 시간을 입력해 주세요.
+	        $("form[name=frmWrite]").find("input[name=VOLATILE_HOUR]").focus();
+	        return false;
+	    }else if($("form[name=frmWrite]").find("input[name=VOLATILE_HOUR]").val().length != 2){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidDelTime") [00 ~ 23]');  //삭제 시간 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=VOLATILE_HOUR]").focus();
+	        return false;
+	    }else if(!$("form[name=frmWrite]").find("input[name=VOLATILE_HOUR]").val().match(/^\d+$/)){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidDelTime") [00 ~ 23]');  //삭제 시간 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=VOLATILE_HOUR]").focus();
+	        return false;
+	    }else if(parseInt($("form[name=frmWrite]").find("input[name=VOLATILE_HOUR]").val()) > 23){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidDelTime") [00 ~ 23]');  //삭제 시간 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=VOLATILE_HOUR]").focus();
+	        return false;
+	    }else if($("form[name=frmWrite]").find("input[name=VOLATILE_MIN]").val() == ""){
+	        alert('#springMessage("menu.securePush.msgSend.alert.inputDelMin")');  //삭제 분을 입력해 주세요.
+	        $("form[name=frmWrite]").find("input[name=VOLATILE_MIN]").focus();
+	        return false;
+	    }else if($("form[name=frmWrite]").find("input[name=VOLATILE_MIN]").val().length != 2){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidDelMin") [00 ~ 59]');  //삭제 분 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=VOLATILE_MIN]").focus();
+	        return false;
+	    }else if(!$("form[name=frmWrite]").find("input[name=VOLATILE_MIN]").val().match(/^\d+$/)){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidDelMin") [00 ~ 59]');  //삭제 분 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=VOLATILE_MIN]").focus();
+	        return false;
+	    }else if(parseInt($("form[name=frmWrite]").find("input[name=VOLATILE_MIN]").val()) > 59){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidDelMin") [00 ~ 59]');  //삭제 분 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=VOLATILE_MIN]").focus();
+	        return false;
+	    }
+	}
+	
+	if( $("form[name=frmWrite]").find("input[name=RESERVED]:checked").val() == "Y"){
+		if( $("form[name=frmWrite]").find("input[name=RESERV_DATE]").val() == ""){
+			alert('#springMessage("menu.securePush.msgSend.alert.selectReservDate")'); // 예약 날짜를 선택해 주세요.
+			$("form[name=frmWrite]").find("input[name=RESERV_DATE]").focus();
+			return false;
+		}else if($("form[name=frmWrite]").find("input[name=RESERV_HOUR]").val() == ""){
+	        alert('#springMessage("menu.securePush.msgSend.alert.inputReservTime")');  //예약 시간을 입력해 주세요.
+	        $("form[name=frmWrite]").find("input[name=RESERV_HOUR]").focus();
+	        return false;
+	    }else if($("form[name=frmWrite]").find("input[name=RESERV_HOUR]").val().length != 2){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidReservTime") [00 ~ 23]');  //예약 시간 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=RESERV_HOUR]").focus();
+	        return false;
+	    }else if(!$("form[name=frmWrite]").find("input[name=RESERV_HOUR]").val().match(/^\d+$/)){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidReservTime") [00 ~ 23]');  //예약 시간 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=RESERV_HOUR]").focus();
+	        return false;
+	    }else if(parseInt($("form[name=frmWrite]").find("input[name=RESERV_HOUR]").val()) > 23){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidReservTime") [00 ~ 23]');  //예약 시간 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=RESERV_HOUR]").focus();
+	        return false;
+	    }else if($("form[name=frmWrite]").find("input[name=RESERV_MIN]").val() == ""){
+	        alert('#springMessage("menu.securePush.msgSend.alert.inputReservMin")');  //예약 분을 입력해 주세요.
+	        $("form[name=frmWrite]").find("input[name=RESERV_MIN]").focus();
+	        return false;
+	    }else if($("form[name=frmWrite]").find("input[name=RESERV_MIN]").val().length != 2){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidReservMin") [00 ~ 59]');  //예약 분 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=RESERV_MIN]").focus();
+	        return false;
+	    }else if(!$("form[name=frmWrite]").find("input[name=RESERV_MIN]").val().match(/^\d+$/)){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidReservMin") [00 ~ 59]');  //예약 분 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=RESERV_MIN]").focus();
+	        return false;
+	    }else if(parseInt($("form[name=frmWrite]").find("input[name=RESERV_MIN]").val()) > 59){
+	        alert('#springMessage("menu.securePush.msgSend.alert.invalidReservMin") [00 ~ 59]');  //예약 분 포맷이 유효하지 않습니다.
+	        $("form[name=frmWrite]").find("input[name=RESERV_MIN]").focus();
+	        return false;
+	    }
+		var _reservFormattedDate = fn_formatReservDate();
+		var _currDate = new Date();
+		var _currDateStr = _currDate.getFullYear()+ '' + ((_currDate.getMonth()+1)<10?'0'+(_currDate.getMonth()+1):(_currDate.getMonth()+1)) 
+			+ '' + (_currDate.getDate()<10?'0'+_currDate.getDate():_currDate.getDate())
+			+ '' + (_currDate.getHours()<10?'0'+_currDate.getHours():_currDate.getHours())
+			+ '' + (_currDate.getMinutes()<10?'0'+_currDate.getMinutes():_currDate.getMinutes());
+		if(parseInt(_reservFormattedDate) <= parseInt(_currDateStr)){
+			alert('#springMessage("menu.securePush.msgSend.alert.invalidReservSendTime")'); // 예약 발송 시간을 현재 시간 이후로 설정해 주세요.
+			return false;
+		}
+	}
+	
+	if( $("form[name=frmWrite]").find("select[name=MSG_TYPE]").val() == "VOLATILE" 
+			&& $("form[name=frmWrite]").find("input[name=RESERVED]:checked").val() == "Y"){
+		var _reservFormattedDate = fn_formatReservDate();
+		
+		var _volatileFormattedDate = fn_formatVolatileDate();
+		
+		if(parseInt(_volatileFormattedDate) <= parseInt(_reservFormattedDate)){
+			alert('#springMessage("menu.securePush.msgSend.alert.invalidVolatileDelTime")'); // 휘발성 메시지 삭제 시간을 예약 발송 시간 이후로 설정해 주세요.
+			return false;
+		}
+	}
+	
+	if( $("form[name=frmWrite]").find("input[name=TITLE]").val() == ""){
+		alert('#springMessage("menu.securePush.msgSend.alert.inputTitle")');  //제목을 입력해 주세요.
+		$("form[name=frmWrite]").find("input[name=TITLE]").focus();
+		return false;
+    }
+	
+	return true;
+}
+
+//메시지 전송
+function fn_pageWrite(){
+	
+	if(!fn_validate())return;
+	
+	var formData = new FormData();
+	formData.append("TITLE" , $("form[name=frmWrite]").find("input[name=TITLE]").val());
+	formData.append("MSG_CONT" , $("form[name=frmWrite]").find("#MSG_CONT").val() );
+	formData.append("SENDER_ID" , $("form[name=frmWrite]").find("#SENDER_ID").val()); 
+	formData.append("GROUP_ID" , $("form[name=frmWrite]").find("#GROUP_ID").val());
+	if($("form[name=frmWrite]").find("input:checkbox[id='URGENT']").is(":checked"))
+		formData.append("URGENT" , "Y");
+	if($("form[name=frmWrite]").find("input:checkbox[id='FWD_ALLOW']").is(":checked"))
+		formData.append("FWD_ALLOW" , "Y");
+	formData.append("MSG_TYPE" , $("form[name=frmWrite]").find("select[name=MSG_TYPE]").val());
+	if( $("form[name=frmWrite]").find("select[name=MSG_TYPE]").val() == "VOLATILE"){
+		formData.append("VOLATILE_DATE" , fn_formatVolatileDate()+'00');
+	}
+	formData.append("RESERVED" , $("form[name=frmWrite]").find("input[name=RESERVED]:checked").val());
+	if( $("form[name=frmWrite]").find("input[name=RESERVED]:checked").val() == "Y"){
+		formData.append("RESERV_DATE" , fn_formatReservDate()+'00');
+	}
+	var fileIdsArr = new Array();
+	$(".file-list").find("div").each(function(){ fileIdsArr.push(this.id); });
+	if(fileIdsArr.length > 0)
+		formData.append("ATTACH_FILE_ID" , fileIdsArr.join());
+	formData.append("CONT_TYPE", "html");
+	
+	var url = CONTEXT_PATH + "/admin/securepush/msgSend/groupSend";
+	document.getElementById("loading-indicator").style.display="block";
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		cache: false,
+        contentType: false,
+        processData: false,
+		data:formData,
+		dataType:"json",
+		success:function(data){
+			document.getElementById("loading-indicator").style.display="none";
+			
+			if(data.result > 0){
+				alert('#springMessage("menu.push.sendManage.alert.sendRequest")'); //"발송 요청되었습니다."
+			}else{
+				alert(data.msg);
+			}
+		},
+        error: function(jqXHR, textStatus, errorThrown) {
+        	document.getElementById("loading-indicator").style.display="none";
+            alert(errorThrown);
+        }
+	});
+}
+
+
+//조직도 검색 팝업 호출.
+function fn_goSelectOrgPop(grpId){
+
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/selectOrg";
+	var type = "POST";
+	var data = "";
+	if(grpId != null && typeof(grpId) != 'undefined')
+		data = 'GRP_ID=' + grpId;
+	var target = $("#windowPop");
+	var whideh = 800;
+	var title = '#springMessage("menu.securePush.manageGrp.assignMember")';  // 구성원 지정
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+//등록 화면 (그룹명, 그룹컬러 지정)
+$(document).on("click","#addGrpLink",function(){
+	$("#NEW_GRP_NM").val('');
+	$("#NEW_GRP_COLOR").val('');
+	
+	fn_goAddGrpPop();
+});
+
+//그룹 생성 팝업 호출.
+function fn_goAddGrpPop(){
+	
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/addGrpPop";
+	var type = "POST";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 440;
+	var title = '#springMessage("menu.securePush.manageGrp.addGrp")';  // 그룹 추가
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+//그룹 생성
+function fn_grpAdd(grpNm, grpColor, deptCdArr, userIdArr){
+
+	var url = CONTEXT_PATH + "/admin/securepush/manageGrp/addGrp";
+	var data = 'GRP_NM=' + encodeURIComponent(grpNm);
+	data += '&GRP_COLOR=' + grpColor;
+	if(deptCdArr.length != 0)
+		data += '&DEPT_CDS=' + deptCdArr.join(',');
+	if(userIdArr.length != 0)
+		data += '&USER_IDS=' + userIdArr.join(',');
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('#springMessage("menu.securePush.freeBoard.alert.regComplete")'); //등록되었습니다.
+				fn_closePopup();
+			}else{
+				alert(data.msg);
+			}
+		},
+   error: function(jqXHR, textStatus, errorThrown) {
+       alert(errorThrown);
+   }
+	});
+}
+</script>
+
+<div id="loading-indicator" class="backgroundPopupDiv">
+    <img alt="loading" src= "$RESOURCES_PATH/images/loading.gif" style="margin-top: 15%"/>
+</div>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span></span>
+		<span></span>
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<form name="frmWrite" method="post">
+	#### S : 리스트  폼 부분  ####
+		<div class="scroll-area">
+			<table class="full-width">
+				<caption></caption>
+				<colgroup>
+					<col>
+					<col style="width:10px">
+					<col>
+				</colgroup>
+				<tr>
+					<td class="tbl-wrap valignTop">
+						<table class="tbl full-width">
+							<caption>#springMessage("menu.securePush.msgSend.sendGrpMsg")</caption> <!-- 그룹 메시지 보내기 -->
+							<colgroup>
+								<col style="width:88px">
+								<col style="width:103px">
+								<col style="width:88px">
+								<col style="width:103px">
+							</colgroup>
+							<tr>
+								<th>#springMessage("common.text.registDate")</th> <!-- 등록일시 -->
+								<td id="tdRegDt"></td>
+								<th>#springMessage("common.header.author")</th> <!-- 작성자 -->
+								<td>
+									$!senderInfo.USER_NM<br />
+									($!senderInfo.DEPT_NM)
+									<input type="hidden" name="SENDER_ID" id="SENDER_ID" value="$!senderInfo.USER_ID" />
+								</td>
+							</tr>
+
+							<tr>
+								<th><label for="GROUP_NAME">#springMessage("menu.push.user.groupName")</label></th> <!-- 그룹명 -->
+								<td colspan="3">
+									<input type="text" name="GROUP_NAME" id="GROUP_NAME" size="12" readonly>
+									<a href="javascript:fn_goSelectGrpPop();void(0)" class="tbl-btn1">#springMessage("menu.securePush.msgSend.selectGrp")</a> <!-- 그룹 선택 -->
+									<input type="hidden" name="GROUP_ID" id="GROUP_ID" value="" />
+									<a href="javascript:void(0)" id="addGrpLink" class="tbl-btn1">#springMessage("menu.securePush.manageGrp.addGrp")</a> <!-- 그룹 추가 -->
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.msgType")</th> <!-- 메시지 유형 -->
+								<td colspan="3">
+									<div class="tbl-select" style="width:140px;">
+										<label for="MSG_TYPE">#springMessage("menu.securePush.msgSend.msgType.normal")</label> <!-- 일반 메시지 -->
+										<select name="MSG_TYPE" id="MSG_TYPE">
+											<option value="NORMAL">#springMessage("menu.securePush.msgSend.msgType.normal")</option> <!-- 일반 메시지 -->
+											<option value="VOLATILE">#springMessage("menu.securePush.msgSend.msgType.volatileMsg")</option> <!-- 휘발성 메시지 -->
+										</select>
+									</div>
+									
+									<input type="checkbox" name="URGENT" id="URGENT" value="Y"><label for="URGENT">#springMessage("menu.securePush.msgSend.msgType.urgent")</label> <!-- 긴급 -->
+									<input type="checkbox" name="FWD_ALLOW" id="FWD_ALLOW" value="Y"><label for="FWD_ALLOW" style="margin-left:5px;">#springMessage("menu.securePush.msgSend.msgType.fwdAllow")</label><br /> <!-- 전달가능 -->
+									<small>※ #springMessage("menu.securePush.msgSend.urgent.comment")</small> <!-- '긴급'체크 시, 일반 메시지보다 먼저 발송됩니다. -->
+									<small>※ #springMessage("menu.securePush.msgSend.fwdAllow.comment")</small> <!-- '전달가능'체크 시, 수신자의 메시지 전달이 가능해집니다. -->
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.expireDate")</th> <!-- 삭제일시 -->
+								<td colspan="3">
+									<div class="tbl-select disabled">
+										<label for="VOLATILE_DATE">#springMessage("menu.securePush.msgSend.selectDate")</label> <!-- 날짜 선택 -->
+										<select name="VOLATILE_DATE" id="VOLATILE_DATE" disabled>
+											<option value="">#springMessage("menu.securePush.msgSend.selectDate")</option> <!-- 날짜 선택 -->
+											<option value="d_1">1#springMessage("menu.securePush.msgSend.select.dayAfter")</option> <!-- 일 후 -->
+											<option value="d_3">3#springMessage("menu.securePush.msgSend.select.dayAfter")</option>
+											<option value="d_5">5#springMessage("menu.securePush.msgSend.select.dayAfter")</option>
+											<option value="w_1">#springMessage("menu.securePush.msgSend.select.oneWeekAfter")</option> <!-- 일주일 후 -->
+											<option value="m_1">#springMessage("menu.securePush.msgSend.select.oneMonthLater")</option> <!-- 한달 뒤 -->
+											<option value="m_3">#springMessage("menu.securePush.msgSend.select.threeMonthLater")</option> <!-- 석달 뒤 -->
+											<option value="m_6">#springMessage("menu.securePush.msgSend.select.sixMonthLater")</option> <!-- 6개월 뒤 -->
+										</select>
+									</div>
+
+									<input type="text" size="2" maxlength="2" name="VOLATILE_HOUR" id="VOLATILE_HOUR" disabled> : <input type="text" size="2" maxlength="2" name="VOLATILE_MIN" id="VOLATILE_MIN" disabled>
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.push.sendManage.sendTime")</th> <!-- 발송시간 -->
+								<td colspan="3">
+									<input type="radio" name="RESERVED" id="now" checked="checked" value="N"><label for="now">#springMessage("menu.securePush.msgSend.immediateSend")</label> <!-- 즉시 발송 -->
+									<input type="radio" name="RESERVED" id="reserved" value="Y"><label for="reserved">#springMessage("menu.securePush.msgSend.reservSend")</label> <!-- 예약 발송 -->
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.push.sendManage.reserveTime")</th> <!-- 예약시간 -->
+								<td colspan="3">
+									<input type="text" name="RESERV_DATE" id="RESERV_DATE" class="datepicker sDate" placeholder="#springMessage('menu.securePush.manageSend.selectDate')" readonly disabled><label for="RESERV_DATE"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label> <!-- 날짜선택 -->
+									<input type="text" size="2" maxlength="2" name="RESERV_HOUR" id="RESERV_HOUR" disabled> : <input type="text" size="2" maxlength="2" name="RESERV_MIN" id="RESERV_MIN" disabled>
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.addFile")</th> <!-- 파일추가 -->
+								<td colspan="3">
+									<input type="file" name="ATTACH_FILE"  id="ATTACH_FILE" />
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("common.text.upFile")</th> <!-- 첨부파일 -->
+								<td colspan="3">
+									<div class="file-list" style="height: 245px;">
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+					<td></td>
+					<td class="tbl-wrap valignTop">
+						<table class="tbl-editor full-width">
+							<caption>#springMessage("menu.securePush.msgSend.enterTitleCont")</caption> <!-- 제목/내용 입력 -->
+							<colgroup>
+								<col style="width:380px">
+							</colgroup>
+							<tr>
+								<td>
+									<input type="text" name="TITLE" id="TITLE" maxlength="20" class="title" placeholder="#springMessage('common.header.title')"> <!-- 제목 -->
+								</td>
+							</tr>
+							<tr>
+								<td class="editor-body">
+									<div>
+										<textarea id="MSG_CONT" name="MSG_CONT" cols="105" rows="45" placeholder="#springMessage('common.alert.inputContents')"></textarea> <!-- 내용을 입력해 주세요. -->
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+
+			<div class="btn-wrap">
+				<a href="javascript:void(0)" class="btn1 type2 fl" id="pageInit">#springMessage("menu.securePush.msgSend.reset")</a> <!-- 초기화 -->
+				<a href="javascript:void(0)" class="btn1 fr" id="pageWrite">#springMessage("menu.securePush.msgSend.send")</a> <!-- 보내기 -->
+			</div>
+
+		</div>
+
+	</form>
+	<input type="hidden" id="SELECTED_GRP_ID" value="" />
+	<input type="hidden" id="SELECTED_GRP_NM" value="" />
+	<input type="hidden" id="NEW_GRP_NM" value="" />
+	<input type="hidden" id="NEW_GRP_COLOR" value="" />
+</div>

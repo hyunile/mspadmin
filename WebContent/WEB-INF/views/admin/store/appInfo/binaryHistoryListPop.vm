@@ -1,0 +1,88 @@
+
+<script type="text/javascript">
+
+function fn_goList(){
+    location.href = "/admin/store/appInfo";
+};
+
+$(document).ready(function () {
+    fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+
+</script>
+<div id="binaryHistoryTableDiv">
+    <table class="tbl-nb" >
+        <colgroup>
+            <col width="5%"></col>
+            <col width="15%"></col>
+            <col width="40%"></col>
+            <col width="20%"></col>
+            <col width="15%"></col>
+         </colgroup>
+        
+        <thead>
+            <tr>
+                <th>NO</th>
+                <th>Binary #springMessage("menu.mobile.deploy.version")</th> <!-- 버전 -->
+                <th>#springMessage("menu.mobile.manage.filePath")</th> <!--파일경로  -->
+                <th>#springMessage("menu.store.appManage.platform")(#springMessage("menu.mobile.deploy.version"))</th> <!-- 플랫폼(버전) -->
+                <th>#springMessage("menu.mobile.deploy.date") </th> <!-- 등록일 -->
+            </tr>
+        </thead>
+        <tbody>
+            #foreach( $bin in $binaryHistoryList )
+                #set($j_tot = $bin.TOT_CNT)
+                    <form name="frmSearch"  style="display:none;">
+						<input type="hidden" id="APP_PLAT_IDX"  name="APP_PLAT_IDX"  value="$bin.APP_PLAT_IDX"/>
+                    </form>
+               
+                <tr class="addInfoDiv">
+                    <td>
+                        $!bin.RNUM
+                    </td>
+                    <td>
+                        $!bin.BIN_VER</a>
+                    </td>
+                    <td>
+                         $!bin.ORG_BIN_FILE_NM
+                    </td>
+                    <td>
+                         $!bin.PLAT_VER_NM
+                    </td>
+                    <td>
+                        $!bin.REG_DTTM
+                    </td> 
+                </tr>
+            #end
+            #if(!$j_tot)
+                <tr >
+                    <td align="center" colspan="5">
+                        #springMessage("menu.store.user.noSearch") <!-- 검색된 정보가 없습니다. -->
+                    </td>
+                </tr>
+            #end
+        </tbody>
+    </table>
+</div>
+
+<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+    ##현재 페이지
+    <input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot" />
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_binaryHistoryList" />
+</div>
+    
+
+<div class="btn-wrap txtCenter">
+	<a href="javascript:void(0);" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+</div>
+
+  

@@ -1,0 +1,448 @@
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+});
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+function ch_search(){
+	var sfrm=document.frmSearch;
+	var sval=$("#conSelect").val();
+	if(sval==0){
+		if(sfrm.cuid.value.length>0&&sfrm.cuid.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.cuid.value="";
+			sfrm.cuid.focus();
+		}
+	}else if(sval==1){
+		if(sfrm.cname.value.length>0&&sfrm.appid.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.cname.value="";
+			sfrm.cname.focus();
+		}
+	}else if(sval==2){
+		if(sfrm.cname.value.length>0&&sfrm.cname.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.cname.value="";
+			sfrm.cname.focus();
+		}
+	}else if(sval==3){
+			if(sfrm.phoneno.value.length>0&&sfrm.phoneno.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.phoneno.value="";
+			sfrm.phoneno.focus();
+		}
+	}
+	fn_userList(1);
+}
+
+//페이징
+function fn_userList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/push/user";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#userTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//리시버 리로드
+$(document).on("click","#userReceiverReload",function(){
+    var url = CONTEXT_PATH + "/admin/push/receiverReload";
+    var data = {};
+    jQuery.ajax({
+        url: url,
+        type: "POST",
+        data: data,
+        dataType: "json",
+        success: function (data) {
+//                alert(JSON.stringify(data));
+            if (data.callbackData.resultCode == "0000") {
+                alert('#springMessage("menu.push.user.alert.success")'); //성공적으로 적용되었습니다.
+            } else {
+                alert(data.callbackData.resultMsg);
+            }
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert(thrownError);
+        }
+    });
+});
+
+//유저 등록 화면
+$(document).on("click","#userWrite",function(){
+	var url = CONTEXT_PATH + "/admin/push/user/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 480;
+	var title = '#springMessage("menu.push.user.userIn")';//"사용자 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//유저 대량 등록 화면
+$(document).on("click","#userWriteFile",function(){
+	var url = CONTEXT_PATH + "/admin/push/user/file/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 600;
+	var title = '#springMessage("menu.push.user.userManyIn")'; //"사용자 대량 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//유저 샘플 엑셀파일 다운로드
+function fn_download(){
+	f = document.frmUserInfo;
+	f.action = CONTEXT_PATH + '/admin/push/user/file/download';
+ 	f.submit();
+}
+
+//유저 대량 등록
+function fn_save(){
+	
+	if($('#USER_FILE').val() == ''){
+		alert('#springMessage("common.alert.inputFile")'); //"파일을 입력해주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){ // "등록 하시겠습니까?"
+		return;
+	}
+	
+	jQuery.ajaxFileUpload({
+		url: CONTEXT_PATH + '/admin/push/user/file/regist',
+		secureuri:false,
+		fileElementId:'USER_FILE',
+		data: {},
+		dataType: 'html/text',
+		contentType : 'multipart/form-data',
+		success: function (data,status) {
+		var result = jQuery.parseJSON(data);
+		alert(result.msg);
+			if(result.result > 0){
+				fn_userList(1);
+				fn_closePopup();
+			}
+		},
+		error:function(x,e){
+			alert('#springMessage("menu.mobile.common.getError")'); //'오류가 발생했습니다. 계속해서 같은 오류발생시 관리자에게 문의하십시오.'
+		}
+	});
+}
+
+//유저 수정 화면
+$(document).on("click","#userModify",function(){
+
+	var PUSHKEY = $(this).parent().parent().find(".PUSHKEY").val();
+
+	var url = CONTEXT_PATH + "/admin/push/user/edit";
+	var type = "GET";
+	var data = "PUSHKEY=" + PUSHKEY;
+	var target = $("#windowPop");
+	var whideh = 480;
+	var title = '#springMessage("menu.push.user.userUpdate")';//"사용자 수정";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//유저 등록
+function fn_userWrite(){
+	if( $("form[name=frmUserInfo]").find("input[name=CUID]").val() == ""){
+		alert("CUID"+'#springMessage("common.alert.doInput2")');  //를 입력해주세요.
+		return;
+	} else if($("#CUID_CHECK").val() == '0'){
+		alert("CUID"+'#springMessage("menu.push.user.alert.doCheck")'); //를 중복체크를 해주새요.
+		return;
+	}else if( $("form[name=frmUserInfo]").find("input[name=CNAME]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.nameIn")'); //이름을 입력해주세요.
+		return;
+	} else if( $("form[name=frmUserInfo]").find("input[name=PHONENO]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.phoneIn")'); //전화번호를 입력해주세요.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){  // "등록 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/user/regist";
+	var data = $("form[name=frmUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_userList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//유저 수정
+function fn_userModify(){
+
+	if( $("form[name=frmUserInfo]").find("input[name=CNAME]").val() == ""){
+		alert("CNAME"+'#springMessage("common.alert.doInput")');  //을 입력해주세요.
+		return;
+	} else if( $("form[name=frmUserInfo]").find("input[name=PHONENO]").val() == ""){
+		alert("PHONENO"+'#springMessage("common.alert.doInput")');  //을 입력해주세요.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){  //"수정 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/user/edit";
+	var data = $("form[name=frmUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_userList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//유저 삭제
+function fn_userDelete(){
+
+	if(! confirm('#springMessage("common.alert.doDelete")')){ // "삭제 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/user/delete";
+	var data = $("form[name=frmUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_userList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//GUID 중복체크
+function fn_CuidCheck(){
+	var url = CONTEXT_PATH + "/admin/push/user/check";
+	var data = $("form[name=frmUserInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#CUID_CHECK").val("1");
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//CUID 변경
+function fn_GuidChange(){
+	$("#CUID_CHECK").val("0");
+}
+
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_userList(1);
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.system.userManage")</span>			<!-- 사용자 관리 -->
+		<span>#springMessage("menu.system.userManage")</span>			<!-- 사용자 관리 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.userManage")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:300px">
+				<col/>
+			</colgroup>
+			
+			<thead>
+				<tr>
+					<td>
+						<select id="conSelect" title="#springMessage('menu.mobile.notice.title.selectSearch')" > <!-- 검색항목선택 -->
+	      						<option value="0">CUID</option>
+	      						<option value="1">AppID</option>
+	      						<option value="2">#springMessage("common.text.name")</option> <!-- 이름 -->
+	      				</select>
+						
+						<input class="se_con" type="text" id="cuid" name="CUID" class="inputField" title="#springMessage('login.userid')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 아이디 -->
+						<input class="se_con" type="text" id="appid" name="APPID" class="inputField" title="#springMessage('menu.push.sendManage.appID')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 앱아이디 -->
+	      				<input class="se_con" type="text" id="cname" name="CNAME" class="inputField" title="#springMessage('common.text.name')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 이름 -->
+	      				<input class="se_con" type="text" id="phoneno" name="PHONENO" class="inputField" title="#springMessage('common.text.phoneNum')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 전화번호 -->
+					</td>
+					<td>
+						<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+					</td>
+				</tr>
+			</thead>
+		</table>
+		
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+			
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		
+		
+			
+            
+		<div id="userTableDiv">
+			
+			<table class="tbl-nb" summary="디바이스ID,구분,아이디,고객이름,전화번호,변경일시,상세">
+				<colgroup>
+					<col >
+					<col style="width:70px">
+					<col style="width:100px">
+					<col style="width:150px">
+					<col style="width:200px">
+					<col style="width:100px">
+					<col style="width:60px">
+				</colgroup>
+				
+				
+					<thead>
+						<tr>
+							<th scope="col">#springMessage("common.text.device")ID</th> <!-- 디바이스 -->
+                            <th scope="col">#springMessage("menu.stats.mobile.type")</th> <!-- 구분 -->
+                            <th scope="col">#springMessage("login.userid")</th> <!-- 아이디 -->
+							<th scope="col">#springMessage("menu.push.user.clientName")</th> <!-- 고객이름 -->				
+							<th scope="col">#springMessage("common.text.app")ID</th> <!-- 앱 -->
+							<th scope="col">#springMessage("menu.push.appManage.updateDate")</th> <!--변경일시  -->
+							<th scope="col"> </th>
+						</tr>
+					</thead>
+					<tbody>
+					#foreach( $pushUser in $pushUserList )
+						#set($j_tot = $pushUser.TOT_CNT)
+						<tr>
+                            <td style="text-align:center;" >
+                                $esc.xml($!pushUser.DEVICEID)
+                            </td>
+                            <td style="text-align:center;" >
+                                $esc.xml($!pushUser.PNSID)
+                            </td>
+							<td  >
+								$esc.xml($!pushUser.CUID)
+                                <input type="hidden" class="PUSHKEY" value="$!pushUser.PUSHKEY"/>
+							</td>
+							<td >
+								$esc.xml($!pushUser.CNAME)
+							</td>
+<!--							
+							<td>
+								$!pushUser.PHONENO
+							</td>
+-->							
+							<td>
+								$esc.xml($!pushUser.APPID)
+							</td>
+							<td>
+								$esc.xml($!pushUser.MODDATE)
+							</td>
+							<td>
+								<a href="javascript:void(0)" id="userModify" class="tbl-btn1">#springMessage("common.header.detail")</a> <!-- 상세 -->
+							</td>
+						</tr>
+					#end
+					#if(!$j_tot)
+						<tr>
+							<td colspan="7" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+						</tr>
+					#end
+					</tbody>
+				</table>
+
+				<div class="j_page_div">
+					##현재 페이지
+					<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+					##총 개수
+					<input type="hidden" name="J_tot" value="$!j_tot" />
+					##한페이지의 로우수
+					<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+					##한페이지수
+					<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+					##이밴트
+					<input type="hidden" name="j_event" value="fn_userList" />
+				</div>
+				
+			</div>
+			
+			<br><br>
+	
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

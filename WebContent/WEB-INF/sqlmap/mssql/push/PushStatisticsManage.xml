@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.statistics.mapper.PushStatisticsManageDao">
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT CONVERT(integer, #{PAGE_SIZE}) PAGE_SIZE
+	, CONVERT(integer, #{PAGE_NUM}) PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+
+    <!--  Period Statistics per Time   -->
+    <select id="selectPeriodTimeStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT datename(hh,T1.REGDATE) DT, COUNT(*) AS CNT
+        FROM T_PUSH_USER_INFO T1
+        WHERE T1.REGDATE BETWEEN CONVERT(datetime,#{START_DT}, 102) AND CONVERT(datetime,#{END_DT}, 102)
+        <if test="APPID != null and APPID!=''" >
+            AND T1.APPID = #{APPID}
+        </if>
+        <if test="PNSID != null and PNSID!=''" >
+            AND T1.PNSID = #{PNSID}
+        </if>
+        GROUP BY datename(hh,T1.REGDATE)
+        ORDER BY datename(hh,T1.REGDATE) ASC
+    </select>
+
+    <!--  Period Statistics per Day   -->
+    <select id="selectPeriodDayStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT CONVERT(char(8), T1.REGDATE, 112) DT, COUNT(*) AS CNT
+        FROM T_PUSH_USER_INFO T1
+        WHERE T1.REGDATE BETWEEN CONVERT(datetime,#{START_DT}, 102) AND CONVERT(datetime,#{END_DT}, 102)
+        <if test="APPID != null and APPID!=''" >
+            AND T1.APPID = #{APPID}
+        </if>
+        <if test="PNSID != null and PNSID!=''" >
+            AND T1.PNSID = #{PNSID}
+        </if>
+        GROUP BY CONVERT(char(8), T1.REGDATE, 112)
+        ORDER BY CONVERT(char(8), T1.REGDATE, 112) ASC
+    </select>
+
+    <!--  Period Statistics per Week   -->
+    <select id="selectPeriodWeekStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT DATEPART(weekday, T1.REGDATE) DT, COUNT(*) AS CNT
+        FROM T_PUSH_USER_INFO T1
+        WHERE T1.REGDATE BETWEEN CONVERT(datetime,#{START_DT}, 102) AND CONVERT(datetime,#{END_DT}, 102)
+        <if test="APPID != null and APPID!=''" >
+            AND T1.APPID = #{APPID}
+        </if>
+        <if test="PNSID != null and PNSID!=''" >
+            AND T1.PNSID = #{PNSID}
+        </if>
+        GROUP BY DATEPART(weekday, T1.REGDATE) 
+        ORDER BY DATEPART(weekday, T1.REGDATE)  ASC
+    </select>
+
+    <!--  Period Statistics per Day   -->
+    <select id="selectPeriodMonthStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT CONVERT(char(19), T1.REGDATE, 112) DT, COUNT(*) AS CNT
+        FROM T_PUSH_USER_INFO T1
+        WHERE T1.REGDATE BETWEEN CONVERT(datetime,#{START_DT}, 102) AND CONVERT(datetime,#{END_DT}, 102)
+        <if test="APPID != null and APPID!=''" >
+            AND T1.APPID = #{APPID}
+        </if>
+        <if test="PNSID != null and PNSID!=''" >
+            AND T1.PNSID = #{PNSID}
+        </if>
+        GROUP BY CONVERT(char(19), T1.REGDATE, 112)
+        ORDER BY CONVERT(char(19), T1.REGDATE, 112) ASC
+    </select>
+
+    <!--  OS Statistics   -->
+    <select id="selectPerioOSStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT PNSID, COUNT(*) AS CNT
+        FROM T_PUSH_USER_INFO T1
+        WHERE T1.REGDATE BETWEEN CONVERT(datetime,#{START_DT}, 102) AND CONVERT(datetime,#{END_DT}, 102)
+        <if test="APPID != null and APPID!=''" >
+            AND T1.APPID = #{APPID}
+        </if>
+        <if test="PNSID != null and PNSID!=''" >
+            AND T1.PNSID = #{PNSID}
+        </if>
+        GROUP BY PNSID
+        ORDER BY CNT desc
+    </select>
+
+    <select id="selectSenderCode" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT SENDERSEQ,SENDERCODE,SENDERNAME
+        FROM T_PUSH_SENDER_INFO
+        WHERE ISDELETED = 'N'
+        ORDER BY SENDERSEQ DESC
+    </select>
+
+    <select id="selectSysSentMsg"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+    	<include refid="head"/>
+        SELECT SENDDATE
+        ,SENDERCODE
+        ,SENT_CNT
+        ,FAIL_CNT
+        ,READ_CNT
+        ,UPNS_SENT_CNT
+        ,UPNS_FAIL_CNT
+        ,APNS_SENT_CNT
+        ,APNS_FAIL_CNT
+        ,GCM_SENT_CNT
+        ,GCM_FAIL_CNT
+        ,TIME00
+        ,TIME01
+        ,TIME02
+        ,TIME03
+        ,TIME04
+        ,TIME05
+        ,TIME06
+        ,TIME07
+        ,TIME08
+        ,TIME09
+        ,TIME10
+        ,TIME11
+        ,TIME12
+        ,TIME13
+        ,TIME14
+        ,TIME15
+        ,TIME16
+        ,TIME17
+        ,TIME18
+        ,TIME19
+        ,TIME20
+        ,TIME21
+        ,TIME22
+        ,TIME23
+        , ROW_NUMBER() OVER(ORDER BY SENDDATE DESC, SENDERCODE ASC) PAGE_KEY
+        FROM T_PUSH_SYSMSG_SENTINFO
+        <where>
+            <if test="START_DT!=null and START_DT!='' and END_DT!=null and END_DT!=''">
+                <![CDATA[SENDDATE >= #{START_DT} AND SENDDATE<=#{END_DT}]]>
+            </if>
+            <if test="SENDERCODE != null and SENDERCODE!=''">
+                AND SENDERCODE=#{SENDERCODE}
+            </if>
+        </where>
+        
+    <include refid="bottom"/>
+    </select>
+    
+    <!-- 메세지별 통계 -->
+	<select id="selectPushStaticsMsgList" parameterType="kr.msp.admin.push.statistics.dto.PushStatisticsPDTO" resultType="kr.msp.admin.push.statistics.dto.PushStatisticsMsgDTO">
+		<include refid="head"/>
+		SELECT SEQNO,
+			   MESSAGE,
+			   convert(char(10), REGDATE, 23) AS REGDATE,
+			   TOTAL_SEND_CNT AS TOTAL_SEND_CNT, 
+			   SEND_CNT AS SUCC_CNT,
+			   FAIL_CNT AS FAIL_CNT, 
+			   REV_CNT AS RECV_CNT, 
+			   READ_CNT AS READ_CNT,
+			   DB_IN,
+			   ROW_NUMBER() OVER(ORDER BY REGDATE DESC) PAGE_KEY
+		FROM T_PUSH_MSG_RECV_MASTER
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="APPID != null and APPID != ''">
+				AND APPID = #{APPID, jdbcType=VARCHAR}
+			</if>
+			<if test="FROM_DATE != null and FROM_DATE != '' and TO_DATE != null and TO_DATE != ''">
+				AND REGDATE BETWEEN convert(datetime, #{FROM_DATE}, 102) AND convert(datetime, #{TO_DATE}, 102)
+			</if>
+		</trim>
+        ORDER BY SEQNO DESC
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- 원장테이블의 SEQNO list 조회 -->
+	<select id="selectSeqNoList" parameterType="kr.msp.admin.push.statistics.dto.PushStatisticsPDTO" resultType="Integer">
+		SELECT SEQNO
+		FROM T_PUSH_MSG_RECV_MASTER
+		WHERE APPID = #{APPID}
+	</select>
+	
+	<select id="selectTotStaticsMsg" parameterType="kr.msp.admin.push.statistics.dto.PushStatisticsPDTO" resultType="kr.msp.admin.push.statistics.dto.PushStatisticsMsgDTO">
+		SELECT SUM(TOTAL_SEND_CNT) AS TOTAL_SEND_CNT, 
+			   SUM(SEND_CNT) AS SUCC_CNT,
+			   SUM(FAIL_CNT) AS FAIL_CNT, 
+			   SUM(REV_CNT) AS RECV_CNT, 
+			   SUM(READ_CNT) AS READ_CNT
+		FROM T_PUSH_MSG_RECV_MASTER
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="APPID != null and APPID != ''">
+				AND APPID = #{APPID, jdbcType=VARCHAR}
+			</if>
+			<if test="FROM_DATE != null and FROM_DATE != '' and TO_DATE != null and TO_DATE != ''">
+				AND REGDATE BETWEEN convert(datetime, #{FROM_DATE}, 102) AND convert(datetime, #{TO_DATE}, 102)
+			</if>
+		</trim> 
+	</select>
+	
+	<select id="selectStaticsMsgByHourGraph" parameterType="kr.msp.admin.push.statistics.dto.PushStatisticsPDTO" resultType="kr.msp.admin.push.statistics.dto.PushStatisticsMsgDTO">
+		SELECT * 
+		FROM(
+		    SELECT 1 AS COL, COUNT(CUID) AS READ_CNT, READDATE AS READ_DATE 
+		    FROM T_PUSH_SUCCESS 
+		    WHERE STATUS = 3 AND READDATE IS NOT NULL AND SEQNO = #{SEQNO}
+		    GROUP BY CUID, READDATE
+		    ) A
+			INNER JOIN(
+		              SELECT 1 AS COL,  COUNT(CUID) AS RECV_CNT, REVDATE AS RECV_DATE
+		              FROM T_PUSH_SUCCESS 
+		              WHERE STATUS = 2 AND READDATE IS NOT NULL AND SEQNO = #{SEQNO}
+		              GROUP BY CUID, REVDATE
+		              ) B
+			ON A.COL = B.COL   
+	</select>
+		
+	<select id="selectStaticsRecvMsgGraphByHour" parameterType="kr.msp.admin.push.statistics.dto.PushStatisticsPDTO" resultType="kr.msp.admin.push.statistics.dto.PushStatisticsMsgDTO">
+		SELECT COUNT(*) AS RECV_CNT, datename(hh,REVDATE) AS RECV_DATE
+		FROM T_PUSH_SUCCESS
+		WHERE STATUS = 2 AND 
+		      REVDATE IS NOT NULL AND 
+		      SEQNO = #{SEQNO} AND
+		      CONVERT(char(10), REVDATE, 102) = #{DATE}
+		GROUP BY datename(hh,REVDATE)
+	</select>
+		
+	<select id="selectStaticsReadMsgGraphByHour" parameterType="kr.msp.admin.push.statistics.dto.PushStatisticsPDTO" resultType="kr.msp.admin.push.statistics.dto.PushStatisticsMsgDTO">
+		SELECT COUNT(*) AS READ_CNT, datename(hh,READDATE) AS READ_DATE
+		FROM T_PUSH_SUCCESS
+		WHERE STATUS = 3 AND 
+		      READDATE IS NOT NULL AND 
+		      SEQNO = #{SEQNO} AND
+		      CONVERT(char(10), READDATE, 102) = #{DATE}
+		GROUP BY datename(hh,READDATE)
+	</select>	
+	
+</mapper>

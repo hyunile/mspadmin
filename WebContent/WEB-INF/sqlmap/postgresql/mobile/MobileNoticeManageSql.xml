@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.mobile.notice.mapper.MobileNoticeDao">
+
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+	<sql id="head">
+    SELECT viewC.*
+    FROM (
+      SELECT
+            (ROW_NUMBER() OVER()) AS "RNUM"
+            ,COUNT(*) OVER() AS "TOT_CNT"
+            ,viewB.*
+      FROM (SELECT viewA.* FROM (
+    </sql>
+
+	<sql id="bottom">
+		) AS viewA
+		) AS viewB
+		) AS viewC
+		WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+	<!-- 페이징 처리 쿼리 부분 끝 -->
+	
+	<!-- 조회 -->
+	<!-- START_DTTM ADD by UncleJoe 2014.01.10 -->
+	<select id="GetClientNoticeList" parameterType="kr.msp.admin.mobile.notice.dto.MobileNoticeParamDto" resultType="kr.msp.admin.mobile.notice.dto.MobileNoticeDto" >
+		<include refid="head"/>
+		SELECT 	C."NOTC_IDX",
+    		   	C."TITLE",
+    		   	C."CONT",
+    		  	TO_CHAR(C."REG_DTTM", 'YYYY.MM.DD') AS "REG_DTTM",
+    		  	TO_CHAR(C."MOD_DTTM", 'YYYY.MM.DD') AS "MOD_DTTM",
+    			C."USE_YN",
+    			C."APP_ID",
+    			C."START_DTTM",
+    			C."END_DTTM",
+    			D."SVC_NM"
+    	FROM 	"TB_MOB_NOTC" AS C
+	    		, (
+	    		SELECT 
+		       		A."SVC_ID"
+		           	, A."SVC_NM"
+		           	, A."APP_ID"
+		      	FROM 
+		       		"TB_SVC" AS A ,
+		          	"TB_MOB_SVC" AS B ,
+		           	"TB_SVC_AUTH" AS C ,
+		          	"TB_SYS_USER_AUTH_GRP" AS D
+		    	WHERE 
+		      		A."SVC_ID" = B."SVC_ID"
+		         	AND B."USE_YN" = 'Y'
+		       		AND B."SVC_ID" = C."SVC_ID"
+		         	AND C."AUTH_GRP_ID" = D."AUTH_GRP_ID"
+		            AND D."USER_ID" = #{USER_ID}
+	            ) AS D
+		WHERE C."APP_ID" = D."APP_ID"
+			<if test="APP_ID != null and APP_ID != ''">
+				AND D."APP_ID" = #{APP_ID}
+			</if>
+			<if test="TITLE != null and TITLE != ''">
+				AND C."TITLE" LIKE '%' || #{TITLE} || '%'
+			</if>
+			<if test="CONT != null and CONT != ''">
+				AND C."CONT" LIKE '%' || #{CONT} || '%'
+			</if>
+		ORDER BY C."NOTC_IDX" DESC
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- 서비스 조회 -->
+	<select id="GetMobileSvc" parameterType="kr.msp.admin.mobile.notice.dto.MobileSvcDto" resultType="kr.msp.admin.mobile.notice.dto.MobileSvcDto" >
+		SELECT 
+       		A."SVC_ID"
+           	, A."SVC_NM"
+           	, A."APP_ID"
+      	FROM 
+       		"TB_SVC" AS A ,
+          	"TB_MOB_SVC" AS B ,
+           	"TB_SVC_AUTH" AS C ,
+          	"TB_SYS_USER_AUTH_GRP" AS D
+    	WHERE 
+      		A."SVC_ID" = B."SVC_ID"
+         	AND B."USE_YN" = 'Y'
+       		AND B."SVC_ID" = C."SVC_ID"
+         	AND C."AUTH_GRP_ID" = D."AUTH_GRP_ID"
+            AND D."USER_ID" = #{USER_ID}
+	</select>
+	
+	<!-- 조회 단건 -->
+	<!-- START_DTTM ADD by UncleJoe 2014.01.10 -->
+	<select id="GetClientNoticeOneList" parameterType="kr.msp.admin.mobile.notice.dto.MobileNoticeDto" resultType="kr.msp.admin.mobile.notice.dto.MobileNoticeDto" >
+		SELECT 	A."NOTC_IDX",
+    		   	A."TITLE",
+    		   	A."CONT",
+    		  	TO_CHAR(A."REG_DTTM", 'YYYY.MM.DD') AS "REG_DTTM",
+    		  	TO_CHAR(A."MOD_DTTM", 'YYYY.MM.DD') AS "MOD_DTTM",
+    			A."USE_YN",
+    			A."APP_ID",
+    			A."START_DTTM",
+    			A."END_DTTM",
+    			B."SVC_NM"
+    	FROM "TB_MOB_NOTC" AS A
+    	INNER JOIN "TB_SVC" AS B
+    	ON A."APP_ID" = B."APP_ID"
+    	WHERE A."NOTC_IDX" = CAST(#{NOTC_IDX} AS BIGINT)
+	</select>
+	
+	<!-- 공지사항 등록 -->
+	<!-- START_DTTM ADD by UncleJoe 2014.01.10 -->
+	<insert id="InsertMobileNotice" parameterType="kr.msp.admin.mobile.notice.dto.MobileNoticeDto">
+		INSERT INTO "TB_MOB_NOTC"
+		( 
+			"NOTC_IDX" ,
+		  	"TITLE",
+		  	"CONT",
+		  	"REG_DTTM" ,
+		  	"MOD_DTTM",
+		  	"USE_YN" ,
+		  	"APP_ID" ,
+		  	"START_DTTM",
+		  	"END_DTTM"
+		) VALUES ( 
+			NEXTVAL('"SEQ_TB_MOB_NOTC"') ,
+			 #{TITLE},
+			 #{CONT},
+			 now() ,
+			 now() ,
+			 #{USE_YN} ,
+			 #{APP_ID} ,
+			 #{START_DTTM}, 
+			 #{END_DTTM} 
+		)
+	</insert>
+	
+	<!-- 공지사항 등록 -->
+	<!-- START_DTTM ADD by UncleJoe 2014.01.10 -->
+	<update id="UpdateMobileNotice" parameterType="kr.msp.admin.mobile.notice.dto.MobileNoticeDto">
+		UPDATE "TB_MOB_NOTC"
+			SET "TITLE" = #{TITLE},
+				"CONT" = #{CONT},
+				"APP_ID" = #{APP_ID},
+				"USE_YN" = #{USE_YN},
+				"START_DTTM" = #{START_DTTM},
+				"END_DTTM" = #{END_DTTM},
+				"MOD_DTTM" = now()
+			WHERE "NOTC_IDX" = CAST(#{NOTC_IDX} AS BIGINT)
+	</update>
+	
+	<!-- 공지사항 삭제 -->
+	<delete id="DeleteMobileNotice" parameterType="kr.msp.admin.mobile.notice.dto.MobileNoticeDto">
+		DELETE FROM "TB_MOB_NOTC" WHERE "NOTC_IDX" = CAST(#{NOTC_IDX} AS BIGINT)
+	</delete>
+</mapper>

@@ -1,0 +1,336 @@
+<div id="conWrap">
+	
+	<style type="text/css">
+		.togUi {display:none;}
+		tr.check	td	{background-color:#C0C0C0; }
+	</style>
+    <script type="text/javascript">
+   
+        //그룹리스트  체크박스 전체선택
+        $(document).on("click","#checkAll1",function( e ){     
+            $(".chkCls1").prop('checked', $(this).is(":checked"));  //class는 먹는데, id,name은 안먹음;;
+        });
+        
+        //사용자 리스트 체크박스 전체선택
+        $(document).on("click","#checkAll2",function( e ){     
+            $(".chkCls2").prop('checked', $(this).is(":checked")); 
+        });
+        
+        //그룹사용자 리스트 체크박스 전체선택
+        $(document).on("click","#checkAll3",function( e ){     
+            $(".chkCls3").prop('checked', $(this).is(":checked")); 
+        });
+       
+        //리스트 삭제
+        $(document).on("click","#btn_delete",function( e ){ 
+           
+            var cnt = $(".chkCls:checkbox:checked").length;
+           
+            if(cnt < 1){
+                 alert('#springMessage("menu.store.appManage.alert.chooseApp")'); //"한 개 이상 App정보를 선택하셔야 합니다"
+            }else{
+                 if(confirm('#springMessage("menu.store.userGroup.alert.groupDelete")')){ //"그룹을 삭제하시겠습니까?"
+                    var checkBoxList = [];
+                    $('.chkCls:not(#checkAll):checkbox:checked').each(function(i) {
+                           checkBoxList.push($(this).val());
+                    });
+        
+                    var data = "DEL_LIST="+checkBoxList;
+                    alert(data);
+                    jQuery.ajax({
+                            url: CONTEXT_PATH +"/admin/store/userGroup/deleteList"
+                            ,type:"post"
+                            ,data:data
+                            ,dataType:"json"
+                            ,success:function(data){
+                                alert(data.msg);
+                                if(data.result > 0){
+                                     document.location.href= CONTEXT_PATH +'/admin/store/userGroup';
+                                }
+                         }
+                    }) 
+                    
+                }
+            }
+        });
+            	
+    	//오른쪽으로 이동하기
+        $(document).on("click","#groupAdd",function( e ){ 
+            var groupCnt = $(".chkCls1:checkbox:checked").length;
+            var userCnt = $(".chkCls2:checkbox:checked").length;
+           
+            if(groupCnt > 0 &&userCnt > 0){
+               
+           
+                jQuery("#groupTable").find("input[type=checkbox]:not(#checkAll1):checked").each(function(i){
+                    
+                    var t1 = jQuery(this).parent().parent().clone();
+                    jQuery("#userTable").find("input[type=checkbox]:not(#checkAll2):checked").each(function(j){
+                    
+                        var len =  jQuery("#userGroupTable > tbody > tr").length;
+                        
+                        var t2 = jQuery(this).parent().parent().clone();
+                        var grpId  =  t1.find("td:eq(0)").find("input[type=checkbox]").val(); 
+                        var empNo =  t2.find("td:eq(0)").find("input[type=checkbox]").val();
+                        var group  = t1.find("td:eq(2)").text(); //그룹명
+                        var user    =  t2.find("td:eq(2)").text();//회원명
+                        var userId  = t2.find("td:eq(3)").text(); //회원ID
+                        
+                        var txt = '<tr class="userGroupDiv">';
+                             txt += '<input type="hidden" name="GRP_ID" id="GRP_ID" value="' + grpId+'">';
+                             txt += '<input type="hidden" name="EMP_NO" id="EMP_NO" value="' + empNo+'">';
+                             txt += '<td><input type="checkbox" class="chkCls3" id="checkBoxUserGroup" value="" title="항목선택"/></td>';
+                             txt += '<td>' + group  + '</td>';
+                             txt += '<td>' + user  + '</td>';
+                             txt += '<td>' + userId  + '</td>';
+                             txt += '</tr>';
+                        
+                        jQuery("#userGroupTable").find("tbody").append(txt);
+                       
+                    });
+                    
+                });
+            
+            
+                /*
+                jQuery("#add_rightListTable tr:eq(0)").remove();
+                var checkBoxList = [];
+                $('.chkCls1:not(#checkAll):checkbox:checked').each(function(i) {
+                      checkBoxList.push($(this).val());
+                });
+                */
+                
+                
+            }else{
+                if(groupCnt < 1){
+                    alert('#springMessage("menu.store.userGroup.alert.noGroup")'); //선택된 그룹이 없습니다. 추가할 그룹을 선택하세요.
+                    return;
+                }
+                
+                if(userCnt < 1){
+                    alert('#springMessage("menu.store.userGroup.alert.noMember")'); //선택된 회원이 없습니다. 추가할 회원을 선택하세요.
+                    return;
+                }
+            }
+        });
+        
+        //왼쪽으로 제거하기
+        $(document).on("click","#groupDel",function( e ){ 
+            //전체건 체크
+            var len =  jQuery("#userGroupTable > tbody > tr").length;
+            if(parseInt(len) < 1){
+                alert('#springMessage("menu.store.userGroup.alert.noRemove")'); //제거할 건이 없습니다.
+                return;
+            }   
+            
+            //삭제할 건 체크
+            var chk =  jQuery("#checkBoxUserGroup:checked").length;
+            if(parseInt(chk) < 1){
+                alert('#springMessage("menu.store.userGroup.alert.removeCheck")'); //삭제할 건을 체크해 주세요.
+                return;
+            }
+            
+             jQuery("#userGroupTable").find("input[type=checkbox]:not(#checkAll3):checked").each(function(i){
+                  $(this).parent().parent().remove();
+                  
+             });
+           
+        });
+     
+        
+        //등록 버튼선택
+        $(document).on("click","#btn_save",function( e ){ 
+            
+            var len =  jQuery("#userGroupTable > tbody > tr").length;
+             
+            if( len == 0 ){
+                alert('#springMessage("menu.store.userGroup.alert.noRegist")'); //등록할 건이 없습니다.
+            }
+        
+            if( len > 0){
+                
+                if(confirm('#springMessage("menu.store.userGroup.alert.userListIn")')){ //"사용자 리스트를  등록하시겠습니까?"        
+                    var data = jQuery("form[id=userGroupForm]").serialize();
+                   
+                    jQuery.ajax({
+                            url: CONTEXT_PATH +"/admin/store/userGroup/save"
+                            ,type:"post"
+                            ,data:data
+                            ,dataType:"json"
+                            ,success:function(data){
+                                alert(data.msg);
+                                //if(data.result > 0){
+                                     document.location.href= CONTEXT_PATH +'/admin/store/userGroup';
+                                //}
+                             }
+                     }) 
+                }        
+            }
+        });    
+        
+        ##목록 리스트 보기 
+        $(document).on("click","#btn_list",function( e ){ 
+            document.location.href='/admin/store/userGroup';
+        });
+    </script>
+    
+    <form name="frm" method="post" action="selectDevice" style="display:none;">
+        <input type="hidden" name="AUTH_TYPE"/>
+        <input type="hidden" name="APP_IDX"/>
+        <input type="hidden" name="DELEV_DATA"/>
+        <input type="hidden" name="ORDER" value="$!{R_ORDER}"/>
+    </form>
+
+#### S : 프로그램 위치 기술 부분  ####
+    <div class="headerBg">
+    	<div class="innerNavi">
+    		<a href="#"><img src="$RESOURCES_PATH/img/icon/icon_home.gif" alt="home"/></a> <span>ADMIN</span> <span>#springMessage("menu.system.serviceAppstore")</span> <span>#springMessage("menu.store.userGroup")</span> <strong>#springMessage("common.button.regist")</strong>  <!-- 앱스토어  / 사용자 그룹관리  / 등록-->
+    	</div>
+    	<div class="tb_tit">
+    		<h3>#springMessage("menu.store.userGroup")</h3> <!-- 사용자 그룹관리 -->
+    	</div>
+    </div>
+#### E : 프로그램 위치 기술 부분  ####
+
+   #### S : 조회 폼 부분  ####
+     <!-- 
+     <form name="frmSearch" method="post">
+        <input type="hidden" id="rtnCd" value="$!rtnCd" />
+        <input type="hidden" id="rtnMsg" value="$!rtnMsg" />
+        <div class="detail_searchBox">
+            <p> 그룹명  :               
+                <input class="se_con" type="text" name="SEARCH_GRP_NM"  onkeydown="javascript:if(event.keyCode==13){fn_groupList(1);return false;}"/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                              회원명 : 
+                <input class="se_con" type="text" name="SEARCH_EMP_NM"  onkeydown="javascript:if(event.keyCode==13){fn_groupList(1);return false;}"/>          
+            </p>
+            <p class="btn_detail">
+                <a href="javascript:fn_select();" class="btn_search">검색 </a>
+            </p>
+        </div>
+     </form>
+      -->
+    
+    #### S : 리스트  폼 부분  ####
+    <div class="contents">
+    	   <div class="left_area" style="height:560px;">
+              
+               <div class="left_list1" style="height:280px;border-bottom:1px solid grey;">
+                   <h4 class="title">#springMessage("menu.system.noticeGroupList")</h4> <!-- 그룹 목록 -->
+                   <div  id="divGroupList"  class="left_list1"  style="overflow-y: auto;height:250px;border-bottom:1px solid grey;">
+                       <table class="tbList1" summary="제목,내용" id="groupTable" >
+                            <colgroup>
+                                <col width="10%"/><col width="10%"/><col width="auto"/>
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="checkAll1" title="#springMessage('common.title.selectAll')" /> <!-- 전체선택 -->
+                                </th>
+                                <th>NO</th>
+                                <th>#springMessage("menu.push.user.groupName") </th> <!-- 그룹 명 -->
+                               
+                            </thead>
+                            <tbody >
+                        #foreach( $group in $groupList )
+                            <tr class="appDiv">
+                                <td><input type="checkbox" class="chkCls1" value="$group.GRP_ID" title="#springMessage('common.title.selectOne')"/></td> <!-- 항목선택 -->
+                                <td>$!group.RNUM</td>
+                                <td>$!group.GRP_NM</td>
+                            </tr>
+                        #end
+                            </tbody>
+                        </table>
+                    </div>    
+               </div>
+               
+               <div class="left_list2" style="height:280px;">
+                    <h4 class="title"> #springMessage("menu.store.userGroup.userList")</h4> <!-- 사용자 목록 -->
+                        
+                    <div  id="divUserList"  class="left_list1"  style="overflow-y: auto;height:250px;border-bottom:1px solid grey;">
+                        <table class="tbList1"  id="userTable" >
+                            <colgroup>
+                                <col width="10%"/><col width="10%"/><col width="35%"/><col width="25%"/><col width="auto"/>
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th><input type="checkbox" id="checkAll2" title="#springMessage('common.title.selectAll')" /></th> <!-- 전체선택 -->
+                                <th scope="row">NO
+                                </th>
+                                <th scope="row">#springMessage("common.text.memberName") <!-- 회원명 -->
+                                </th>
+                                <th scope="row">#springMessage("login.userid") <!-- 아이디 -->
+                                </th>
+                                <th scope="row">#springMessage("menu.store.user.rank") <!-- 직급 -->
+                                </th>
+                            </thead>
+                            <tbody>
+                        #foreach( $user in $userList )
+                            <tr class="appDiv">
+                                <td><input type="checkbox" class="chkCls2" value="$user.EMP_NO" title="#springMessage('common.title.selectOne')"/></td> <!-- 항목선택 -->
+                                <td>$!user.RNUM</td>
+                                <td>$!user.EMP_NM</td>
+                                <td>$!user.USERID</td>
+                                <td>$!user.EMP_CD_NM</td>
+                            </tr>
+                        #end
+                            </tbody>
+                        </table>
+                    </div>    
+                 </div>   
+             </div>
+                    
+             <form name="userGroupForm" id="userGroupForm"  method="post"  >        
+                 <div class="right_area" style="height:560px;">
+                     <h4 class="title"> USER GROUP #springMessage("common.text.list")</h4> <!-- 목록 -->
+                     <div  id="divGroupList"  class="left_list1"  style="overflow-y: auto;height:530px;border-bottom:1px solid grey;">
+                         <table class="tbList1" summary="제목,내용" id="userGroupTable">
+                            <colgroup>
+                                <col width="10%"/><col width="40%"/><col width="30%"/><col width="auto"/>
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th><input type="checkbox" id="checkAll3" title="#springMessage('common.title.selectAll')" /></th> <!-- 전체선택 -->
+                                <th>#springMessage("menu.push.user.groupName") <!-- 그룹  명 --></th>
+                                <th>#springMessage("common.text.memberName") <!-- 회원명 --> </th>
+                                <th>#springMessage("login.userid") <!-- 아이디 --> </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                             
+                            </tbody>
+                        </table>
+                    </div>   
+               </div>
+            </form>
+            
+            <div id="btnPane">
+                <table width="100%">
+                    <tr>
+                        <td width="50%" align="right">
+                <div class="btnArea ">
+                    <div class="btn_left right_area">
+                        <button type="button" class="btn_style1" id="groupAdd"><strong>#springMessage("common.button.add")&gt;&gt;</strong></button> <!-- 추가 -->
+                    </div>
+                </div>
+                        </td>   
+                        <td width="50%" align="left">
+                <div class="btnArea ">
+                    <div class="btn_left ta_r">
+                        <button type="button" class="btn_style1" id="groupDel"><strong>&lt;&lt#springMessage("common.button.delete")</strong></button> <!-- 삭제 -->
+                    </div>
+                </div>
+                        </td>   
+                    </tr>
+                </table>    
+            </div>
+            <div class="btnArea ta_r">
+                <button type="button" class="btn_style1" id="btn_save"><strong>#springMessage("common.button.regist")</strong></button> <!-- 등록 -->
+                <button type="button" class="btn_style1" id="btn_list" ><span>#springMessage("common.text.list")</span></button> <!-- 목록 -->
+            </div>
+         
+    </div>
+#### E : 리스트  폼 부분  ####
+
+
+</div>	

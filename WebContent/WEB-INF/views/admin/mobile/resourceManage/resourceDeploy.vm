@@ -1,0 +1,121 @@
+<script type="text/javascript">
+
+function fn_GoResDeploy(){
+
+	if($("#DPLY_VER").val() == ""){
+		alert('#springMessage("menu.mobile.deploy.alertVersion")'); //"배포 버전을 입력해 주십시오."
+		$("#DPLY_VER").focus();
+		return;
+	}
+	if($("#DPLY_NM").val() == ""){
+		alert('#springMessage("menu.mobile.deploy.alertTitle")'); //"배포 제목을 입력해 주십시오."
+		$("#DPLY_NM").focus();
+		return;
+	}
+	if($("#DPLY_DESC").val() == ""){
+		alert('#springMessage("menu.mobile.deploy.alertDesc")'); //"배포 설명을 입력해 주십시오."
+		$("#DPLY_DESC").focus();
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.askDeploy")')){ //"배포 하시겠습니까?"
+		return;
+	}
+	
+	$("#RESOURCE_LIST").val( $!resourceDeploy.RESOURCE_LIST );
+	
+	var url =  CONTEXT_PATH + "/admin/mobile/resourceManage/doprocess";
+	
+	var data = $("form[name=frmMain]").serialize();
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				GO_MENU_URL("0000000016", "/admin/mobile/rsc/deployList");
+			} else {
+				GO_MENU_URL("0000000070", "/admin/mobile/resourceManage");
+			}
+		}
+	});
+}
+</script>
+
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="headerBg">
+		<div class="innerNavi">
+			<a href="#"><img src="/resources/img/icon/icon_home.gif" alt="home"/></a> <span>#springMessage("menu.mobile")</span> <span>#springMessage("menu.mobile.upload")</span> <strong>배포정보입력</strong><!-- 모바일 관리 / 리소스업로드 -->
+		</div>
+		<div class="tb_tit">
+			<h3>#springMessage("menu.mobile.deployInfo")</h3><!-- 배포정보입력 -->
+		</div>
+	</div>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<div class="contents">
+		<form name="frmMain" method="post">
+			<input type="hidden" name="SVC_ID" value="$!resourceDeploy.SVC_ID" />
+			<input type="hidden" id="RESOURCE_LIST"  name="RESOURCE_LIST" value="" />
+			<input type="hidden" name="RESOURCE_CON" value="$!resourceDeploy.RESOURCE_CON" />
+			
+			#if( $resourceDeploy.RESOURCE_CON == "S" )
+				<input type="hidden" name="FILE_NM" value="$resourceDeploy.FILE_NM" />
+				<input type="hidden" name="FILE_EXT" value="$resourceDeploy.FILE_EXT" />
+				<input type="hidden" name="STS_CD" value="$resourceDeploy.STS_CD" />
+				<input type="hidden" name="RESOURCEDTTM_S" value="$resourceDeploy.RESOURCEDTTM_S" />
+				<input type="hidden" name="RESOURCEDTTM_E" value="$resourceDeploy.RESOURCEDTTM_E" />
+			#end
+			
+			<div class="tb_con">
+				<table class="tbType1" summary="앱 서비스명,배포 버전,제목,배포모드,암호화여부,설명">
+					<colgroup>
+						<col  width="20%"/><col  width="80%"/>
+					</colgroup>
+					<tr>
+						<th scope="row"><label for="SVC_NM">#springMessage("common.text.appname")</label></th><!-- App. 명 -->
+						<td>
+							$!resourceDeploy.SVC_NM
+							<input type="hidden" value="$!resourceDeploy.SVC_NM" name="SVC_NM" id="SVC_NM" />
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="DPLY_VER">#springMessage("menu.mobile.manage.deployVersion")</label></th> <!-- 배포 버전 -->
+						<td><input type="text" name="DPLY_VER" id="DPLY_VER" class="inputField" value="$!resourceDeploy.DEPLOY_VERSION"/></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="DPLY_NM">#springMessage("common.header.title")</label></th> <!-- 제목 -->
+						<td><input type="text" name="DPLY_NM" id="DPLY_NM" class="inputField" /></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="DPLY_TP">#springMessage("menu.mobile.deploy.mode")</label></th> <!-- 배포 모드 -->
+						<td>
+							<select id="DPLY_TP" name="DPLY_TP">
+								<option  value="0">#springMessage("menu.mobile.deploy.develop")</option> <!-- 개발 -->
+								<option  value="1">#springMessage("menu.mobile.deploy.operate")</option> <!-- 운영 -->
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="DEPLOY_FULL_ENC">#springMessage("menu.mobile.manage.encYN")</label></th> <!-- 암호화여부 -->
+						<td title="#springMessage('menu.mobile.manage.encDesc')">  <!-- 해당 배포할 리소스들을 암호화 합니다. -->
+							<input id="DEPLOY_FULL_ENC" name="DEPLOY_FULL_ENC" type="checkbox" value="Y"/> <label for="DEPLOY_FULL_ENC">#springMessage("menu.mobile.manage.enc")</label> <!-- 암호화 -->
+						</td>
+					</tr>
+					<tr>
+						<th><label for="DPLY_DESC">#springMessage("common.header.desc")</label></th> <!-- 설명 -->
+						<td><textarea id="DPLY_DESC" name="DPLY_DESC" class="width95" style="height:100px;"></textarea></td>
+					</tr>
+				</table>
+
+				<div class="btnArea ta_r"  id="deployDiv" >
+					<button type="button" onclick="fn_GoResDeploy()" class="btn_style1"><strong>#springMessage("common.button.save")</strong></button> <!-- 저장 -->
+				</div>
+			</div>
+		</form>
+	</div>
+</div>

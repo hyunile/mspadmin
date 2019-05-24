@@ -1,0 +1,133 @@
+<!-- 
+화면 : 배포관리 리스트 구성
+url : admin/mobile/rsc/ajax/deployList
+	( resourceDeployList.vm 에서 ajax통신후 리스트 구현)
+작성자 : 장문규
+ -->
+<table class="tbl-nb" summary="항목선택,앱서비스명,배포명,버전,배포파일명,등록일,배포모드,상태,다운">
+	<colgroup>
+		<col  width="15%"/><col  width="auto"/><col  width="20%"/>
+		<col  width="10%"/><col  width="10%"/><col  width="70px"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col" id="orderDPLY_VER" >#springMessage("menu.mobile.deploy.version")</th> <!-- 버전 -->
+			<th scope="col" id="orderDPLY_NM" >#springMessage("menu.mobile.deploy.name") / #springMessage("menu.mobile.deploy.size")</th> <!-- 배포명 / 사이즈 -->
+			<th scope="col" id="orderREG_DTTM" >#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+			<th scope="col" id="orderDPLY_TP" title="#springMessage('common.title.click')">#springMessage("menu.mobile.deploy.mode")</th> <!-- 배포모드   클릭하여 정렬변경--> 
+			<th scope="col" id="orderUSE_YN" title="#springMessage('common.title.click')">#springMessage("menu.mobile.deploy.status")</th> <!-- 상태    클릭하여 정렬변경-->
+			<th scope="col">#springMessage("common.button.down")</th> <!-- 다운 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach($rsc in $deployList)
+			#set($j_tot = $rsc.TOT_CNT)
+            #set($file_size_m = $rsc.FILE_SIZE / (1024*1024))
+		<tr class='moveResDeployDetail'>
+			#*
+		#	set($summary="DEPLOY_SEQNO=$rsc.DEPLOY_SEQNO&SERVICE_ID=$rsc.SERVICE_ID"+
+				"&DEPLOY_NAME=$rsc.DEPLOY_NAME&VERSION=$rsc.VERSION&FILE_NAME=$rsc.FILE_NAME"+
+				"&REMARK=$rsc.REMARK&REG_DATE=$rsc.REG_DATE&DEPLOY_TYPE=$rsc.DEPLOY_TYPE"+
+				"&USE_FLAG=$rsc.USE_FLAG")
+			*#
+			<input type="hidden" id="SVC_ID" value="$rsc.SVC_ID" />
+			<input type="hidden" id="DPLY_DESC" value="$rsc.DPLY_DESC" />
+			<input type="hidden" id="DPLY_TP" value="$rsc.DPLY_TP" />
+			<input type="hidden" id="USE_YN" value="$rsc.USE_YN" />
+			<input type="hidden" id="SVC_NM" value="$rsc.SVC_NM" />
+			<input type="hidden" id="FILE_NAME" value="$!rsc.FILE_NAME" />
+			<input type="hidden" id="USE_YN" value="$rsc.USE_YN" />
+			<input type="hidden" id="DPLY_IDX" value="$rsc.DPLY_IDX" />
+            <input type="hidden" id="FILE_IDX" value="$rsc.FILE_IDX" />
+			
+			<td>$esc.xml($!rsc.DPLY_VER)</td>
+			<td style="text-align:left;cursor:pointer;">$esc.xml($!rsc.DPLY_NM) ($!rsc.FILE_NAME) / $!{file_size_m}M</td>
+			<td>$esc.xml($!rsc.REG_DTTM)</td>
+
+		#if($!rsc.DPLY_TP == "0")
+			<td>#springMessage("menu.mobile.deploy.develop") $!FILE_PATH</td> <!-- 개발 -->
+		#else
+			<td>#springMessage("menu.mobile.deploy.operate")</td> <!-- 운영 -->
+		#end
+		#if($!rsc.USE_YN == "N")
+			<td>#springMessage("menu.mobile.deploy.stop")</td> <!-- 중지 -->
+		#else 
+			<td>#springMessage("menu.mobile.deploy.use")</td> <!-- 사용 -->
+		#end
+
+		#if(!$rsc.FILE_NAME)
+			<td>X</td>
+		#else
+			<td><a href="$!{CONTEXT_PATH}/admin/mobile/rsc/download?FILE_IDX=$rsc.FILE_IDX&D_TYPE=rsc" > <img src="$!{CONTEXT_PATH}/resources/img/icon/icon_file.gif" alt="첨부파일"/></a> </td>
+		#end
+		</tr>
+			##set($j_tot = $rsc.TOT_CNT)
+			##set($j_pageSize = $rsc.PAGE_SIZE)
+			##set($j_now = $rsc.PAGE_NUM)
+			##$j_tot / $rsc.PAGE_SIZE
+		#end
+	</tbody>
+</table>
+
+<input type="hidden" id="NOW_NUM" value="$!R_PAGE_NUM"/>
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_noticeList"/>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function()
+{
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	var target = $("#orderTarget").val();
+	var type = $("#orderType").val();
+
+	if(target == "DPLY_TP"){
+		if(type == "DESC"){
+    		$("#orderDPLY_TP").text('#springMessage("menu.mobile.deploy.mode")'+" ▽");  //배포모드 
+		}else{
+    		$("#orderDPLY_TP").text('#springMessage("menu.mobile.deploy.mode")'+" △");  //배포모드 
+		}
+	}else if(target == "USE_YN"){
+		if(type == "DESC"){
+    		$("#orderUSE_YN").text('#springMessage("menu.mobile.deploy.status")'+" ▽");  //상태 
+		}else{
+    		$("#orderUSE_YN").text('#springMessage("menu.mobile.deploy.status")'+" △"); //상태
+		}
+	}else if(target == "DPLY_IDX"){
+		if(type == "DESC"){
+    		$("#orderDPLY_IDX").text('#springMessage("common.header.number")'+" ▽"); //번호  
+		}else{
+    		$("#orderDPLY_IDX").text('#springMessage("common.header.number")'+" △"); //번호
+		}
+	}else if(target == "DPLY_NM"){
+		if(type == "DESC"){
+    		$("#orderDPLY_NM").text('#springMessage("menu.mobile.deploy.name")'+" ▽"); //배포명
+		}else{
+    		$("#orderDPLY_NM").text('#springMessage("menu.mobile.deploy.name")'+" △"); //배포명
+		}
+	}else if(target == "DPLY_VER"){
+		if(type == "DESC"){
+    		$("#orderDPLY_VER").text('#springMessage("menu.mobile.deploy.version")'+" ▽"); //버전
+		}else{
+    		$("#orderDPLY_VER").text('#springMessage("menu.mobile.deploy.version")'+" △"); //버전
+		}
+	}else if(target == "REG_DTTM"){
+		if(type == "DESC"){
+    		$("#orderREG_DTTM").text('#springMessage("menu.mobile.deploy.date")'+" ▽"); //등록일
+		}else{
+    		$("#orderREG_DTTM").text('#springMessage("menu.mobile.deploy.date")'+" △"); //등록일
+		}
+	}
+});
+</script>
+
+

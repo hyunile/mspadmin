@@ -1,0 +1,78 @@
+<script type="text/javascript">
+
+//조직원 목록 선택 토글 이벤트 처리.
+$(".user-list-div .user-list-row").bind("click keydown", function(e){
+	$(this).toggleClass("selected");
+	
+	var userId = $(this).find(".USER_ID").val();
+	var userNm = $(this).find(".USER_NM").val();
+	
+	if($(this).hasClass("selected")){
+		// 체크 박스 자체를 클릭하였을 때에는 체크 박스 세팅을 하지 않도록 처리.
+		if(e.target.nodeName != "INPUT" && e.target.nodeName != "LABEL")
+			$(this).find(".USER_CHK").prop('checked', true);
+		fn_addReceiverList(userId, userNm, 'usr');
+		
+	}else{
+		if(e.target.nodeName != "INPUT" && e.target.nodeName != "LABEL")
+			$(this).find(".USER_CHK").prop('checked', false);
+		$("#popup_receiver").find("#" + userId).remove();
+	}
+});
+
+//조직원 목록 체크 박스 핸들러.
+$(".user-list-div .USER_CHK").bind("change click", function(e){
+	e.stopPropagation(); // 중복 이벤트 방지.
+});
+
+//전체 선택 체크 박스 핸들러.
+$(".user-list-div #CHK_USER_ALL").bind("change", function(){
+	var _checked = $(this).is(":checked");
+	$(".user-list-div").find(".USER_CHK").each(function(){
+		$(this).prop("checked", _checked);
+		var userId = $(this).parent().parent().find(".USER_ID").val();
+		var userNm = $(this).parent().parent().find(".USER_NM").val();
+		if(_checked){
+			$(this).parent().parent().addClass("selected");
+			fn_addReceiverList(userId, userNm, 'usr');
+		}else{
+			$(this).parent().parent().removeClass("selected");
+			$("#popup_receiver").find("#" + userId).remove();
+		}
+	});
+});
+
+</script>
+<table class="tbl-pop-info user-list" style="margin-bottom:10px;">
+	<colgroup>
+		<col style="width:360px">
+		<col style="width:60px">
+	</colgroup>
+	<tbody>
+		<tr><td colspan="2"><div class="user-list-div" style="height:450px;">
+			<table>
+				<colgroup>
+					<col style="width:40px">
+					<col style="width:100px">
+					<col style="width:280px">
+				</colgroup>
+				<tr>
+					<th>
+						<input type="checkbox" name="CHK_USER_ALL" id="CHK_USER_ALL"><label for="CHK_USER_ALL"></label>
+					</th>
+					<th>#springMessage("common.text.name")</th> <!-- 이름 -->
+					<th>#springMessage("common.text.dept")</th> <!-- 부서 -->
+				</tr>
+				#foreach( $emp in $empList )
+				<tr class="user-list-row">
+					<td>
+						<input type="checkbox" class="USER_CHK" id="usrchk_$!emp.USER_ID"/><label for="usrchk_$!emp.USER_ID"></label>
+					</td>
+					<td>$!emp.USER_NM<input type="hidden" class="USER_ID" value="$!emp.USER_ID"/><input type="hidden" class="USER_NM" value="$!emp.USER_NM"/></td>
+					<td>$!emp.FULL_NM</td>
+				</tr>
+				#end
+			</table>
+		</div></td></tr>
+	</tbody>
+</table>

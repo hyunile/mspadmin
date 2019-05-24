@@ -1,0 +1,108 @@
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+$(document).on("click","#contentView",function( e ){ 
+
+      	var RV_NO = $(this).parent().parent().find(".hi_ck_row").val();
+    	var url = CONTEXT_PATH + "/admin/store/review/info";
+		var type = "GET";
+		var data = "RV_NO=" + RV_NO;
+		var target = $("#windowPop");
+		var whideh = 600;
+		var title = '#springMessage("common.text.group")'+' '+'#springMessage("common.button.regist")';//"그룹 등록";
+		fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+		
+});
+
+ $(document).on("click","#checkAll",function( e ){     
+    $(".ck_row").prop('checked', $(this).is(":checked")); 
+});
+
+</script>
+<table class="tb_list" id="GroupInfoList">
+	<colgroup>
+		<col width="8%"></col>
+		<col width="8%"></col>
+		<col width="20%"></col>
+		<col width="45%"></col>
+		<col width="10%"></col>
+        <col width="9%"></col>
+	</colgroup>
+	
+	<thead>
+		<tr>
+    		<th>
+    			<input type="checkbox"  class="ck_head"  id="checkAll"/>
+	     	</th>
+    		<th>
+    			NO
+	     	</th>
+	        <th class="sort" fname="APP_NM">
+	           	#springMessage("common.text.appname")<a class="mark" /> <!-- APP명 -->
+    		</th>
+    		<th class="sort" fname="TITLE">
+    			#springMessage("common.header.title")<a class="mark" /> <!-- 제목 -->
+	       	</th>
+	       	<th class="sort" fname="REG_DT">
+	           	#springMessage("menu.mobile.deploy.date")<a class="mark" /> <!-- 등록일 -->
+    		</th>
+            <th>
+               
+            </th>
+ 		</tr>
+	</thead>
+	<tbody>
+        #set($cnt = 1)
+    	#foreach( $data in $revList )
+       		#set($j_tot = $data.TOT_CNT)
+            
+    		<tr>
+        		<td>
+        			<input type="checkbox" class="ck_row" RV_NO="$!{data.RV_NO}"/>
+    	     	</td>
+        		<td>
+        			$!{data.RNUM}
+        			<input type="hidden" class="hi_ck_row" value="$!{data.RV_NO}"/>
+    	     	</td>
+    	        <td style="text-align:left;">
+    	           	$!{data.APP_NM}
+        		</td>
+        		<td style="text-align:left;">
+        			$!{data.TITLE}
+    	       	</td>
+    	       	<td>
+    				$!{data.REG_DT}
+        		</td>
+                <td>
+                    <button type="button" id="contentView" class="btn_style2" cnt="$cnt" >#springMessage("common.header.`detail")</button> <!-- 상세 -->
+                </td>
+     		</tr>	
+            #set($cnt = $cnt + 1)
+		#end
+		#if(!$j_tot)
+	   		<tr >
+	   			<td align="center" colspan="6">
+	   				#springMessage("menu.store.notice.alert.noReview")<!-- 검색된 리뷰가 없습니다. -->
+	           	</td>
+	       	</tr>
+	   	#end
+	</tbody>
+</table>
+
+<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot" />
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_select" />
+</div>

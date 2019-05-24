@@ -1,0 +1,274 @@
+<style type="text/css">
+	.treenode		{cursor:pointer;}
+</style>
+<script type="text/javascript">
+	$(document).ready(function(){
+		//공통 페지징 처리
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+		
+	    //left 트리메뉴
+		// $("#browser").treeview({useToggle:false});
+		//색상 및 커서상태 변경
+		// $('.treeview span.folder').css({'color':'black','cursor':'text'});       
+ 	});
+	
+	
+	    //공통코드 화면 호출(공통)
+    function fn_getList( url, type, data, target ){
+        var AjaxHTML = jQuery.ajax({
+            url: url ,
+            type: type ,
+            data: data ,
+            dataType: "html" ,
+            async: false
+        }).responseText;
+    
+        target.html(AjaxHTML);
+    }
+	
+		//신규 버튼
+	function fn_init(){
+		var  catgNm = $("form[name=frmCategory]").find("input[name=CATG_NM]").val() ;
+        var  catgCd = $("form[name=frmCategory]").find("input[name=CATG_CD]").val();
+
+		//if(confirm("신규 등록하시겠습니까? ")){
+        	
+			if(catgCd == undefined){
+				fn_categoryInfoSelect('0'); //top 카테고리는 정보조회가 없으므로 form 정보가 없어서 form을 나오게 하기 위한 조치임.
+				$('#selectcate').hide();
+			}
+             $('#categoryDetailDiv input[type="text"]').val('');
+             $('#categoryDetailDiv input[name="CATG_CD"]').val('');
+             $('#categoryDetailDiv input[name="UP_CATG_CD"]').val('STORE');
+             $('#categoryDetailDiv input[name="UP_CATG_NM"]').val('STORE');
+           
+             $('#categoryDetailDiv input[name="CATG_NM"]').focus();
+         //}
+
+        $('#categoryDetailDiv input[name="SORT_NO"]').val('1');
+        $('#categoryDetailDiv input[name="UP_CATG_NM"]').attr("readonly", true);
+        $('#LAST_CHK').val('');
+        $('#categoryDetailDiv select').val('Y');
+        $('#btn_delete').show();
+        $('#btn_save').show();
+        $('#btn_cancel').show();
+        $('#btn_new').hide();
+		
+    }
+
+	//저장전에 confirm
+	function fn_saveConfirm(){
+		if( $("form[name=frmCategory]").find("input[name=CATG_NM]").val() == ""){
+			alert('#springMessage("menu.store.appManage.alert.categoryIn")'); //카테고리명을 입력해주세요.
+			$("form[name=frmCategory]").find("input[name=CATG_NM]").focus();
+			return;
+		}
+        
+        if (fc_chk_byte($("form[name=frmCategory]").find("input[name=CATG_NM]").val()) > 20){  
+            alert('#springMessage("menu.store.appManage.alert.limitCategory")'); //카테고리명은  영문20자, 한글10자를  넘길수 없습니다.\n\n다시 입력해 주세요.
+            $('#categoryDetailDiv input[name="CATG_NM"]').focus();
+            return;
+            
+        }
+        
+        // LAST_CHK : '0'->현재 선택한 카테고리 이하가 존재 ,'1'->제일하위
+        if( $('#LAST_CHK').val() == '0' ){
+            
+            //하위 카테고리가 존재하는 경우, 사용유무를 전체 업데이트시 FLAG[UPDATEALL_FLAG]가 필요함.
+            if( jQuery('select[name=USE_YN]').val() == 'N' ){ 
+                if(confirm('#springMessage("menu.store.appManage.alert.allDelete")'+' '+'#springMessage("common.alert.doDelete")')){ //선택한 카테고리 이하가 모두 삭제됩니다.  삭제하시겠습니까?
+                    fn_save('N');
+                }
+            }
+            if( jQuery('select[name=USE_YN]').val() == 'Y'  ){ 
+                if(confirm('#springMessage("menu.store.appManage.alert.allUpdate")'+' '+'#springMessage("common.alert.doModify")')){ //"선택한 카테고리 이하가 모두 수정됩니다. 수정하시겠습니까?"
+                    fn_save('Y');
+                }
+            }
+            
+        }else{
+            fn_save();
+        }
+    }
+    
+    //저장
+    function fn_save(flag){
+        var url = CONTEXT_PATH + "/admin/store/app/category/save";
+        var data = $("form[name=frmCategory]").serialize();
+        
+        //하위 카테고리가 존재하는 경우, 사용유무를 전체 업데이트시 FLAG[UPDATEALL_FLAG]가 필요함.
+        data = data + "&SVC_ID="+ $('#SVC_ID').val() +  "&UPDATEALL_FLAG=" + flag ;
+        //alert(data);
+        
+        jQuery.ajax({
+                url:url,
+                type:"POST",
+                data:data,
+                dataType:"json",
+                success:function(data){
+                    alert(data.msg);
+                    if(data.result > 0){
+                        fn_treeSelect();
+                    }
+                }
+        });
+	}
+    function fn_delete(){
+        var url = CONTEXT_PATH + "/admin/store/app/category/del";
+        var data = $("form[name=frmCategory]").serialize();
+        
+        data = data + "&SVC_ID="+ $('#SVC_ID').val();
+        
+		var  catgCd = $("form[name=frmCategory]").find("input[name=CATG_CD]").val();
+		if(catgCd == undefined || catgCd == ''){
+			alert('#springMessage("menu.store.appManage.alert.chooseDelete")'); //'삭제할 카테고리를 선택해 주세요.'
+			return;
+		}
+		
+        if(confirm('#springMessage("menu.store.appManage.alert.deleteCategory")') == false){ //해당 카테고리를 삭제하시겠습니까?
+			return;
+		}
+        jQuery.ajax({
+                url:url,
+                type:"POST",
+                data:data,
+                dataType:"json",
+                success:function(data){
+                    alert(data.msg);
+                    if(data.result > 0){
+                        fn_treeSelect();
+                    }
+                }
+        });
+	}
+	//좌측 트리 리스트 조회
+	function fn_treeSelect(){
+        var url = CONTEXT_PATH + "/admin/store/app/category/tree";
+        var data = "" ;
+        var type = "POST";
+        var target = $("#menu_list_div");
+        
+        fn_getList( url, type, data , target );
+       
+        //left 트리메뉴
+        //$("#browser").treeview({useToggle:false});
+        //색상 및 커서상태 변경
+        $('.treeview span.folder').css({'color':'black','cursor':'text'});       
+    }
+	//카테고리 파일 선택시, 상세리스트와 상세정보 조회
+	  
+    
+    //카테고리 상세정보 조회
+    function fn_categoryInfoSelect(catgCd){
+    
+        var url = CONTEXT_PATH + "/admin/store/app/category/categoryInfo";
+        var type = "POST";
+        var data = "CATG_CD=" + catgCd;
+        var target = $("#categoryDetailDiv");
+        fn_getList( url, type, data , target );
+		
+		$('#btn_delete').show();
+        $('#btn_save').show();
+    
+    }
+	
+    function fn_cancel(){
+    
+        $('#btn_delete').hide();
+        $('#btn_save').hide();
+        $('#btn_cancel').hide();
+        $('#btn_new').show();
+    
+    }
+    
+    jQuery(document).on('click', '.treenode', function()
+    {
+        // 카테고리 상세 리스트 조회
+        var catg_cd = jQuery(this).attr('catg_cd');
+        var last_chk = jQuery(this).attr('last_chk');
+        
+        var data = "CATG_CD=" + catg_cd + "&LAST_CHK=" + last_chk ;
+        var url    = CONTEXT_PATH + "/admin/store/app/category/categoryInfo";
+        var type = "POST";
+        var target = $("#menu_info_div");
+        fn_getList( url, type, data , target );
+        //카테고리 상세정보 조회     
+        fn_categoryInfoSelect(catg_cd);
+        catehide = document.getElementById("selectcate") ;
+        catehide.style.display = "none"; 
+        $("#LAST_CHK").val(last_chk); //선택한 카테고리에 하위카테고리가 존재하는지 저장함. '1'-제일하위,'0'-하위존재
+    
+    });
+	
+</script>
+
+
+<div class="contents-area">
+
+	#### S : 프로그램 위치 기술 부분  ####
+   <div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>	
+
+	##HIDDEN##
+	<input type="hidden" id="CLICK_ID_MENU" value="" />
+    <input type="hidden" id="SVC_ID" value="$SVC_ID" />
+    <input type="hidden" id="LAST_CHK" value="" />
+    ##HIDDEN##
+    
+    <div class="scroll-area">
+    	
+    	<table class="full-width">
+			<caption></caption>
+			<colgroup>
+				<col>
+				<col style="width:30px">
+				<col>
+			</colgroup>
+			<tr>
+				<td class="tbl-wrap valignTop">  ######### S: 왼쪽 영역 ####
+					
+					<h2 class="tbl-title">#springMessage("menu.store.userGroup.category") </h2> <!-- 카테고리 -->
+	 				<div class="tb_menuList" id="menu_list_div" style="overflow:hidden;">
+						#parse ("/admin/store/category/categoryTree.vm")
+	 				</div>
+					
+				</td>  ######### E: 왼쪽 영역 ####
+			
+				<td class="txtCenter">	######### S: 가운데 영역 ####
+				
+				</td>		######### E: 가운데 영역 ####
+				
+				<td class="tbl-wrap valignTop">		######### S: 오른쪽 영역 ####
+				
+					<h2 class="tbl-title"> #springMessage("menu.store.appManage.categoryDetail")</h2> <!-- 카테고리 상세정보 -->
+					<div class= "tb_menuView">
+						<table class="tbl full-width">
+							<colgroup><!--  4cell  -->
+								<col width="80px"/><col width="auto"/><col width="80px"/><col width="auto"/>
+							</colgroup>
+							<tr id = "selectcate">
+								<th colspan="4" class="ta_c">#springMessage("menu.store.appManage.chooseCategory")</th> <!-- 카테고리를 선택해 주세요. -->
+							</tr>
+							<div id="categoryDetailDiv"></div>
+						
+						</table>
+					</div>
+		
+				</td>	######### E: 오른쪽 영역 ####
+			</tr>
+		</table>
+
+	</div>
+		
+	<div class="btnArea ta_r">
+		<a href="javascript:void(0)" id="btn_save" onClick="fn_saveConfirm();" class="btn1 fr">#springMessage("common.button.save")</a>			### 저장 ###
+		<a href="javascript:void(0)" id="btn_delete" onClick="fn_delete();" class="btn1 fr">#springMessage("common.button.delete")</a>			### 삭제 ###
+		<a href="javascript:void(0)" id="btn_new" onClick="fn_init();" class="btn1 fr">#springMessage("common.button.new")</a>					### 신규 ###
+		<a href="javascript:void(0)" id="btn_cancel" onClick="fn_cancel();" class="btn1 fr">#springMessage("common.button.cancel")</a>			### 취소 ###
+	</div>
+	
+</div>

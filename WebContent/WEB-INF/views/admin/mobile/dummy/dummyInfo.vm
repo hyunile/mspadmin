@@ -1,0 +1,86 @@
+<form name="frmDummy" method="post">
+	<div class="popup_content">
+		<fieldset>
+			<legend>등록 폼</legend>
+			<table class="tb_view" summary="제목,내용,만료일자,사용 여부,서비스명">
+				<colgroup>
+					<col width="15%"/><col width="35%"/><col width="15%"/><col width="35%"/>
+				</colgroup>
+				
+				<tr>
+					<th scope="row">
+						<label for="apiNm" class="required">#springMessage("common.text.apiName")</label> <!-- API 명 -->
+					</th>
+					<td colspan="3">
+						<input type="text" id="apiNm" name="apiNm" value="$!dummyInfo.apiNm"/>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="apiUrl" class="required">API URL</label>
+					</th>
+					<td colspan="3">
+						<input type="text" id="apiUrl" name="apiUrl" value="$!dummyInfo.apiUrl"/>
+						<input type="hidden" name="dummyIdx" value="$!dummyInfo.dummyIdx"/>
+					</td>
+				</tr>
+				
+				<tr>
+					<th>
+						<label for="rspBody" class="required">#springMessage("common.text.coursePrice")</label> <!-- 응답값 -->
+					</th>
+					<td colspan="3">
+						<textarea  name="rspBody" id="rspBody" class="width95" style="height:100px;width:452px;">$!dummyInfo.rspBody</textarea>
+					</td>
+				</tr>
+				<tr>
+					<th>
+						<label for="USE_YN">#springMessage("common.header.useYN")</label> <!-- 사용 여부 -->
+					</th>
+					<td>
+						<select id="USE_YN" name="useYn">
+						#if($dummyInfo.useYn == "Y")
+							<option value="Y" selected="selected">#springMessage("common.header.use_Y")</option> <!-- 사용  -->
+							<option value="N">#springMessage("menu.mobile.deploy.noUse")</option> <!-- 사용 안함 -->
+						#else
+							<option value="N" selected="selected">#springMessage("menu.mobile.deploy.noUse")</option> <!-- 사용 안함 -->
+							<option value="Y">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+						#end
+						</select>
+					</td>
+					
+					<th scope="row">
+						<label for="svcId" class="required">#springMessage("common.text.appname")</label> <!-- App. 명 -->
+					</th>
+					<td colspan="3">
+						##if($dummyInfo)
+						#if(false)
+							$!dummyInfo.svcNm
+							<input type="hidden" name="svcId" value="$!dummyInfo.svcId"/>
+						#else
+							<select id="svcId" name="svcId">
+								<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							#foreach( $b in $mobileSvcList )
+								#if($b.SVC_ID == $!dummyInfo.svcId) 
+								<option value="$b.SVC_ID" selected="selected">$b.SVC_NM</option>
+								#else
+								<option value="$b.SVC_ID" >$b.SVC_NM</option>
+								#end
+							#end
+							</select>
+						#end
+					</td>
+				</tr>
+			</table>
+		</fieldset>
+		<div class="btn_pop">
+		#if($dummyInfo)
+			<button type="button" onclick="fn_modify();" class="btn_basic"><span>#springMessage("common.button.modify")</span></button> <!-- 수정 -->
+			<button type="button" onclick="fn_delete();" class="btn_basic"><span><em class="icon del">#springMessage("common.button.delete")</em></span></button> <!-- 삭제 -->
+		#else
+			<button type="button" onclick="fn_save();" class="btn_basic"><strong>#springMessage("common.button.save")</strong></button> <!-- 저장 -->
+		#end
+			<button type="button" onclick="fn_closePopup();" class="btn_basic"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+		</div>
+	</div>
+</form>

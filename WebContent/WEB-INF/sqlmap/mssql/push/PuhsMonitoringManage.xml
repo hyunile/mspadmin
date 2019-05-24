@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.monitoring.mapper.MonitoringManageDao">
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT CONVERT(integer, #{PAGE_SIZE}) PAGE_SIZE
+	, CONVERT(integer, #{PAGE_NUM}) PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	
+	<!--  서버 상태 리스트 조회  -->
+    <select id="SelectServerList" parameterType="kr.msp.admin.push.monitoring.dto.MonitoringDto" resultType="kr.msp.admin.push.monitoring.dto.MonitoringDto">
+		<include refid="head"/>
+	        SELECT 
+			    A.SERVERTYPE
+			   ,A.SERVERNAME
+			   ,A.IPADDRESS
+			   ,A.PORT
+			   ,B.STATUS
+			   , ROW_NUMBER() OVER(ORDER BY A.SERVERTYPE DESC, A.IPADDRESS, A.PORT) PAGE_KEY
+			FROM T_PUSH_SERVER_INFO A
+			     LEFT OUTER JOIN T_PUSH_SERVER_STATUS B ON (A.IPADDRESS = B.IPADDRESS AND A.PORT = B.PORT)
+		<include refid="bottom"/>
+    </select>
+    
+    <!--  서버 장애 리스트조회  -->
+    <select id="SelectServerLogList" parameterType="kr.msp.admin.push.monitoring.dto.MonitoringDto" resultType="kr.msp.admin.push.monitoring.dto.MonitoringDto">
+       <include refid="head"/>
+            SELECT DISTINCT
+                   IPADDRESS
+                  ,PORT
+                  ,CONVERT(VARCHAR(19), REGDATE, 102) AS REGDATE
+                  ,SERVERNAME
+                  ,SERVERTYPE
+			   , ROW_NUMBER() OVER(ORDER BY REGDATE DESC, IPADDRESS, PORT, REGDATE, SUPERVISORSEQ) PAGE_KEY
+			FROM T_PUSH_ALERT_LOG
+			WHERE IPADDRESS = #{IPADDRESS}
+			AND PORT = #{PORT}
+        <include refid="bottom"/>
+    </select>
+	
+</mapper>

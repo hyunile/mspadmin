@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.msp.admin.mobile.statistics.mapper.StatisticsJoinDao">
+
+    <resultMap type="kr.msp.admin.mobile.statistics.dto.SvcCodeDto" id="SvcCodeDto">
+		<result property="SVC_ID"				column = "SVC_ID" 			/>
+		<result property="SVC_NM"				column = "SVC_NM" 			/>
+	</resultMap>
+	
+    
+
+    <!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT convert(int,#{PAGE_SIZE}) PAGE_SIZE
+	, convert(int,#{PAGE_NUM}) PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+
+    <!-- Select mobile Service Code -->
+    <select id="selectSvcCode" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      	SELECT S1.SVC_ID, S1.SVC_NM, S1.APP_ID
+	    FROM TB_SVC S1 ,TB_SVC_AUTH S2,TB_MOB_SVC S3, TB_SYS_USER_AUTH_GRP S4
+	    WHERE S1.SVC_ID = S2.SVC_ID
+		AND S1.SVC_ID = S3.SVC_ID
+		AND ISNULL(S3.USE_YN ,'N') = 'Y'
+		AND S2.AUTH_GRP_ID=S4.AUTH_GRP_ID
+		AND USER_ID= #{S_ID_USER}
+	</select>
+
+    <!--  Select List Of DownloadStatistics  -->
+    <select id="selectSvcId"  resultMap="SvcCodeDto">
+			SELECT  A.SVC_ID
+			,            A.SVC_NM
+			FROM    TB_SVC A
+			            INNER JOIN TB_STO_SVC B
+			                ON A.SVC_ID = B.SVC_ID
+			WHERE B.USE_YN = 'Y'
+			ORDER BY SVC_NM
+
+    </select>
+
+    <!--  Period Statistics per Time   -->
+    <select id="selectPeriodTimeStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT CONVERT(char(2), T1.REG_DTTM, 108) DT, COUNT(*) AS CNT
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT}, 120)
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        GROUP BY CONVERT(char(2), T1.REG_DTTM, 108)
+        ORDER BY CONVERT(char(2), T1.REG_DTTM, 108) ASC
+    </select>
+
+    <!--  Period Statistics per Day   -->
+    <select id="selectPeriodDayStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT CONVERT(VARCHAR, T1.REG_DTTM,112) DT, COUNT(*) AS CNT
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT}, 120)
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        GROUP BY CONVERT(VARCHAR, T1.REG_DTTM,112)
+        ORDER BY CONVERT(VARCHAR, T1.REG_DTTM,112) ASC
+    </select>
+
+    <!--  Period Statistics per Week   -->
+    <select id="selectPeriodWeekStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT DATEPART(dw, T1.REG_DTTM) DT, COUNT(*) AS CNT
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT}, 120)
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        GROUP BY DATEPART(dw, T1.REG_DTTM)
+        ORDER BY DATEPART(dw, T1.REG_DTTM) ASC
+    </select>
+
+    <!--  OS Statistics   -->
+    <select id="selectPerioOSStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT OS_NM, COUNT(*) AS CNT
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT}, 120)
+        AND OS_NM IS NOT NULL
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        GROUP BY OS_NM
+        ORDER BY CNT desc
+    </select>
+
+    <!--  Select User Statistics  -->
+    <select id="selectUserStatistics" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        <include refid="head"/><!--  include head of paging query -->
+        SELECT
+        USER_NM,   USER_ID,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,0,#{START_DT}), 112)THEN 1 ELSE 0 END) D1,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,1,#{START_DT}), 112)THEN 1 ELSE 0 END) D2,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,2,#{START_DT}), 112)THEN 1 ELSE 0 END) D3,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,3,#{START_DT}), 112)THEN 1 ELSE 0 END) D4,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,4,#{START_DT}), 112)THEN 1 ELSE 0 END) D5,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,5,#{START_DT}), 112)THEN 1 ELSE 0 END) D6,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,6,#{START_DT}), 112)THEN 1 ELSE 0 END) D7,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,7,#{START_DT}), 112)THEN 1 ELSE 0 END) D8,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,8,#{START_DT}), 112)THEN 1 ELSE 0 END) D9,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,9,#{START_DT}), 112)THEN 1 ELSE 0 END) D10,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,10,#{START_DT}), 112) THEN 1 ELSE 0 END) D11,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,11,#{START_DT}), 112) THEN 1 ELSE 0 END) D12,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,12,#{START_DT}), 112) THEN 1 ELSE 0 END) D13,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,13,#{START_DT}), 112) THEN 1 ELSE 0 END) D14,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,14,#{START_DT}), 112) THEN 1 ELSE 0 END) D15,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,15,#{START_DT}), 112) THEN 1 ELSE 0 END) D16,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,16,#{START_DT}), 112) THEN 1 ELSE 0 END) D17,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,17,#{START_DT}), 112) THEN 1 ELSE 0 END) D18,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,18,#{START_DT}), 112) THEN 1 ELSE 0 END) D19,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,19,#{START_DT}), 112) THEN 1 ELSE 0 END) D20,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,20,#{START_DT}), 112) THEN 1 ELSE 0 END) D21,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,21,#{START_DT}), 112) THEN 1 ELSE 0 END) D22,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,22,#{START_DT}), 112) THEN 1 ELSE 0 END) D23,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,23,#{START_DT}), 112) THEN 1 ELSE 0 END) D24,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,24,#{START_DT}), 112) THEN 1 ELSE 0 END) D25,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,25,#{START_DT}), 112) THEN 1 ELSE 0 END) D26,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,26,#{START_DT}), 112) THEN 1 ELSE 0 END) D27,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,27,#{START_DT}), 112) THEN 1 ELSE 0 END) D28,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,28,#{START_DT}), 112) THEN 1 ELSE 0 END) D29,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,29,#{START_DT}), 112) THEN 1 ELSE 0 END) D30,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,30,#{START_DT}), 112) THEN 1 ELSE 0 END) D31,
+        ROW_NUMBER() OVER(ORDER BY USER_NM,   USER_ID) PAGE_KEY
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT} + ' 23:59:59', 120)
+        AND T1.USER_NM IS NOT NULL
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+			<if test="SearchKey ==  'USER_ID'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.USER_ID LIKE '%' + #{SearchWord} + '%'
+				</if>
+				</if>
+				<if test="SearchKey ==  'USER_NM'"  >
+					<if test="SearchWord !=null and SearchWord !=''">
+						AND T1.USER_NM LIKE '%' + #{SearchWord} + '%'
+					</if>
+				</if>
+			<if test="SearchKey ==  'COMP_CD'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.COMP_CD LIKE '%' + #{SearchWord} + '%'
+			 </if>
+		</if>
+        </if>
+        GROUP BY     USER_NM,   USER_ID
+        <include refid="bottom"/><!--  include tail of paging query -->
+    </select>
+
+    <!--  Select User Statistics Chart -->
+    <select id="selectUserStatisticChart" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,0,#{START_DT}), 112)THEN 1 ELSE 0 END) D1,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,1,#{START_DT}), 112)THEN 1 ELSE 0 END) D2,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,2,#{START_DT}), 112)THEN 1 ELSE 0 END) D3,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,3,#{START_DT}), 112)THEN 1 ELSE 0 END) D4,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,4,#{START_DT}), 112)THEN 1 ELSE 0 END) D5,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,5,#{START_DT}), 112)THEN 1 ELSE 0 END) D6,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,6,#{START_DT}), 112)THEN 1 ELSE 0 END) D7,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,7,#{START_DT}), 112)THEN 1 ELSE 0 END) D8,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,8,#{START_DT}), 112)THEN 1 ELSE 0 END) D9,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,9,#{START_DT}), 112)THEN 1 ELSE 0 END) D10,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,10,#{START_DT}), 112) THEN 1 ELSE 0 END) D11,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,11,#{START_DT}), 112) THEN 1 ELSE 0 END) D12,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,12,#{START_DT}), 112) THEN 1 ELSE 0 END) D13,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,13,#{START_DT}), 112) THEN 1 ELSE 0 END) D14,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,14,#{START_DT}), 112) THEN 1 ELSE 0 END) D15,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,15,#{START_DT}), 112) THEN 1 ELSE 0 END) D16,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,16,#{START_DT}), 112) THEN 1 ELSE 0 END) D17,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,17,#{START_DT}), 112) THEN 1 ELSE 0 END) D18,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,18,#{START_DT}), 112) THEN 1 ELSE 0 END) D19,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,19,#{START_DT}), 112) THEN 1 ELSE 0 END) D20,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,20,#{START_DT}), 112) THEN 1 ELSE 0 END) D21,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,21,#{START_DT}), 112) THEN 1 ELSE 0 END) D22,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,22,#{START_DT}), 112) THEN 1 ELSE 0 END) D23,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,23,#{START_DT}), 112) THEN 1 ELSE 0 END) D24,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,24,#{START_DT}), 112) THEN 1 ELSE 0 END) D25,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,25,#{START_DT}), 112) THEN 1 ELSE 0 END) D26,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,26,#{START_DT}), 112) THEN 1 ELSE 0 END) D27,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,27,#{START_DT}), 112) THEN 1 ELSE 0 END) D28,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,28,#{START_DT}), 112) THEN 1 ELSE 0 END) D29,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,29,#{START_DT}), 112) THEN 1 ELSE 0 END) D30,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,30,#{START_DT}), 112) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT} + ' 23:59:59', 120)
+        AND T1.USER_NM IS NOT NULL
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+			<if test="SearchKey ==  'USER_ID'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.USER_ID LIKE '%' + #{SearchWord} + '%'
+				</if>
+				</if>
+				<if test="SearchKey ==  'USER_NM'"  >
+					<if test="SearchWord !=null and SearchWord !=''">
+						AND T1.USER_NM LIKE '%' + #{SearchWord} + '%'
+					</if>
+				</if>
+			<if test="SearchKey ==  'COMP_CD'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.COMP_CD LIKE '%' + #{SearchWord} + '%'
+			 </if>
+		</if>
+        </if>
+    </select>
+
+    <!--  Select User Excel Statistics  -->
+    <select id="selectUserStatisticsExcel" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+        USER_NM,   USER_ID,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,0,#{START_DT}), 112)THEN 1 ELSE 0 END) D1,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,1,#{START_DT}), 112)THEN 1 ELSE 0 END) D2,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,2,#{START_DT}), 112)THEN 1 ELSE 0 END) D3,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,3,#{START_DT}), 112)THEN 1 ELSE 0 END) D4,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,4,#{START_DT}), 112)THEN 1 ELSE 0 END) D5,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,5,#{START_DT}), 112)THEN 1 ELSE 0 END) D6,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,6,#{START_DT}), 112)THEN 1 ELSE 0 END) D7,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,7,#{START_DT}), 112)THEN 1 ELSE 0 END) D8,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,8,#{START_DT}), 112)THEN 1 ELSE 0 END) D9,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,9,#{START_DT}), 112)THEN 1 ELSE 0 END) D10,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,10,#{START_DT}), 112) THEN 1 ELSE 0 END) D11,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,11,#{START_DT}), 112) THEN 1 ELSE 0 END) D12,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,12,#{START_DT}), 112) THEN 1 ELSE 0 END) D13,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,13,#{START_DT}), 112) THEN 1 ELSE 0 END) D14,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,14,#{START_DT}), 112) THEN 1 ELSE 0 END) D15,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,15,#{START_DT}), 112) THEN 1 ELSE 0 END) D16,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,16,#{START_DT}), 112) THEN 1 ELSE 0 END) D17,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,17,#{START_DT}), 112) THEN 1 ELSE 0 END) D18,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,18,#{START_DT}), 112) THEN 1 ELSE 0 END) D19,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,19,#{START_DT}), 112) THEN 1 ELSE 0 END) D20,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,20,#{START_DT}), 112) THEN 1 ELSE 0 END) D21,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,21,#{START_DT}), 112) THEN 1 ELSE 0 END) D22,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,22,#{START_DT}), 112) THEN 1 ELSE 0 END) D23,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,23,#{START_DT}), 112) THEN 1 ELSE 0 END) D24,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,24,#{START_DT}), 112) THEN 1 ELSE 0 END) D25,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,25,#{START_DT}), 112) THEN 1 ELSE 0 END) D26,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,26,#{START_DT}), 112) THEN 1 ELSE 0 END) D27,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,27,#{START_DT}), 112) THEN 1 ELSE 0 END) D28,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,28,#{START_DT}), 112) THEN 1 ELSE 0 END) D29,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,29,#{START_DT}), 112) THEN 1 ELSE 0 END) D30,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,30,#{START_DT}), 112) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT} + ' 23:59:59', 120)
+        AND T1.USER_NM IS NOT NULL
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+			<if test="SearchKey ==  'USER_ID'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.USER_ID LIKE '%' + #{SearchWord} + '%'
+				</if>
+				</if>
+				<if test="SearchKey ==  'USER_NM'"  >
+					<if test="SearchWord !=null and SearchWord !=''">
+						AND T1.USER_NM LIKE '%' + #{SearchWord} + '%'
+					</if>
+				</if>
+			<if test="SearchKey ==  'COMP_CD'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.COMP_CD LIKE '%' + #{SearchWord} + '%'
+			 </if>
+		</if>
+        </if>
+        GROUP BY     USER_NM,   USER_ID
+    </select>
+    <!--  Protocol Statistic -->
+    <select id="selectProtocolStatistics" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        <include refid="head"/><!--  include head of paging query -->
+        SELECT
+        T1.COMP_CD,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,0,#{START_DT}), 112)THEN 1 ELSE 0 END) D1,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,1,#{START_DT}), 112)THEN 1 ELSE 0 END) D2,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,2,#{START_DT}), 112)THEN 1 ELSE 0 END) D3,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,3,#{START_DT}), 112)THEN 1 ELSE 0 END) D4,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,4,#{START_DT}), 112)THEN 1 ELSE 0 END) D5,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,5,#{START_DT}), 112)THEN 1 ELSE 0 END) D6,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,6,#{START_DT}), 112)THEN 1 ELSE 0 END) D7,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,7,#{START_DT}), 112)THEN 1 ELSE 0 END) D8,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,8,#{START_DT}), 112)THEN 1 ELSE 0 END) D9,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,9,#{START_DT}), 112)THEN 1 ELSE 0 END) D10,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,10,#{START_DT}), 112) THEN 1 ELSE 0 END) D11,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,11,#{START_DT}), 112) THEN 1 ELSE 0 END) D12,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,12,#{START_DT}), 112) THEN 1 ELSE 0 END) D13,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,13,#{START_DT}), 112) THEN 1 ELSE 0 END) D14,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,14,#{START_DT}), 112) THEN 1 ELSE 0 END) D15,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,15,#{START_DT}), 112) THEN 1 ELSE 0 END) D16,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,16,#{START_DT}), 112) THEN 1 ELSE 0 END) D17,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,17,#{START_DT}), 112) THEN 1 ELSE 0 END) D18,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,18,#{START_DT}), 112) THEN 1 ELSE 0 END) D19,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,19,#{START_DT}), 112) THEN 1 ELSE 0 END) D20,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,20,#{START_DT}), 112) THEN 1 ELSE 0 END) D21,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,21,#{START_DT}), 112) THEN 1 ELSE 0 END) D22,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,22,#{START_DT}), 112) THEN 1 ELSE 0 END) D23,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,23,#{START_DT}), 112) THEN 1 ELSE 0 END) D24,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,24,#{START_DT}), 112) THEN 1 ELSE 0 END) D25,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,25,#{START_DT}), 112) THEN 1 ELSE 0 END) D26,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,26,#{START_DT}), 112) THEN 1 ELSE 0 END) D27,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,27,#{START_DT}), 112) THEN 1 ELSE 0 END) D28,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,28,#{START_DT}), 112) THEN 1 ELSE 0 END) D29,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,29,#{START_DT}), 112) THEN 1 ELSE 0 END) D30,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,30,#{START_DT}), 112) THEN 1 ELSE 0 END) D31,
+        ROW_NUMBER() OVER(ORDER BY COMP_CD) PAGE_KEY
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT} + ' 23:59:59', 120)
+        AND T1.COMP_CD IS NOT NULL
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+			<if test="SearchKey ==  'USER_ID'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.USER_ID LIKE '%' + #{SearchWord} + '%'
+				</if>
+				</if>
+				<if test="SearchKey ==  'USER_NM'"  >
+					<if test="SearchWord !=null and SearchWord !=''">
+						AND T1.USER_NM LIKE '%' + #{SearchWord} + '%'
+					</if>
+				</if>
+			<if test="SearchKey ==  'COMP_CD'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.COMP_CD LIKE '%' + #{SearchWord} + '%'
+			 </if>
+		</if>
+        </if>
+        GROUP BY T1.COMP_CD
+        <include refid="bottom"/><!--  include tail of paging query -->
+    </select>
+
+    <!--  Protocol Chart Statistic -->
+    <select id="selectProtocolStatisticsChart" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,0,#{START_DT}), 112)THEN 1 ELSE 0 END) D1,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,1,#{START_DT}), 112)THEN 1 ELSE 0 END) D2,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,2,#{START_DT}), 112)THEN 1 ELSE 0 END) D3,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,3,#{START_DT}), 112)THEN 1 ELSE 0 END) D4,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,4,#{START_DT}), 112)THEN 1 ELSE 0 END) D5,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,5,#{START_DT}), 112)THEN 1 ELSE 0 END) D6,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,6,#{START_DT}), 112)THEN 1 ELSE 0 END) D7,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,7,#{START_DT}), 112)THEN 1 ELSE 0 END) D8,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,8,#{START_DT}), 112)THEN 1 ELSE 0 END) D9,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,9,#{START_DT}), 112)THEN 1 ELSE 0 END) D10,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,10,#{START_DT}), 112) THEN 1 ELSE 0 END) D11,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,11,#{START_DT}), 112) THEN 1 ELSE 0 END) D12,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,12,#{START_DT}), 112) THEN 1 ELSE 0 END) D13,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,13,#{START_DT}), 112) THEN 1 ELSE 0 END) D14,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,14,#{START_DT}), 112) THEN 1 ELSE 0 END) D15,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,15,#{START_DT}), 112) THEN 1 ELSE 0 END) D16,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,16,#{START_DT}), 112) THEN 1 ELSE 0 END) D17,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,17,#{START_DT}), 112) THEN 1 ELSE 0 END) D18,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,18,#{START_DT}), 112) THEN 1 ELSE 0 END) D19,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,19,#{START_DT}), 112) THEN 1 ELSE 0 END) D20,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,20,#{START_DT}), 112) THEN 1 ELSE 0 END) D21,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,21,#{START_DT}), 112) THEN 1 ELSE 0 END) D22,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,22,#{START_DT}), 112) THEN 1 ELSE 0 END) D23,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,23,#{START_DT}), 112) THEN 1 ELSE 0 END) D24,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,24,#{START_DT}), 112) THEN 1 ELSE 0 END) D25,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,25,#{START_DT}), 112) THEN 1 ELSE 0 END) D26,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,26,#{START_DT}), 112) THEN 1 ELSE 0 END) D27,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,27,#{START_DT}), 112) THEN 1 ELSE 0 END) D28,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,28,#{START_DT}), 112) THEN 1 ELSE 0 END) D29,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,29,#{START_DT}), 112) THEN 1 ELSE 0 END) D30,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,30,#{START_DT}), 112) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT} + ' 23:59:59', 120)
+        AND T1.COMP_CD IS NOT NULL
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+			<if test="SearchKey ==  'USER_ID'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.USER_ID LIKE '%' + #{SearchWord} + '%'
+				</if>
+				</if>
+				<if test="SearchKey ==  'USER_NM'"  >
+					<if test="SearchWord !=null and SearchWord !=''">
+						AND T1.USER_NM LIKE '%' + #{SearchWord} + '%'
+					</if>
+				</if>
+			<if test="SearchKey ==  'COMP_CD'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.COMP_CD LIKE '%' + #{SearchWord} + '%'
+			 </if>
+		</if>
+        </if>
+    </select>
+
+    <!--  Protocol Excel Statistic -->
+    <select id="selectProtocolStatisticsExcel" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+        T1.COMP_CD,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,0,#{START_DT}), 112)THEN 1 ELSE 0 END) D1,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,1,#{START_DT}), 112)THEN 1 ELSE 0 END) D2,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,2,#{START_DT}), 112)THEN 1 ELSE 0 END) D3,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,3,#{START_DT}), 112)THEN 1 ELSE 0 END) D4,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,4,#{START_DT}), 112)THEN 1 ELSE 0 END) D5,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,5,#{START_DT}), 112)THEN 1 ELSE 0 END) D6,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,6,#{START_DT}), 112)THEN 1 ELSE 0 END) D7,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,7,#{START_DT}), 112)THEN 1 ELSE 0 END) D8,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,8,#{START_DT}), 112)THEN 1 ELSE 0 END) D9,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,9,#{START_DT}), 112)THEN 1 ELSE 0 END) D10,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,10,#{START_DT}), 112) THEN 1 ELSE 0 END) D11,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,11,#{START_DT}), 112) THEN 1 ELSE 0 END) D12,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,12,#{START_DT}), 112) THEN 1 ELSE 0 END) D13,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,13,#{START_DT}), 112) THEN 1 ELSE 0 END) D14,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,14,#{START_DT}), 112) THEN 1 ELSE 0 END) D15,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,15,#{START_DT}), 112) THEN 1 ELSE 0 END) D16,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,16,#{START_DT}), 112) THEN 1 ELSE 0 END) D17,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,17,#{START_DT}), 112) THEN 1 ELSE 0 END) D18,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,18,#{START_DT}), 112) THEN 1 ELSE 0 END) D19,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,19,#{START_DT}), 112) THEN 1 ELSE 0 END) D20,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,20,#{START_DT}), 112) THEN 1 ELSE 0 END) D21,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,21,#{START_DT}), 112) THEN 1 ELSE 0 END) D22,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,22,#{START_DT}), 112) THEN 1 ELSE 0 END) D23,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,23,#{START_DT}), 112) THEN 1 ELSE 0 END) D24,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,24,#{START_DT}), 112) THEN 1 ELSE 0 END) D25,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,25,#{START_DT}), 112) THEN 1 ELSE 0 END) D26,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,26,#{START_DT}), 112) THEN 1 ELSE 0 END) D27,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,27,#{START_DT}), 112) THEN 1 ELSE 0 END) D28,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,28,#{START_DT}), 112) THEN 1 ELSE 0 END) D29,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,29,#{START_DT}), 112) THEN 1 ELSE 0 END) D30,
+        SUM(CASE CONVERT(char(8),T1.REG_DTTM,112) WHEN CONVERT(char(8), dateadd(d,30,#{START_DT}), 112) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE T1.REG_DTTM BETWEEN CONVERT(datetime, #{START_DT}, 120) AND CONVERT(datetime, #{END_DT} + ' 23:59:59', 120)
+        AND T1.COMP_CD IS NOT NULL
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = #{SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+			<if test="SearchKey ==  'USER_ID'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.USER_ID LIKE '%' + #{SearchWord} + '%'
+				</if>
+				</if>
+				<if test="SearchKey ==  'USER_NM'"  >
+					<if test="SearchWord !=null and SearchWord !=''">
+						AND T1.USER_NM LIKE '%' + #{SearchWord} + '%'
+					</if>
+				</if>
+			<if test="SearchKey ==  'COMP_CD'"  >
+				<if test="SearchWord !=null and SearchWord !=''">
+					AND T1.COMP_CD LIKE '%' + #{SearchWord} + '%'
+			 </if>
+		</if>
+        </if>
+        GROUP BY T1.COMP_CD
+    </select>
+
+</mapper>

@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.userAppAuth.mapper.UserAppAuthDao">
+    
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+    <select id="selectUserAppAuthList" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoSearchDto" resultType="kr.msp.admin.store.appInfo.dto.AppInfoSearchDto">
+	   <include refid="head"/>
+<!--  begin of merge for multi row  to the a row -->
+	SELECT 	APP.APP_IDX
+	,		APP.APP_NM
+	,		APP.PAKG_ID
+	,		APP.USE_YN
+	,		APP.PUB_YN
+	,		CONVERT(CHAR(10), APP.REG_DTTM, 102) AS REG_DT
+	,		USR.USER_NM
+	,		PLAT.PLATFORM
+	,		APP.SVC_ID
+	,		APP.CATG_CD
+	,		APP.STS_CD
+	,		CATG.CATG_NM
+	,		( 
+				(	/* USER COUNT */
+					SELECT 	COUNT(*) 
+					FROM 	TB_STO_AUTH A
+							INNER JOIN TB_STO_USER B 	ON A.EMP_NO = B.EMP_NO AND B.USE_YN = 'Y'
+					WHERE 	APP.APP_IDX = A.APP_IDX
+				)
+				+
+				(	/* GROUP MEMBER COUNT */
+					SELECT 	COUNT(*) 
+					FROM 	TB_STO_AUTH A
+							INNER JOIN TB_STO_USERGROUP C ON A.GRP_ID = C.GRP_ID AND C.USE_YN = 'Y'
+							INNER JOIN TB_STO_USER D 	ON C.EMP_NO = D.EMP_NO AND D.USE_YN = 'Y'
+					WHERE 	APP.APP_IDX = A.APP_IDX
+				)
+			) AS USER_COUNT
+	,		ROW_NUMBER() OVER(ORDER BY  APP.APP_IDX) PAGE_KEY
+	FROM	TB_STO_APP  APP
+			INNER JOIN TB_STO_SVC  SVC
+				ON APP.SVC_ID = SVC.SVC_ID
+		    INNER JOIN TB_SYS_USER USR
+				ON APP.REG_ID = USR.USER_ID
+			INNER JOIN TB_STO_CATG CATG
+				ON APP.CATG_CD = CATG.CATG_CD
+		<if test="PLATFORM != null and PLATFORM != ''">   
+			INNER JOIN
+		</if>
+		<if test="PLATFORM == null or PLATFORM == ''">   
+			LEFT JOIN 
+		</if>    
+			(
+				SELECT DISTINCT
+					   APP_IDX, 
+					   STUFF((
+							 SELECT	',' + PLATFORM
+							 FROM	(
+										SELECT DISTINCT BIN.APP_PLAT_IDX, APP_PLAT.APP_IDX,  PLAT.PLAT_NM+'('+VER.PLAT_VER_CD+')'  PLATFORM 
+										FROM 
+												TB_STO_BIN   BIN
+												INNER JOIN	TB_STO_PLAT_VER  VER
+														ON	VER.PLAT_VER_IDX = BIN.PLAT_VER_IDX
+												INNER JOIN	TB_STO_PLAT  PLAT
+														ON	PLAT.PLAT_IDX= VER.PLAT_IDX
+												INNER JOIN	TB_STO_APP_PLAT APP_PLAT
+														ON	APP_PLAT.PLAT_IDX   = PLAT.PLAT_IDX
+														AND	APP_PLAT.APP_PLAT_IDX = BIN.APP_PLAT_IDX
+														AND APP_PLAT.USE_YN = 'Y'
+												INNER JOIN	TB_STO_APP APP
+														ON	APP.APP_IDX = APP_PLAT.APP_IDX AND APP.USE_YN = 'Y'
+										WHERE		BIN.USE_YN = 'Y'
+											<if test="PLATFORM != null and PLATFORM != ''">   
+												AND	PLAT.PLAT_CD  = #{PLATFORM}
+											</if>
+											<if test="APP_NM != null and APP_NM != ''">   
+												AND	APP.APP_NM  LIKE '%'+#{APP_NM}+'%'
+											</if>
+											<if test="PAKG_ID != null and PAKG_ID != ''">   
+												AND	APP.PAKG_ID  LIKE '%'+#{PAKG_ID}+'%'
+											</if>
+
+									) b 
+							 WHERE   b.APP_IDX = a.APP_IDX
+							 FOR XML PATH('')
+						),1,1,'') AS PLATFORM 
+				FROM	(
+							SELECT DISTINCT BIN.APP_PLAT_IDX, APP_PLAT.APP_IDX,  PLAT.PLAT_NM+'('+VER.PLAT_VER_CD+')'  PLATFORM 
+							FROM	TB_STO_BIN   BIN
+									INNER JOIN	TB_STO_PLAT_VER  VER
+											ON	VER.PLAT_VER_IDX = BIN.PLAT_VER_IDX
+									INNER JOIN	TB_STO_PLAT  PLAT
+											ON	PLAT.PLAT_IDX= VER.PLAT_IDX
+									INNER JOIN	TB_STO_APP_PLAT APP_PLAT
+											ON	APP_PLAT.PLAT_IDX   = PLAT.PLAT_IDX
+											AND	APP_PLAT.APP_PLAT_IDX = BIN.APP_PLAT_IDX
+											AND APP_PLAT.USE_YN = 'Y'
+									INNER JOIN	TB_STO_APP APP
+											ON	APP.APP_IDX = APP_PLAT.APP_IDX AND APP.USE_YN = 'Y'
+							WHERE		BIN.USE_YN = 'Y'
+								<if test="PLATFORM != null and PLATFORM != ''">   
+									AND    PLAT.PLAT_CD  = #{PLATFORM}
+								</if>
+								<if test="APP_NM != null and APP_NM != ''">   
+									AND    APP.APP_NM  LIKE '%'+#{APP_NM}+'%'
+								</if>
+								<if test="PAKG_ID != null and PAKG_ID != ''">   
+									AND    APP.PAKG_ID  LIKE '%'+#{PAKG_ID}+'%'
+								</if>
+						) a
+			) PLAT
+				ON APP.APP_IDX = PLAT.APP_IDX
+		WHERE    APP.USE_YN = 'Y'
+
+		<if test="APP_NM != null and APP_NM != ''">   
+		 	AND   APP.APP_NM  LIKE '%'+#{APP_NM}+'%'
+		 </if>
+		 <if test="PAKG_ID != null and PAKG_ID != ''">   
+		 	AND   APP.PAKG_ID  LIKE '%'+#{PAKG_ID}+'%'
+		 </if>
+		 <if test="CATG_CD != null and CATG_CD != ''">
+		 	AND CATG.CATG_CD = #{CATG_CD}
+		 </if>
+
+<!--  end of merge for multi row  to the a row  -->
+       <include refid="bottom"/>
+    </select>
+    
+    <select id="selectCataAllList" resultType="kr.msp.admin.store.category.dto.CategoryDto">
+		SELECT 	CATG_CD, CATG_NM, SORT_NO, USE_YN, UP_CATG_CD
+		, 		CATG_DESC, SVC_ID
+		, 		REG_ID, CONVERT(CHAR(10), REG_DT, 102) REG_DT
+		, 		MOD_ID, CONVERT(CHAR(10), MOD_DT, 102) MOD_DT
+		FROM TB_STO_CATG
+    </select>
+    
+    <select id="selectAppAuthList" parameterType="kr.msp.admin.store.appInfo.dto.AppInfoSearchDto" resultType="kr.msp.admin.store.appInfo.dto.AppInfoSearchDto">
+    	SELECT 
+            APP.APP_IDX
+            , APP.APP_NM 
+            , CATG.CATG_NM
+        FROM 
+            TB_STO_APP  APP,
+            TB_STO_CATG CATG
+        WHERE 
+            APP.CATG_CD = CATG.CATG_CD
+            AND APP_IDX IN
+        <foreach item="APP_ARRAY" index="index" collection="APP_ARRAY" open="(" separator="," close=")">
+			#{APP_ARRAY}
+		</foreach> 
+	</select>
+	
+    <select id="selectAuthUserList" parameterType="kr.msp.admin.store.userAppAuth.dto.UserAddAuthDto" resultType="kr.msp.admin.store.userAppAuth.dto.UserAddAuthDto">
+        SELECT 
+        	* 
+        FROM         
+	        (SELECT 
+	            US.EMP_NO
+	            , US.EMP_NM
+	            , US.CD_NM
+	            , GR.GRP_ID
+	            , GR.GRP_NM
+	            , '2' AS SU
+	        FROM 
+	            (
+	             SELECT 
+	                A.EMP_NO
+	                , A.EMP_NM
+	                , B.CD_NM
+	            FROM 
+	                TB_STO_USER A 
+	                LEFT JOIN TB_STO_EMP_CODE B 
+	            		ON A.EMP_CD = B.EMP_CD
+	             ) US 
+	            INNER JOIN TB_STO_USERGROUP AU
+	            		ON US.EMP_NO = AU.EMP_NO
+	            INNER JOIN TB_STO_GROUP GR 
+	            		ON  GR.GRP_ID = AU.GRP_ID 
+	            UNION ALL
+	            SELECT 
+	                '' AS EMP_NO
+	                , '' AS EMP_NM
+	                , '' AS CD_NM
+	                , GRP_ID
+	                , GRP_NM
+	                , '1' AS SU
+	            FROM
+	                TB_STO_GROUP
+	            WHERE USE_YN = 'Y' 
+	            ) A
+		ORDER BY GRP_NM , SU
+    </select>
+    
+    <select id="selectAuthUserDivisionList" resultType="kr.msp.admin.store.userAppAuth.dto.UserAddAuthDivisionList">
+		WITH LST AS
+		(
+			SELECT		DIVISION_NM
+			,			DIVISION_ID
+			,			UP_DIVISION_ID
+			FROM		TB_STO_DIVISION A
+		)
+		, CONNECT_BY AS
+		(
+			SELECT      DIVISION_ID,				UP_DIVISION_ID,			DIVISION_NM
+			,			1 LV
+			,			CONVERT(VARCHAR(1000), DIVISION_ID + DIVISION_NM) SORT_KEY
+			FROM
+			    LST	
+			WHERE		
+			    UP_DIVISION_ID = '0'
+			UNION ALL
+			SELECT      LST_C.DIVISION_ID,			LST_C.UP_DIVISION_ID,	LST_C.DIVISION_NM
+			,			LST_P.LV + 1 LV
+			,			CONVERT(VARCHAR(1000), LST_P.SORT_KEY + '_' + LST_C.DIVISION_ID + LST_C.DIVISION_NM) SORT_KEY
+			FROM	
+			    LST LST_C
+						INNER JOIN CONNECT_BY LST_P
+							ON CAST(LST_P.DIVISION_ID AS VARCHAR) = LST_C.UP_DIVISION_ID
+		)
+		SELECT	DIVISION_NM
+		,		DIVISION_ID
+		,		UP_DIVISION_ID
+		,		LV MENU_LEVEL
+		,		EMP_NO
+		,		EMP_NM
+		,		CD_NM
+		,		SU
+		,		SORT_KEY
+		,		ROW_NUMBER() OVER(ORDER BY SORT_KEY, SU) ROWSU
+		FROM
+		(
+			SELECT	
+					DI.DIVISION_NM
+			,		DI.DIVISION_ID
+			,		DI.UP_DIVISION_ID
+			,		DI.LV
+			,		'' EMP_NO
+			,		'' EMP_NM
+			,		'' CD_NM
+			,		DI.SORT_KEY
+			,		1 SU
+			FROM 	CONNECT_BY DI
+			UNION ALL
+			SELECT	
+					DI.DIVISION_NM
+			,		DI.DIVISION_ID
+			,		DI.UP_DIVISION_ID
+			,		DI.LV
+			,		US.EMP_NO
+			,		US.EMP_NM
+			,		CD.CD_NM
+			,		DI.SORT_KEY
+			,		2 SU
+			FROM 	CONNECT_BY DI
+					INNER JOIN TB_STO_USER US 
+						ON DI.DIVISION_ID = US.DIVISION_ID
+					LEFT JOIN  TB_STO_EMP_CODE CD 
+						ON US.EMP_CD = CD.EMP_CD
+		) A
+    </select>
+    
+    <select id="selectAuthCount" parameterType="kr.msp.admin.store.userAppAuth.dto.UserAuthInsertDto" resultType="Integer">
+    	SELECT 
+    		COUNT(*) 
+    	FROM 
+    		TB_STO_AUTH 
+    	WHERE
+    		APP_IDX = #{APP_IDX}
+    		<if test="GRP_ID != null and GRP_ID != ''">   
+       			 AND GRP_ID = #{GRP_ID}
+       		</if>
+       		<if test="EMP_NO != null and EMP_NO != ''">   
+       			 AND EMP_NO = #{EMP_NO}
+       		</if>
+       		AND AUTH_TYPE = #{AUTH_TYPE}
+    </select>
+    
+    <insert id="insertUserAppAuth" parameterType="kr.msp.admin.store.userAppAuth.dto.UserAuthInsertDto">
+        INSERT INTO TB_STO_AUTH ( 
+        	 APP_IDX
+        	<if test="EMP_NO != null and EMP_NO != ''">
+        	, EMP_NO
+        	</if>
+        	<if test="GRP_ID != null and GRP_ID != ''">
+        	, GRP_ID
+        	</if>
+        	, AUTH_TYPE
+        	, USE_YN
+        	, REG_ID
+        	, REG_DT
+       	) VALUES (
+       		 #{APP_IDX}
+        	<if test="EMP_NO != null and EMP_NO != ''">
+        	, #{EMP_NO}
+        	</if>
+        	<if test="GRP_ID != null and GRP_ID != ''">
+        	, #{GRP_ID}
+        	</if>
+        	, #{AUTH_TYPE}
+        	, 'Y'
+        	, #{REG_ID}
+        	, GETDATE())
+    </insert>
+    
+    <select id="selectAppAuthUser" parameterType="kr.msp.admin.store.userAppAuth.dto.UserAddAuthDto" resultType="kr.msp.admin.store.userAppAuth.dto.UserAddAuthDto">
+        <include refid="head"/>
+        SELECT
+        	AU.AUTH_ID
+			,US.EMP_NO
+		    ,US.CD_NM
+		    ,AU.GRP_ID
+		    ,ISNULL(US.EMP_NM, (  SELECT GRP_NM FROM TB_STO_GROUP GR WHERE AU.GRP_ID = GR.GRP_ID  )) AS EMP_NM
+		    , ROW_NUMBER() OVER(ORDER BY AU.AUTH_ID) PAGE_KEY
+		FROM 
+		    TB_STO_AUTH AU 
+		    LEFT JOIN ( 
+				    SELECT 
+				  		A.EMP_NO
+				     	, A.EMP_NM
+				      	, B.CD_NM
+				 	FROM 	TB_STO_USER A 
+				    LEFT JOIN TB_STO_EMP_CODE B 
+						ON	A.EMP_CD = B.EMP_CD
+				 )  US 
+				 ON AU.EMP_NO = US.EMP_NO
+		WHERE 
+			APP_IDX = #{APP_IDX}
+		<include refid="bottom"/>
+    </select>
+    
+   <delete id="deleteUserAppAuth" parameterType="list">
+       DELETE FROM 
+	    	TB_STO_AUTH 
+	    WHERE 
+	    	AUTH_ID IN 
+	    	<foreach item="AUTH_ID" index="index" collection="list" open="(" separator="," close=")">
+				#{AUTH_ID}
+			</foreach>
+   </delete>
+
+	<select id="getDivisionListByParentCd" resultType="map">
+		SELECT
+			A.DIVISION_ID AS "key"
+			, CASE
+			WHEN (ISNULL(C.MEMBER_CNT,0) = 0) THEN
+			A.DIVISION_NM
+			ELSE
+			(A.DIVISION_NM + '(' + CAST(ISNULL(C.MEMBER_CNT,0) AS VARCHAR) + ')')
+			END as "title"
+			, 1 AS "isFolder"
+			, CASE
+			WHEN (ISNULL (B.CNT ,0) + ISNULL
+			(C.MEMBER_CNT,0) = 0) THEN 0
+			ELSE  1
+			END as "isLazy"
+			, A.DIVISION_ID
+			, A.DIVISION_NM
+			, A.UP_DIVISION_ID
+			, A.DIVISION_DESC
+			, ISNULL (B.CNT ,0) as SUB_CNT
+			, ISNULL (C.MEMBER_CNT,0) as MEMBER_CNT
+		FROM TB_STO_DIVISION A
+		LEFT JOIN
+			(
+				SELECT COUNT(*) as CNT
+				, UP_DIVISION_ID
+				FROM
+				TB_STO_DIVISION
+				GROUP BY UP_DIVISION_ID
+			) B
+		ON A.DIVISION_ID = B.UP_DIVISION_ID
+		LEFT JOIN
+			(
+				SELECT COUNT(*) as
+				MEMBER_CNT, DIVISION_ID
+				FROM
+				TB_STO_USER
+				GROUP BY DIVISION_ID
+			) C
+		ON A.DIVISION_ID = C.DIVISION_ID
+		WHERE A.UP_DIVISION_ID  = #{parentCd}
+		ORDER BY A.REG_DTTM
+	</select>
+
+	<select id="getEmpListByDeptCd" resultType="map">
+		SELECT
+		EMP_NO as "key"
+		, (EMP_NM + '(' + EMP_NO + ', ' + B.CD_NM + ')') as "title"
+		, EMP_NM as "keyName"
+		, EMP_NO
+		, B.cd_nm  as "role"
+		, division_Id as "divisionId"
+		, 0 as "isFolder"
+		, 0 as "isLazy"
+		, 0 as SUB_CNT
+		, 0 as MEMBER_CNT
+		FROM
+		TB_STO_USER U
+		LEFT JOIN TB_STO_EMP_CODE B
+		ON U.EMP_CD = B.EMP_CD
+		WHERE DIVISION_ID = #{parentCd}
+		ORDER BY EMP_NM
+	</select>
+
+
+	<!-- App권한등록시 사용자그룹 -->
+
+	<select id="selectUserDefinedGroupTree" resultType="map">
+		SELECT
+			GR.GRP_ID as "key"
+			, (GR.GRP_NM + '(' + CAST(ISNULL(AUTH.USER_CNT, 0) AS VARCHAR) + ')') as "title"
+			, GR.GRP_NM as "keyName"
+			, GR.GRP_ID
+			, 1 as "isFolder"
+			, CASE
+			WHEN ISNULL(AUTH.USER_CNT,0)=0 THEN 0
+			ELSE  1
+			END as "isLazy"
+			, GR.USE_YN
+			, GR.REG_ID
+			, CONVERT(CHAR(10), GR.REG_DT, 23) AS REG_DT
+			, AUTH.USER_CNT as MEMBER_CNT
+			, 0 as SUB_CNT
+			FROM
+		TB_STO_GROUP GR
+		LEFT JOIN
+		(
+			SELECT AU.GRP_ID, COUNT(AU.GRP_ID) USER_CNT
+			FROM TB_STO_USERGROUP AU
+			INNER JOIN TB_STO_USER US
+			ON AU.EMP_NO = US.EMP_NO
+			AND US.USE_YN = 'Y'
+			GROUP BY AU.GRP_ID
+		) AUTH
+		ON GR.GRP_ID = AUTH.GRP_ID
+		AND GR.USE_YN = 'Y'
+	</select>
+
+
+
+	<select id="selectUserListByUserDefinedGroup" resultType="map">
+		SELECT US.EMP_NO as "key"
+		, (US.EMP_NM + '('+ US.EMP_NO + ', ' + CD.CD_NM + ')') as "title"
+		, US.EMP_NM as "keyName"
+		, US.EMP_NO
+		, US.WORK_CD
+		, US.USERID
+		, US.PASSWD
+		, US.EMP_CD as "role"
+		, CD.CD_NM
+		, US.DIVISION_ID
+		FROM
+		TB_STO_USERGROUP AU
+		INNER JOIN TB_STO_USER US
+		ON US.EMP_NO = AU.EMP_NO
+		AND US.USE_YN = 'Y'
+		LEFT JOIN TB_STO_EMP_CODE CD
+		ON US.EMP_CD = CD.EMP_CD
+		WHERE
+		AU.GRP_ID = #{GRP_ID}
+	</select>
+
+	<delete id="truncateAppAuth" parameterType="string">
+		DELETE FROM TB_STO_AUTH
+		WHERE APP_IDX = #{APP_IDX}
+	</delete>
+
+</mapper>

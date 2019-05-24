@@ -1,0 +1,268 @@
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function fn_se_select(){
+	fn_groupList(1);
+}
+
+//모니터링 페이징
+function fn_moniterList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/push/monitorConfig";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM;
+	var target = $("#moniterTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//모니터링 등록 화면
+$(document).on("click","#monitorConfigWrite",function(){
+	var url = CONTEXT_PATH + "/admin/push/monitorConfig/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 650;
+	var title = '#springMessage("menu.push.monitoring.regist")';//"모니터링 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//모니터링 중복 체크
+function fn_check_moniter(){
+	if( $("form[name=frmMoniterInfo]").find("input[name=IPADDRESS]").val() == ""){
+		alert("IP"+'#springMessage("common.alert.doInput2")'); //를 입력해주세요.
+		return;
+	} else if( $("form[name=frmMoniterInfo]").find("input[name=PORT]").val() == ""){
+		alert("PORT"+'#springMessage("common.alert.doInput2")'); //를 입력해주세요.
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/push/monitorConfig/check";
+	var data = $("form[name=frmMoniterInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#CHECK_CODE").val("1");
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//모니터링 코드 변경
+function fn_moniter_change(){
+	$("#CHECK_CODE").val("0");
+}
+
+//모니터링 등록
+function fn_senderWrite(){
+	if( $("form[name=frmMoniterInfo]").find("input[name=SENDERNAME]").val() == ""){
+		alert('#springMessage("menu.push.alert.serverNameIn")'); //서버 이름을 입력해주세요.
+		return;
+	} else if( $("form[name=frmMoniterInfo]").find("input[name=IPADDRESS]").val() == ""){
+		alert("IP"+'#springMessage("common.alert.doInput2")'); //를 입력해주세요.
+		return;
+	} else if( $("form[name=frmMoniterInfo]").find("input[name=PORT]").val() == ""){
+		alert("PORT"+'#springMessage("common.alert.doInput2")'); //를 입력해주세요.
+		return;
+	} else if($("#CHECK_CODE").val() == '0'){
+		alert('#springMessage("menu.push.appManage.alert.doSameCheck")'); // "중복체크를 해주새요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/push/monitorConfig/regist";
+	var data = $("form[name=frmMoniterInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_moniterList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//모니터링 체크
+$(document).on("click",".no_select",function(){
+	$(".select").removeClass().addClass("no_select");
+	$(this).removeClass().addClass("select");
+});
+
+$(document).on("click",".select",function(){
+	$(this).removeClass().addClass("no_select");
+});
+
+//모니터링 삭제
+$(document).on("click","#monitorConfigDelete",function(){
+	if($(".select").length < 1){
+		alert('#springMessage("menu.push.alert.deleteServer")'); //삭제할 서버를 선택해 주세요.
+		return ;
+	}
+	
+	var IPADDRESS = $(".select").find(".IPADDRESS").val();
+	var PORT = $(".select").find(".PORT").val();
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/push/monitorConfig/delete";
+	var data = "IPADDRESS=" + IPADDRESS + "&PORT=" + PORT;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_moniterList(1);
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+});
+
+</script>
+
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="headerBg">
+    	<div class="innerNavi">
+    		<a href="#"><img src="/resources/img/icon/icon_home.gif" alt="home"/></a> <span>모바일</span> <span>리소스 관리</span> <span>배포관리</span> <strong>목록</strong>
+		</div>
+		<div class="tb_tit">
+			<h3>#springMessage("menu.push.monitoring.setting")</h3> <!-- 모니터링 설정 -->
+		</div>
+	</div>
+    #### E : 프로그램 위치 기술 부분  ####
+    
+    <form name="frmList" method="post">
+    #### S : 리스트  폼 부분  ####
+    <div class="contents">
+    	<div class="btnArea1 ta_r">
+			<button type="button" class="btn_style1" id="monitorConfigWrite"><span>#springMessage("common.button.regist")</span></button> <!-- 등록 -->
+			<button type="button" class="btn_style1" id="monitorConfigDelete"><span>#springMessage("common.button.delete")</span></button> <!-- 삭제 -->
+		</div>
+    	<div class="tbCon">
+		    <div id="moniterTableDiv">
+		       	<table class="tbList1" summary="서버 종류,서버 이름,IP,PORT,URL">
+		       		<colgroup>
+						<col width="15%"/><col width="20%"/><col width="17%"/><col width="12%"/><col width="auto"/>
+					</colgroup>
+		       		<thead>
+			       		<tr>
+			       			<th scope="cols">
+			       				#springMessage("menu.push.serverType") <!-- 서버 종류 -->
+			       			</th>
+			       			<th scope="cols">
+								#springMessage("menu.push.serverName") <!-- 서버 이름 -->
+							</th>
+							<th scope="cols">
+			       				IP
+			       			</th>
+			       			<th scope="cols">
+								PORT
+							</th>
+							<th scope="cols">
+								URL
+							</th>
+			           	</tr>
+			        </thead>
+			        
+			        <tbody>
+			           	#foreach( $monitorConfig in $monitorConfigList )
+			           		#set($j_tot = $!monitorConfig.TOT_CNT)
+				           	<tr class="no_select">
+				           		<td style="text-align:left;">
+				           			#if($!monitorConfig.SERVERTYPE == "UPNS")
+				           				UPNS
+			           				#elseif($!monitorConfig.SERVERTYPE  == "RECV")
+			           					RECEIVER
+			           				#elseif($!monitorConfig.SERVERTYPE  == "PRVD")
+			           					PROVIDER
+			           				#elseif($!monitorConfig.SERVERTYPE  == "MEDI")
+			           					MEDIATOR
+			           				#end
+			           				<input type="hidden" class="IPADDRESS" value="$!monitorConfig.IPADDRESS">
+			           				<input type="hidden" class="PORT" value="$!monitorConfig.PORT">
+			       				</td>
+								#if(!$monitorConfig.SERVERNAME)
+									<td style="text-align:left;">
+										$!monitorConfig.SERVERNAME
+									</td>
+								#else
+			       				<td style="text-align:left;">
+				           			$esc.xml($!monitorConfig.SERVERNAME)
+				           		</td>
+								#end
+				           		<td>
+				           			$esc.xml($!monitorConfig.IPADDRESS)
+				           		</td>
+				           		<td>
+				           			$esc.xml($!monitorConfig.PORT)
+				           		</td>
+								#if(!$!monitorConfig.URL)
+									<td style="text-align:left;">
+										$!monitorConfig.URL
+									</td>
+								#else
+									<td style="text-align:left;">
+										$esc.xml($!monitorConfig.URL)
+									</td>
+								#end
+			           		</tr>
+			       		#end
+			       		#if(!$j_tot)
+							<tr>
+								<td colspan="5">
+									#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+								</td>
+							</tr>
+						#end
+						
+					</tbody>
+		    	</table>
+		   		<input type="hidden" id="MONITER_NUM" value="$!R_PAGE_NUM">
+		      	<div class="j_page_div">
+		         	##현재 페이지
+		         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+		            ##총 개수
+		            <input type="hidden" name="J_tot" value="$!j_tot">
+		            ##한페이지의 로우수
+		            <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+		            ##한페이지수
+		            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+		            ##이밴트
+		            <input type="hidden" name="j_event" value="fn_moniterList">
+		    	</div>
+			</div>
+		</div>
+    </div>
+	#### E : 리스트  폼 부분  ####
+</form>
+</div>

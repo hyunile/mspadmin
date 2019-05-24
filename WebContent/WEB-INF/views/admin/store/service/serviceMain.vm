@@ -1,0 +1,87 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	
+});
+
+//서비스 정보 조회 
+function fn_select(){
+    var url = CONTEXT_PATH + "/admin/store/service/selectInfo";
+    var target = $("#serviceTableDiv");
+    var type = "POST";
+    var data = $("form[name=frmServiceInfo]").serialize();
+    fn_getList( url, type, data , target );
+}
+
+
+//서비스 저장
+function fn_save(){
+
+	if(! confirm('#springMessage("common.alert.doSave")')){ //"저장하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/store/service/save";
+    var data = $("form[name=frmServiceInfo]").serialize();
+    
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+              fn_select();
+			}
+		}
+	});
+}
+
+//공통코드 화면 호출(공통)
+function fn_getList( url, type, data, target ){
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+</script>
+
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="headerBg">
+		<div class="innerNavi">
+			<a href="#"><img src="$!{RESOURCES_PATH}/img/icon/icon_home.gif" alt="home"/></a> <span>ADMIN</span> <span>#springMessage("menu.system.serviceAppstore")</span>  <span>#springMessage("menu.system.serviceAppManage")</span> <strong>#springMessage("menu.system.serviceInfo")</strong> <!-- 앱스토어/앱스토어관리 /서비스정보 -->
+		</div>
+		<div class="tb_tit">
+			<h3>#springMessage("menu.system.serviceAppManage")</h3> <!-- 앱스토어관리 -->
+		</div>
+	</div>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<!-- <form name="frmSearch" method="get">
+		<fieldset>
+			<legend>조회 폼 부분</legend>
+			<div class="detail_searchBox">
+				<p class="btn_detail">
+					<button type="button" onclick="fn_select()" class="btn_search">조회</button>
+				</p>
+			</div>
+		</fieldset>
+	</form>
+     -->
+    <div class="contents" id="serviceTableDiv">
+#parse ("/admin/store/service/serviceInfo.vm") 
+       
+    </div>
+    <div class="btnArea ta_r" >
+        <button type="button"   onclick="fn_save()" class="btn_style1" >#springMessage("common.button.save")</button> <!-- 저장 -->
+   </div>
+   
+</div>

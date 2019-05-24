@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.groupAuth.mapper.PushGroupAuthManageDao">
+    <!-- 페이징 처리 쿼리 부분 시작 -->
+    <sql id="head">
+		SELECT *
+        FROM ( SELECT 
+                    ROWNUM RNUM
+                   ,COUNT(*) OVER() TOT_CNT
+                   ,A.*
+               FROM (SELECT * FROM (
+	</sql>
+
+    <sql id="bottom">
+		)
+                    ) A
+             )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+
+    <select id="SelectPushGroupList" resultType="kr.msp.admin.push.group.dto.PushUserGroupDto">
+		SELECT 	GROUPSEQ
+            	,GROUPNAME
+       	FROM 	T_PUSH_USER_GROUP_INFO
+        WHERE 	ISDELETED = 'N'
+        
+	</select>
+
+	<select id="SelectInUserList" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto" resultType="kr.msp.admin.push.user.dto.PushUserDto">
+		<include refid="head"/>
+		SELECT A.CUID, A.CNAME
+		FROM T_PUSH_USER_INFO A
+		LEFT OUTER JOIN T_PUSH_USER_GROUP B
+		ON A.CUID = B.CUID
+		<where>
+			<if test="GROUPSEQ != null and GROUPSEQ != ''">
+		B.GROUPSEQ = #{GROUPSEQ}
+			</if>	
+			<if test="CNAME != null and CNAME != ''">
+    	AND A.CNAME LIKE #{CNAME} || '%'
+    	</if>
+		</where>
+	    GROUP BY A.CUID, A.CNAME
+	    ORDER BY A.CUID
+ 	    <include refid="bottom"/>
+	</select>
+	
+	<select id="SelectOutUserList" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto" resultType="kr.msp.admin.push.user.dto.PushUserDto">
+		<include refid="head"/>
+		SELECT A.CUID, A.CNAME
+		FROM T_PUSH_USER_INFO A
+		LEFT OUTER JOIN T_PUSH_USER_GROUP B
+		ON A.CUID = B.CUID
+	    <where>
+			<if test="GROUPSEQ != null and GROUPSEQ != ''">
+		A.CUID NOT IN (SELECT CUID FROM T_PUSH_USER_GROUP WHERE GROUPSEQ = #{GROUPSEQ})
+			</if>
+			<if test="CNAME != null and CNAME != ''">
+   		AND A.CNAME LIKE #{CNAME} || '%'
+    		</if>
+		</where>
+	    GROUP BY A.CUID, A.CNAME
+	    ORDER BY A.CUID
+		<include refid="bottom"/>
+	</select>
+
+    <select id="SelectInUserCount" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto" resultType="java.lang.Integer">
+        SELECT 	COUNT(*)
+        FROM   	T_PUSH_USER_INFO A
+        INNER JOIN T_PUSH_USER_GROUP B
+        ON 	A.CUID = B.CUID
+        AND B.GROUPSEQ = #{GROUPSEQ}
+        <where>
+            <if test="CNAME != null and CNAME != ''">
+                AND A.CNAME LIKE #{CNAME} || '%'
+            </if>
+        </where>
+    </select>
+
+    <select id="SelectOutUserCount" parameterType="kr.msp.admin.push.user.dto.PushUserDto" resultType="java.lang.Integer">
+        SELECT  NVL(MAX(CNT), 0) CNT
+        FROM (
+        SELECT 	COUNT(*) AS CNT
+        , NVL( B.GROUPSEQ, 1  ) AS GRP
+        FROM 	T_PUSH_USER_INFO A ,
+        T_PUSH_USER_GROUP B
+        WHERE  	B.GROUPSEQ(+) = #{GROUPSEQ}
+        AND 	A.CUID = B.CUID(+)
+        <if test="CNAME != null and CNAME != ''">
+            AND A.CNAME LIKE #{CNAME} || '%'
+        </if>
+        GROUP BY NVL( B.GROUPSEQ, 1  ) )
+        WHERE   GRP = 1
+        <!--
+        SELECT C.CNT - D.CNT
+        FROM (
+            SELECT 	COUNT(CUID) AS CNT
+            FROM  	T_PUSH_USER
+            <where>
+                <if test="CNAME != null and CNAME != ''">
+                    AND CNAME LIKE #{CNAME} || '%'
+                </if>
+            </where>
+        ) C
+        , (
+            SELECT 	COUNT(A.CUID) AS CNT
+            FROM   	T_PUSH_USER A
+            INNER JOIN T_PUSH_USER_GROUP B
+            ON 	A.CUID = B.CUID
+            AND B.GROUPSEQ = #{GROUPSEQ}
+            AND A.ISDELETED = 'N'
+            <where>
+                <if test="CNAME != null and CNAME != ''">
+                    AND A.CNAME LIKE #{CNAME} || '%'
+                </if>
+            </where>
+        ) D
+        -->
+    </select>
+
+    <insert id="InsertPushGroupAuth" parameterType="kr.msp.admin.push.groupAuth.dto.PushGroupAuthDto">
+		 INSERT INTO T_PUSH_USER_GROUP (
+                                        CUID
+                                       ,GROUPSEQ
+                                      ) VALUES (
+                                        #{CUID}
+                                       ,#{GROUPSEQ}
+                                      )
+	</insert>
+
+
+    <delete id="DeletePushGroupAuth" parameterType="kr.msp.admin.push.groupAuth.dto.PushGroupAuthDto">
+        DELETE FROM T_PUSH_USER_GROUP
+        WHERE CUID = #{CUID} AND GROUPSEQ = #{GROUPSEQ}
+    </delete>
+    
+    <delete id="DeleteAllPushGroupAuth" parameterType="kr.msp.admin.push.groupAuth.dto.PushGroupAuthDto">
+        DELETE FROM T_PUSH_USER_GROUP
+        WHERE GROUPSEQ = #{GROUPSEQ}
+    </delete>
+
+</mapper>

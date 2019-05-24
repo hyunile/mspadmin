@@ -1,0 +1,21 @@
+<div style="max-height:500px; overflow-y:auto;">
+	<ul id="resTree" class="easyui-tree" >
+	</ul>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function () {
+	
+	$('#resTree').tree({
+   		checkbox:true,
+    	data: $userList
+	});
+	
+	$(".tree-node").each(function(){
+		if($(this).find(".tree-indent").length < 2){
+			$(this).find(".tree-file").removeClass().addClass("tree-icon").addClass("tree-folder");
+		}
+	});
+	
+});
+</script>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+    <tx:annotation-driven />
+    <!-- DB DataSource was pool JNDI 사용-->
+    <bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+     	<property name="jndiName" value="${datasource.jndiname.msp.mobile}"/>
+     	<property name="resourceRef" value="true"/>
+  	</bean>
+
+    <!-- DB DataSource DBCP 사용-->
+<!--
+    <bean id="dataSource" class="kr.msp.dbcp.CryptoDataSource" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+-->
+
+    <!--
+    // xml로 정의된 sql변경시 즉시 반영하기 위해 사용하였으나 메모리 관련 이슈가 있어 사용 안함
+    <bean id="sqlSessionFactory" class="kr.msp.admin.base.utils.RefreshableSqlSessionFactoryBean">
+    -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+	<!-- ************************************************************************* -->
+
+    	<property name="mapperLocations">
+            <list>
+                <value>${datasource.mybatis.msp.mobile.mapperLocation}</value>
+            </list>
+        </property>
+        <!--
+    	<property name="mapperLocations" value="WEB-INF/sqlmap/mssql/**/*.xml"/>
+    	<property name="mapperLocations" value="WEB-INF/sqlmap/mysql/**/*.xml"/>
+     	-->
+	<!-- ************************************************************************* -->
+    	<!--<property name="interval" value="36000"/>-->
+    </bean>
+    
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+  		<constructor-arg index="0" ref="sqlSessionFactory"></constructor-arg>
+        <qualifier value="sqlSession"/>
+  	</bean>
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+  		<constructor-arg index="0" ref="sqlSessionFactory"></constructor-arg>
+        <qualifier value="sqlSessionTemplate"/>
+  	</bean>
+    
+    <bean id="transactionManager"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+        <qualifier value="sqlSessionTemplate"/>
+   </bean>
+
+    <!-- was pool push -->
+    <bean id="dataSource_push" class="org.springframework.jndi.JndiObjectFactoryBean">
+     	<property name="jndiName" value="${datasource.jndiname.msp.push}"/>
+     	<property name="resourceRef" value="true"/>
+  	</bean>
+    <!--
+    // xml로 정의된 sql변경시 즉시 반영하기 위해 사용하였으나 메모리 관련 이슈가 있어 사용 안함
+    <bean id="sqlSessionFactory" class="kr.msp.admin.base.utils.RefreshableSqlSessionFactoryBean">
+    -->
+    <bean id="sqlSessionFactory_push" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource_push" />
+        <!-- *************************************************************************  -->
+        <!--
+        <property name="mapperLocations" value="WEB-INF/sqlmap/oracle/**/*.xml"/>
+        <property name="mapperLocations" value="WEB-INF/sqlmap/mssql/**/*.xml"/>
+        -->
+        <!-- *************************************************************************	-->
+        <property name="mapperLocations" value="${datasource.mybatis.msp.push.mapperLocation}"/>
+		<!--<property name="interval" value="36000"/>-->
+    </bean>
+    
+    <bean id="sqlSession_push" class="org.mybatis.spring.SqlSessionTemplate"> 
+  		<constructor-arg index="0" ref="sqlSessionFactory_push"></constructor-arg>
+  		<qualifier value="push"/>
+  	</bean>
+    
+	<bean id="transactionManager_push"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource_push" />
+        <qualifier value="push"/>
+    </bean>
+	
+	<!-- securepush context -->
+    <import resource="spush-mybatis-context.xml"/>
+</beans>

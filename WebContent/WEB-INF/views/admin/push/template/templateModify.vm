@@ -1,0 +1,154 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery-te-1.4.0.css" >
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery-te-1.4.0.js"></script>
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+	jQuery("textarea[name=WEBEDIT]").jqte();
+	
+	init();
+});
+
+function init(){
+	var categoryType = $("#CATEGORY_TYPE").val();
+	if(categoryType == ""){
+		categoryType = "0";
+	}
+	document.getElementById("selectCATEGORY_TYPE").selectedIndex = categoryType
+	selMsgCategoryOnChangeHandler(categoryType);
+}
+
+function selMsgCategoryOnChangeHandler(msgCategory){
+	if(msgCategory == "0"){
+		$(".trMsgInputImage").css("display","none");
+		$(".trMsgInputTypeRich").css("display","none");
+		$(".trMsgInputVideoUrl").css("display","none");
+	}else if(msgCategory == "1"){
+		$(".trMsgInputImage").css("display","");
+		$(".trMsgInputTypeRich").css("display","");
+		$(".trMsgInputVideoUrl").css("display","none");
+	}else if(msgCategory == "2"){
+		$(".trMsgInputImage").css("display","");
+		$(".trMsgInputTypeRich").css("display","none");
+		$(".trMsgInputVideoUrl").css("display","");
+	}else if(msgCategory == "3"){
+		$(".trMsgInputImage").css("display","");
+		$(".trMsgInputTypeRich").css("display","none");
+		$(".trMsgInputVideoUrl").css("display","none");
+	}
+	$("#CATEGORY_TYPE").val(msgCategory);
+}
+
+// 이미지 파일 업로드 후 이미지 URL 세팅.
+function fn_uploadImageFile(){
+	var data = "";
+	var url = CONTEXT_PATH + "/admin/push/template/imgupload";
+	jQuery.ajaxFileUpload({
+		url           : url,
+		secureuri     : false,
+		cache: false,
+		fileElementId :'IMAGE_FILE',
+		dataType	  : 'json', 
+		data          : data,
+		contentType   : 'multipart/form-data',
+		success:function(json){
+			if(json.result > 0){
+				alert(json.msg);
+				$('#URL').val(json.imgUrl);
+			}else{
+				alert(json.msg);
+			}
+		}
+	});
+}
+</script>
+<form name="frmTemplateInfo" method="POST">
+	
+	<table class="tbl">
+		<colgroup>
+			<col width="20%"/><col width="auto"/>
+		</colgroup>
+		<tr>
+			<th colspan="2">01. #springMessage("menu.push.sendManage.sendInfo")</th> <!-- 발송 정보 -->
+		</tr>
+		<tr>
+        	<th>#springMessage("menu.push.sendManage.messageType")</th> <!-- 메세지 유형 -->
+        	<td>
+        		<select class="se_con" id="selectCATEGORY_TYPE" name="CATEGORY_TYPE" onchange="selMsgCategoryOnChangeHandler(this.value)">
+					<option value="0">#springMessage("common.text.base")</option> <!-- 기본 -->
+					<option value="1">#springMessage("common.text.webPage")</option> <!-- 웹페이지 -->
+					<option value="2">#springMessage("common.text.video")</option> <!-- 동영상 -->
+					<option value="3">#springMessage("common.text.image")</option> <!-- 이미지 -->
+				</select>
+        	</td>
+        </tr>
+        <tr>
+			<th scope="row">
+				<label for="TEMPLATE_TITLE" class="required">#springMessage("menu.push.setting.templateName")</label> <!-- 템플릿 명 -->
+			</th>
+			<td>
+				<input type="text" id="TEMPLATE_TITLE" name="TEMPLATE_TITLE" onchange="fn_template_change()" style="width:300px;" value="$!templateOne.TEMPLATE_TITLE" />
+<!-- 						<button type="button" onclick="fn_template_check()" class="btn_basic">#springMessage("menu.push.appManage.sameCheck")</button> --> <!-- 중복체크 -->
+			</td>
+		</tr>
+	</table>
+	
+	<br/>
+	
+	<table class="tbl" summary="상태창,앱내메세지,URL">
+		<colgroup><!--  2cell  -->
+			<col width="20%"/><col width="auto"/>
+		</colgroup>
+		<tr>
+			<th colspan="11">02. #springMessage("menu.push.sendManage.messageIn")</th> <!-- 메세지 입력 -->
+		</tr>
+		<tr>
+       		<th><label class="required">#springMessage("common.text.message")</label></th> <!-- 메세지 -->
+       		<td colspan="10">
+         			<input id="txtMessage" name="MESSAGE" class="width100" type="text" value="$!templateOne.MESSAGE"/>
+       		</td>
+     		</tr>
+     
+     		<tr class="trMsgInputTypeExt">
+       		<th>EXT</th>
+       		<td colspan="10">
+        			<textarea id="txtExt" name="SUB_MESSAGE" cols="105" rows="2">$!templateOne.SUB_MESSAGE</textarea>
+       		</td>
+     		</tr>
+     		<tr class="trMsgInputTypeRich">
+       		<th>web page</th>
+       		<td colspan="10">
+     				<textarea id="txtRichExt" name="WEBEDIT" cols="105" rows="10">$!templateOne.WEBEDIT</textarea>
+   			</td>
+     		</tr>
+    		<tr class="trMsgInputImage">
+       		<th rowspan="2">#springMessage("common.text.image")</th> <!-- 이미지 -->
+       		<td colspan="9">
+         			<input type="file" name="IMAGE_FILE"  id="IMAGE_FILE" />
+       		</td>
+     		</tr>
+     		<tr class="trMsgInputImage">
+     			<td colspan="9">
+     				<input id="txtUrl" name="IMAGE_URL" type="text" class="width100" value="$!templateOne.IMAGE_URL"/>
+     			<td>
+		<tr>
+     		<tr class="trMsgInputVideoUrl">
+     			<th>#springMessage("common.text.video") URL</th> <!-- 동영상 -->
+     			<td colspan="9">
+     				<input id="txtVideoUrl" name="VIDEO_URL" class="width100" type="text" value="$!templateOne.VIDEO_URL"/> 
+     			<td>
+		<tr>
+	</table>
+		
+	<div class="btn-wrap txtCenter">
+	#if(!$templateOne)
+		<a href="javascript:void(0)" onclick="fn_templateWrite();" class="btn1">#springMessage("common.button.save")</a>	<!-- 저장 -->
+	#else
+		<a href="javascript:void(0)" onclick="fn_templateModify();" class="btn1">#springMessage("common.button.modify")</a>	<!--수정  -->
+		<a href="javascript:void(0)" onclick="fn_templateDelete();" class="btn1 type2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+	#end
+		<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div> 
+	
+	<input type="hidden" id="TEMPLATE_CODE" name="TEMPLATE_CODE" value="$!templateOne.TEMPLATE_CODE" />
+	<input type="hidden" id="CATEGORY_TYPE" name="CATEGORY_TYPE" value="$!templateOne.CATEGORY_TYPE" />
+</form>

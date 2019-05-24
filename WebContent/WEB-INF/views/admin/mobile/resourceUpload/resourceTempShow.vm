@@ -1,0 +1,96 @@
+<style type="text/css">
+	ul, li {list-style:none; margin:0; padding:0; font-size:10pt; }
+
+	.image_list {clear:both;overflow: auto;position: relative;width: 100%; border:1px solid #e1e1e1; cursor:pointer; }
+	.image_list .images {position:absolute; display:none; }
+
+	.tab {width:600px;cursor:pointer;}
+	.tab li {width:70px;float:left;border-left:1px solid #e1e1e1;border-right:1px solid #e1e1e1;border-top:1px solid #e1e1e1;padding:7px;}
+	.tab li.fir {border-left:1px solid #e1e1e1;}
+
+	.tab_icon {width:800px;cursor:pointer;}
+	.tab_icon li {float:left;}
+
+	.tab li.tabOutClass {font-weight:normal;color:#707070;background-color:#fff}
+	.tab li.tabOverClass {font-weight:bold;color:#000;background-color:#D0D0D0;}
+</style>
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		var notConfig =  $(".image_list").find("#notConfig");
+		if(notConfig.length > 0){
+			alert('#springMessage("menu.mobile.upload.alert.noform")'); //리소스 업로드에 등록하지 않은 형식의 리소스 파일이 있습니다.
+		}
+	});
+</script>
+
+<form name="frmTempResInfo" method="POST">
+	
+		<div>
+			<ul class="tab" id="tab">
+				<li class="tabOverClass" id="summaryList">#springMessage("menu.mobile.upload.tabList")</li> <!-- 목록보기 -->
+				<li class="tabOutClass" id="treeList" >#springMessage("menu.mobile.upload.tabTree")</li> <!-- 트리보기 -->
+			</ul>
+		</div>
+		
+        <div class="tbCon" id="loading-indicator2" style="width:100%;text-align:center;display:none;">
+            <img alt="loading" src= "$RESOURCES_PATH/images/loading.gif" />
+        </div>
+		
+		<div class="image_list" id="image_list">
+
+			<div id="noticeTableDiv" style="max-height:400px; overflow-y:auto;">
+			
+				<table class="tbl" summary="체크,확장자,합계">
+					<colgroup><!--  6cell  -->
+						<col width="8%"/><col/><col width="20%"/>
+					</colgroup>
+					
+					<thead>
+						<tr>
+							<th scope="col"> </th>
+							<th scope="col">#springMessage("menu.mobile.upload.fileForm")</th><!-- 파일 형식 -->
+							<th scope="col">#springMessage("menu.mobile.upload.fileNum")</th> <!-- 파일 수 -->
+						</tr>
+					</thead>
+					
+					<tbody>
+						#foreach( $resourceSummary in $resourceSummaryList )
+							#if($resourceSummary.EXT_USE == "O")
+								<tr>
+							#else 
+								<tr id="notConfig">
+							#end
+								<td>
+									<input type="checkbox" class="Check_box" name="CH_FILE_EXT" id="CH_FILE_EXT_$resourceSummary.FILE_EXT" value="$resourceSummary.FILE_EXT"/><label for="CH_FILE_EXT_$resourceSummary.FILE_EXT"></label>
+								</td>
+								#if($resourceSummary.EXT_USE == "O")
+									<td class="SummaryClickTd">
+										$resourceSummary.FILE_EXT
+									</td>
+									<td class="SummaryClickTd">
+										$resourceSummary.EXT_CONT 
+									</td>
+								#else 
+									<td class="SummaryClickTd" style="color:#FF0000;font-weight:bold">
+										$resourceSummary.FILE_EXT
+									</td>
+									<td class="SummaryClickTd" style="color:#FF0000;font-weight:bold">
+										$resourceSummary.EXT_CONT 
+									</td>
+								#end
+							</tr>
+						#end
+					</tbody>
+				</table>
+			</div>
+		</div>
+	
+	
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:fn_deleteSummaryList();void(0);" class="btn1 type2">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+		<a href="javascript:fn_reourceRegist();void(0);" class="btn1 type2">#springMessage("common.button.okay")</a> <!-- 확인 -->
+
+	</div>
+	
+</form>

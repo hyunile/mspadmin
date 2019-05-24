@@ -1,0 +1,554 @@
+<div id="conWrap">
+	
+	<style type="text/css">
+		.togUi {display:none;}
+		tr.check	td	{background-color:#C0C0C0; }
+	</style>
+    <script type="text/javascript">
+    
+    	$(document).ready(function(){
+    		//검색 폼 초기화
+    		//fn_mp_initSelectOptionElement("conSelect_dtType");
+    		
+    		
+    		
+    	#if($!{AUTH_TYPE}=="00")
+    		fn_toggleList('togUi', 'usr'); 
+    	#elseif($!{AUTH_TYPE}=="01")
+    		fn_toggleList('togUi', 'grp');
+		#else
+		    fn_toggleList('togUi', 'comment');
+    	#end
+    	});
+    	
+    	
+    	
+    	// 사용자 목록 조회
+    	// ajax call
+    	function fn_selectUserList(PAGE_NUM)
+    	{
+    		$("form[name=frmUser]>input[name=EMP_NM]").val($(".detail_searchBox").find("input[name=EMP_NM]").val());
+    		$("form[name=frmUser]>input[name=APP_IDX]").val($("select[name=APP_IDX]").val());
+    		$("form[name=frmUser]>input[name=PAGE_NUM]").val(PAGE_NUM)
+    		var url  = CONTEXT_PATH + "/admin/store/appauth/userList";
+    		//var url  = "/admin/store/appauth/userList";
+    		var data = jQuery("form[name=frmUser]").serialize();
+    		var target = jQuery("div.usr");
+    		var type = "POST";
+    		fn_getCommonList( url, type, data, target );
+    	}
+    	
+    	
+    	// 그룹 목록 조회
+    	// ajax call
+    	function fn_selectGroupList(PAGE_NUM)
+    	{
+    		$("form[name=frmGroup]>input[name=GRP_NM]").val($(".detail_searchBox").find("input[name=GRP_NM]").val());
+    		$("form[name=frmGroup]>input[name=APP_IDX]").val($("select[name=APP_IDX]").val());
+    		$("form[name=frmGroup]>input[name=PAGE_NUM]").val(PAGE_NUM)
+    		var url  = CONTEXT_PATH + "/admin/store/appauth/groupList";
+    		var data = jQuery("form[name=frmGroup]").serialize();
+    		var target = jQuery("div.grp");		// <div class="grp"..../>
+    		var type = "POST";
+    		fn_getCommonList( url, type, data, target );
+    	}
+    	
+    	// 권한 목록 조회
+    	// ajax call
+    	function fn_selectAuthList(PAGE_NUM)
+    	{
+    		$("form[name=frmAuth]>input[name=PAGE_NUM]").val(PAGE_NUM)
+    		var url  = CONTEXT_PATH + "/admin/store/appauth/authList";
+    		var data = jQuery("form[name=frmAuth]").serialize();
+    		var target = jQuery(".right_area");
+    		var type = "POST";
+    		fn_getCommonList( url, type, data, target );
+    	}
+    	
+    	
+    	// 앱을 바꿈.
+    	// 화면을 모두 새로 조회 함.
+    	function change_app(app_idx)
+    	{
+    		if(app_idx != "")
+    		{
+        		document.frm.APP_IDX.value = app_idx;
+        		document.frm.AUTH_TYPE.value = $(':radio[name="AUTH_TYPE"]:checked').val();
+        		document.frm.action=CONTEXT_PATH + "/admin/store/appauth/auth";
+        		document.frm.method="POST";
+        		document.frm.submit();
+    		}
+    	}
+    	
+    	
+    	
+    	
+    	// 사용자 목록과 그룹목록 중 하나를 선택 함.
+    	function fn_toggleList(togGrp, togTarget)
+    	{
+    		$("." + togGrp).hide();
+    		$("." + togTarget).show();
+    	}
+    	
+    
+    	// -----------------------------------------------------------------------------------------------------------------------------------
+		// 		UI Table 에 추가 관련 - 시작
+    	// -----------------------------------------------------------------------------------------------------------------------------------
+		function fn_bind_checkboxEvent(head_ck_cls,row_ck_cls)
+		{
+    		var onEa = 0;
+    		var  offEa = 0;
+    		
+    		onEa = $(":checkbox[class='"+row_ck_cls+"']:checked").length;		// 체크된 행의 체크박스 갯수
+    		offEa = $(":checkbox[class='"+row_ck_cls+"']").length - onEa;		// 체크되지 않은 행의 체크박스 갯수
+    		$("."+head_ck_cls).prop('checked', offEa == 0);
+		}
+		
+		// 권한 테이블에 항목을 추가 함.
+    	function fn_append_auth_row(typenm, emp_no, emp_nm, grp_no, grp_nm)
+		{
+			var hide_ck = typenm == "그룹" ? $("table[id=authList]").find("input[GRP_ID=" +grp_no+"]") : $("table[id=authList]").find("input[EMP_NO=" +emp_no+"]");
+			if(hide_ck.length == 0)
+			{
+    			var newRow = $("#template").find("tr[name=auth_row]").clone();
+    			var chkbox = $(newRow).find("input[type=checkbox]");
+    			chkbox.attr("GRP_ID", grp_no);
+    			chkbox.attr("EMP_NO", emp_no);
+    			$(newRow).children()[1].innerHTML = typenm;
+    			$(newRow).children()[2].innerHTML = grp_nm;
+    			$(newRow).children()[3].innerHTML = emp_nm;
+    			
+				$(chkbox).addClass("ck_row_auth");
+
+    			$("table[id=authList] > tbody").append(newRow);			
+			}
+			else
+			{
+				$(hide_ck[0]).addClass("ck_row_auth");
+				$(hide_ck[0]).parent().parent().show();
+			}
+			return true;
+		}
+    	
+    	
+		// 사용자 테이블에 항목을 추가 함.
+    	function fn_append_user_row(emp_no, emp_nm)
+		{
+			
+			var hide_ck = $("table[id=userList]").find("input[EMP_NO=" +emp_no+"]");
+			if(hide_ck.length==0)
+            {
+    			var newRow = $("#template").find("tr[name=user_row]").clone();
+    			var chkbox = $(newRow).find("input[type=checkbox]");
+
+				// 새로 추가 함.
+    			chkbox.attr("EMP_NO", emp_no);
+    			chkbox.attr("EMP_NM", emp_nm);
+				$(chkbox).addClass("ck_row_usr");
+    			
+				$(newRow).children()[1].innerHTML = emp_nm;
+    			$("table[id=userList] > tbody").append(newRow);
+            }
+			else
+			{
+				$(hide_ck[0]).addClass("ck_row_usr");
+				$(hide_ck[0]).parent().parent().show();
+			}
+			
+			return true;
+		}
+		
+		
+    	function fn_append_group_row(grp_no, grp_nm)
+		{
+			
+			var hide_ck = $("table[id=groupList]").find("input[GRP_ID=" +grp_no+"]");
+			if(hide_ck.length==0)
+            {
+    			var newRow = $("#template").find("tr[name=group_row]").clone();
+    			var chkbox = $(newRow).find("input[type=checkbox]");
+
+				// 새로 추가 함.
+    			chkbox.attr("GRP_ID", grp_no);
+    			chkbox.attr("GRP_NM", grp_nm);
+    			
+				$(chkbox).addClass("ck_row_grp");
+    			$(newRow).children()[1].innerHTML = grp_nm;
+    			$("table[id=groupList] > tbody").append(newRow);
+            }
+			else
+			{
+				$(hide_ck[0]).addClass("ck_row_grp");
+				$(hide_ck[0]).parent().parent().show();
+			}
+			
+			
+			return true;
+		}
+    	
+		
+		
+		// -----------------------------------------------------------------------------------------------------------------------------------
+		// 		UI Table 에 추가 관련 - 끝
+    	// -----------------------------------------------------------------------------------------------------------------------------------
+
+		
+    	// 권한을 추가함.
+    	function append_auth()
+    	{
+    		var app_idx = $("select[name=APP_IDX]").val();
+    		
+    		var auth_type = $(':radio[name="AUTH_TYPE"]:checked').val();
+    		var type_nm = $(':radio[name="AUTH_TYPE"]:checked').attr("TYPE_NM");
+    		var emp_no = "";
+    		var emp_nm = "";
+    		var grp_id = "";
+    		var grp_nm = "";
+    		
+    		var params = "";
+    		
+    		if(app_idx == "")
+    		{
+    			alert('#springMessage("menu.store.appManage.alert.selectApp")'); //앱을 선택 하세요.
+    			return;
+    		}
+    		else if(auth_type == "")
+    		{
+    			alert('#springMessage("menu.store.appManage.alert.selectType")'); //타입을 선택 하세요.
+    		}
+    		else
+    		{
+
+        		switch(auth_type)
+        		{
+        			case "00":	// 회원
+        			{
+        				$(".usr").find("tbody").find("input[type=checkbox]:checked").each(function(i)
+        				{
+			        		var row = $(this).parent().parent();
+							fn_append_auth_row("회원", $(this).attr("EMP_NO"), $(this).attr("EMP_NM"), "", "");
+							if($(row).hasClass("new"))
+        					{
+        						$(row).remove();
+        					}
+							else
+							{
+    							$(this).prop("checked", false);
+    							$(this).removeClass("ck_row_usr");
+								$(row).hide();
+							}
+        				});
+        			}
+        			break;
+        			case "01": // 그룹
+        			{
+        				$(".grp").find("tbody").find("input[type=checkbox]:checked").each(function(i)
+        				{
+			        		var row = $(this).parent().parent();
+							fn_append_auth_row("그룹", "", "", $(this).attr("GRP_ID"), $(this).attr("GRP_NM"));
+							if($(row).hasClass("new"))
+        					{
+        						$(row).remove();
+        					}
+							else
+							{
+    							$(this).prop("checked", false);
+    							$(this).removeClass("ck_row_grp");
+								$(row).hide();
+							}
+        				});
+        			}
+        			break;
+        		}
+				
+    		}
+    	}
+    	
+    	function remove_auth()
+    	{
+    		var app_idx = $("select[name=APP_IDX]").val();
+    		var auth_type = $(':radio[name="AUTH_TYPE"]:checked').val();
+    		var type_nm = $(':radio[name="AUTH_TYPE"]:checked').attr("TYPE_NM");
+    		var params = "";
+    		
+    		if(app_idx == "")
+    		{
+    			alert('#springMessage("menu.store.appManage.alert.selectApp")'); //앱을 선택 하세요.
+    			return;
+    		}
+    		else
+    		{
+    			$(".right_area").find("tbody").find("input[type=checkbox]:checked").each(function(i)
+    			{
+					var row = $(this).parent().parent();
+					var grp_no = $(this).attr("GRP_ID");
+					var emp_no = $(this).attr("EMP_NO");
+					var typenm = $(row).children()[1].innerHTML;
+					var grp_nm = $(row).children()[2].innerHTML;
+					var emp_nm = $(row).children()[3].innerHTML;
+					
+					
+					if(typenm == "그룹")
+					{
+						fn_append_group_row(grp_no, grp_nm);
+					}
+					else
+					{
+						fn_append_user_row(emp_no, emp_nm)
+					}
+					
+					
+					if($(row).hasClass("new"))
+					{
+						$(row).remove();
+					}
+					else
+					{
+						$(this).prop("checked", false);
+						$(this).removeClass("ck_row_auth");
+						$(row).hide();
+					}
+					
+    			});
+    		}
+    	}
+		
+		function saveAuth()
+		{
+			// 저장할 항목을 JSon 형태로 생성 함.
+			var data = [];
+		    var auth_type = $(':radio[name="AUTH_TYPE"]:checked').val();
+    		var app_idx = $("select[name=APP_IDX]").val();
+			// hidden 항목을 찾음.(삭제할 항목 목록)
+			$("#authList").find("tr:hidden").each(function(i){
+				var ckbox = $(this).find("input[type=checkbox]");
+				data.push({"CRUD":"D","AUTH_TYPE":auth_type,"APP_IDX":app_idx,"AUTH_ID":$(ckbox).attr("AUTH_ID"),"GRP_ID":$(ckbox).attr("GRP_ID"),"EMP_NO":$(ckbox).attr("EMP_NO")});
+			});
+			
+			// new 항목을 찾음(저장할 항목 목록)
+			$("#authList").find("tr.new").each(function(i){
+				var ckbox = $(this).find("input[type=checkbox]");
+				data.push({"CRUD":"C","AUTH_TYPE":auth_type,"APP_IDX":app_idx,"AUTH_ID":$(ckbox).attr("AUTH_ID"),"GRP_ID":$(ckbox).attr("GRP_ID"),"EMP_NO":$(ckbox).attr("EMP_NO")});
+			});
+			
+			if(data.length > 0)
+			{
+				if(confirm('#springMessage("menu.store.appManage.alert.changeSave")')) //변경된 내용을 저장 하시겠습니까?
+				{
+        			var url  = CONTEXT_PATH + "/admin/store/appauth/saveAuth";
+        			fn_getCommonList( url, "POST", JSON.stringify(data), $("#listDiv"), "json" );
+				}
+			}
+			else
+			{
+				alert('#springMessage("menu.store.appManage.alert.noChange")'); //변경된 내용이 없습니다.
+			}
+		}
+		
+		
+    /*	
+    	// 권한을 추가함.
+    	function append_auth()
+    	{
+    		var app_idx = $("select[name=APP_IDX]").val();
+    		
+    		var auth_type = $(':radio[name="AUTH_TYPE"]:checked').val();
+    		var type_nm = $(':radio[name="AUTH_TYPE"]:checked').attr("TYPE_NM");
+    		var emp_no = "";
+    		var emp_nm = "";
+    		var grp_id = "";
+    		var grp_nm = "";
+    		
+    		var params = "";
+    		
+    		if(app_idx == "")
+    		{
+    			alert("앱을 선택 하세요.");
+    			return;
+    		}
+    		else if(auth_type == "")
+    		{
+    			alert("타입을 선택 하세요.");
+    		}
+    		else
+    		{
+        		
+        		switch(auth_type)
+        		{
+        			case "00":	// 회원
+        			{
+        				$(".usr").find("tbody").find("input[type=checkbox]:checked").each(function(i)
+        				{
+        					emp_no = $(this).attr("EMP_NO");
+        					emp_nm = $(this).attr("EMP_NM");
+        					if(i != 0)
+        						params = params + "#";
+        					params = params + emp_no;
+        				});
+        			}
+        			break;
+        			case "01": // 그룹
+        			{
+        				$(".grp").find("tbody").find("input[type=checkbox]:checked").each(function(i)
+        				{
+        					grp_id = $(this).attr("GRP_ID");
+        					grp_nm = $(this).attr("GRP_NM");
+        					if(i != 0)
+        						params = params + "#";
+        					params = params + grp_id;
+        				});
+        			}
+        			break;
+        		}
+    			if(params == "")
+    			{
+    				alert("추가할 항목을 선택 하세요.");
+    			}
+    			else 
+    			{
+            		$("form[name=frm]>input[name=APP_IDX]").val(app_idx);
+            		$("form[name=frm]>input[name=DELEV_DATA]").val(params);
+            		$("form[name=frm]>input[name=AUTH_TYPE]").val(auth_type);
+            		
+            		
+            		document.frm.action=CONTEXT_PATH + "/admin/store/appauth/addAuth";
+            		document.frm.method="POST";
+            		document.frm.submit();
+    		
+    			}
+    		}
+    	}
+    	*/
+    	
+		
+
+		
+    /*
+        function remove_auth()
+    	{
+    		var app_idx = $("select[name=APP_IDX]").val();
+    		
+    		var auth_type = $(':radio[name="AUTH_TYPE"]:checked').val();
+    		var type_nm = $(':radio[name="AUTH_TYPE"]:checked').attr("TYPE_NM");
+    		var params = "";
+    		
+    		if(app_idx == "")
+    		{
+    			alert("앱을 선택 하세요.");
+    			return;
+    		}
+    		else if(confirm("삭제하시면 복구할 수 없습니다.\n삭제하시겠습니까?"))
+    		{
+    			$(".right_area").find("tbody").find("input[type=checkbox]:checked").each(function(i)
+    			{
+    				if(i != 0)
+    					params = params + "#";
+    				params = params + $(this).attr("AUTH_ID");;
+    			});
+    		
+				if(params == "")
+				{
+					alert("삭제할 사용자가 없습니다.");
+				}
+				else
+				{
+                    $("form[name=frm]>input[name=APP_IDX]").val(app_idx);
+                    $("form[name=frm]>input[name=DELEV_DATA]").val(params);
+                    $("form[name=frm]>input[name=AUTH_TYPE]").val(auth_type);
+                    
+                    
+                    document.frm.action=CONTEXT_PATH + "/admin/store/appauth/delAuth";
+                    document.frm.method="POST";
+                    document.frm.submit();
+				}
+    		}
+    	}
+    	*/
+    	
+    	
+    
+    </script>
+    
+    <form name="frm" method="post" action="selectDevice" style="display:none;">
+        <input type="hidden" name="AUTH_TYPE"/>
+        <input type="hidden" name="APP_IDX"/>
+        <input type="hidden" name="GRP_NM"/>
+        <input type="hidden" name="EMP_NM"/>
+        <input type="hidden" name="DELEV_DATA"/>
+        <input type="hidden" name="ORDER" value="$!{R_ORDER}"/>
+    </form>
+
+#### S : 프로그램 위치 기술 부분  ####
+    <div class="headerBg">
+    	<div class="innerNavi"><!--  NAVIGATOR  --></div>
+		<div class="tb_tit"><!--  TITLE  --></div>
+    </div>
+#### E : 프로그램 위치 기술 부분  ####
+
+<br/>
+<br/>
+
+
+<table id="template" style="display:none;">
+    	<tr name="auth_row" class="new">
+    		<td><input type="checkbox" GRP_ID="" EMP_NO="" AUTH_ID="" onclick="fn_bind_checkboxEvent('ck_head_auth', 'ck_row_auth')" /></td>
+    		<td></td>
+    		<td></td>
+    		<td></td>
+    	</tr>
+    	<tr name="user_row" class="new">
+    		<td><input type="checkbox"  EMP_NO="" EMP_NM="" onclick="fn_bind_checkboxEvent('ck_head_usr', 'ck_row_usr')"/></td>
+    		<td></td>
+    	</tr>
+    	<tr name="group_row" class="new">
+    		<td><input type="checkbox" GRP_ID="" GRP_NM="" onclick="fn_bind_checkboxEvent('ck_head_grp', 'ck_row_grp')"/></td>
+    		<td></td>
+    	</tr>
+</table>
+	
+	
+	
+	
+   #### S : 조회 폼 부분  ####
+
+    <div class="contents">
+        #### S : 리스트  폼 부분  ####
+    	<div class="detail_searchBox">
+    		<p>
+    			#springMessage("common.text.appname"):&nbsp;&nbsp; <!-- App 명 -->
+                <select name="APP_IDX" onchange="change_app(this.value);">
+                    <option value="">#springMessage("menu.store.appManage.alert.selectApp")</option> <!-- 앱을 선택하세요. -->
+                    #foreach( $data in $appList )
+                    <option value="$!{data.APP_IDX}" #if($!{data.APP_IDX} == $!{APP_IDX}) selected="selected" #end>$!{data.APP_NM}</option>
+                    #end
+                </select>
+    			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    			#springMessage("common.text.type"): <!-- 타입 -->
+    			<input type="radio" name="AUTH_TYPE" value="00" TYPE_NM="회원" onchange="fn_toggleList('togUi', 'usr');" #if($!{AUTH_TYPE}=="00") checked="checked"  #end/>#springMessage("common.text.member") <!-- 회원 -->
+    			<input type="radio" name="AUTH_TYPE" value="01" TYPE_NM="그룹" onchange="fn_toggleList('togUi', 'grp');" #if($!{AUTH_TYPE}=="01") checked="checked"  #end/>#springMessage("common.text.group") <!-- 그룹 -->
+    			
+    			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    			<span class="togUi usr">
+    				#springMessage("common.text.name"):&nbsp;<input type="text" style="width:20%;"  name="EMP_NM" /> <!-- 이름 -->
+    				<button class="btn_search" onclick="fn_selectUserList(1);">#springMessage("common.button.search")</button> <!-- 검색 -->
+    			</span>
+    			<span class="togUi grp">
+    				#springMessage("common.text.group"):&nbsp;<input type="text" style="width:20%;"  name="GRP_NM" /> <!-- 그룹 -->
+    				<button class="btn_search" onclick="fn_selectGroupList(1);">#springMessage("common.button.search")</button> <!-- 검색 -->
+    			</span>
+            </p>   
+        </div>
+		<div class="tbCon" id="listDiv">
+			#parse ("/admin/store/appauth/AuthLayout.vm")
+		</div>
+    	<div class="processBtnDiv btnArea ta_r">
+            <button class="btn_style1" onclick="saveAuth();"><strong >#springMessage("common.button.save")</strong></button> <!-- 저장 -->
+    	</div>
+    </div>
+					    	#### E : 리스트  폼 부분  ####
+
+			
+	
+	
+</div>	
+

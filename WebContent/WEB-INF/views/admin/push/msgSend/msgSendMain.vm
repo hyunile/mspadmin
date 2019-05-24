@@ -1,0 +1,997 @@
+<style>
+    .backgroundPopupDiv{
+        display:none;
+        position:fixed;
+        _position:absolute; /* hack for internet explorer 6*/
+        height:100%;
+        width:100%;
+        top:0px;
+        left:0px;
+        z-index:100;
+        text-align: center;
+    }
+</style>
+
+
+<div id="loading-indicator" class="backgroundPopupDiv">
+    <img alt="loading" src= "$RESOURCES_PATH/images/loading.gif" style="margin-top: 15%";/>
+</div>
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="header_bg">
+    	<div class="inner_navi"></div>
+		<div class="tb_tit"></div>
+	</div>
+    #### E : 프로그램 위치 기술 부분  ####
+
+    <form name="frmList" id="frmList" action="$CONTEXT_PATH/admin/push/msgSend/send" method="post" enctype="multipart/form-data">
+    #### S : 리스트  폼 부분  ####
+    <div class="contents">
+    	<div class="tb_view">
+    		<div>
+				<h4 class="title">#springMessage("menu.push.msgSendSetting")</h4> <!-- 메시지 발송 설정 -->
+				<table class="tb_menuView" summary="APP ID,발송 시간,템플릿,우선 순위,MSG 내용,부가정보">
+					<colgroup>
+						<col width="100px"/>
+						<col width="200px"/>
+						<col width="100px"/>
+						<col width="auto"/>
+					</colgroup>
+					<tr>
+						<th>
+							<label for="APPID" class="required"> APP ID</label>
+						</th>
+						<td>
+							<select id="APPID" name="APPID">
+								<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+								#foreach($pushService in $pushServiceList)
+									<option value="$pushService.APPID">$pushService.APPNAME</option>
+								#end
+								<!-- <option value="kr.co.msp.mobile.officeu">오피스유(officeu)</option> -->
+							</select>
+						</td>
+		    			<th>
+							<label for="SEND_TYPE">#springMessage("menu.push.sendManage.sendTime")</label> <!-- 발송 시간 -->
+						</th>
+						<td>
+							<select name="SEND_TYPE" id="SEND_TYPE">
+								<option value="I" selected="selected">#springMessage("menu.push.sendManage.now")</option> <!-- 즉시 -->
+								<option value="R" >#springMessage("menu.push.sendManage.reserve")</option> <!-- 예약 -->
+							</select>
+
+							##Calendar
+							<span id="calendar_div" class="mat_10">
+								<input type="text" name="END_VIEW" id="END_VIEW" readonly="readonly" style="width:80px;" />
+								<input type="text" name="SEND_DATE" id="SEND_DATE" style="width: 0px; border-style: none;" />
+								<select name="SEND_HOUR" id="SEND_HOUR">
+									#foreach ( $item in [0..23] )
+										#if($item < 10)
+											<option value="0$item">$item</option>
+										#else
+											<option value="$item">$item</option>
+										#end
+									#end
+								</select>
+								 #springMessage("common.text.hour")&nbsp; <!-- 시 -->
+								<select name="SEND_MINUTE" id="SEND_MINUTE">
+									#foreach ( $item in [0..59] )
+										#if($item < 10)
+											<option value="0$item">$item</option>
+										#else
+											<option value="$item">$item</option>
+										#end
+									#end
+								</select>
+								#springMessage("common.text.minite") &nbsp; <!-- 분 -->
+							</span>
+							##Calendar
+						</td>
+
+					</tr>
+					<tr>
+						<th>
+							#springMessage("menu.push.sendManage.template") <!-- 템플릿 -->
+						</th>
+						<td>
+							<p>
+								<input type="radio" id="TEMPLATE_YN1" name="TEMPLATE_YN" value="Y" onclick="fn_template_y()"> <label for="TEMPLATE_YN1">#springMessage("common.header.use_Y")</label> &nbsp;&nbsp;&nbsp;&nbsp; <!-- 사용 -->
+								<input type="radio" id="TEMPLATE_YN2" name="TEMPLATE_YN" value="N" checked="checked" onclick="fn_template_n()"> <label for="TEMPLATE_YN2">#springMessage("menu.mobile.deploy.noUse")</label> <!-- 사용안함 -->
+							</p>
+		    			</td>
+		    			<th>
+							<label for="PRIORITY">#springMessage("common.header.rank")</label> <!-- 우선 순위 -->
+		    			</th>
+		    			<td>
+							<select id="PRIORITY" name="PRIORITY">
+								<option value="3" selected="selected">#springMessage("")</option> <!-- 보통 -->
+								<option value="5">#springMessage("menu.push.urgent")</option> <!-- 긴급 -->
+							</select> *.#springMessage("menu.push.urgentDesc") <!-- 긴급은 발송 중일때만 사용가능 -->
+						</td>
+		    		</tr>
+		    		#*<tr>
+		    			<th>
+							<label for="MESSAGE">* MSG #springMessage("common.header.contents")</label> <!-- 내용 -->
+		    			</th>
+		    			<td colspan="3">
+							<div id="template_tr">
+								<label for="TEMPLATECODE">#springMessage("menu.push.sendManage.template") #springMessage("common.select.choose") : </label> <!-- 템플릿 선택 -->
+								<select name="TEMPLATECODE" id="TEMPLATECODE">
+									<option value="">-- #springMessage("menu.push.directInput") --</option> <!-- 직접 입력 -->
+									#foreach( $template in $templateList )
+										<option value="$template.TEMPLATECODE">$esc.xml($template.TEMPLATECODE)</option>
+									#end
+								</select>
+								#foreach( $template in $templateList )
+									<input type="hidden" id="$template.TEMPLATECODE" value="$template.MESSAGE">
+								#end
+							</div>
+		    				<textarea name="MESSAGE" id="MESSAGE" cols="105" rows="3" style="margin-top:10px;"></textarea>
+		    			</td>
+		    		</tr>
+					<tr>
+						<th>
+							<label for="input_message">#springMessage("menu.push.addInfo")</label> <!-- 부가정보 -->
+						</th>
+						<td colspan="3">
+							<textarea name="EXT" cols="105" rows="3" id="input_message" onkeyup="javascript:fn_input(this, 'E');"></textarea>
+						</td>
+					</tr>*#
+					
+					<tr>
+						<th>
+							<label for="msgCategory" class="required"> #springMessage("menu.stats.mobile.type")</label> <!-- 구분 -->
+						</th>
+						<td>
+							<select id="msgCategory" name="msgCategory" onchange = "javascript:changeCategory(this.selectedIndex);">
+									<option value="0">#springMessage("common.text.base")</option> <!-- 기본 -->
+									<option value="1">#springMessage("common.text.webPage")</option> <!-- 웹페이지 -->
+									<option value="2">#springMessage("common.text.video")</option> <!-- 동영상 -->
+									<option value="3">#springMessage("common.text.image")</option> <!-- 이미지 -->
+									<option value="4">#springMessage("common.text.security")</option> <!-- 보안 -->
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th>
+							<label for="msgCategory" class="required"> DB#springMessage("common.button.save")</label> <!-- 저장 -->
+						</th>
+						<td>
+							<select id="DB_IN" name="DB_IN" >
+									<option value="N">N</option>
+									<option value="Y">Y</option>
+							</select>
+						</td>
+					</tr>
+                    <tr id="template_tr">
+                        <th>#springMessage("menu.push.sendManage.template") #springMessage("common.select.choose")</td> <!-- 템플릿 선택 -->
+                        <td colspan="3">
+                            <select name="TEMPLATECODE" id="TEMPLATECODE">
+                                <option value="">-- #springMessage("menu.push.directInput") --</option> <!-- 직접 입력 -->
+                                #foreach( $template in $templateList )
+                                    <option value="$template.TEMPLATECODE">$esc.xml($template.TEMPLATECODE)</option>
+                                #end
+                            </select>
+                            #foreach( $template in $templateList )
+                                <input type="hidden" id="$template.TEMPLATECODE" value="$template.MESSAGE">
+                            #end
+                        </td>
+                    </tr>
+		    		<tr id="tr_subject">
+		    			<th>
+							<label for="MESSAGE" class="required"> #springMessage("")</label> <!-- 제목 -->
+		    			</th>
+		    			<td colspan="3">
+							<div>
+							</div>
+		    				<input type="text" name="MESSAGE" id="MESSAGE" style="width:98%">
+##		    				<textarea name="MESSAGE" id="MESSAGE" cols="105" rows="3" style="margin-top:10px;"></textarea>
+		    			</td>
+		    		</tr>
+					<tr id="tr_contents">
+						<th>
+							<label for="input_message"> Notification #springMessage("")</label> <!-- 내용 -->
+						</th>
+						<td colspan="3">
+							<textarea name="EXT" cols="105" rows="2" id="input_message"></textarea>
+						</td>
+					</tr>
+
+					<tr id="tr_webPage" style="display:none">
+						<th>
+							<label for="WEBEDIT" class="required"> Web page</label>
+						</th>
+						<td colspan="3">
+							<textarea id="WEBEDIT" name="WEBEDIT" cols="105" rows="10"></textarea>
+						</td>
+					</tr>
+					<tr id="tr_image" style="display:none">
+						<th>
+							<label for="imageFile" class="required">#springMessage("common.text.image")</label> <!-- 이미지 -->
+						</th>
+						<!-- 
+						<td colspan="3">
+							<input type file name="EXT" cols="105" rows="3" id="input_message" onkeyup="javascript:fn_input(this, 'E');"></textarea>
+						</td>
+						 -->
+						<td colspan="3">
+                            <input type="file" name="imageFile"  id="imageFile" />
+##                            <input type="file" name="files[0]"  id="files[0]" onchange="document.getElementById('imagePath').value = this.value"/>
+##                            <input type="text" class="input_txt" id="imagePath" name="imagePath" style="width:97%;" readonly="readonly" />
+						</td>
+					</tr>
+					<tr id="tr_video" style="display:none">
+						<th>
+							<label for="videoUrl" class="required">#springMessage("common.text.video")</label> <!-- 동영상 -->
+						</th>
+						<td colspan="3">
+							<textarea name="videoUrl" cols="105" rows="2" id="videoUrl"></textarea>
+						</td>
+					</tr>
+				</table>
+
+				<h4 class="title">#springMessage("menu.push.sendTargetSet")</h4> <!-- 발송대상 설정 -->
+				<table class="tb_menuView" summary="발송 정책,발송대상 선택,발송대상 사용자">
+					<colgroup>
+						<col width="120px"/><col width="auto"/>
+					</colgroup>
+					
+					<tr>
+						<th>
+							<label for="USER_TYPE">#springMessage("menu.push.sendTargetSelect")</label> <!-- 발송대상 선택 -->
+						</th>
+						<td>
+							<select name="USER_TYPE" id="USER_TYPE" >
+								<option value="EACH">#springMessage("menu.push.clientSend")</option> <!-- 고객 발송 -->
+								<option value="GROUP">#springMessage("menu.push.groupSend")</option> <!-- 그룹 발송 -->
+								<option value="ALL">#springMessage("menu.push.allSend")</option> <!-- 전체 발송 -->
+                                <option value="CSV">CSV#springMessage("menu.push.fileSend")</option> <!-- 파일 발송 -->
+							</select>
+						</td>
+					</tr>
+				</table>
+				<div class="user_type_change_div5">##변경 되는 div 영역##
+				<table class="tbType1 lineTB" summary="발송 정책,발송대상 선택,발송대상 사용자">
+					<colgroup>
+						<col width="120px"/><col width="auto"/>
+					</colgroup>
+					<tr>
+						<th>
+							<label for="SERVICECODE" class="required">#springMessage("menu.push.sendPolicy")</label> <!-- 발송 정책 -->
+						</th>
+						<td>
+							<select id="SERVICECODE" name="SERVICECODE">
+								<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+								#foreach( $sendType in $sendTypeList )
+									<option value="$sendType.SERVICECODE">$sendType.SERVICECODE</option>
+								#end
+							</select>
+						</td>
+					</tr>
+				</table>
+				</div>
+				
+
+			##변경 부분###################################################################
+				<div class="user_type_change_div1">##변경 되는 div 영역##
+    					<div class="contents">
+    						<div class="tbCon">
+    								<h4 class="title">#springMessage("menu.push.clientSend")</h4> <!-- 고객 발송 -->
+    								##검색 부분##
+    								<div class="detail_searchBox">
+    									<p>
+    										<select id="conSelect">
+    								            <option value="0">CUID</option>
+    								            <option value="1">#springMessage("common.text.name")</option> <!-- 이름 -->
+    								       		<option value="2">#springMessage("common.text.phoneNum")</option> <!-- 전화번호 -->
+    								     	</select>
+    									    
+    									    <input class="se_con" type="text" id="SE_CUID" class="inputField" />
+    								       	<input class="se_con" type="text" id="SE_CNAME" class="inputField" />
+    								        <input class="se_con" type="text" id="SE_PHONENO" class="inputField" />
+											<a href="javascript:fn_se_select()" class="btn_basic">검색</a>
+    									</p>
+    								</div>
+    								##검색 부분##
+    								
+    							<div class="left_area">
+								<h4 class="title">#springMessage("menu.push.userList")</h4> <!-- 사용자 리스트 -->
+    							<div class="out_userList_div">##사용자 리스트 변경 부분##
+    								<table class="tb_list" id="user_table">
+    									<thead>
+    										<tr>
+    											<th width="30px">
+    												<input type="checkbox" id="all_check">
+    											</th>
+    											<th width="100px">CUID</th>
+    											<th width="auto">#springMessage("common.text.name")</th> <!-- 이름 -->
+    											<th width="100px">#springMessage("menu.push.sendServer")</th> <!-- 발송서버 -->
+												<th width="auto"> </th>
+    										</tr>
+    									</thead>
+    									<tbody>
+    							           	#foreach( $pushUser in $pushUserList )
+    							           		#set($j_tot = $pushUser.TOT_CNT)
+    								           	<tr class="no_select">
+    								           		<td>
+    								           			<input type="checkbox" class="CUID" value="$!{pushUser.CUID}" >
+    												</td>
+    								           		<td id="user_check_td">
+    								           			$!{pushUser.CUID}
+    							       				</td>
+    							       				<td id="user_check_td">$!{pushUser.CNAME}</td>
+    							       				<td id="user_check_td">
+    								           			$!{pushUser.PNSID}
+    							       				</td>
+                                                    <td style="display: none" id="user_check_td">
+                                                        $esc.url($!{pushUser.PSID})
+                                                    </td>
+    							           		</tr>
+    							       		#end
+    							       		#if(!$j_tot)
+    											<tr>
+    												<td colspan="5">
+                                                        #if($!{totalPushRegDevice}!="" && $!{totalPushRegDevice}>0)
+                                                            #springMessage("menu.push.alert.sendTargetSelect") <!-- 발송대상을 조회해 주세요. -->
+                                                        #else
+                                                          	#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+                                                        #end
+
+    												</td>
+    											</tr>
+    										#end
+    									</tbody>
+    						    	</table>
+    						   		<input type="hidden" id="USER_NUM" value="$!R_PAGE_NUM">
+    						      	<div class="j_page_div">
+    						         	##현재 페이지
+    						         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+    						            ##총 개수
+    						            <input type="hidden" name="J_tot" id="J_tot" value="$!j_tot">
+    						            ##한페이지의 로우수
+    						            <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+    						            ##한페이지수
+    						            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+    						            ##이밴트
+    						            <input type="hidden" name="j_event" value="fn_userList">
+    						    	</div>
+    							</div>##사용자 리스트 변경 부분##
+    						</div>
+    						
+    						<div class="right_area">
+    							<div class="in_userList_div">
+    								<h4 class="title">#springMessage("menu.push.sendTargetUser")</h4> <!-- 발송 대상 사용자 -->
+    								<div style="height:350px; overflow-x:hidden; overflow-y:scroll;">
+    								<table class="tbList1" id="sendUser_table">
+    									<thead>
+    										<tr>
+    											<th>CUID</th>
+    											<th>#springMessage("common.text.name")</th> <!-- 이름 -->
+    										</tr>
+    									</thead>
+    									<tbody>
+    										<tr id="default_text">
+    											<td colspan="2">#springMessage("menu.push.alert.chooseUser")</td> <!-- 사용자를 선택해 주세요. -->
+    								        </tr>
+    							        </tbody>
+    								</table>
+    								</div>
+    							</div>
+    						</div>
+    					</div>
+    				</div>
+    			</div>##변경 되는 div 영역 end##
+    			
+    			<div class="user_type_change_div2">##변경 되는 div 영역##
+    				<div class="contents">
+    			    	<div class="tbCon">
+    					    <div id="groupTableDiv">
+    					       	<h4 class="title">#springMessage("menu.push.groupList")</h4> <!-- 그룹 리스트 -->
+    					       	<table class="tbList1" id="group_table">
+    					       		<thead>
+    						       		<tr>
+    										<th style="width:10%;">
+    											<!-- 
+    											<input type="checkbox" id="gall_check">
+    											 -->
+    										</th>
+    						       			<th>
+    						       				#springMessage("menu.push.user.groupName") <!--그룹명 -->
+    						       				<input type="hidden" id="GROUPSEQ" name="GROUPSEQ" value="">
+    						       			</th>
+    						       			<th>
+    											#springMessage("menu.push.user.groupNum") <!-- 그룹멤버수-->
+    										</th>
+    										<th>
+    											#springMessage("common.text.registDate") <!-- 등록일시 -->
+    										</th>
+    										<th> 
+    											#springMessage("menu.push.appManage.updateDate") <!-- 변경일시 -->
+    										</th>
+    						           	</tr>
+    						        </thead>
+    						        
+    						        <tbody>
+    						           	#foreach( $pushUserGroup in $pushUserGroupList )
+    						           		#set($j_tot = $pushUserGroup.TOT_CNT)
+    							           	<tr id="group_tr" style="background:white;" class="gr_select">
+    											<td>
+    												<input type="radio" name="gr_select" value="$!pushUserGroup.GROUPSEQ">
+    											</td>
+    							           		<td>
+    							           			$!pushUserGroup.GROUPNAME
+    							           			<input type="hidden" class="GROUPSEQ" value="$!pushUserGroup.GROUPSEQ">
+    						       				</td>
+    						       				<td>
+    							           			$!pushUserGroup.GROUPCNT
+    							           		</td>
+    						       				<td>
+    							           			$!pushUserGroup.REGDATE
+    						       				</td>
+    						       				<td>
+    							           			$!pushUserGroup.MODDATE
+    						       				</td>
+    						           		</tr>
+    						       		#end
+    						       		#if(!$j_tot)
+    										<tr>
+    											<td colspan="5">
+    												#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+    											</td>
+    										</tr>
+    									#end
+    								</tbody>
+    					    	</table>
+    						</div>
+    					</div>
+    				</div>
+        		</div>
+    			##변경 되는 div 영역##
+    			<div class="user_type_change_div3"></div>
+                ##변경 되는 CSV파일 발송 div 영역##
+                <div class="user_type_change_div4" style="margin-top: 10px;display: none">
+                    <fieldset>
+                        <legend>CSV#springMessage("menu.push.fileRegistForm")</legend> <!-- 파일 등록 폼 -->
+                        <table class="tbType1" summary="파일선택">
+                            <colgroup><!--  2cell  -->
+                                <col width="16%"/><col width="84%"/>
+                            </colgroup>
+                            <tr>
+                                <th scope="row">
+                                    <label for="CSV_FILE" class="required">CSV#springMessage("menu.push.user.fineChoose")</label> <!-- 파일선택 -->
+                                </th>
+                                <td>
+                                    <input type="file" id="CSV_FILE" name="CSV_FILE" />
+                                </td>
+                            </tr>
+                        </table>
+                    </fieldset>
+                </div>
+			</div>
+
+			<div class="btnArea ta_r">
+				<button type="button" class="btn_basic" onclick="document.location.replace('$!{CONTEXT_PATH}/admin/push/msgSend');" >#springMessage("menu.push.reWrite")</button> <!-- 재작성 -->
+				<button type="button" class="btn_basic" id="pushSendBtn" onclick="fn_goSend()">#springMessage("menu.stats.push.send")</button> <!-- 발송 -->
+			</div>
+
+		</div>
+	</div>
+    <input type="hidden" name="EditMode" value="Y"/>
+	#### E : 리스트  폼 부분  ####
+</form>
+</div>
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery-te-1.4.0.css" >
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery-te-1.4.0.js"></script>
+<script type="text/javascript">
+var SENDPAGE = "Y";
+##WISIWIG 생성
+jQuery("textarea[name=WEBEDIT]").jqte();
+
+$(document).ready(function(){
+
+    //발송 유저 전체 카운트 가져오기
+    getAllSendUserCnt();
+
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+
+	$("#calendar_div").hide();
+	$(".user_type_change_div2").hide();
+	$(".user_type_change_div3").hide();
+	$(".user_type_change_div5").show();
+	$("#SERVICECODE").val('');
+	
+	
+	$("#template_tr").hide();
+
+	//달력 구현
+	$("#SEND_DATE").datepicker({
+		regional: "ko",
+		dateFormat: "yy/mm/dd",
+		showOn: "button",
+		buttonImage: "$!{RESOURCES_PATH}/img/btn/btn_calendar.gif",
+		buttonImageOnly: true,
+		altField: "#END_VIEW",
+		altFormat: "yy.mm.dd"
+	});
+	
+	$("#END_VIEW").val(jQuery.datepicker.formatDate("yy.mm.dd", new Date()));
+});
+
+//발송 전체 대상 카운트 조회
+function getAllSendUserCnt() {
+    var url = CONTEXT_PATH + "/admin/push/getAllSendUserCntJson";
+    var data = {};
+    jQuery.ajax({
+        url: url,
+        type: "POST",
+        data: data,
+        dataType: "json",
+        success: function (data) {
+            document.getElementById("pushUserCnt_TD").innerHTML=data.TOT_PSID_CNT;
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            if(thrownError!=""){
+                alert(thrownError);
+            }
+        }
+    });
+}
+//사용자 선택시 사용---------------------------------------------------------------------------------
+function fn_se_select(){
+	
+	var searchObj = $(".se_con:eq(" + $("#conSelect").val() + ")");
+	var a = searchObj.val();
+	if(a == ''){
+		alert('#springMessage("common.alert.inputSearchWord")'); //검색어를 입력해 주세요.
+		searchObj.focus();
+		return;
+	}else if(document.getElementById("APPID").value==""){
+        alert('#springMessage("menu.push.alert.chooseAppID")'+'~!'); //앱아이디를 선택 해 주세요
+        document.getElementById("APPID").focus();
+        return;
+    }
+	fn_userList(1);
+}
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+//페이징
+function fn_userList(PAGE_NUM){
+
+	var CUID = $("#SE_CUID").val();
+	var CNAME = $("#SE_CNAME").val();
+	var PHONENO = $("#SE_PHONENO").val();
+    var APPID = $("#APPID").val();
+
+	var url = CONTEXT_PATH + "/admin/push/msgSend/user";
+	var type = "POST";
+	var data = "CUID=" + CUID + "&CNAME=" + CNAME + "&PHONENO=" + PHONENO + "&PAGE_NUM=" + PAGE_NUM + "&APPID="+APPID;
+	var target = $(".out_userList_div");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	user_list_incheck();
+}
+
+function user_list_incheck(){
+
+	$(".CUID").each(function(){
+		var CUID = $(this).val();
+		var con = 0;
+		$("#sendUser_table").find("tr").each(function(){
+			if( $(this).attr("id") == CUID){
+				con = 1;
+			}
+		});
+
+		if(con == 1){
+			$(this).parent().parent().removeClass().addClass("select");
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+		}
+
+	});
+
+}
+//개별사용자 TD 클릭시이벤트
+$(document).on("click","#user_check_td",function(){
+    if($("#sendUser_table").find("tr").size() > 100){
+        alert('#springMessage("menu.push.alert.privateSendLimit")'); //개별 발송은 100명을 초과하여 선택 할 수 없습니다.
+        var selectBox = $(this).parent().find(".CUID")[0];
+        selectBox.checked = false;
+        return;
+    }
+	if($(this).parent().attr("class") == "select"){
+		$(this).parent().removeClass().addClass("no_select");
+		var selectBox = $(this).parent().find(".CUID")[0];
+		selectBox.checked = false;
+		out_user_tr( $(this).parent().find(".CUID").val() );
+	} else {
+		$(this).parent().removeClass().addClass("select");
+		var selectBox = $(this).parent().find(".CUID")[0];
+		selectBox.checked = true;
+        in_each_user_tr( $(this).parent().find(".CUID").val(), $(this).parent().find("td:eq(2)").text(), $(this).parent().find("td:eq(4)").text());
+	}
+});
+//개별 사용자 체크박스 클릭시 이벤트
+$(document).on("click",".CUID",function(){
+
+    if($("#sendUser_table").find("tr").size() > 100){
+        alert('#springMessage("menu.push.alert.privateSendLimit")'); //개별 발송은 100명을 초과하여 선택 할 수 없습니다.
+        this.checked = false;
+        return;
+    }
+    if($(this).is(":checked")){
+        $(this).parent().parent().removeClass().addClass("select");
+        in_each_user_tr( $(this).val() , $(this).parent().parent().find("td:eq(2)").text(), $(this).parent().parent().find("td:eq(4)").text());
+    } else {
+        $(this).parent().parent().removeClass().addClass("no_select");
+        out_user_tr( $(this).val() );
+    }
+});
+//개별 사용자 전체선택 클릭시 이벤트
+$(document).on("click","#all_check",function(){
+    var selCount = 0;
+    if($(this).is(":checked")){
+        $(".no_select").each(function(){
+            selCount++;
+        });
+    }
+    if($("#sendUser_table").find("tr").size()+selCount > 100){
+        alert('#springMessage("menu.push.alert.privateSendLimit")'); //개별 발송은 100명을 초과하여 선택 할 수 없습니다.
+        this.checked = false;
+        return;
+    }
+	if($(this).is(":checked")){
+		$(".no_select").each(function(){
+			$(this).removeClass().addClass("select");
+			var selectBox = $(this).find("input[type=checkbox]")[0];
+			selectBox.checked = true;
+            in_each_user_tr($(this).find(".CUID").val(),$(this).find("td:eq(2)").text(), $(this).find("td:eq(4)").text());
+		});
+	} else {
+		$("#user_table").find(".select").each(function(){
+			$(this).removeClass().addClass("no_select");
+			var selectBox = $(this).find("input[type=checkbox]")[0];
+			selectBox.checked = false;
+			out_user_tr($(this).find(".CUID").val());
+		});
+	}
+});
+
+$(document).on("click","#gall_check",function(){
+	if($(this).is(":checked")){
+		$(".gr_select").each(function(){
+			$(this).removeClass().addClass("select");
+			var selectBox = $(this).find("input[type=checkbox]")[0];
+			selectBox.checked = true;
+			in_user_tr($(this).find(".GROUPSEQ").val(),$(this).find("td:eq(2)").text());
+		});
+	} else {
+		$("#group_table").find(".select").each(function(){
+			$(this).removeClass().addClass("gr_select");
+			var selectBox = $(this).find("input[type=checkbox]")[0];
+			selectBox.checked = false;
+			out_user_tr($(this).find(".GROUPSEQ").val());
+		});
+	}
+});
+//그룹발송 체크시
+function in_user_tr(CUID,CNAME){
+    $("#sendUser_table").append("<tr id="+CUID+"> <td>" + CUID + "<input type='hidden' name='CUIDS' value=" + CUID + "></td> <td>"+CNAME+"<input type='hidden' name='USER_SELS' value=" + CNAME + "></td> </tr>");
+    if($("#sendUser_table").find("tr").size() > 2){
+        $("#default_text").hide();
+    }
+}
+//개별발송 체크시
+function in_each_user_tr(CUID,CNAME,PSID){
+	$("#sendUser_table").append("<tr id="+CUID+"> <td>" + CUID + "<input type='hidden' name='CUIDS' value=" + CUID + "></td> <td>"+CNAME+"<input type='hidden' name='USER_SELS' value=" + CNAME + "><input type='hidden' name='PSID_SELS' value=" + PSID + "></td> </tr>");
+	if($("#sendUser_table").find("tr").size() > 2){
+		$("#default_text").hide();
+	}
+}
+
+function out_user_tr(CUID){
+	$("#sendUser_table").find("tr").each(function(){
+		if( $(this).attr("id") == CUID){
+			$(this).remove();
+		}
+	});
+
+	if($("#sendUser_table").find("tr").size() <= 2){
+		$("#default_text").show();
+	}
+}
+
+//사용자 선택시 사용---------------------------------------------------------------------------------
+
+//템플릿---------------------------------------------------------------------------------------------
+$(document).on("change","#TEMPLATECODE",function(){
+	if($(this).val() != ""){
+		$("#MESSAGE").val($("#" + $(this).val()).val()).attr("readonly", true);
+	} else {
+		$("#MESSAGE").val("").attr("readonly", false);
+	}
+});
+//템플릿---------------------------------------------------------------------------------------------
+
+//발송 시간------------------------------------------------------------------------------------------
+$(document).on("change","#SEND_TYPE",function(){
+	if($(this).val() == "I"){
+		$("#calendar_div").hide();
+	} else {
+		$("#calendar_div").show();
+	}
+
+});
+//발송 시간------------------------------------------------------------------------------------------
+
+//발송대상 선택--------------------------------------------------------------------------------------
+$(document).on("change","#USER_TYPE",function(){
+	if($(this).val() == "ALL"){
+		$("#SERVICECODE").val('');
+		$(".user_type_change_div1").hide();
+		$(".user_type_change_div2").hide();
+		$(".user_type_change_div3").show();
+        $(".user_type_change_div4").hide();
+        $(".user_type_change_div5").show();
+	} else if($(this).val() == "GROUP") {
+		$("#SERVICECODE").val('');
+		$(".user_type_change_div1").hide();
+		$(".user_type_change_div2").show();
+		$(".user_type_change_div3").hide();
+        $(".user_type_change_div4").hide();
+        $(".user_type_change_div5").show();
+	} else if($(this).val() == "EACH") {
+		$("#SERVICECODE").val('');
+		$(".user_type_change_div1").show();
+		$(".user_type_change_div2").hide();
+		$(".user_type_change_div3").hide();
+        $(".user_type_change_div4").hide();
+        $(".user_type_change_div5").show();
+	} else if($(this).val() == "CSV") {
+		$("#SERVICECODE").val('');
+        $(".user_type_change_div1").hide();
+        $(".user_type_change_div2").hide();
+        $(".user_type_change_div3").hide();
+        $(".user_type_change_div4").show();
+        $(".user_type_change_div5").show();
+    }
+});
+//발송대상 선택--------------------------------------------------------------------------------------
+
+//그룹 선택------------------------------------------------------------------------------------------
+$(document).on("click","#group_tr",function(){
+	$("#group_table").find(".select").removeClass();
+	$(this).addClass("select"); 
+	var GROUPSEQ = $(this).find(".GROUPSEQ").val();
+	$("#GROUPSEQ").val(GROUPSEQ);
+});
+//그룹 선택------------------------------------------------------------------------------------------
+
+//템플릿 변경----------------------------------------------------------------------------------------
+function fn_template_y(){
+	$("#template_tr").show();
+}
+
+function fn_template_n(){
+	$("#TEMPLATECODE").val("");
+	$("#MESSAGE").val("").attr("readonly", false);
+	$("#template_tr").hide();
+}
+//템플릿 변경----------------------------------------------------------------------------------------
+
+//발송자 등록
+function fn_goSend(){
+    var Frm = document.frmList;
+    if(EditorMode){
+        Frm.EditMode.value = "Y";
+    }else{
+        Frm.EditMode.value = "N";
+    }
+
+
+    if($("form[name=frmList]").find("select[name=APPID]").val() == "" ){
+		alert("APP ID"+'#springMessage("common.alert.doInput2")'); //를 입력해 주세요.
+		return;
+	}
+    if(document.getElementById("MESSAGE").value==""){
+        alert('#springMessage("common.alert.inputTitle")'); //"제목을 입력해 주세요."
+        return false;
+    }
+
+	var msgCategory = Frm.msgCategory
+	//<20140220-JHW> 추가된 Web Page 및 이미지, 동영상에 대한 정합성체크 추가
+	if(msgCategory.selectedIndex == "0"){
+
+	}else if(msgCategory.selectedIndex == "1"){
+        if(document.getElementById("WEBEDIT").value == ""){
+			alert("Web page"+'#springMessage("common.alert.doInput2")'); //를 입력해 주세요.
+            return;
+		}
+		if(document.getElementById("imageFile").value == ""){
+			alert('#springMessage("common.alert.inputImg")'); //"이미지를 입력해주세요."
+            return;
+		}
+	}else if(msgCategory.selectedIndex == "2"){
+		if(document.getElementById("imageFile").value == ""){
+			alert('#springMessage("common.alert.inputImg")'); //"이미지를 입력해주세요."
+            return;
+		}
+		if(document.getElementById("videoUrl").value == ""){
+			alert('#springMessage("common.alert.inputURL")'); //"동영상Url을 입력해주세요."
+            return;
+		}
+	}else if(msgCategory.selectedIndex == "3"){
+		if(document.getElementById("imageFile").value == ""){
+			alert('#springMessage("common.alert.inputImg")'); //"이미지를 입력해주세요."
+            return;
+		}
+	}else if(msgCategory.selectedIndex == "4"){
+		if(document.getElementById("WEBEDIT").value == ""){
+			alert("Web page"+'#springMessage("common.alert.doInput2")'); //를 입력해 주세요.
+            return;
+		}
+	}
+	//<20140220-JHW> 추가된 Web Page 및 이미지, 동영상에 대한 정합성체크 추가 끝.
+	
+	var now = new Date();
+	var nowTime = now.getFullYear() + ""
+				+ (((now.getMonth()+1) < 10) ? "0" + (now.getMonth()+1) : (now.getMonth()+1)) + ""
+				+ ((now.getDate() < 10) ? "0" + now.getDate() : now.getDate()) + ""
+				+ ((now.getHours() < 10) ? "0" + now.getHours() : now.getHours()) + ""
+				+ ((now.getMinutes() < 10) ? "0" + now.getMinutes() : now.getMinutes());
+
+	var SEND_DATE = $("form[name=frmList]").find("input[name=END_VIEW]").val();
+    SEND_DATE = SEND_DATE.split(".").join("");
+    $("form[name=frmList]").find("input[name=SEND_DATE]").val(SEND_DATE);
+	var inTime = SEND_DATE.split(".").join("") + "" +
+				$("form[name=frmList]").find("select[name=SEND_HOUR]").val() + "" +
+				$("form[name=frmList]").find("select[name=SEND_MINUTE]").val();
+//    alert("inTime:"+inTime+"   nowTime:"+nowTime);
+	if( $("form[name=frmList]").find("select[name=SEND_TYPE]").val() == "R" && inTime < nowTime ){
+		alert('#springMessage("menu.push.alert.afterTimeChoose")'); //현재 시간보다 이후 시간을 선택해 주세요
+		return;
+	}
+
+	$("#END_DTTM").val( $("#END_DATE").val() +""+ $("#END_HOUR").val() +""+ $("#END_MINUTE").val() );
+
+	if($("form[name=frmList]").find("select[name=SERVICECODE]").val() == "" ){
+		alert('#springMessage("menu.push.alert.sendPolicyIn")'); //"발송정책을 입력해주세요."
+		return;
+	}
+
+	if($("form[name=frmList]").find("select[name=USER_TYPE]").val() == "EACH" &&  $("form[name=frmList]").find("input[name=CUIDS]").size() == 0){
+		alert('#springMessage("menu.push.alert.sendTargetChoose")'); //"발송 대상을 선택해주세요."
+		return;
+	}
+
+	if($("form[name=frmList]").find("select[name=USER_TYPE]").val() == "GROUP" &&  $("form[name=frmList]").find("input[name=GROUPSEQ]").val()==""){
+		alert('#springMessage("menu.push.user.alert.groupChoose")'); //"그룹을 선택해주세요."
+		return;
+	}
+
+    if($("form[name=frmList]").find("select[name=USER_TYPE]").val() == "CSV"){
+        var csvFileVal = $('#CSV_FILE').val();
+        var csvFileExt = csvFileVal.slice(csvFileVal.indexOf(".") + 1).toLowerCase();
+
+        if( csvFileVal == ""){
+            alert("CSV "+'#springMessage("common.alert.chooseFile")'); //파일을 선택해주세요.
+            return;
+        }
+        if(csvFileExt!="csv"){
+            alert("csv "+'#springMessage("common.alert.onlyFile")'); //파일만 등록가능합니다.
+            return;
+        }
+    }
+
+    document.getElementById("loading-indicator").style.display="block";
+    var url = CONTEXT_PATH + "/admin/push/msgSend/send";
+//IE 9부터 지원
+    var formData = new FormData(document.getElementById('frmList'));
+    jQuery.ajax({
+        url:url,
+        type:"POST",
+        cache: false,
+        contentType: false,
+        processData: false,
+        data:formData,
+        dataType:"json",
+        success:function(returnData){
+            document.getElementById("loading-indicator").style.display="none";
+            if(returnData.resultCode=="0000"){ //성공
+//                alert(JSON.stringify(returnData));
+                if($("form[name=frmList]").find("select[name=SEND_TYPE]").val() !="R"){
+                    var ReceiverHostUrl = "";
+                    if(returnData.bodyData.HOST_URL!=undefined){
+                        ReceiverHostUrl = returnData.bodyData.HOST_URL;
+                    }
+                    sendDetailInfoPop(returnData.bodyData.SENDMSG_SEQNO,ReceiverHostUrl);
+                }else{
+                    alert('#springMessage("menu.push.alert.reserveSendSuccess")'); //'예약발송이 성공적으로 등록되었습니다.'
+                }
+            }else{ //실패
+                alert(returnData.resultMsg);
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            document.getElementById("loading-indicator").style.display="none";
+            alert(errorThrown);
+        }
+    });
+}
+
+//발송정보 상세
+function sendDetailInfoPop(SEQNO,HOST_URL){
+    var url = CONTEXT_PATH + "/admin/push/sendDatailPop";
+    var type = "POST";
+    var data = "SEQNO=" + SEQNO + "&HOST_URL=" + HOST_URL;
+    var target = $("#windowPop");
+    var whideh = 800;
+    var title = '#springMessage("menu.push.sendInfoDetail")'; //"발송정보 상세";
+    fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+
+function changeCategory(value){
+	var selectObj = document.getElementById("msgCategory");
+	var selectedObj = selectObj.options[value];
+	
+	var tr_subject = document.getElementById("tr_subject");
+	var tr_contents = document.getElementById("tr_contents");
+	var tr_webPage = document.getElementById("tr_webPage");
+	var tr_image = document.getElementById("tr_image");
+	var tr_video = document.getElementById("tr_video");
+	
+	switch(Number(selectedObj.value)){
+		case 0://기본
+    		tr_subject.style.display = '';
+    		tr_contents.style.display = '';
+    		tr_webPage.style.display = 'none';
+    		tr_image.style.display = 'none';
+    		tr_video.style.display = 'none';
+		break;
+		case 1://웹페이지
+    		tr_subject.style.display = '';
+    		tr_contents.style.display = '';
+    		tr_webPage.style.display = '';
+    		tr_image.style.display = '';
+    		tr_video.style.display = 'none';
+		break;
+		case 2://동영상
+    		tr_subject.style.display = '';
+    		tr_contents.style.display = '';
+    		tr_webPage.style.display = 'none';
+    		tr_image.style.display = '';
+    		tr_video.style.display = '';
+		break;
+		case 3://이미지
+    		tr_subject.style.display = '';
+    		tr_contents.style.display = '';
+    		tr_webPage.style.display = 'none';
+    		tr_image.style.display = '';
+    		tr_video.style.display = 'none';
+		break;
+		case 4://보안
+    		tr_subject.style.display = '';
+    		tr_contents.style.display = '';
+    		tr_webPage.style.display = '';
+    		tr_image.style.display = 'none';
+    		tr_video.style.display = 'none';
+		break;
+	}
+}
+
+
+</script>

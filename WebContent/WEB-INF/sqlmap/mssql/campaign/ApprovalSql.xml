@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.campaign.approval.mapper.ApprovalDao">
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+	
+	<!--리스트 조회 -->
+	<select id="selectCmpApprovalList" parameterType="hashmap" resultType="kr.msp.admin.campaign.approval.dto.ApprovalDTO" >
+		<include refid="head"/>
+			SELECT *
+			, ROW_NUMBER() OVER(ORDER BY APPROVAL_SEQNO DESC) PAGE_KEY 
+			FROM TB_CMP_APPROVAL
+			
+			<where>
+	            <if test="START_DT != null and START_DT != '' and END_DT != null and END_DT != ''">
+	                REGDATE BETWEEN CONVERT(datetime,#{START_DT},102) AND CONVERT(datetime,#{END_DT},102)
+	            </if>
+	            <if test="APP_ID != null and APP_ID != ''">
+	                AND APP_ID = #{APP_ID}
+	            </if>
+	            <if test="SENDER_CODE != null and SENDER_CODE != ''">
+	                AND SENDERCODE = #{SENDER_CODE}
+	            </if>
+	            <if test="CMP_TYPE != null and CMP_TYPE != ''">
+	                AND CMP_TYPE = #{CMP_TYPE}
+	            </if>
+	            <if test="APPROVAL_FLAG != null and APPROVAL_FLAG != ''">
+	                AND APPROVAL_FLAG = #{APPROVAL_FLAG}
+	            </if>
+	        </where>
+			
+		<include refid="bottom"/>
+	</select>
+    
+    <update id="updateCmpApprovalFlag"  parameterType="hashmap">
+    	UPDATE TB_CMP_APPROVAL SET APPROVAL_FLAG = #{APPROVAL_FLAG}, APPROVAL_SENDERCODE = #{APPROVAL_SENDERCODE}
+    	WHERE APPROVAL_SEQNO = #{APPROVAL_SEQNO}
+    	AND APPROVAL_FLAG = 'S'
+    </update>
+    
+    <insert id="insertCmpApproval" parameterType="kr.msp.admin.campaign.approval.dto.ApprovalDTO">
+		INSERT INTO TB_CMP_APPROVAL(TYPE, PSID, CUID, GROUPSEQ, MESSAGE, PRIORITY, BADGENO, RESERVEDATE, SERVICECODE, SOUNDFILE, EXT, SENDERCODE, APP_ID, ATTACHFILE, DB_IN, CMP_TYPE, TEXT_TYPE, REGDATE, RESERVE_FLAG, APPROVAL_FLAG) 
+		VALUES (#{TYPE}, #{PSID}, #{CUID}, #{GROUPSEQ}, #{MESSAGE}, #{PRIORITY}, #{BADGENO}, (
+			select convert(datetime, substring(#{RESERVEDATE},1,8) + ' ' + substring(#{RESERVEDATE},10,2) + ':' + substring(#{RESERVEDATE},12,2) + ':' +substring(#{RESERVEDATE},14,2))
+		), #{SERVICECODE}, #{SOUNDFILE}, #{EXT}, #{SENDERCODE}, #{APP_ID} ,#{ATTACHFILE} ,#{DB_IN} ,#{CMP_TYPE} ,#{TEXT_TYPE} ,GETDATE() ,#{RESERVE_FLAG} ,'S')
+	</insert>
+	
+	<select id="selectCmpApproval" parameterType="hashmap" resultType="kr.msp.admin.campaign.approval.dto.ApprovalDTO" >
+		SELECT * FROM TB_CMP_APPROVAL WHERE APPROVAL_SEQNO = #{APPROVAL_SEQNO}
+	</select>
+</mapper>

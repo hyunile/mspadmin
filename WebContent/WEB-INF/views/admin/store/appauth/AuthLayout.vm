@@ -1,0 +1,45 @@
+<div class="left_area" style="width:45%;">
+	<div class="togUi comment">
+		<br />
+		<h4 class="title">#springMessage("common.text.list") #springMessage("common.select.choose")</h4> <!-- 목록 선택 -->
+        <table class="tbList1">
+        	<colgroup>
+        		<col />
+            </colgroup>
+        	<thead>
+        		<tr>
+        			<th>&nbsp;</th>
+        		</tr>
+            </thead>
+        	<tbody>
+        	<tr>
+                <td>#springMessage("menu.store.appManage.alert.selectType")</td> <!-- 타입을 선택 하세요. -->
+        	</tr>
+            </tbody>
+        </table>
+	</div>
+	<div class="togUi grp">
+		#parse ("/admin/store/appauth/GroupList.vm")
+	</div>
+	<div class="togUi usr">
+		#parse ("/admin/store/appauth/UserList.vm")
+    </div>
+</div>
+<div class="left_area menu_btn" style="width:10%;">
+	<button type="button" id="in_menu" onclick="append_auth()"><img src="$RESOURCES_PATH/img/btn_moveR.gif" alt="왼쪽으로 이동" /></button><br /><br />
+	<button type="button" id="out_menu" onclick="remove_auth()"><img src="$RESOURCES_PATH/img/btn_moveL.gif" alt="오른쪽으로 이동" /></button>
+</div>
+<div class="right_area" style="width:45%;">
+	#parse ("/admin/store/appauth/AuthList.vm")
+</div>
+			
+		
+		<script type="text/javascript">
+		#if($!{AUTH_TYPE}=="00")
+    		fn_toggleList('togUi', 'usr'); 
+    	#elseif($!{AUTH_TYPE}=="01")
+    		fn_toggleList('togUi', 'grp');
+		#else
+		    fn_toggleList('togUi', 'comment');
+		#end
+				</script>

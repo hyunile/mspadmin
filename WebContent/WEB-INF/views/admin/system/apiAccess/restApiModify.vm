@@ -1,0 +1,39 @@
+<form name="apiAccessform" method="post">
+<div class="popup_content">
+	<fieldset>
+		<legend>#springMessage("menu.system.registForm")</legend> <!-- 등록 폼 -->
+		<table class="tbType1" summary="코드,코드명,코드설명,우선순위,변경구분">
+			<colgroup><!--  4cell  -->
+				<col width="30%"/><col width="auto"/>
+			</colgroup>
+			<tr>
+				<th>
+					<label for="ACCESS_KEY">* #springMessage("menu.system.apiURL")</label> <!-- API URL -->
+				</th>
+				<td>
+					<input type="hidden" name="API_IDX" value="$!restApiOne.API_IDX">
+						<input type="text" name="URL_PATH" value="$!restApiOne.URL_PATH"/>
+				</td>
+			</tr>
+			<tr>
+				<th>
+					<label for="CONSUMER_KEY">* #springMessage("common.header.desc")</label> <!-- 설명 -->
+				</th>
+				<td>
+					<input type="text" name="CONTENTS" value="$!restApiOne.CONTENTS"/>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<div class="btnArea ta_r">
+	#if(!$restApiOne)
+		<button type="button" onclick="fn_restApiWrite();" class="btn_style1"><strong>#springMessage("common.button.regist")</strong></button> <!-- 등록 -->
+	#else
+		<button type="button" onclick="fn_restApiModify();" class="btn_style1"><span>#springMessage("common.button.modify")</span></button><!-- 수정 -->
+		<button type="button" onclick="fn_restApiDelete();" class="btn_style1"><span><em class="icon del">#springMessage("common.button.delete")</em></span></button><!-- 삭제 -->
+	#end
+		<button type="button" id="dialogPop" class="btn_style1"><span>#springMessage("common.button.close")</span></button><!-- 닫기 -->
+	</div>
+</div>
+</form>

@@ -1,0 +1,176 @@
+<!--  02. 상세정보 입력  -->
+
+<div class="tbl-wrap">
+	<h2 class="tbl-title">App #springMessage("common.header.desc")</h2>	<!-- 설명 -->
+	<table class="tbl full-width">
+		<caption></caption>
+		<colgroup>
+			<col style="width:120px">
+			<col>
+		</colgroup>
+		<tr>
+			<th><label for="synopsis">#springMessage("common.text.summary")</label></th>	<!-- 개요 -->
+			<td>
+				<textarea style="width:97%; height: 50px; overflow-y:auto" id="APP_INFO" name="APP_INFO" >$!appInfo.APP_INFO</textarea>
+			</td>
+		</tr>
+		<tr>
+			<th><label for="introduce">#springMessage("common.text.introduce")</label></th>	<!-- 소개 -->
+			<td>
+				<textarea style="width:97%; height:50px; overflow-y:auto" id="APP_DESC" name="APP_DESC">$!appInfo.APP_DESC</textarea>
+			</td>
+		</tr>
+	</table>
+</div>
+
+
+<div class="tbl-wrap">
+
+	
+	<h2 class="tbl-title"> App Icon #springMessage("common.text.image")</h4> <!-- 이미지 -->
+	
+    <table id="thumbImgTable" class="tbl-nb full-width" >
+        <colgruop>
+			<col style="width:33.333%">
+			<col style="width:33.333%">
+			<col style="width:33.333%">
+		</colgruop>
+
+        <tr>
+            <td id="fileName1" style="text-align:center;">#springMessage("menu.store.appManage.mobileDashboard")(120x120)</td> <!-- 모바일 대시보드 -->
+            <td id="fileName2" style="text-align:center;">#springMessage("menu.store.appManage.mobileList")(75x75)</td> <!-- 모바일 리스트 -->
+            <td id="fileName3" style="text-align:center;">#springMessage("menu.store.appManage.managerList")(30x30)</td> <!-- 관리자 리스트 -->
+        </tr>
+        <tr>
+            <td height="150px" >
+                <center>
+                    <div id='thumbNailId1'  style='width: 120px; height: 120px; color: gray; font-size: 9pt; border: 1px solid black; '>
+                        <img id = "thumbImg1" src="#if($appImageInfo)${CONTEXT_PATH}/admin/store/download?dispName=thumbImg1&fileName=$!appImageInfo.IMG_PATH_1/$!appImageInfo.FILE_NM_1#end" width="120px" height="120px" />
+                    </div>
+                </center>
+            </td>
+            <td height="150px">
+                <center>
+                    <div id='thumbNailId2' style='width: 75px; height: 75px; color: gray; font-size: 9pt; border: 1px solid black; '>
+                        <img id = "thumbImg2"  src="#if($appImageInfo)${CONTEXT_PATH}/admin/store/download?dispName=thumbImg2&fileName=$!appImageInfo.IMG_PATH_2/$!appImageInfo.FILE_NM_2#end" width="75px" height="75px" />
+                    </div>
+                </center>
+            </td>
+            <td height="150px">
+                <center>
+                    <div id='thumbNailId3' style='width: 30px; height: 30px; color: gray; font-size: 9pt; border: 1px solid black; '>
+                        <img id = "thumbImg3"  src="#if($appImageInfo)${CONTEXT_PATH}/admin/store/download?dispName=thumbImg3&fileName=$!appImageInfo.IMG_PATH_3/$!appImageInfo.FILE_NM_3#end" width="30px" height="30px" />
+                    </div>
+                </center>
+            </td>
+        
+        </tr>
+        <tr>
+            <td>
+                <center>
+                	<button type="button" id="imgDelete1" class="btn1" imgIdx="$!appImageInfo.IMG_IDX_1" imgIdxS="IMG_IDXS1" delImgId="thumbImg1" fileNm="$!appImageInfo.FILE_NM_1">#springMessage("common.button.delete")</button>	<!-- 삭제 -->
+                	<br><br>
+                    <input name="files[2]" id="imgFile1" type="file" onchange="previewImage(this,'thumbNailId1', '120','120')"   />
+                </center>
+                <input type="hidden" id="IMG_IDXS1"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_1"/>
+                <input type="hidden" id="FILE_NM_1"  name="FILE_NM_1"  value="$!appImageInfo.FILE_NM_1"/>
+            </td>
+            <td>
+                <center>
+                	<button type="button" id="imgDelete2" class="btn1" imgIdx="$!appImageInfo.IMG_IDX_2" imgIdxS="IMG_IDXS2"  delImgId="thumbImg2" fileNm="$!appImageInfo.FILE_NM_2">#springMessage("common.button.delete")</button>	<!-- 삭제 -->
+                    <br><br>
+                    <input name="files[3]" id="imgFile2" type="file" onchange="previewImage(this,'thumbNailId2', '75','75')"  />
+                </center>
+                <input type="hidden" id="IMG_IDXS2"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_2"/>
+            </td>
+            <td><center>
+            		<button type="button" id="imgDelete3" class="btn1"  imgIdx="$!appImageInfo.IMG_IDX_3" imgIdxS="IMG_IDXS3"  delImgId="thumbImg3" fileNm="$!appImageInfo.FILE_NM_3">#springMessage("common.button.delete")</button>	<!-- 삭제 -->
+                	<br><br>
+                	<input name="files[4]" id="imgFile3" type="file" onchange="previewImage(this,'thumbNailId3', '30','30')"  />
+                </center>
+                <input type="hidden" id="IMG_IDXS3"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_3"/>
+            </td>
+        </tr>
+    </table>
+	
+</div> <!--  이미지 레이어 -->
+
+<div id="prevImage"  class="tbl-wrap">
+	<h2 class="tbl-title">#springMessage("menu.push.sendManage.preview") #springMessage("common.text.image")</h2>	<!-- 미리보기 이미지 -->
+		
+    <table class="tbl-nb full-width" style="width:100%">
+        <colgroup>
+            <col width="25%">
+            <col width="25%">
+            <col width="25%">
+            <col width="25%">
+        </colgroup>
+        <tr>
+        	<td style="text-align:center;" colspan=4>#springMessage("menu.push.sendManage.preview") #springMessage("common.text.image") (120 X 240)</td> <!-- 미리보기 이미지 -->
+        </tr>
+        <tr>
+            <td height="240px">
+                <center>
+                    <div id='preview1' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 1px solid black; '>
+                    	<img id='previewImg1' src="#if($appImageInfo)${CONTEXT_PATH}/admin/store/download?dispName=preview1&fileName=$!appImageInfo.IMG_PATH_4/$!appImageInfo.FILE_NM_4#end" width="120px" height="240px" />
+                    </div>
+                </center>
+            </td>
+            <td height="240px">
+                <center>
+                    <div id='preview2' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 1px solid black; '>
+                    	<img id='previewImg2' src="#if($appImageInfo)${CONTEXT_PATH}/admin/store/download?dispName=preview2&fileName=$!appImageInfo.IMG_PATH_5/$!appImageInfo.FILE_NM_5#end" width="120px" height="240px" />
+                    </div>
+                </center>
+            </td>
+            <td height="240px">
+                <center>
+                    <div id='preview3' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 1px solid black; '>
+                    	<img id='previewImg3' src="#if($appImageInfo)${CONTEXT_PATH}/admin/store/download?dispName=preview3&fileName=$!appImageInfo.IMG_PATH_6/$!appImageInfo.FILE_NM_6#end" width="120px" height="240px"/>
+                    </div>
+                </center>
+            </td>
+            <td height="240px">
+                <center>
+                    <div id='preview4' style='width: 120px; height: 240px; color: gray; font-size: 9pt; border: 1px solid black; '>
+                    	<img id='previewImg4' src="#if($appImageInfo)${CONTEXT_PATH}/admin/store/download?dispName=preview4&fileName=$!appImageInfo.IMG_PATH_7/$!appImageInfo.FILE_NM_7#end" width="120px" height="240px" />
+                    </div>
+                </center>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            	<center>
+            		<button type="button" id="imgDelete4" class="btn1" imgIdx="$!appImageInfo.IMG_IDX_4" imgIdxS="IMG_IDXS4"  delImgId="previewImg1"  fileNm="$!appImageInfo.FILE_NM_4">#springMessage("common.button.delete")</button>	<!-- 삭제 -->
+            		<br><br>
+                	<input type="file" name="files[5]" id="imgFile4" onchange="previewImage(this,'preview1', '120','240')" />
+                </center>
+                <input type="hidden" id="IMG_IDXS4"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_4"/>
+            </td>
+            <td>
+            	<center>
+            		<button type="button" id="imgDelete5" class="btn1"  imgIdx="$!appImageInfo.IMG_IDX_5" imgIdxS="IMG_IDXS5" delImgId="previewImg2" fileNm="$!appImageInfo.FILE_NM_5">#springMessage("common.button.delete")</button>	<!-- 삭제 -->
+            		<br><br>
+                	<input type="file" name="files[6]" id="imgFile5" onchange="previewImage(this,'preview2', '120','240')"  />
+                </center>
+                <input type="hidden" id="IMG_IDXS5"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_5"/>
+            </td>
+            <td>
+            	<center>
+            		<button type="button" id="imgDelete6" class="btn1" imgIdx="$!appImageInfo.IMG_IDX_6" imgIdxS="IMG_IDXS6"  delImgId="previewImg3" fileNm="$!appImageInfo.FILE_NM_6">#springMessage("common.button.delete")</button>	<!-- 삭제 -->
+            		<br><br>
+                	<input type="file" name="files[7]" id="imgFile6" onchange="previewImage(this,'preview3', '120','240')"  />
+                </center>
+                <input type="hidden" id="IMG_IDXS6"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_6"/>
+            </td>
+            <td>
+            	<center>
+            		<button type="button" id="imgDelete7" class="btn1" imgIdx="$!appImageInfo.IMG_IDX_7" imgIdxS="IMG_IDXS7"  delImgId="previewImg4" fileNm="$!appImageInfo.FILE_NM_7">#springMessage("common.button.delete")</button>	<!-- 삭제 -->
+ 					<br><br>
+                	<input type="file" name="files[8]" id="imgFile7" onchange="previewImage(this,'preview4', '120','240')"  />
+                </center>
+                <input type="hidden" id="IMG_IDXS7"  name="IMG_IDXS"  value="$!appImageInfo.IMG_IDX_7"/>
+            </td>
+        </tr>
+    </table>
+</div>

@@ -1,0 +1,61 @@
+<div class="popup_content">
+	<!--  table List  -->
+	<table class="tbList1">
+			<thead>
+				<tr>
+					<th>
+						CUID
+						<input type="hidden" id="INFO_PAGE_NUM">
+						<input type="hidden" id="R_SEQNO" value="$R_SEQNO">
+			       	</th>
+			       	<th>
+			       		PNSID
+					</th>
+					<th>
+						#springMessage("menu.push.sendManage.seeCheck") <!-- 수신확인 -->
+			       	</th>
+			       	<th>
+			       		#springMessage("menu.push.sendManage.readCheck") <!-- 읽음확인 -->	
+				    </th>
+				    <th>
+				    	#springMessage("common.text.registDate") <!-- 등록일시 -->
+					</th>
+			   	</tr>
+		   	</thead>
+		   	<tbody>
+		   		#set($j_tot = 0)
+			   	#foreach( $pushUserSend in $pushUserSendInfoList )
+			   		#set($j_tot = $j_tot + 1)
+			       	<tr>
+			       		<td>
+			       			$esc.xml($pushUserSend.CUID)
+			   			</td>
+			   			<td>
+			   				$esc.xml($pushUserSend.PNSID)
+			       		</td>
+			       		<td>
+			       			$esc.xml($pushUserSend.SEND_YN)
+	       				</td>
+			   			<td>
+							$esc.xml($pushUserSend.READ_YN)
+						</td>
+						<td>
+							$esc.xml($pushUserSend.REGDATE)
+						</td>
+			   		</tr>
+				#end
+				#if($j_tot == 0)
+					<tr>
+						<td colspan="5">
+							#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+						</td>
+					</tr>
+				#end
+			</tbody>
+		</table>
+	<!--  btnArea  -->
+	<div class="btnArea ta_r">
+		<a href="javascript:fn_goInfoList();" class="btn_style1"><span>#springMessage("common.text.list")</span></a> <!-- 목록 -->
+	</div>
+</div>
+

@@ -1,0 +1,484 @@
+#set($contextPath = $request.getContextPath())
+## multipart-form Ajax 전송
+<script type="text/javascript" src="${contextPath}/resources/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function ch_search(){
+	var sfrm=document.frmSearch.svcnm;
+	if(sfrm.value.length>0&&sfrm.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.value="";
+			sfrm.focus();
+		}
+	fn_mobileList(1);
+}
+
+//모바일 서비스 리스트 호출
+function fn_mobileList(PAGE_NUM){
+	var url = "mobileService";
+	var type = "POST";
+	var data = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = jQuery("#mobileServiceListDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_mobileUpdateNullList();
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//모바일 서비스 업데이트 리스트 호출
+function fn_mobileUpdateNullList(){
+	var url = "$!{CONTEXT_PATH}/admin/mobile/mobileService/mobileUpdateList";
+	var type = "GET";
+	var data = "";
+	var target = jQuery("#mobileUpdateListDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+
+//모바일 서비스 업데이트 리스트 호출
+function fn_mobileUpdateList(PAGE_NUM){
+	var SVC_ID = jQuery(".selected").find(".SVC_ID").val();
+	var url = "$!{CONTEXT_PATH}/admin/mobile/mobileService/mobileUpdateList";
+	
+	
+	var type = "POST";
+	var data = "SVC_ID=" + SVC_ID + "&PAGE_NUM=" + PAGE_NUM + "&ORDER_TYPE=" + $('#ORDER_TYPE').val() + "&ORDER_TARGET=" + $('#ORDER_TARGET').val();
+	
+	var target = jQuery("#mobileUpdateListDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//모바일 서비스 선택
+jQuery(document).on("click","#click_mobileServiceTr",function(){
+	jQuery(".selected").removeClass();
+	jQuery(this).parent().removeClass().addClass("selected");
+	
+	$("#ORDER_TYPE").val("DESC");
+	$("#ORDER_TARGET").val("CURRENT_APP_VERSION");
+	fn_mobileUpdateList(1);
+});
+
+//모바일 업데이트 등록 팝업 열기
+jQuery(document).on("click","#serviceUpdateInsert",function(){
+	if(!jQuery("#mobileServiceListDiv").find("tr").hasClass( "selected" )){
+		alert('#springMessage("menu.mobile.version.alert.selectApp")'); //"모바일 서비스 목록의 App를 선택하여 주십시오."
+		return;
+	}
+	
+	var title = '#springMessage("menu.mobile.version.appUpdateRegist")';//"앱 업데이트 등록";
+	var SVC_ID = jQuery(".selected").find(".SVC_ID").val();
+	var url =  CONTEXT_PATH + "/admin/mobile/mobileService/regist";
+	var data = "SVC_ID=" + SVC_ID;
+	var target =  $("#windowPop");
+	var type = "GET";
+	var width = 650;
+	
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+
+//모바일 강제업데이트 수정 팝업 열기
+jQuery(document).on('click','#mobileServiceUpdateModify',function(){
+
+	var APP_UP_IDX = jQuery(this).parent().parent().find(".APP_UP_IDX").val();
+	var url = CONTEXT_PATH + "/admin/mobile/mobileService/edit";
+	var data = "APP_UP_IDX=" + APP_UP_IDX;
+	var title = '#springMessage("menu.mobile.version.appUpdateModify")';//"앱 업데이트 수정";
+	var target =  $("#windowPop");
+	var type = "GET";
+	var width = 630;
+
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//모바일 업데이트 수정 팝업 열기
+jQuery(document).on('click','#mobileServiceinfo',function(){
+
+	var SVC_ID = jQuery(this).parent().parent().find(".SVC_ID").val();
+	var url = CONTEXT_PATH + "/admin/mobile/mobileService/info";
+	var data = "SVC_ID=" + SVC_ID;
+	var title = '#springMessage("menu.mobile.version.mobileServiceDetail")';//"모바일 서비스 상세";
+	var target =  $("#windowPop");
+	var type = "GET";
+	var width = 630;
+
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//모바일 강제 업데이트 등록 *****
+function fn_versionWrite(){
+
+	if( jQuery("form[name=versionInsertform]").find("select[name=DEVICE_TYPE]").val() == ""){
+		alert('#springMessage("menu.mobile.version.alert.inputFlatform")');  //"플랫폼 유형을 입력해주세요."
+		return;
+	} else if( jQuery("form[name=versionInsertform]").find("select[name=CURRENT_APP_VERSION]").val() == ""){
+		alert('#springMessage("menu.mobile.version.alert.inputNew")'); //"최신 바이너리 버전을 입력해주세요."
+		return;
+//	} else if( jQuery("form[name=versionInsertform]").find("select[name=REQUIRED_APP_VERSION]").val() == ""){
+//		alert("단말 바이너리 버전을 입력해주세요.");
+//		return;
+	} else if( jQuery("form[name=versionInsertform]").find("input[name=DOWNLOAD_MARKET_URL]").val() == ""){
+		alert('#springMessage("menu.mobile.version.alert.inputUpdateAddr")'); //"업데이트 주소를 입력해주세요."
+		return;
+	} 
+
+	// ***** 현재 업데이트 URL 호출하여 default 값으로 보여주기 *****
+
+	var str_CURRENT= $("#CURRENT_APP_VERSION").val().split(".");
+	var str_CURRENT_num = "";
+	for(var i = 0 ; i < str_CURRENT.length ; i ++ ){
+		str_CURRENT_num += str_CURRENT[i] + "";
+	}
+    var selCurrentAppVerIdx = document.getElementById("CURRENT_APP_VERSION").selectedIndex;
+    document.getElementById("REQUIRED_APP_VERSION")[selCurrentAppVerIdx].selected=true;
+
+/*	var str_REQUIRED= $("#REQUIRED_APP_VERSION").val().split(".");
+	var str_REQUIRED_num = "";
+	for(var i = 0 ; i < str_REQUIRED.length ; i ++ ){
+		str_REQUIRED_num += str_REQUIRED[i] + "";
+	}
+
+	if( Number(str_CURRENT_num) <= Number(str_REQUIRED_num) && str_REQUIRED_num != "" ){
+		alert("단말 바이너리 버전은 최신 바이너리 버전보다 작아야 합니다.");
+		return;
+	}*/
+
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+
+	var SVC_ID = jQuery(".selected").find(".SVC_ID").val(); 
+
+	var url = "mobileService/regist";
+
+	var data = $("form[name=versionInsertform]").serialize() + "&SVC_ID=" + SVC_ID;
+
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_mobileUpdateList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//모바일 서비스 업데이트 수정
+function fn_versionModify(){
+	
+	if( jQuery("form[name=versionInsertform]").find("input[name=DOWNLOAD_MARKET_URL]").val() == ""){
+		alert('#springMessage("menu.mobile.version.alert.inputUpdateAddr")'); //"업데이트 주소를 입력해주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+	
+	var SVC_ID = jQuery(".selected").find(".SVC_ID").val(); 
+	var url = "mobileService/edit";
+	var data = $("form[name=versionInsertform]").serialize() + "&SVC_ID=" + SVC_ID;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_mobileUpdateList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//version 중복체크//현재 미사용
+function fn_versionCheck(){
+	
+	if( jQuery("form[name=versionInsertform]").find("select[name=DEVICE_TYPE]").val() == ""){
+		alert('#springMessage("menu.mobile.version.alert.device")'); //"디바이스 유형을 입력해주세요."
+		return;
+	} else if( jQuery("form[name=versionInsertform]").find("input[name=CURRENT_APP_VERSION]").val() == ""){
+		alert('#springMessage("menu.mobile.version.alert.mobileVersion")'); //"현재 모바일서비스 버전을 입력해주세요"
+		return;
+	}
+	
+	var SVC_ID = jQuery(".selected").find(".SVC_ID").val();
+		
+	var url = "mobileService/check";
+	var data = jQuery("form[name=versionInsertform]").serialize() + "&SVC_ID=" + SVC_ID;
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				jQuery("#CUID_CHECK").val("1");
+			}
+		}
+	});
+}
+
+//모바일 서비스 업데이트 삭제
+function fn_versionDelete(){
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+	
+	var url = "mobileService/delete";
+	var data = $("form[name=versionInsertform]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_mobileUpdateList( 1 );
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+jQuery(document).on('change','#DEVICE_TYPE',function(){
+	
+	var DEVICE_TYPE = "";
+	var SVC_ID = $(".selected").find(".SVC_ID").val();
+	
+	if( $(this).val() == "A" ){
+		DEVICE_TYPE = "10";
+	} else if( $(this).val() == "I" ) {
+		DEVICE_TYPE = "20";
+	} else if(  $(this).val() == "" ) {
+		var option_str = "<option value=''>"+'#springMessage("menu.mobile.version.alert.selectFlatform")'+"</option>"; //플랫폼 유형을 선택해 주세요.
+		$("#CURRENT_APP_VERSION").html(option_str);
+		$("#REQUIRED_APP_VERSION").html(option_str);
+		$("#CHOICE_APP_VERSION").html(option_str);
+		return;
+	}
+	
+	var url = "mobileService/appVersion";
+	var data = "DEVICE_TYPE=" + DEVICE_TYPE + "&SVC_ID=" + SVC_ID;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			var option_str = "";
+			var cu_option_str = "";
+			if(data.length == 0){
+				option_str += "<option value='' >"+'#springMessage("menu.mobile.version.alert.noBinaryVersion")'+"</option>"; //등록된 바이너리 버전이 없습니다.
+				cu_option_str += "<option value='' >"+'#springMessage("menu.mobile.version.alert.noBinaryVersion")'+"</option>"; //등록된 바이너리 버전이 없습니다.
+			} else {
+				//option_str += "<option value='' >사용 안함</option>";
+				jQuery.each(data, function (index, item){
+					option_str += "<option value="+ item.bin_VER +" >" + item.bin_VER_STR + "</option>";
+				});
+				
+				jQuery.each(data, function (index, item){
+					cu_option_str += "<option value="+ item.bin_VER +" >" + item.bin_VER_STR + "</option>";
+				});
+			}
+			
+			$("#CURRENT_APP_VERSION").html(cu_option_str);
+			$("#REQUIRED_APP_VERSION").html(option_str);
+			$("#CHOICE_APP_VERSION").html(option_str);
+		}
+	});
+	
+	var url = "mobileService/lastMarketUrl";
+	var data = "DEVICE_TYPE=" + $(this).val() + "&SVC_ID=" + SVC_ID;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+		
+			$("#DOWNLOAD_MARKET_URL").val(data.marketUrl);
+		}
+	});
+});
+
+jQuery(document).on("click",".order_th",function(){
+	var orderTarget = $(this).attr("id");
+	var order = orderTarget.split("OR_");
+	if($("#ORDER_TARGET").val() == order[1]){
+	 	if( $("#ORDER_TYPE").val() == "DESC") {
+	 		$("#ORDER_TYPE").val("ASC");
+	 	} else {
+	 		$("#ORDER_TYPE").val("DESC");
+	 	}
+	} else {
+		$("#ORDER_TARGET").val(order[1]);
+		$("#ORDER_TYPE").val("DESC");
+	}
+	fn_mobileUpdateList($("#SVC_UP_NUM").val());
+});
+
+</script>
+
+<div id="dialogPop" title="모바일 업데이트 등록" style="display:none;"></div>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.mobile")</span>
+		<span>#springMessage("menu.system.appUpdateManage")</span>		<!--  앱 업데이트 관리 -->
+		<span>#springMessage("menu.system.appUpdateManage")</span>		<!-- 앱 업데이트 관리 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.appUpdateManage")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:80px">
+				<col style="width:260px">
+				<col>
+			</colgroup>
+			<thead>
+				<tr>
+					<th>#springMessage("common.text.appname")</th> <!-- App. 명 -->
+					<td class="par_30">
+						<input type="text" id="svcnm" name="SVC_NM" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}">
+					</td>
+					<td><a href="javascript:void(0)" onclick="ch_search();" class="tbl-btn2">#springMessage("common.button.view")</a></td>	<!-- 조회 -->
+				</tr>
+			</thead>
+		</table>		
+		<input type="hidden" id="ORDER_TYPE" name="ORDER_TYPE">
+		<input type="hidden" id="ORDER_TARGET" name="ORDER_TARGET">
+
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+		##HIDDEN##
+		<input type="hidden" id="CLICK_ID_MENU" value="" />
+		##HIDDEN##
+		
+		<table class="full-width">
+			<caption></caption>
+			<colgroup>
+				<col>
+				<col style="width:10px">
+				<col>
+			</colgroup>
+			<tr>
+				<td class="tbl-wrap">
+				
+					<h2 class="tbl-title">#springMessage("menu.mobile.version.mobileServiceList")</h2>	<!-- 모바일 서비스 목록 -->
+					
+					<div id="mobileServiceListDiv">
+    					<table class="tbl-nb full-width" summary="항목선택,CUID,이름,전화번호">
+    						<colgroup><!--  4cell  -->
+    							<col width="auto"/><col width="25%"/><col width="70px"/>
+    						</colgroup>
+    						<thead>
+    							<tr>
+     								<th scope="col">#springMessage("common.text.appname")</th> <!-- App. 명 -->
+    								<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+    								<th scope="col"> </th>
+    							</tr>
+    						</thead>
+    						<tbody>
+    							#foreach( $mobileService in $mobileServiceList )
+    					        	#set($j_tot = $!mobileService.TOT_CNT)
+    						       	<tr style="cursor:pointer;">
+    						       		<td id="click_mobileServiceTr" style="text-align:left;">
+    						       			$!mobileService.SVC_NM
+    						       			<input type="hidden" class="SVC_ID" value="$!mobileService.SVC_ID">
+    					       			</td>
+    						       		<td id="click_mobileServiceTr">
+    						       			$!mobileService.REG_DTTM
+    						       		</td>
+    					       			<td>
+    					       				<a href="javascript:void(0)" class="btn2" id="mobileServiceinfo">#springMessage("common.button.detail")</a> <!-- 상세 -->
+    					       			</td>
+    					        	</tr>
+    					       	#end
+    					       	#if(!$j_tot)
+    								<tr>
+    									<td colspan="4">
+    										#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+    									</td>
+    								</tr>
+    							#end
+    						</tbody>
+    					</table>
+    					
+    					<input type="hidden" id="MOBILE_NUM" value="$!R_PAGE_NUM"/>
+    			      	<div class="j_page_div">
+    			         	##현재 페이지
+    			         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+    			            ##총 개수
+    			            <input type="hidden" name="J_tot" value="$!j_tot"/>
+    			            ##한페이지의 로우수
+    			            <input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+    			            ##한페이지수
+    			            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+    			            ##이밴트
+    			            <input type="hidden" name="j_event" value="fn_mobileList"/>
+    			    	</div>
+    				</div>
+				
+				</td><!-- left end -->
+				
+				<td></td>
+				
+				<td class="tbl-wrap" valign="top">
+				
+					<h2 class="tbl-title">#springMessage("menu.mobile.version.mobileUpdateList") <!-- 모바일 업데이트 목록 -->
+						<a href="javascript:void(0)" id="serviceUpdateInsert" class="btn2 fr">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+					</h2>
+					
+					<div id="mobileUpdateListDiv">
+    					<table class="tbl-nb full-width" summary="항목선택,CUID,이름,전화번호">
+    						<colgroup><!--  4cell  -->
+    							<col width="auto"/><col width="auto"/><col width="20%"/><col width="70px"/>
+    						</colgroup>
+    						<thead>
+    							<tr>
+    								<th scope="col">#springMessage("menu.mobile.version.mustApp")</th> <!-- 필수앱버전 -->
+    								<th scope="col">#springMessage("menu.mobile.version.deviceType")</th> <!-- 디바이스유형 -->
+    								<th scope="col">#springMessage("common.header.useYN")</th> <!-- 사용여부 -->
+    								<th scope="col"> </th>
+    							</tr>
+    						</thead>
+    						<tbody>
+    							<tr>
+    								<td colspan="4" class="ta_c">#springMessage("menu.mobile.version.alert.selectMobile")</td><!-- 모바일 서비스을 선택해 주세요. -->
+    							</tr>
+    						</tbody>
+    					</table>
+    				</div>
+					
+				
+				</td>	<!-- right end -->
+			</tr>
+		</table>
+		
+	</form>
+</div>
+

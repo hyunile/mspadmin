@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.mobile.mobileService.mapper.MobileServiceDao">
+
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+
+	<!-- 조회 -->
+	<select id="GetAppServiceList" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceDto" resultType="kr.msp.admin.mobile.mobileService.dto.MobileServiceDto">
+		<include refid="head"/>
+			SELECT 
+	       		A.SVC_ID 
+	           	, A.SVC_NM
+	           	, A.APP_ID
+	           	, B.SVC_DTL
+	           	, B.USE_YN
+	           	, TO_CHAR(B.REG_DTTM, '%Y.%m.%d')  AS REG_DTTM
+	      	FROM 
+	       		TB_SVC A ,
+	          	TB_MOB_SVC B ,
+	           	TB_SVC_AUTH  C , 
+	          	TB_SYS_USER_AUTH_GRP D 
+	    	WHERE 
+	      		A.SVC_ID = B.SVC_ID
+	         	AND B.USE_YN = 'Y'
+	       		AND B.SVC_ID = C.SVC_ID
+	         	AND C.AUTH_GRP_ID = D.AUTH_GRP_ID
+	            AND D.USER_ID = #{USER_ID}
+	            <if test="SVC_NM != null and SVC_NM != ''">
+					AND A.SVC_NM LIKE '%' || #{SVC_NM} || '%'
+				</if>
+	          ORDER BY A.SVC_ID				
+		<include refid="bottom"/>
+	</select>
+
+	<!-- 조회 -->
+	<select id="GetAppUpdateList" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto" resultType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto">
+		<include refid="head"/>
+		SELECT 	APP_UP_IDX   
+				, CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 1, 2) AS INT) || '.' || CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 3, 2) AS INT) || '.' ||	CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 5, 2) AS INT) AS CURRENT_APP_VERSION	  	
+				, DOWNLOAD_MARKET_URL  
+				, DEVICE_TYPE  
+				, REG_DTTM     
+				, USE_YN       
+				, CAST(SUBSTR(REPLACE(REQUIRED_APP_VERSION, '.', ''), 1, 2) AS INT) || '.' || CAST(SUBSTR(REPLACE(REQUIRED_APP_VERSION, '.', ''), 3, 2) AS INT) || '.' ||	CAST(SUBSTR(REPLACE(REQUIRED_APP_VERSION, '.', ''), 5, 2) AS INT) AS REQUIRED_APP_VERSION	  	
+				, SVC_ID       
+				FROM TB_MOB_SVC_UPDATE
+		WHERE SVC_ID = #{SVC_ID}
+		ORDER BY REG_DTTM DESC
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- 조회 -->
+	<select id="GetAppServiceOne" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceDto" resultType="kr.msp.admin.mobile.mobileService.dto.MobileServiceDto">
+		SELECT 	A.SVC_ID
+		,		A.APP_ID
+		,		A.SVC_NM
+		,		B.SVC_DTL
+		,		B.USE_YN
+		,		( 
+					SELECT	MAX( CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 1, 2) AS INT) || '.' || CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 3, 2) AS INT) || '.' || CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 5, 2) AS INT) ) AS CURRENT_APP_VERSION
+					FROM 	TB_MOB_SVC_UPDATE C 
+					WHERE	C.SVC_ID = A.SVC_ID 
+						AND	C.USE_YN = 'Y' 
+						AND	DEVICE_TYPE = 'A'
+				) AS A_VERSION
+		,		( 
+					SELECT MAX( CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 1, 2) AS INT) || '.' || CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 3, 2) AS INT) || '.' || CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 5, 2) AS INT) ) AS CURRENT_APP_VERSION
+					FROM	TB_MOB_SVC_UPDATE C 
+					WHERE	C.SVC_ID = A.SVC_ID 
+						AND	C.USE_YN = 'Y' 
+						AND	DEVICE_TYPE = 'I'
+				) AS I_VERSION
+		,		TO_CHAR(B.REG_DTTM, '%Y.%m.%d') AS REG_DTTM
+		FROM 	TB_SVC A 
+				INNER JOIN TB_MOB_SVC B ON A.SVC_ID = B.SVC_ID
+		WHERE A.SVC_ID = #{SVC_ID}
+	</select>
+
+	<!-- 조회 -->
+	<select id="GetAppUpdateOne" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto" resultType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto">
+		SELECT 	APP_UP_IDX           
+			  	, CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 1, 2) AS INT) || '.' ||	CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 3, 2) AS INT) || '.' ||	CAST(SUBSTR(REPLACE(CURRENT_APP_VERSION, '.', ''), 5, 2) AS INT) AS CURRENT_APP_VERSION	
+			  	, DOWNLOAD_MARKET_URL  
+			  	, DEVICE_TYPE          
+			 	, REG_DTTM             
+			  	, USE_YN               
+			  	, CAST(SUBSTR(REPLACE(REQUIRED_APP_VERSION, '.', ''), 1, 2) AS INT) || '.' ||	CAST(SUBSTR(REPLACE(REQUIRED_APP_VERSION, '.', ''), 3, 2) AS INT) || '.' ||	CAST(SUBSTR(REPLACE(REQUIRED_APP_VERSION, '.', ''), 5, 2) AS INT) AS REQUIRED_APP_VERSION			  	
+			  	, SVC_ID
+			  	, CHOICE_APP_VERSION            
+		FROM TB_MOB_SVC_UPDATE
+		WHERE APP_UP_IDX = #{APP_UP_IDX}
+	</select>
+	
+	<select id="GetAppUpdateCheck" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto" resultType="java.lang.Integer">
+		SELECT 	COUNT(APP_UP_IDX)                
+		FROM TB_MOB_SVC_UPDATE
+		WHERE SVC_ID = #{SVC_ID}
+		AND DEVICE_TYPE = #{DEVICE_TYPE}
+		AND CURRENT_APP_VERSION <![CDATA[>=]]> #{CURRENT_APP_VERSION}
+	</select>
+    <!--강제업데이트 등록 가능 여부 체크-->
+    <select id="chkAppUpdate" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto" resultType="java.lang.Integer">
+        select count(*) AS cnt from TB_MOB_SVC_UPDATE
+        where SVC_ID=#{SVC_ID} and DEVICE_TYPE=#{DEVICE_TYPE}
+    </select>
+	<!-- 추가 -->
+	<insert id="InsertAppUpdate" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto" >
+		INSERT INTO 
+		TB_MOB_SVC_UPDATE(
+						  	  CURRENT_APP_VERSION  
+						  	, DOWNLOAD_MARKET_URL  
+						  	, DEVICE_TYPE          
+						 	, REG_DTTM             
+						  	, USE_YN               
+						  	, REQUIRED_APP_VERSION 
+						  	, SVC_ID 
+						  	, CHOICE_APP_VERSION            
+						  	)
+		VALUES (		 #{CURRENT_APP_VERSION} 
+						  	, #{DOWNLOAD_MARKET_URL}  
+						  	, #{DEVICE_TYPE}          
+						 	, CURRENT      
+						  	, #{USE_YN}  
+						  	, #{REQUIRED_APP_VERSION} 
+						  	, #{SVC_ID} 
+						  	, #{CHOICE_APP_VERSION})	
+
+	</insert>
+
+	<!-- 갱신 -->
+	<update id="UpdateAppUpdate" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto">
+		UPDATE TB_MOB_SVC_UPDATE SET      
+			USE_YN = #{USE_YN}                
+			, DOWNLOAD_MARKET_URL = #{DOWNLOAD_MARKET_URL}
+		WHERE APP_UP_IDX = #{APP_UP_IDX}
+	</update>
+	
+	<update id="UpdateAppUpdateUseAll" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto">
+		UPDATE TB_MOB_SVC_UPDATE SET USE_YN = 'N' WHERE SVC_ID = #{SVC_ID} AND DEVICE_TYPE = #{DEVICE_TYPE}
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="DeleteAppUpdate" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto">
+		DELETE FROM TB_MOB_SVC_UPDATE WHERE APP_UP_IDX = #{APP_UP_IDX}
+	</delete>
+	
+	
+	<select id="selectAppVersion" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto" resultType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+		SELECT 	BIN_VER
+				, CAST( SUBSTR( VER.BIN_VER, 1, 2) AS INT) || '.' || CAST( SUBSTR( VER.BIN_VER, 4, 2) AS INT) || '.' || CAST( SUBSTR( VER.BIN_VER, 7, 2) AS INT)  AS BIN_VER_STR
+		FROM 
+			TB_STO_APP_VER VER
+		INNER JOIN TB_STO_PLAT PL	
+		ON VER.PLAT_IDX = PL.PLAT_IDX
+		WHERE 
+			SVC_ID = #{SVC_ID} AND PL.PLAT_CD = #{DEVICE_TYPE}
+	</select>
+	
+	
+	<select id="getLastMarketUrl" parameterType="kr.msp.admin.mobile.mobileService.dto.MobileServiceUpdateDto" resultType="string">
+	    SELECT MAX(A.DOWNLOAD_MARKET_URL)
+		FROM TB_MOB_SVC_UPDATE A
+		WHERE SVC_ID = #{SVC_ID}
+			AND A.DEVICE_TYPE = #{DEVICE_TYPE}
+			AND A.USE_YN = 'Y'
+	</select>
+</mapper>

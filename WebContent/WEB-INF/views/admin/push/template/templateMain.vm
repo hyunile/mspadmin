@@ -1,0 +1,316 @@
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페이징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+});
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+// 검색
+function ch_search(){
+	var sfrm=document.frmSearch;
+	var sval=$("#conSelect").val();
+	if(sval==0){
+		if(sfrm.TEMPLATE_TITLE.value.length>0&&sfrm.TEMPLATE_TITLE.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.value="";
+			sfrm.focus();
+			return;
+		}
+	}
+	fn_templateList(1);
+}
+
+function fn_templateList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var url = CONTEXT_PATH + "/admin/push/template";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize()+"&PAGE_NUM=" + PAGE_NUM + "&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+	var target = $("#templateTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//템플릿 등록 화면
+$(document).on("click","#templateWrite",function(){
+	var url = CONTEXT_PATH + "/admin/push/template/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 700;
+	var title = '#springMessage("menu.push.setting.templateIn")'; //"템플릿 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//템플릿 수정 화면
+$(document).on("click","#templateModify",function(){
+	var TEMPLATE_CODE = $(this).parent().parent().find(".TEMPLATE_CODE").val();
+	var url = CONTEXT_PATH + "/admin/push/template/edit";
+	var type = "GET";
+	var data = "TEMPLATE_CODE=" + TEMPLATE_CODE;
+	var target = $("#windowPop");
+	var whideh = 700;
+	var title = '#springMessage("menu.push.setting.templateUpdate")'; //"템플릿 수정";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//템플릿 체크
+function fn_template_check(){
+
+	if( $("form[name=frmTemplateInfo]").find("input[name=TEMPLATE_TITLE]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.templateIdIn")'); //"템플릿 ID를 입력해주세요."
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/template/check";
+	var data = $("form[name=frmTemplateInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#CHECK_CODE").val("1");
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//템플릿 코드 변경
+function fn_template_change(){
+	$("#CHECK_CODE").val("0");
+}
+
+//템플릿 등록
+function fn_templateWrite(){
+
+	if($("form[name=frmTemplateInfo]").find("textarea[name=MESSAGE]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.statusIn")'); //"상태 창 내용을 입력해주세요."
+		$("form[name=frmTemplateInfo]").find("textarea[name=MESSAGE]").focus();
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/template/regist";
+	var formData = new FormData();
+	formData.append("TEMPLATE_TITLE" , $("form[name=frmTemplateInfo]").find("input[name=TEMPLATE_TITLE]").val() );
+	formData.append("MESSAGE" , $("form[name=frmTemplateInfo]").find("input[name=MESSAGE]").val() );
+	formData.append("SUB_MESSAGE" , $("form[name=frmTemplateInfo]").find("textarea[name=SUB_MESSAGE]").val() );
+	formData.append("WEBEDIT" , $("form[name=frmTemplateInfo]").find("textarea[name=WEBEDIT]").val() );
+	formData.append("IMAGE_URL" , $("form[name=frmTemplateInfo]").find("input[name=IMAGE_URL]").val() );
+	formData.append("VIDEO_URL" , $("form[name=frmTemplateInfo]").find("input[name=VIDEO_URL]").val() );
+//	formData.append("REPLACE_YN" , $("form[name=frmTemplateInfo]").find("textarea[name=MESSAGE]").val() );
+	formData.append("CATEGORY_TYPE" , $("form[name=frmTemplateInfo]").find("input[name=CATEGORY_TYPE]").val() );
+	if($("input[name=IMAGE_FILE]")[0].files[0]){
+		formData.append("IMAGE_FILE" , $("input[name=IMAGE_FILE]")[0].files[0]);
+	}
+	
+	jQuery.ajax({
+		url:url,
+        type:"POST",
+        cache: false,
+        contentType: false,
+        processData: false,
+        data:formData,
+        dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_templateList($("#TEMPLATE_NUM").val());
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+	
+	
+}
+
+//템플릿 수정
+function fn_templateModify(){
+	
+	if($("form[name=frmTemplateInfo]").find("textarea[name=MESSAGE]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.statusIn")'); //상태 창 내용을 입력해주세요.
+		$("form[name=frmTemplateInfo]").find("textarea[name=MESSAGE]").focus();
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+
+	
+	var url = CONTEXT_PATH + "/admin/push/template/edit";
+	var formData = new FormData();
+	formData.append("TEMPLATE_CODE" , $("form[name=frmTemplateInfo]").find("input[name=TEMPLATE_CODE]").val() );
+	formData.append("TEMPLATE_TITLE" , $("form[name=frmTemplateInfo]").find("input[name=TEMPLATE_TITLE]").val() );
+	formData.append("MESSAGE" , $("form[name=frmTemplateInfo]").find("input[name=MESSAGE]").val() );
+	formData.append("SUB_MESSAGE" , $("form[name=frmTemplateInfo]").find("textarea[name=SUB_MESSAGE]").val() );
+	formData.append("WEBEDIT" , $("form[name=frmTemplateInfo]").find("textarea[name=WEBEDIT]").val() );
+	formData.append("IMAGE_URL" , $("form[name=frmTemplateInfo]").find("input[name=IMAGE_URL]").val() );
+	formData.append("VIDEO_URL" , $("form[name=frmTemplateInfo]").find("input[name=VIDEO_URL]").val() );
+//	formData.append("REPLACE_YN" , $("form[name=frmTemplateInfo]").find("textarea[name=MESSAGE]").val() );
+	formData.append("CATEGORY_TYPE" , $("form[name=frmTemplateInfo]").find("input[name=CATEGORY_TYPE]").val() );
+	if($("input[name=IMAGE_FILE]")[0].files[0]){
+		formData.append("IMAGE_FILE" , $("input[name=IMAGE_FILE]")[0].files[0]);
+	}
+	
+	jQuery.ajax({
+		url:url,
+        type:"POST",
+        cache: false,
+        contentType: false,
+        processData: false,
+        data:formData,
+        dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_templateList($("#TEMPLATE_NUM").val());
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//템플릿 삭제
+function fn_templateDelete(){
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/push/template/delete";
+	var data = $("form[name=frmTemplateInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_templateList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_templateList(1);
+}
+
+// 메세지 유형 라디오 버튼 chanage 리스너.
+function fn_changeMsgInputType(inputType){
+	if(inputType == '1'){ // 1-RICH
+		$(".trMsgInputTypeText").css("display","none");
+		$(".trMsgInputTypeRich").css("display","");
+	}else{ // 0-TEXT
+		$(".trMsgInputTypeText").css("display","");
+		$(".trMsgInputTypeRich").css("display","none");
+	}
+}
+
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>						<!-- 푸시 -->
+		<span>#springMessage("menu.push.setting")</span>				<!-- 설정 -->
+		<span>#springMessage("menu.push.setting.templateIn")</span>		<!-- 템플릿 등록 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.push.setting.templateIn")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+	<form name="frmSearch" method="post">
+		
+		<table class="tbl-search">
+			<thead>
+   			<tr>
+   				<td> 
+   					<select id="conSelect" title="#springMessage('menu.mobile.notice.title.selectSearch')" style="width:130px;"> <!-- 검색항목선택 -->
+						<option value="0">#springMessage("menu.push.setting.templateName")</option> <!-- 템플릿명 -->
+						<option value="1">#springMessage("menu.push.setting.templateType")</option> <!-- 템플릿유형 -->
+					</select>
+					<input class="se_con inp_wd300" type="text" id="TEMPLATE_TITLE" name="TEMPLATE_TITLE" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+					<select class="se_con" name="CATEGORY_TYPE" title="#springMessage('menu.push.setting.codeSelectList2')" style="width:130px;" onchange="fn_templateList(1)"> <!-- 검색항목2 선택 -->
+						<option value="">#springMessage("common.text.all")</option> <!-- 전체 -->
+						<option value="0" onkeydown="javascript:if(event.keyCode==13){fn_templateList(1);return false;}">#springMessage("common.text.base")</option> <!-- 기본 -->
+						<option value="1" onkeydown="javascript:if(event.keyCode==13){fn_templateList(1);return false;}">#springMessage("common.text.webPage")</option> <!-- 웹페이지 -->
+						<option value="2" onkeydown="javascript:if(event.keyCode==13){fn_templateList(1);return false;}">#springMessage("common.text.video")</option> <!-- 동영상 -->
+						<option value="3" onkeydown="javascript:if(event.keyCode==13){fn_templateList(1);return false;}">#springMessage("common.text.image")</option> <!-- 이미지 -->
+					</select>
+					<a href="javascript:ch_search();" class="tbl-btn2">#springMessage("common.button.view")</a> <!-- 조회 -->
+   				</td>
+               </tr>
+			</thead>
+         </table>
+		
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+		
+	</form>
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="templateWrite">#springMessage("common.button.regist")</a> <!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		
+		## ListView Body
+   		<div id="templateTableDiv">
+			#parse("admin/push/template/templateList.vm")
+   		</div>
+    	
+    	<br><br>
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

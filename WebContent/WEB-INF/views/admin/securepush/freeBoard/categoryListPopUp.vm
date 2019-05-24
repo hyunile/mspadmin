@@ -1,0 +1,66 @@
+<script type="text/javascript">
+
+//카테고리 수정 팝업 호출.
+function fn_goCatgViewPop(catgId){
+	
+	var url = CONTEXT_PATH + "/admin/securepush/freeBoard/addCategory";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 450;
+	var title = '#springMessage("menu.securePush.freeBoard.regCateg")'; // 카테고리 등록
+	if(catgId != null && typeof(catgId) != 'undefined'){
+		url = CONTEXT_PATH + "/admin/securepush/freeBoard/categoryView";
+		type = "POST";
+		data = "CATG_ID=" + catgId;
+		title = '#springMessage("menu.securePush.freeBoard.editCateg")'; // 카테고리 수정
+	}
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+</script>
+<div>
+	<table class="tbl-nb noMargin">
+		<colgroup>
+			<col width="auto" /><col width="21%" /><col width="24%" /><col width="18%" />
+		</colgroup>
+		<thead>
+			<tr>
+				<th scope="col">#springMessage("menu.securePush.freeBoard.catgName")</th>  <!-- 카테고리명 -->
+				<th scope="col">#springMessage("common.header.author")</th> <!-- 작성자 -->
+				<th scope="col">#springMessage("common.header.registDate")</th> <!-- 작성일 -->
+				<th scope="col"></th>
+			</tr>
+		</thead>
+	</table>
+	<div class="tblScroll">
+	<table class="tbl-nb">
+		<colgroup>
+			<col width="auto" /><col width="21%" /><col width="24%" /><col width="18%" />
+		</colgroup>
+		<tbody>
+		#foreach( $catgInfo in $itemList )
+		#set($j_tot = 1)
+		<tr>
+			<td>$esc.xml($!catgInfo.CATG_NM)</td>
+			<td>$!catgInfo.REG_NM</td>
+			<td>$!catgInfo.REG_DT</td>
+			<td>
+				<a href="javascript:fn_goCatgViewPop('$!catgInfo.CATG_ID');void(0)" class="tbl-btn1">#springMessage("common.button.detail")</a> <!-- 상세 -->
+			</td>
+		</tr>
+		#end
+		
+		#if(!$j_tot)
+			<tr>
+				<td colspan="4" class="ta_c">#springMessage("common.alert.nodata")</td>		### 데이터가 없습니다 ###
+			</tr>
+		#end
+		</tbody>
+	</table>
+	</div>
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:fn_goCatgViewPop();void(0);" class="btn1" id="subWrite"><strong>#springMessage("common.button.regist")</strong></a> <!--등록-->
+		<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a> <!--닫기-->
+	</div>
+</div>

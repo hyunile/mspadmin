@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.ReserveServiceDao">
+
+    <!--  ================================================================================================= -->
+    <!-- begin of paging query -->
+    <!--  ================================================================================================= -->
+    <sql id="head">
+        SELECT *
+        , @RN TOT_CNT
+        FROM
+        (
+        SELECT A.*
+        ,	(@RN := @RN + 1) AS RNUM
+        FROM
+        (
+    </sql>
+
+    <!-- tail of paging query -->
+    <sql id="bottom">
+        ) A
+        , (SELECT @RN := 0, @TOT := 0) R
+        ) A
+        WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+    </sql>
+    <!--  ================================================================================================= -->
+    <!-- end of paging query -->
+    <!--  ================================================================================================= -->
+
+    <!-- 예약발송 리스트 -->
+    <select id="selectReserveMsg" parameterType="hashmap" resultType="kr.msp.admin.push.reserve.dto.ReserveMsgDto">
+        <include refid="head"/>
+        SELECT
+        RESERVE_SEQNO,
+        APP_ID,
+        MESSAGE,
+        SOUNDFILE,
+        BADGENO,
+        PRIORITY,
+        EXT,
+        SENDERCODE,
+        SERVICECODE,
+        DATE_FORMAT(RESERVEDATE, '%Y-%m-%d %H:%i') as RESERVEDATE,
+        TYPE,
+        ATTACHFILE,
+        GROUPSEQ,
+        CUID,
+        DATE_FORMAT(REGDATE, '%Y-%m-%d %H:%i') as REGDATE,
+        PROCESS_FLAG
+        FROM T_PUSH_RESERVE_MSG
+        <where>
+            <if test="RESERVEDATE_S != null and RESERVEDATE_S != '' and RESERVEDATE_E != null">
+                RESERVEDATE BETWEEN STR_TO_DATE(#{RESERVEDATE_S}, '%Y.%m.%d %H:%i') AND STR_TO_DATE(#{RESERVEDATE_E}, '%Y.%m.%d %H:%i')
+            </if>
+            <if test="APPID != null and APPID!=''">
+                AND APP_ID=#{APPID}
+            </if>
+            <if test="SENDER_CODE != null and SENDER_CODE != ''">
+                AND SENDERCODE = #{SENDER_CODE}
+            </if>
+        </where>
+        ORDER BY RESERVEDATE DESC
+        <include refid="bottom"/>
+    </select>
+</mapper>

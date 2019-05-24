@@ -1,0 +1,70 @@
+
+		<form name="frmPop" method="post">
+			<table class="tbl" summary="파일명,RSC_ID,용량,최초 등록일,최종 수정일">
+				<colgroup>
+					<col width="20%"/><col width="30%"/><col width="20%"/><col width="AUTO"/>
+				</colgroup>
+				<tr>
+					<th scope="row">#springMessage("menu.mobile.manage.fileName")</th><!-- 파일명 -->
+					<td>$basicDto.FILE_NM</td>
+					<th scope="row">RSC_ID</th>
+					<td>$basicDto.RSC_ID</td>
+				</tr>
+				<tr>
+					<th scope="row">#springMessage("menu.mobile.manage.capacity")</th> <!-- 용량 -->
+					<td colspan="3">$basicDto.FILE_SIZE byte</td>
+				</tr>
+				<tr>
+					<th scope="row">#springMessage("menu.mobile.manage.writeDate")</th> <!-- 최초 등록일 -->
+					<td colspan="3">$basicDto.REG_DTTM</td>
+				</tr>
+				<tr>
+					<th scope="row">#springMessage("menu.mobile.manage.updateDate")</th> <!-- 최종 수정일 -->
+					<td colspan="3">$basicDto.MOD_DTTM</td>
+				</tr>
+			</table>
+
+			<br/>
+			<br/>
+			<p><strong >#springMessage("menu.mobile.manage.deployRecord")</strong> #springMessage("menu.mobile.manage.all2") : $detailInfo.size() #springMessage("menu.mobile.manage.unit")</p> <!-- 배포이력     총    회 -->
+			<table class="tbl-nb" summary="배포일,배포명,배포모드,배포상태,삭제여부">
+				<colgroup>
+					<col width="30%"/><col width="40%"/><col width="10%"/><col width="10%"/><col width="AUTO"/>
+				</colgroup>
+				<thead>
+					<tr >
+						<th scope="col">#springMessage("menu.mobile.manage.deployDate")</th> <!-- 배포일 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.name")</th> <!-- 배포명 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.mode")</th> <!-- 배포모드 -->
+						<th scope="col">#springMessage("menu.mobile.manage.deployStatus")</th> <!-- 배포상태 -->
+						<th scope="col">#springMessage("menu.mobile.manage.deleteYN")</th> <!-- 삭제여부-->
+					</tr>
+				</thead>
+				<tbody>
+				#foreach($rsc in $detailInfo)
+					<tr title="$!rsc.DPLY_DESC">
+						<td>$!rsc.REG_DTTM</td>
+						<td>$!rsc.DPLY_NM</td>
+					#if($!rsc.DPLY_TP == "0")
+						<td>#springMessage("menu.mobile.deploy.develop")</td> <!-- 개발 -->
+					#else
+						<td>#springMessage("menu.mobile.deploy.operate")</td> <!-- 운영 -->
+					#end
+					#if($!rsc.USE_YN == "N")
+						<td>#springMessage("menu.mobile.deploy.stop") </td> <!-- 중지 -->
+					#else
+						<td>#springMessage("menu.mobile.deploy.use") </td> <!-- 사용 -->
+					#end
+						<td>$!rsc.DEL_YN</td>
+					</tr>
+				#end
+				</tbody>
+			</table>
+		</form>
+
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:fn_closePopup();void(0)" class="btn1 type2 close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+	</div>
+
+
+

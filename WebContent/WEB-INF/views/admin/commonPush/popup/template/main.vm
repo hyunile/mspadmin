@@ -1,0 +1,121 @@
+<script type="text/javascript">
+    $(document).ready(function(){
+		//공통 페지징 처리
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+		
+    	//검색메뉴 hide
+    	$(".se_con").each(function(i){
+    		if(i != 0){
+    			$(this).hide();
+    		}
+    	});
+    });
+    
+    $(document).on("change","#conSelect",function(){
+    	var su = $(this).val();
+    	$(".se_con").hide();
+    	$(".se_con").val("");
+    	$(".se_con:eq(" + su + ")").show();
+    });
+    
+	//공통코드 페이지 호출(공통)
+    function fn_getPage( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+	
+	// 검색
+    function ch_search(){
+    	var sfrm=document.popupFrmSearch;
+    	var sval=$("#conSelect").val();
+    	if(sval==0){
+    		if(sfrm.TEMPLATE_TITLE.value.length>0&&sfrm.TEMPLATE_TITLE.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.TEMPLATE_TITLE.value="";
+    			sfrm.TEMPLATE_TITLE.focus();
+    			return;
+    		}
+    	}
+    	fn_getTemplateList(1);
+    }
+    
+    //페이징 처리
+    function fn_getTemplateList(PAGE_NUM){
+    	var url = CONTEXT_PATH + "/admin/commonPush/popup/template";
+    	var type = "POST";
+    	var data = $("form[name=popupFrmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+		var target = $("#divPopupList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+    }
+    
+    
+  //선택된 템플릿 적용
+	function fn_setTemplateSelected(_templatecode){
+		fn_closePopup();
+		// html 메세지 컨텐츠를 파라메터로 넘기지 못하므로 템플릿 아이디로 다시 한번 조회한다.
+		var data = "TEMPLATE_CODE=" + _templatecode;
+		var url = CONTEXT_PATH + "/admin/commonPush/popup/template/detail";
+		var type = "POST";
+		jQuery.ajax({
+			url:url,
+			type:"POST",
+			data:data,
+			dataType:"json",
+			cache: false,
+			success:function(json){
+				if(json.result > 0){
+					alert('#springMessage("menu.push.sendManage.alert.processError") #springMessage("menu.push.sendManage.alert.askAdmin")'); //처리 중 오류가 발생하였습니다.  관리자에게 문의하세요.
+				}else{
+					var tempData = json.data;
+					fn_displayTempData(tempData);//campaignPush.vm
+				}
+			}
+		});
+	}
+	
+</script>
+
+	
+	<form name="popupFrmSearch" method="post">
+		
+		<table class="tbl-search">
+			<thead>
+				<tr>
+					<td>
+						<select id="conSelect" title="#springMessage('menu.push.setting.selectSearch')" style="width:130px;"> <!-- 검색항목선택 -->
+							<option value="0">#springMessage("menu.push.setting.templateName")</option> <!-- 템플릿명 -->
+							<option value="1">#springMessage("menu.push.setting.templateType")</option> <!-- 템플릿유형 -->
+						</select>
+						<input class="se_con inp_wd300" type="text" id="TEMPLATE_TITLE" name="TEMPLATE_TITLE" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+						<select class="se_con" name="CATEGORY_TYPE" title="#springMessage('menu.push.setting.codeSelectList2')" style="width:130px;" onchange="fn_getTemplateList(1)">
+							<option value="">--#springMessage("common.select.choose")--</option> <!-- 선택 -->
+							<option value="0" onkeydown="javascript:if(event.keyCode==13){fn_getTemplateList(1);return false;}">#springMessage("common.text.base")</option> <!-- 기본 -->
+							<option value="1" onkeydown="javascript:if(event.keyCode==13){fn_getTemplateList(1);return false;}">#springMessage("common.text.webPage")</option> <!-- 웹페이지 -->
+							<option value="2" onkeydown="javascript:if(event.keyCode==13){fn_getTemplateList(1);return false;}">#springMessage("common.text.video")</option> <!-- 동영상 -->
+							<option value="3" onkeydown="javascript:if(event.keyCode==13){fn_getTemplateList(1);return false;}">#springMessage("common.text.image")</option> <!-- 이미지 -->
+						</select>
+						<button type="button" class="btn_basic" onClick="ch_search()"><span>#springMessage("common.button.view")</span></button> <!-- 조회  -->
+					</td>
+				</tr>
+			</thead>
+		</table>
+		
+	</form>
+	
+	<div id="divPopupList">
+		#parse("admin/commonPush/popup/template/list.vm")
+	</div>
+	
+	<br><br>
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a><!-- 닫기 -->
+	</div>

@@ -1,0 +1,55 @@
+<table class="tb_list tbl-nb noMargin" id="tbList" summary="항목선택,그룹명,UserID,이름,전화번호,푸시서버">
+	<colgroup >
+		<col width="5%"/>
+		<col width="AUTO"/>
+		<col width="20%"/>
+		<col width="20%"/>
+		<col width="20%"/>
+        <col width="10%"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th><span><input type="checkbox" id="checkAllTestUser"/><label for="checkAllTestUser"></label></span></th>
+			<th>#springMessage("menu.push.user.groupName")</th> <!-- 그룹명 -->
+			<th>UserID</th>
+			<th>#springMessage("common.text.name")</th> <!-- 이름 -->
+			<th>#springMessage("common.text.phoneNum")</th> <!-- 전화번호 -->
+			<th>#springMessage("menu.pushServer")</th> <!-- 푸시서버-->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $testGroupUserDTO in $testGroupUserDTOList )
+		#set($j_tot = $!testGroupUserDTO.TOT_CNT)
+		<tr>
+			<td>
+				<span><input type="checkbox" name="cb_testuser" class="checkTestUser" value="$!testGroupUserDTO.PSID" id="testchk_$!testGroupUserDTO.PSID"/><label for="testchk_$!testGroupUserDTO.PSID"></label></span>
+				<input type="hidden" name="hddCuid" value="$!testGroupUserDTO.CUID"/>
+			</td>
+			<td>$!testGroupUserDTO.GROUPNAME</td>
+			<td>$!testGroupUserDTO.CUID</td>
+			<td>$!testGroupUserDTO.CNAME</td>
+			<td>$!testGroupUserDTO.PHONENO</td>
+			<td>$!testGroupUserDTO.PNSID</td>
+		</tr>
+		#end	
+		
+		#if(!$j_tot)
+		<tr>
+			<td colspan="6" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+		#end
+	</tbody>
+</table>
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_getTesterList"/>
+</div>
+

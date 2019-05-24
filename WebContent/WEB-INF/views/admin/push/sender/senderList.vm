@@ -1,0 +1,60 @@
+<table class="tbl-nb" summary="발송자 코드,발송자 이름,상세">
+	<colgroup><!--  2cell  -->
+		<col width="auto"/><col width="auto"/><col width="auto"/><col width="auto"/><col width="auto"/><col width="70px"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("menu.push.setting.senderCode")</th> <!-- 발송자 코드 -->
+			<th scope="col">#springMessage("menu.push.setting.senderName")</th> <!-- 발송자 이름 -->
+			<th scope="col">#springMessage("menu.push.setting.senderDesc")</th> <!-- 발송자 설명 -->
+			<th scope="col">#springMessage("menu.mobile.deploy.writer")</th> <!-- 등록자 -->
+			<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+			<th scope="col"> </th>
+		</tr>
+	</thead>
+	<tbody>
+	#foreach( $pushSender in $pushSenderList )
+		#set($j_tot = $!pushSender.TOT_CNT)
+		<tr>
+			<td >
+				$!pushSender.SENDERCODE
+				<input type="hidden" class="SENDERSEQ" value="$!pushSender.SENDERSEQ" />
+			</td>
+			<td >
+				$!pushSender.SENDERNAME
+			</td>
+			<td >
+				$!pushSender.SENDERDESC
+			</td>
+			<td >
+				$!pushSender.REGID
+			</td>
+			<td>
+				$!pushSender.REGDT
+			</td>
+			<td>
+				<a href="javascript:void(0)" class="btn2" id="senderModify">#springMessage("common.header.detail")</a> <!-- 상세 -->
+			</td>
+		</tr>
+	#end
+	#if(!$j_tot)
+		<tr>
+			<td colspan="6" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+	#end
+	</tbody>
+</table>
+
+<input type="hidden" id="SENDER_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_senderList" />
+</div>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.appManage.mapper.PushAppManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 __test -->
+	<sql id="head">
+		SELECT viewC.*
+		FROM (
+		SELECT
+		(ROW_NUMBER() OVER()) AS "RNUM"
+		,COUNT(*) OVER() AS "TOT_CNT"
+		,viewB.*
+		FROM (SELECT viewA.* FROM (
+	</sql>
+
+	<sql id="bottom">
+		) AS viewA
+		) AS viewB
+		) AS viewC
+		WHERE "RNUM" BETWEEN (CAST(#{PAGE_NUM} AS INTEGER) -1) * CAST(#{PAGE_SIZE} AS INTEGER) + 1 AND CAST(#{PAGE_NUM} AS INTEGER) * CAST(#{PAGE_SIZE} AS INTEGER)
+	</sql>
+	
+	<!-- push 서비스 리스트 조회 -->
+	<select id="SelectPushService" parameterType="java.util.HashMap" resultType="kr.msp.admin.push.appManage.dto.PushServiceDto">
+		<include refid="head"/>
+		SELECT 	"APPID"
+				,"APPNAME"
+				,"ISDELETED"
+				,TO_CHAR("REGDATE", 'YYYY.MM.DD HH24:MI:SS') AS "REGDATE"
+				,TO_CHAR("MODDATE", 'YYYY.MM.DD HH24:MI:SS') AS "MODDATE"
+				,"SVC_ID"
+				,"SVC_DTL"
+		FROM "T_PUSH_APPLICATION" WHERE
+		"APPID" IN
+		<foreach item="PushServiceDto" index="index" collection="List"
+			open="(" separator="," close=")">
+			#{PushServiceDto.APPID}
+		</foreach>
+		AND "ISDELETED" = 'N'
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- push 서비스 조회 -->
+	<select id="SelectPushServiceOne" parameterType="kr.msp.admin.push.appManage.dto.PushServiceDto" resultType="kr.msp.admin.push.appManage.dto.PushServiceDto">
+		SELECT 	"APPID"
+				,"APPNAME"
+				,"ISDELETED"
+				,TO_CHAR("REGDATE", 'YYYY.MM.DD HH24:MI:SS') AS "REGDATE"
+				,TO_CHAR("MODDATE", 'YYYY.MM.DD HH24:MI:SS') AS "MODDATE"
+				,"SVC_ID"
+				,"SVC_DTL"
+		FROM "T_PUSH_APPLICATION"
+		WHERE "APPID" = #{APPID}
+	</select>
+	
+	<!-- push 서비스 수정 -->
+	<update id="UpdatePushService" parameterType="kr.msp.admin.push.appManage.dto.PushServiceDto">
+		UPDATE "T_PUSH_APPLICATION"
+		    SET "APPNAME"  = #{APPNAME}
+		       ,"SVC_DTL" = #{SVC_DTL}
+		WHERE "APPID" = #{APPID}
+	</update>
+	
+	<!-- PNS 리스트 조회 -->
+	<select id="SelectPnsList" parameterType="kr.msp.admin.push.appManage.dto.PushPnsDto" resultType="kr.msp.admin.push.appManage.dto.PushPnsDto">
+		SELECT 
+			A."APPID"
+          	,B."PNSID"
+           	,B."KEYSTORE"
+          	,B."PASSWORD"
+     	FROM "T_PUSH_APPLICATION" AS A
+        	INNER JOIN "T_PUSH_PNS_INFO" AS B ON (A."APPID" = B."APPID")
+      	WHERE A."APPID" = #{APPID}
+	</select>
+	
+	<!-- PNS 리스트 조회 -->
+    <select id="SelectPnsVarList" parameterType="kr.msp.admin.push.appManage.dto.PnsSelectVarDto" resultType="kr.msp.admin.push.appManage.dto.PnsSelectVarDto">
+        SELECT 	"VNAME",
+        		"VVALUE"
+		FROM "T_PUSH_VARIABLES"
+		WHERE "VGROUP" = 'PNSIDS'
+		ORDER BY "VNAME"
+    </select>
+    
+    <!-- PNS 등록 -->
+    <insert id="InsertPushPns" parameterType="kr.msp.admin.push.appManage.dto.PushPnsDto">
+    	INSERT INTO "T_PUSH_PNS_INFO" (
+									    "APPID"
+									   ,"PNSID"
+									   ,"KEYSTORE"
+									   ,"PASSWORD"
+									   ,"CERT"
+									)VALUES(
+									    #{APPID}
+									   ,#{PNSID}
+									   ,#{KEYSTORE}
+									   ,#{PASSWORD}
+									   ,#{CERT}
+									)
+    </insert>
+    
+    <!-- PNS 중복 체크 -->
+    <select id="PushPnsCheck" parameterType="kr.msp.admin.push.appManage.dto.PushPnsDto" resultType="java.lang.Integer">
+    	SELECT COUNT("PNSID") FROM "T_PUSH_PNS_INFO" WHERE "APPID" = #{APPID} AND "PNSID" = #{PNSID}
+    </select>
+    
+    <!-- PNS 단건 조회 -->
+    <select id="selectPnsOne" parameterType="kr.msp.admin.push.appManage.dto.PushPnsDto" resultType="kr.msp.admin.push.appManage.dto.PushPnsDto" >
+    	SELECT 	"PNSID"
+  				,"APPID"
+  				,"KEYSTORE"
+  				,"PASSWORD""
+    	FROM 	"T_PUSH_PNS_INFO"
+    	WHERE 	"APPID" = #{APPID}
+    	AND 	"PNSID" = #{PNSID}
+    </select>
+    
+    <!-- PNS 수정 -->
+    <update id="UpdatePushPns" parameterType="kr.msp.admin.push.appManage.dto.PushPnsDto">
+    	UPDATE "T_PUSH_PNS_INFO"
+    		SET "KEYSTORE" = #{KEYSTORE}
+				,"PASSWORD"" = #{PASSWORD}
+			<if test="CERT != null">
+				,"CERT" = #{CERT}
+			</if>
+			WHERE 	"APPID" = #{APPID}
+    		AND 	"PNSID" = #{PNSID}
+    </update>
+    
+    <!-- PNS 삭제 -->
+    <delete id="DeletePushPns" parameterType="kr.msp.admin.push.appManage.dto.PushPnsDto">
+    	DELETE FROM "T_PUSH_PNS_INFO" WHERE "APPID" = #{APPID} AND "PNSID" = #{PNSID}
+    </delete>
+    
+</mapper>

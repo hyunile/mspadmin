@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.fraudPrevent.appManage.mapper.FraAppManageDao">
+
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+	<sql id="head">
+		SELECT viewC.*
+		FROM (
+		SELECT
+		(ROW_NUMBER() OVER()) AS "RNUM"
+		,COUNT(*) OVER() AS "TOT_CNT"
+		,viewB.*
+		FROM (SELECT viewA.* FROM (
+	</sql>
+
+	<sql id="bottom">
+		) AS viewA
+		) AS viewB
+		) AS viewC
+		WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+	
+	<!--리스트 조회 -->
+	<select id="selectFraudPreventAppManageList" parameterType="kr.msp.admin.fraudPrevent.appManage.dto.FraAppManageParamDto" resultType="kr.msp.admin.fraudPrevent.appManage.dto.FraAppManageDto" >
+		<include refid="head"/>
+		SELECT A."APP_ID", A."APP_VER", A."OS_TYPE", A."FRA_DESC", A."MOD_DTTM", B."SVC_NM"
+		FROM "TB_FRA_SVC" AS A
+		LEFT OUTER JOIN "TB_SVC" AS B
+		ON A."APP_ID" = B."APP_ID"
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="APP_ID != null and APP_ID != ''">
+				AND A."APP_ID" = #{APP_ID}
+			</if>
+			<if test="OS_TYPE != null and OS_TYPE != ''">
+				AND A."OS_TYPE" = #{OS_TYPE}
+			</if>
+		</trim>
+		ORDER BY A."MOD_DTTM" DESC
+		<include refid="bottom"/>
+	</select>
+	
+	<!--단건 조회 -->
+	<select id="selectFraudPreventAppManage" parameterType="kr.msp.admin.fraudPrevent.appManage.dto.FraAppManageParamDto" resultType="kr.msp.admin.fraudPrevent.appManage.dto.FraAppManageDto" >
+		SELECT A."APP_ID", A."APP_VER", A."OS_TYPE", A."FRA_DESC", A.M"OD_DTTM", B."SVC_NM", A."HASH_VAL"
+		FROM "TB_FRA_SVC" AS A
+		LEFT OUTER JOIN "TB_SVC" AS B
+		ON A."APP_ID" = B."APP_ID"
+		WHERE A."APP_ID" = #{APP_ID} AND A."APP_VER" = #{APP_VER} AND A."OS_TYPE" = #{OS_TYPE}
+	</select>
+	
+	<insert id="insertFraudPreventAppManage" parameterType="kr.msp.admin.fraudPrevent.appManage.dto.FraAppManageParamDto">
+		INSERT INTO "TB_FRA_SVC" ("APP_ID", "APP_VER", "OS_TYPE", "HASH_BUILD_VER", "HASH_VAL", "FRA_DESC", "FILE_NM", "REG_ID", "REG_DTTM")
+		VALUES( #{APP_ID}, #{APP_VER}, #{OS_TYPE}, #{HASH_BUILD_VER}, #{HASH_VAL}, #{FRA_DESC}, #{FILE_NM}, #{REG_ID}, SYSDATE)
+	</insert>
+	
+    <!-- 수정-->
+    <update id="updateFraudPreventAppManage" parameterType="kr.msp.admin.fraudPrevent.appManage.dto.FraAppManageParamDto">
+		UPDATE "TB_FRA_SVC"
+    	SET "HASH_BUILD_VER" = #{HASH_BUILD_VER}
+	       ,"FRA_DESC" = #{FRA_DESC}
+	       ,"MOD_ID" = #{MOD_ID}
+	       ,"MOD_DTTM" = SYSDATE
+		WHERE "APP_ID" = #{APP_ID} AND "APP_VER" = #{APP_VER} AND "OS_TYPE" = #{OS_TYPE}
+    </update>
+	
+	<!-- 삭제 -->
+    <delete id="deleteFraudPreventAppManage" parameterType="kr.msp.admin.fraudPrevent.appManage.dto.FraAppManageParamDto">
+        DELETE FROM "TB_FRA_SVC"
+        WHERE "APP_ID" = #{APP_ID} AND "APP_VER" = #{APP_VER} AND "OS_TYPE" = #{OS_TYPE}
+    </delete>
+    
+    <!--파일명 조회 -->
+	<select id="selectFraudPreventFileNm" parameterType="kr.msp.admin.fraudPrevent.appManage.dto.FraAppManageParamDto" resultType="java.lang.String" >
+		SELECT "FILE_NM"
+		FROM "TB_FRA_SVC"
+		WHERE "APP_ID" = #{APP_ID} AND "APP_VER" = #{APP_VER} AND "OS_TYPE" = #{OS_TYPE}
+	</select>
+</mapper>

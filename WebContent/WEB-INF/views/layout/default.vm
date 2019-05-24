@@ -1,0 +1,287 @@
+$response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+$response.setHeader("Pragma", "no-cache")
+$response.setHeader("Expires", "0")
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="pragma" content="no-cache" />
+<meta http-equiv="content-type" content="applicaton/xhtml+xml;charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+
+<title>#springMessage("header.title")</title>
+
+	<link rel="stylesheet" href="$RESOURCES_PATH/css/jquery-ui.min.css">
+	<link rel="stylesheet" href="$RESOURCES_PATH/css/morpheus_common.css">
+	<link rel="stylesheet" href="$RESOURCES_PATH/css/morpheus_style.css">
+	<link rel="stylesheet" href="$RESOURCES_PATH/css/morpheus_dialog.css">
+		
+	<script src="$RESOURCES_PATH/js/jquery.js"></script>
+	<script src="$RESOURCES_PATH/js/jquery-ui.min.js"></script>
+	<script src="$RESOURCES_PATH/js/placeholders.min.js"></script>
+	<script src="$RESOURCES_PATH/js/respond.min.js"></script>
+	<script src="$RESOURCES_PATH/js/selectivizr.js"></script>
+	<script src="$RESOURCES_PATH/js/calc.js"></script>
+	<script src="$RESOURCES_PATH/js/select.js"></script>
+	
+	<script src="$RESOURCES_PATH/js/common.js"></script>
+	<script src="$RESOURCES_PATH/js/common_ui.js"></script>
+
+
+<script type="text/javascript">
+//root path 경로 지정
+var UNICODE_BYTES = "$!{UNICODE_BYTES}";
+var CONTEXT_PATH;
+var RESOURCES_PATH;
+var INIT_ROW_CNT = "$!{INIT_ROW_CNT}";
+
+//공통 - 기본 다이얼로그 디자인 변경
+/* 사용안하는지 확인 필요
+function fn_dialogDesign(uid) { 
+	var obj = jQuery('div[aria-describedby="'+uid+'"]');  //해당팝업객체 ID
+	jQuery(".ui-dialog-titlebar-close",obj).hide();  //디폴트 close 제거 후 이벤트객체 추가
+	jQuery('.ui-dialog-titlebar'      ,obj).css({'height':'40px'}).append('<button type="button" class="btn_close '+uid+'" style="position:absolute;cursor:pointer;">닫기</button>');
+	jQuery('.ui-dialog-title'         ,obj).css('padding-top', '8px');
+}
+*/
+
+jQuery(document).ready(function(){
+	CONTEXT_PATH = $("#CONTEXT_PATH").val();
+	RESOURCES_PATH = $("#RESOURCES_PATH").val();
+    
+    fn_OnMenu();
+	//fn_OnMenu_title();
+    fn_titleMenuNavi();
+});
+
+
+/*
+inner_navi 생성.
+*/
+function fn_titleMenuNavi(){
+	var top_nm = jQuery("#Left_MenuTop_Nm").val();
+	var navi_str = "";
+	var menu_su = $(".side-menu").find(".on").length;
+	if(menu_su == 0){
+		navi_str += " <span>" + top_nm + "</span>";
+		$(".page-title").html('#springMessage("menu.system.notice")'); //공지사항
+	}else if( menu_su == 1 ){
+		navi_str += " <span>" + top_nm + "</span> <span>" + $(".side-menu").find(".on").text() + "</span>";
+		$(".page-title").html($(".side-menu").find(".on").text());
+	} else if(menu_su == 2){
+		$(".side-menu").find(".on").each(function(su){
+			if(su == 0){
+				navi_str += "<span>" + top_nm + "</span> <span>" + $(this).text() + "</span>";
+			} else if(su == 1){
+				navi_str += " <span>" + $(this).text() + "</span>";
+				$(".page-title").html($(this).text());
+			}
+		});
+	} else if(menu_su == 3){
+		$(".side-menu").find(".on").each(function(su){
+			if(su == 0){
+				navi_str += "<span>" + top_nm + "</span> <span>" + $(this).text() + "</span>";
+			} else if(su == 1){
+			} else if(su == 2){
+				navi_str += " <span>" + $(this).text() + "</span>";
+				$(".page-title").html($(this).text());
+			}
+		});
+	}
+	$(".nav").html(navi_str);
+}
+
+
+/*
+	매뉴 on
+*/
+function fn_OnMenu(){
+	
+	if(jQuery("#S_ID_LEFT_MENU").val() != ""){
+		var onMenu = jQuery("#" + jQuery("#S_ID_LEFT_MENU").val());
+		onMenu.addClass("on");
+		if(onMenu.nextAll(".Left_Menu_level").val() == 3){
+			onMenu.parents(".dep3").prev("a").addClass("on expanded");
+			onMenu.parents(".dep3").slideDown();
+		}
+	}
+}
+
+function fn_OnMenu_title(){
+	var topMenuId = jQuery("#S_ID_TOP_MENU").val();
+	var onMenu;
+	if(topMenuId != ""){
+		// 상단 메뉴 on 처리. 신규 디자인에서는 여기에서 처리하지 않고 태그 생성 시 넣음.
+		
+		if(onMenu) onMenu.addClass("on");
+	}
+}
+
+/*
+로그아웃
+*/
+function fn_logOut(){
+	document.location.href = "$CONTEXT_PATH/logOut";
+}
+
+/*
+좌측매뉴 이동
+*/
+function GO_MENU_URL(goMenuId,goMenuUrl){
+	if(goMenuUrl != ""){
+		var goMenuTopId = jQuery("#Left_MenuTop_Id").val();
+		document.location.href = CONTEXT_PATH + "/common/go_menu_url?goMenuUrl="+ goMenuUrl + "&goMenuId=" + goMenuId + "&goMenuTopId=" + goMenuTopId;
+	}
+}
+
+/*
+상단매뉴 이동
+*/
+function GO_TOP_URL(goMenuTopId,goMenuUrl){
+	document.location.href = CONTEXT_PATH + "/common/go_menu_url?goMenuUrl="+goMenuUrl+"&goMenuId=&goMenuTopId=" + goMenuTopId;
+}
+
+/*
+홈으로 이동
+*/
+function fn_goHome(){
+	var goMenuTopId = jQuery("#Left_MenuTop_Id").val();
+	document.location.href = CONTEXT_PATH + "/common/go_menu_url?goMenuUrl="+ "/admin/mainHome";
+}
+
+/*
+즐겨찾기
+*/
+function GO_MENU_URL_favori(goMenuId, goMenuTopId,goMenuUrl){
+	if(goMenuUrl != ""){
+		document.location.href = CONTEXT_PATH + "/common/go_menu_url?goMenuUrl="+ goMenuUrl + "&goMenuId=" + goMenuId + "&goMenuTopId=" + goMenuTopId;
+	}
+}
+
+</script>
+
+</head>
+
+<body >  ############# secure push의 경우 <body class="securePush"> 로 설정해야 함!  ######### 
+
+
+<!-- s: GNB -->
+<div class="header">
+	<div class="header_link">
+		[$!S_NM_AUTH_GRP] <strong>$!S_NM_USER</strong>#springMessage("login.welcome.message")<a href="javascript:fn_logOut()" class="logout">#springMessage("login.btn.logout")</a>
+	</div>
+	<div>
+		<input type="hidden" id="S_ID_TOP_MENU" value="$!S_ID_TOP_MENU">
+		
+		<a href="javascript:fn_goHome();" class="logo"><img src="$RESOURCES_PATH/images/common/logo_#springMessage("login.logo.image").png" alt="Morpheus"></a>
+		
+		#foreach( $top_map in $menuMap.topList )
+			
+			#if($S_ID_TOP_MENU == $!top_map.ID_MENU)
+    			<a href="javascript:void(0)" class="dep1 on">$top_map.NM_MENU</a>
+         	#else
+         		<a href="javascript:GO_TOP_URL('$!top_map.ID_MENU','$!top_map.MENU_URL')" class="dep1">$top_map.NM_MENU</a>
+         	#end
+         		
+		#end
+		
+	</div>
+</div>
+<!-- //e: GNB -->
+
+
+<!-- Contents영역 -->
+<div class="container" >
+	<input type="hidden" id="S_ID_LEFT_MENU" value="$!S_ID_LEFT_MENU"/>
+	<input type="hidden" id="CONTEXT_PATH" value="$CONTEXT_PATH"/>
+	<input type="hidden" id="RESOURCES_PATH" value="$RESOURCES_PATH"/>
+	
+	
+	#if($!lsbFlg == 'N')
+	#else
+	<!-- s: Left sub Menu -->
+	<div class="side-menu">
+		#set( $dep2_count = 0 )
+		#set( $dep2_target = 0 )
+		#set( $dep3_count = 0 )
+		#set( $dep3_target = 0 )
+		
+		#foreach( $layoutLeftMenu in $menuMap.leftList )
+			
+			#if($layoutLeftMenu.MENU_LEVEL == 1)
+    			<h2 class="dep1">$!layoutLeftMenu.NM_MENU</h2>
+    			
+    			#if($layoutLeftMenu.CHILD_CNT != 0 && $dep2_count == 0) <!-- 하위매뉴가 있을경우 -->
+					#set( $dep2_target = $layoutLeftMenu.CHILD_CNT ) <!-- 하위매뉴의 갯수 지정 -->
+					
+					<div class="dep2">	  ## 하부 메뉴 추가를 위해 ##
+				#end
+    			 
+    			<input type="hidden" id="Left_MenuTop_Id" value="$!layoutLeftMenu.ID_MENU">
+				<input type="hidden" id="Left_MenuTop_Nm" value="$!layoutLeftMenu.NM_MENU">
+    		#end
+			
+			#if($layoutLeftMenu.MENU_LEVEL == 2)
+				<input type="hidden" class="Left_Menu_Url" value="$!layoutLeftMenu.MENU_URL">
+   				<input type="hidden" class="Left_Menu_level" value="$!layoutLeftMenu.MENU_LEVEL">
+				
+				<a id="$!layoutLeftMenu.ID_MENU" href="javascript:GO_MENU_URL('$!layoutLeftMenu.ID_MENU','$!layoutLeftMenu.MENU_URL')" >$!layoutLeftMenu.NM_MENU</a>
+				#if($layoutLeftMenu.CHILD_CNT != 0 && $dep3_count == 0) <!-- 하위매뉴가 있을경우 -->
+					#set( $dep3_target = $layoutLeftMenu.CHILD_CNT ) <!-- 하위매뉴의 갯수 지정 -->
+					
+					<div class="dep3">	<!-- 하위매뉴가 있으므로 새로운 div 생성-->
+				#end
+				
+				#set( $dep2_count = $dep2_count + 1)
+				
+			#end 
+			
+			#if($layoutLeftMenu.MENU_LEVEL == 3)
+				<a id="$!layoutLeftMenu.ID_MENU" href="javascript:GO_MENU_URL('$!layoutLeftMenu.ID_MENU','$!layoutLeftMenu.MENU_URL');">$!layoutLeftMenu.NM_MENU</a>
+    			<input type="hidden" class="Left_Menu_Url" value="$!layoutLeftMenu.MENU_URL">
+    			<input type="hidden" class="Left_Menu_level" value="$!layoutLeftMenu.MENU_LEVEL">
+    			
+    			#set( $dep3_count = $dep3_count + 1)
+    			
+    			#if($dep3_count == $dep3_target)
+    				</div>
+    				
+    				#set( $dep3_count = 0 ) <!-- 다음 메뉴를 위해 초기화 -->
+					#set( $dep3_target = 0 )
+    			#end
+	
+			#end 		
+
+		#end    ## <!-- foreach end --> ##
+		
+		#if($dep2_count == $dep2_target)
+    		</div>  ## dep2 menu div close
+    	#end
+		
+	</div><!-- //e:side-menu -->
+	
+	#end <!-- if end -->
+	
+	<!-- s:content-area -->	
+	${screen_content}
+	<!-- e:content-area -->
+	
+</div>
+<div class="footer">Copyright #springMessage("login.bottom.corpname") All rights reserved</div>
+
+
+
+<!--  팝업창 디자인  --> 
+<div id="layerpopup" style="position:absolute; z-index:10; top:0px; left:0px;">
+ 
+	<div id="windowModalPop" class="layer"  style="position:absolute; z-index:0; display:none; background-color:#FFFFFF;">
+		<div id='windowPop' class="con"></div>
+	</div>
+</div>
+ 
+
+</body>
+</html>
+

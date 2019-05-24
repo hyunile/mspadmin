@@ -1,0 +1,1079 @@
+@charset "UTF-8";
+@import url(morpheus_reset.css);
+@font-face {
+	font-family: "나눔바른고딕";
+	font-weight: normal;
+	src: url("../fonts/NanumBarunGothic.eot");
+	src: url("../fonts/NanumBarunGothic.eot?#iefix") format("embedded-opentype");
+	src: url("../fonts/NanumBarunGothic.ttf") format("truetype");
+	src: url("../fonts/NanumBarunGothic.woff") format("woff");
+}
+
+@font-face {
+	font-family: "나눔바른고딕";
+	font-weight: 100;
+	src: url("../fonts/NanumBarunGothicUltraLight.eot");
+	src: url("../fonts/NanumBarunGothicUltraLight.eot?#iefix") format("embedded-opentype");
+	src: url("../fonts/NanumBarunGothicUltraLight.ttf") format("truetype");
+	src: url("../fonts/NanumBarunGothicUltraLight.woff") format("woff");
+}
+
+html, body {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+html {
+	font-size: 100px;
+}
+
+body {
+	overflow-y: auto;
+	font-size: 13px;
+	overflow-x: auto;
+	color: #666;
+	background: #f2f2f2;
+}
+
+body, input, select {
+	font-family: "나눔바른고딕", sans-serif;
+}
+
+.fl {
+	float: left;
+}
+
+.fr {
+	float: right;
+}
+
+.fr + .fr {
+	margin-right: 4px;
+}
+
+.txtLeft {
+	text-align: left !important;
+}
+
+.txtRight {
+	text-align: right !important;
+}
+
+.txtCenter {
+	text-align: center !important;
+}
+
+.valignTop {
+	vertical-align: top !important;
+}
+
+.valignBottom {
+	vertical-align: bottom !important;
+}
+
+.valignCenter {
+	vertical-align: center !important;
+}
+
+.paddingNone {
+	padding: 0 !important;
+}
+
+.full-width {
+	width: 100% !important;
+}
+
+.posa {
+	position: absolute !important;
+}
+
+.clear {
+	clear: both;
+}
+
+.noPadding {
+	padding: 0 !important;
+}
+
+.noMargin {
+	margin: 0 !important;
+}
+
+.marginBottom20 {
+	margin-bottom: 20px;
+}
+
+.redNotice:before {
+	content: '＊ ';
+	color: #ff0000;
+}
+
+.hidden {
+	display: none;
+}
+
+.header {
+	min-width: 1024px;
+	height: 111px;
+	border-bottom: 4px solid #e9eaec;
+	background: #fff;
+}
+
+.header:after {
+	content: '';
+	display: block;
+	clear: both;
+}
+
+.header > div {
+	max-width: 1280px;
+	min-width: 1024px;
+	margin: auto;
+	padding-left: 20px;
+	padding-right: 40px;
+}
+
+.header > div:after {
+	content: '';
+	display: block;
+	clear: both;
+}
+
+.header .header_link {
+	height: 51px;
+	padding-top: 21px;
+	padding-bottom: 10px;
+	line-height: 24px;
+	text-align: right;
+	border-bottom: none;
+}
+
+.header .header_link strong {
+	color: #444;
+}
+
+.header .logout {
+	display: block;
+	float: right;
+	height: 20px;
+	line-height: 20px;
+	text-align: center;
+	margin-left: 8px;
+	padding: 0 10px;
+	font-size: 12px;
+	/*font-weight: 100*/
+	background: #f3f3f3;
+	border: 1px solid #eee;
+	border-radius: 5px;
+	box-shadow: 1px 1px 0 0 #d9d9d9;
+}
+
+.header .logout:hover {
+	background: #e4e4e4;
+	border: 1px solid #999;
+}
+
+.header .logout.disabled {
+	color: #9d9d9d;
+	background: #e4e4e4;
+	border: 1px solid #eee;
+}
+
+.header .logo {
+	display: block;
+	float: left;
+	width: 210px;
+	height: 42px;
+	margin-right: 36px;
+	-webkit-transition: 0.5s;
+	-o-transition: 0.5s;
+	transition: 0.5s;
+}
+
+.header .logo img {
+	width: 100%;
+}
+
+.header .dep1 {
+	display: block;
+	float: left;
+	margin-right: 16px;
+	padding: 20px 10px 13px;
+	font-size: 19px;
+	font-weight: bold;
+	color: #666;
+	-webkit-transition: margin 0.5s;
+	-o-transition: margin 0.5s;
+	transition: margin 0.5s;
+}
+
+.header .dep1:last-child {
+	margin-right: 0;
+}
+
+.header .dep1:hover {
+	border-bottom: 6px solid #152b75;
+}
+
+.header .dep1.on {
+	border-bottom: 6px solid #152b75;
+}
+
+@media screen and (min-width: 1280px) {
+	.header .logo {
+		margin-right: 100px;
+	}
+	.header .dep1 {
+		margin-right: 40px;
+	}
+}
+
+.no-csscalc .container {
+	height: 161px;
+}
+
+.container {
+	display: table;
+	width: 100%;
+	max-width: 1280px;
+	min-width: 1024px;
+	min-height: 743px;
+	min-height: calc(100% - 161px);
+	margin: auto;
+	padding-right: 23px;
+}
+
+.side-menu {
+	display: table-cell;
+	width: 170px;
+	height: 100%;
+	background: #2e2e2e;
+}
+
+.side-menu .dep1 {
+	height: 70px;
+	padding-top: 27px;
+	padding-left: 20px;
+	font-size: 24px;
+	font-weight: normal;
+	color: #fff;
+	background: #232323;
+}
+
+.side-menu .dep2 > a {
+	position: relative;
+	display: block;
+	height: 40px;
+	line-height: 40px;
+	padding-left: 20px;
+	font-size: 14px;
+	color: #999;
+	border-bottom: 1px solid #323232;
+	cursor: pointer;
+	-webkit-transition: 0.5s;
+	-o-transition: 0.5s;
+	transition: 0.5s;
+}
+
+.side-menu .dep2 > a img {
+	position: absolute;
+	right: 10px;
+	top: 19px;
+	-webkit-transition: 0.5s;
+	-o-transition: 0.5s;
+	transition: 0.5s;
+}
+
+.side-menu .dep2 > a:hover {
+	font-weight: bold;
+	color: #fff;
+	background: #152b75;
+}
+
+.side-menu .dep2 > a.on {
+	font-weight: bold;
+	color: #fff;
+	background: #152b75;
+}
+
+/*.side-menu .dep2 > a.on img,*/ .side-menu .dep2 > a.expanded img {
+	-webkit-transform: rotateX(-180deg);
+	-ms-transform: rotateX(-180deg);
+	transform: rotateX(-180deg);
+}
+
+.side-menu .dep3 {
+	display: none;
+	background: #292929;
+}
+
+.side-menu .dep3 > a {
+	display: block;
+	height: 32px;
+	line-height: 32px;
+	padding-left: 20px;
+	font-size: 13px;
+	color: #888;
+}
+
+.side-menu .dep3 > a.current, .side-menu .dep3 > a.on, .side-menu .dep3 > a:hover {
+	font-weight: bold;
+	color: #fff;
+	background: #232323;
+}
+
+@media screen and (min-width: 1280px) {
+	.side-menu {
+		width: 190px;
+	}
+}
+
+.contents-area {
+	display: table-cell;
+	padding-left: 20px;
+	padding-right: 20px;
+	vertical-align: top;
+	background: #fff;
+}
+
+.contents-area .nav {
+	height: 27px;
+	padding-top: 14px;
+	text-align: right;
+}
+
+.contents-area .nav span {
+	font-size: 12px;
+}
+
+.contents-area .nav span:before {
+	content: url(../images/common/nav-arrow.png);
+	margin: 0 5px;
+}
+
+.contents-area .nav span:first-child:before {
+	content: none;
+}
+
+.contents-area .page-title {
+	height: 28px;
+	margin-bottom: 15px;
+	font-size: 26px;
+	font-weight: bold;
+	color: #333;
+}
+
+.contents-area .scroll-area {
+	overflow: hidden;
+	min-height: calc(100% - 70px);
+	padding-bottom: 70px;
+}
+
+.no-csscalc .contents-area .scroll-area {
+	height: 70px;
+}
+
+@media screen and (min-width: 1280px) {
+	.contents-area {
+		padding-left: 40px;
+	}
+}
+
+.footer {
+	min-width: 1024px;
+	height: 50px;
+	line-height: 50px;
+	text-align: center;
+	font-size: 11px;
+	color: #ccc;
+	background: #444;
+}
+
+.securePush .header .dep1 {
+	margin-right: 110px;
+}
+
+.securePush .header .dep1:hover {
+	border-color: #00a47f;
+}
+
+.securePush .header .logo {
+	margin-right: 160px;
+}
+
+.securePush .side-menu .dep2 > a.on {
+	background: #00a47f;
+}
+
+@media screen and (min-width: 1280px) {
+	.securePush .header .dep1 {
+		margin-right: 160px;
+	}
+	.securePush .header .logo {
+		margin-right: 220px;
+	}
+}
+
+.securePush .mainVisual {
+	overflow: hidden;
+	position: relative;
+	height: 300px;
+	margin-top: 14px;
+	margin-bottom: 20px;
+	background: url(../images/sub/mainVisual.jpg) no-repeat 0 0;
+	border-radius: 5px;
+}
+
+.securePush .mainVisual ul {
+	overflow: hidden;
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 300px;
+	height: 302px;
+	border-radius: 5px;
+	-webkit-transition: 0.5s;
+	-o-transition: 0.5s;
+	transition: 0.5s;
+}
+
+.securePush .mainVisual li {
+	position: relative;
+	height: 100px;
+	line-height: 100px;
+	padding-left: 30px;
+	font-size: 20px;
+	font-weight: lighter;
+	color: #fff;
+	background: #00a47f;
+	border-top: 1px solid #1aad8c;
+}
+
+.securePush .mainVisual li:first-child {
+	border-top: none;
+}
+
+.securePush .mainVisual li a {
+	display: block;
+}
+
+.securePush .mainVisual li span {
+	display: block;
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 50px;
+	height: 100px;
+	background: #009d7a url(../images/sub/mainVisualArrow.png) no-repeat 50% 50%;
+}
+
+.securePush .mainfl {
+	float: left;
+	width: 49.2%;
+}
+
+.securePush .mainfl > div {
+	overflow: hidden;
+	position: relative;
+	margin-bottom: 18px;
+	padding: 30px;
+	background: #fff;
+	border-radius: 5px;
+}
+
+.securePush .mainfl > div h2 {
+	margin-bottom: 12px;
+	font-size: 22px;
+	color: #000;
+}
+
+.securePush .mainfl > div .more {
+	display: block;
+	position: absolute;
+	top: 28px;
+	right: 30px;
+	width: 56px;
+	height: 22px;
+	line-height: 22px;
+	text-align: center;
+	font-size: 13px;
+	font-weight: lighter;
+	color: #666;
+	background: #f9f9f9;
+	border: 1px solid #f2f2f2;
+	border-radius: 5px;
+}
+
+.securePush .mainfl > div .list {
+	display: block;
+	margin-top: 18px;
+	font-size: 13px;
+	font-weight: lighter;
+	color: #666;
+}
+
+.securePush .mainfl > div .list:first-child {
+	margin-top: 0;
+}
+
+.securePush .mainfl > div .list > strong {
+	font-weight: normal;
+	color: #000;
+}
+
+.securePush .mainfl > div .list > strong:before {
+	content: '[ ';
+}
+
+.securePush .mainfl > div .list > strong:after {
+	content: ' ]';
+}
+
+.securePush .mainfl > div .list span {
+	font-size: 12px;
+}
+
+.securePush .mainfl > div .list span strong {
+	color: #000;
+}
+
+.securePush .mainfl > div .nolist {
+	height: 113px;
+	line-height: 113px;
+	text-align: center;
+	margin-top: 18px;
+	border: 1px solid #f2f2f2;
+}
+
+.securePush .mainfr {
+	position: relative;
+	float: right;
+	width: 49.2%;
+	padding: 30px;
+	background: #fff;
+	border-radius: 5px;
+}
+
+.securePush .mainfr h2 {
+	margin-bottom: 24px;
+	font-size: 22px;
+	color: #000;
+}
+
+.securePush .mainfr h2 small {
+	font-size: 13px;
+	font-weight: lighter;
+	color: #666;
+}
+
+.securePush .mainfr .more {
+	display: block;
+	position: absolute;
+	top: 28px;
+	right: 30px;
+	width: 56px;
+	height: 22px;
+	line-height: 22px;
+	text-align: center;
+	font-size: 13px;
+	font-weight: lighter;
+	color: #666;
+	background: #f9f9f9;
+	border: 1px solid #f2f2f2;
+	border-radius: 5px;
+}
+
+.securePush .mainfr table {
+	width: 100%;
+}
+
+.securePush .mainfr table tr:first-child td {
+	border-bottom: 1px solid #f2f2f2;
+}
+
+.securePush .mainfr table tr:first-child td:first-child h3 {
+	margin-bottom: 50px;
+}
+
+.securePush .mainfr table tr:first-child td:first-child p {
+	margin-bottom: 0;
+}
+
+.securePush .mainfr table td {
+	height: 170px;
+	text-align: center;
+}
+
+.securePush .mainfr table td:first-child {
+	border-right: 1px solid #f2f2f2;
+}
+
+.securePush .mainfr table td h3 {
+	margin-bottom: 25px;
+	font-size: 15px;
+	font-weight: lighter;
+	color: #000;
+}
+
+.securePush .mainfr table td p {
+	margin-bottom: 20px;
+	font-size: 15px;
+	font-weight: lighter;
+	color: #666;
+}
+
+.securePush .mainfr table td p strong {
+	font-size: 38px;
+	font-weight: normal;
+	color: #000;
+}
+
+.securePush .mainfr table td > strong {
+	display: block;
+	margin-bottom: 20px;
+	font-size: 29px;
+	font-weight: normal;
+	color: #000;
+}
+
+.securePush .mainfr table td > strong span {
+	font-weight: lighter;
+}
+
+.securePush .mainfr table td > strong em {
+	font-size: 20px;
+	font-weight: lighter;
+	font-size: normal;
+	color: #ccc;
+}
+
+.securePush .mainfr table td > span {
+	display: block;
+	font-size: 13px;
+	font-weight: lighter;
+	color: #666;
+}
+
+.securePush .mainfr table td .progressBar {
+	width: 182px;
+	height: 5px;
+	margin: auto;
+	margin-bottom: 12px;
+	background: #e5e5e5;
+}
+
+.securePush .mainfr table td .progressBar div {
+	height: 5px;
+	background: #00a47f;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="0"] div {
+	width: 0%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="1"] div {
+	width: 1%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="2"] div {
+	width: 2%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="3"] div {
+	width: 3%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="4"] div {
+	width: 4%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="5"] div {
+	width: 5%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="6"] div {
+	width: 6%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="7"] div {
+	width: 7%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="8"] div {
+	width: 8%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="9"] div {
+	width: 9%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="10"] div {
+	width: 10%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="11"] div {
+	width: 11%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="12"] div {
+	width: 12%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="13"] div {
+	width: 13%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="14"] div {
+	width: 14%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="15"] div {
+	width: 15%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="16"] div {
+	width: 16%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="17"] div {
+	width: 17%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="18"] div {
+	width: 18%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="19"] div {
+	width: 19%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="20"] div {
+	width: 20%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="21"] div {
+	width: 21%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="22"] div {
+	width: 22%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="23"] div {
+	width: 23%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="24"] div {
+	width: 24%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="25"] div {
+	width: 25%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="26"] div {
+	width: 26%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="27"] div {
+	width: 27%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="28"] div {
+	width: 28%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="29"] div {
+	width: 29%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="30"] div {
+	width: 30%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="31"] div {
+	width: 31%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="32"] div {
+	width: 32%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="33"] div {
+	width: 33%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="34"] div {
+	width: 34%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="35"] div {
+	width: 35%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="36"] div {
+	width: 36%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="37"] div {
+	width: 37%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="38"] div {
+	width: 38%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="39"] div {
+	width: 39%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="40"] div {
+	width: 40%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="41"] div {
+	width: 41%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="42"] div {
+	width: 42%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="43"] div {
+	width: 43%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="44"] div {
+	width: 44%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="45"] div {
+	width: 45%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="46"] div {
+	width: 46%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="47"] div {
+	width: 47%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="48"] div {
+	width: 48%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="49"] div {
+	width: 49%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="50"] div {
+	width: 50%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="51"] div {
+	width: 51%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="52"] div {
+	width: 52%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="53"] div {
+	width: 53%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="54"] div {
+	width: 54%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="55"] div {
+	width: 55%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="56"] div {
+	width: 56%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="57"] div {
+	width: 57%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="58"] div {
+	width: 58%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="59"] div {
+	width: 59%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="60"] div {
+	width: 60%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="61"] div {
+	width: 61%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="62"] div {
+	width: 62%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="63"] div {
+	width: 63%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="64"] div {
+	width: 64%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="65"] div {
+	width: 65%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="66"] div {
+	width: 66%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="67"] div {
+	width: 67%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="68"] div {
+	width: 68%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="69"] div {
+	width: 69%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="70"] div {
+	width: 70%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="71"] div {
+	width: 71%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="72"] div {
+	width: 72%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="73"] div {
+	width: 73%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="74"] div {
+	width: 74%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="75"] div {
+	width: 75%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="76"] div {
+	width: 76%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="77"] div {
+	width: 77%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="78"] div {
+	width: 78%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="79"] div {
+	width: 79%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="80"] div {
+	width: 80%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="81"] div {
+	width: 81%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="82"] div {
+	width: 82%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="83"] div {
+	width: 83%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="84"] div {
+	width: 84%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="85"] div {
+	width: 85%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="86"] div {
+	width: 86%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="87"] div {
+	width: 87%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="88"] div {
+	width: 88%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="89"] div {
+	width: 89%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="90"] div {
+	width: 90%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="91"] div {
+	width: 91%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="92"] div {
+	width: 92%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="93"] div {
+	width: 93%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="94"] div {
+	width: 94%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="95"] div {
+	width: 95%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="96"] div {
+	width: 96%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="97"] div {
+	width: 97%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="98"] div {
+	width: 98%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="99"] div {
+	width: 99%;
+}
+
+.securePush .mainfr table td .progressBar[data-progress="100"] div {
+	width: 100%;
+}
+
+@media screen and (min-width: 1280px) {
+	.securePush .mainVisual ul {
+		width: 350px;
+	}
+}

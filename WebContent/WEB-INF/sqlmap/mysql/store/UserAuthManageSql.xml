@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.UserAuth.mapper.StoreUserAuthDao">
+	<select id="selectGroup" parameterType="kr.msp.admin.store.UserAuth.dto.UserGroupDto" resultType="kr.msp.admin.store.UserAuth.dto.UserGroupDto">
+		SELECT 
+		    GR.GRP_ID
+		    , GR.GRP_NM
+		    , GR.USE_YN
+		    , GR.REG_ID
+		    , DATE_FORMAT(GR.REG_DT, '%Y.%m.%d') AS REG_DT
+		    , AUTH.USER_CNT
+		FROM
+			TB_STO_GROUP GR
+			LEFT JOIN
+			(
+				 SELECT	AU.GRP_ID
+				,				COUNT(AU.GRP_ID) USER_CNT 
+				FROM 	TB_STO_USERGROUP AU
+							INNER JOIN	TB_STO_USER US 
+								ON	AU.EMP_NO = US.EMP_NO 
+								AND US.USE_YN = 'Y' 
+				GROUP BY AU.GRP_ID
+			 ) AUTH
+				ON GR.GRP_ID = AUTH.GRP_ID
+				AND GR.USE_YN = 'Y'
+	</select>
+	
+	<select id="selectUser" parameterType="kr.msp.admin.store.UserAuth.dto.UserGroupDto" resultType="kr.msp.admin.store.UserAuth.dto.AuthUserDto">
+		SELECT	US.EMP_NO
+		,				US.EMP_NM
+		,				US.WORK_CD
+		,				US.USERID
+		,				US.PASSWD
+		,				US.EMP_CD
+		,				CD.CD_NM
+		,				US.DIVISION_ID
+		FROM		TB_STO_USERGROUP AU
+		    			INNER JOIN TB_STO_USER US
+		    				ON US.EMP_NO = AU.EMP_NO
+							AND US.USE_YN = 'Y'
+			
+		    			LEFT JOIN TB_STO_EMP_CODE CD
+		    				ON US.EMP_CD = CD.EMP_CD
+		WHERE		AU.GRP_ID = #{GRP_ID}
+	</select>
+	
+	<delete id="deleteUserAuth" parameterType="kr.msp.admin.store.UserAuth.dto.AuthUserDto">
+	    DELETE FROM 
+	    	TB_STO_USERGROUP 
+	    WHERE 
+	    	EMP_NO = #{EMP_NO} 
+	    	AND GRP_ID = #{GRP_ID}
+	</delete>
+	
+	<insert id="insertUserAuth" parameterType="kr.msp.admin.store.UserAuth.dto.AuthUserDto">
+		INSERT INTO TB_STO_USERGROUP
+			(  
+			  EMP_NO
+			, GRP_ID
+			, REG_ID
+			, REG_DT ) 
+		VALUES 
+			( 
+			  #{EMP_NO}
+			, #{GRP_ID}
+			, #{REG_ID}
+			, NOW())
+	</insert>
+</mapper>

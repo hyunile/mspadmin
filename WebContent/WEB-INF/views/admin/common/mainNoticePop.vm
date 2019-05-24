@@ -1,0 +1,26 @@
+<div>
+	<table class="tbl" summary="제목,내용">
+		<colgroup>
+			<col width="20%"/><col width="auto"/>
+		</colgroup>
+		<tr>
+			<th scope="row">
+				<label for="subject">#springMessage("common.header.title")</label> <!-- 제목 -->
+			</th>
+			<td>
+				$esc.xml($!entbox_notice.NM_TITLE)
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="contents">#springMessage("common.header.contents")</label> <!-- 내용 -->
+			</th>
+			<td style="word-wrap: break-word;" >
+				<textarea id="CONTENTS" name="CONTENTS" readonly>$esc.xml($!entbox_notice.CONTENTS)</textarea>
+			</td>
+		</tr>
+	</table>
+</div>
+<div class="btn-wrap txtCenter">
+	<a href="javascript:fn_closePopup();void(0)" id="maskClose" class="btn1 type2 close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+</div>

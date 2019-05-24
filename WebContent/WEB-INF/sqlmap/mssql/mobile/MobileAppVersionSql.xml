@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.mobile.appVersion.mapper.MobileAppVersionDao" >
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	<!--  조회  -->
+	<select id="selectMobileAppService" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto" resultType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+		<include refid="head"/>
+		SELECT 
+		    VER.APP_VER_ID
+		    , SVC.SVC_NM
+		    , PL.PLAT_IDX
+		    , PL.PLAT_NM
+		    , (SUBSTRING( VER.BIN_VER, 1, 2) + '.' + SUBSTRING( VER.BIN_VER, 4, 2) + '.' + SUBSTRING( VER.BIN_VER, 7, 2)) AS BIN_VER
+		    , (
+				  CAST(CONVERT(NUMERIC, SUBSTRING( VER.BIN_VER, 1, 2)) AS VARCHAR) + '.'
+				+ CAST(CONVERT(NUMERIC, SUBSTRING( VER.BIN_VER, 4, 2)) AS VARCHAR) + '.'
+				+ CAST(CONVERT(NUMERIC, SUBSTRING( VER.BIN_VER, 7, 2)) AS VARCHAR)
+			  ) AS BIN_VER_STR
+			, VER.REG_ID
+			, VER.MOD_ID
+			, REPLACE(CONVERT(VARCHAR(13), VER.REG_DTTM, 121) , '-', '.') AS REG_DTTM 
+			, REPLACE(CONVERT(VARCHAR(13), VER.MOD_DTTM, 121) , '-', '.') AS MOD_DTTM 
+			   <if  test="ORDER_TARGET != null and ORDER_TARGET != ''">
+					<if test="ORDER_TYPE == 'DESC' ">
+						
+						<if test="ORDER_TARGET == 'PLAT_IDX' ">
+						   , ROW_NUMBER() OVER(ORDER BY  VER.PLAT_IDX DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'BIN_VER' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.BIN_VER DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'RSC_ID' ">
+							, ROW_NUMBER() OVER(ORDER BY  VER.RSC_ID DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'FILE_NM' ">
+							, ROW_NUMBER() OVER(ORDER BY  VER.FILE_NM DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'DPLY_VER' ">
+							, ROW_NUMBER() OVER(ORDER BY  VER.DPLY_VER DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'DPLY_NM' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.DPLY_NM DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'REG_DTTM' ">
+    						    , ROW_NUMBER() OVER(ORDER BY  VER.REG_DTTM DESC) PAGE_KEY
+						</if>	
+						<if test="ORDER_TARGET == 'MOD_DTTM' ">
+    						    , ROW_NUMBER() OVER(ORDER BY  VER.MOD_DTTM DESC) PAGE_KEY
+						</if>	
+						<if test="ORDER_TARGET == 'DPLY_TP' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.DPLY_TP DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'USE_YN' ">
+   						    , ROW_NUMBER() OVER(ORDER BY  VER.USE_YN DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'FILE_EXT' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.FILE_EXT DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'FILE_SIZE' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.FILE_SIZE DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'DPLY_IDX' ">
+							, ROW_NUMBER() OVER(ORDER BY VER.DPLY_IDX DESC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'PLAT_NM' ">
+							, ROW_NUMBER() OVER(ORDER BY PLAT_NM DESC) PAGE_KEY
+						</if>
+					</if>
+					<if test="ORDER_TYPE == 'ASC' ">
+						<if test="ORDER_TARGET == 'PLAT_IDX' ">
+						   , ROW_NUMBER() OVER(ORDER BY  VER.PLAT_IDX ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'BIN_VER' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.BIN_VER ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'RSC_ID' ">
+							, ROW_NUMBER() OVER(ORDER BY  VER.RSC_ID ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'FILE_NM' ">
+							, ROW_NUMBER() OVER(ORDER BY  VER.FILE_NM ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'DPLY_VER' ">
+							, ROW_NUMBER() OVER(ORDER BY  VER.DPLY_VER ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'DPLY_NM' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.DPLY_NM ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'REG_DTTM' ">
+    						    , ROW_NUMBER() OVER(ORDER BY  VER.REG_DTTM ASC) PAGE_KEY
+						</if>	
+						<if test="ORDER_TARGET == 'MOD_DTTM' ">
+    						    , ROW_NUMBER() OVER(ORDER BY  VER.MOD_DTTM ASC) PAGE_KEY
+						</if>	
+						<if test="ORDER_TARGET == 'DPLY_TP' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.DPLY_TP ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'USE_YN' ">
+   						    , ROW_NUMBER() OVER(ORDER BY  VER.USE_YN ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'FILE_EXT' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.FILE_EXT ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'FILE_SIZE' ">
+						    , ROW_NUMBER() OVER(ORDER BY  VER.FILE_SIZE ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'DPLY_IDX' ">
+							, ROW_NUMBER() OVER(ORDER BY VER.DPLY_IDX ASC) PAGE_KEY
+						</if>
+						<if test="ORDER_TARGET == 'PLAT_NM' ">
+							, ROW_NUMBER() OVER(ORDER BY PLAT_NM ASC) PAGE_KEY
+						</if>
+					</if>
+				</if>
+		FROM 
+		    TB_STO_APP_VER VER
+		    INNER JOIN TB_SVC SVC
+		    	ON VER.SVC_ID = SVC.SVC_ID 
+		    INNER JOIN TB_STO_PLAT PL
+		    	ON VER.PLAT_IDX = PL.PLAT_IDX
+		WHERE 
+		    VER.SVC_ID = #{SVC_ID}
+			<if test="PLAT_IDX != null and PLAT_IDX != ''">
+				AND VER.PLAT_IDX = #{PLAT_IDX}
+			</if>
+
+
+		<include refid="bottom"/>
+	</select>
+	
+	<select id="selectMobileAppServiceOne" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto" resultType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+	    SELECT 
+		     VER.APP_VER_ID
+		    , SVC.SVC_NM
+		    , PL.PLAT_IDX
+		    , PL.PLAT_NM
+		    , VER.BIN_VER
+			, VER.REG_ID
+			, VER.MOD_ID
+			, CONVERT(CHAR(10), VER.REG_DTTM, 102) AS REG_DTTM 
+			, CONVERT(CHAR(10), VER.MOD_DTTM , 102) AS MOD_DTTM 
+		FROM 
+		    TB_STO_APP_VER VER 
+		    INNER JOIN TB_SVC SVC 
+		    	ON VER.SVC_ID = SVC.SVC_ID
+		    INNER JOIN TB_STO_PLAT PL 
+		    	ON VER.PLAT_IDX = PL.PLAT_IDX
+		WHERE APP_VER_ID = #{APP_VER_ID}
+	</select>
+	
+	<select id="SelectPlatList" parameterType="kr.msp.admin.mobile.appVersion.dto.PlatListDto" 
+		resultType="kr.msp.admin.mobile.appVersion.dto.PlatListDto">
+	    <!--  SELECT * FROM TB_STO_PLAT  -->
+	    SELECT PLAT_IDX
+			,  PLAT_NM
+  	
+		FROM  TB_STO_PLAT A
+			, TB_SYS_CD_INFO B
+		WHERE A.PLAT_CD  = B.CD_ID
+  			AND B.CD_GRP_ID = 'ST002'
+  			AND B.USE_YN ='Y'
+	</select>
+	
+	<delete id="deleteMobileAppVersion" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+	    DELETE FROM TB_STO_APP_VER 
+	    WHERE APP_VER_ID = #{APP_VER_ID}
+	</delete>
+	
+	<update id="updateMobileAppVersion" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+	    UPDATE TB_STO_APP_VER SET
+  			BIN_VER = #{BIN_VER}
+  			, MOD_ID = #{MOD_ID}
+  			, MOD_DTTM = GETDATE()
+  		WHERE 
+  			APP_VER_ID = #{APP_VER_ID}
+	</update>
+	
+	<insert id="insertMobileAppVersion" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+	    INSERT INTO TB_STO_APP_VER 
+	    (
+	    	  APP_VER_ID
+	    	, SVC_ID
+  			, BIN_VER
+  			, PLAT_IDX 
+  			, REG_DTTM
+  			, REG_ID 
+  		) 
+		SELECT
+		    (SELECT ISNULL(MAX(CAST(APP_VER_ID AS INT)),0) + 1 FROM TB_STO_APP_VER)
+	    	, #{SVC_ID}
+  			, #{BIN_VER}
+  			, #{PLAT_IDX}
+  			, GETDATE()
+  			, #{REG_ID}
+	</insert>
+	
+	<select id="selectMobileAppVersionMax" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto" resultType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+	   SELECT 
+            VER.PLAT_IDX
+            , ISNULL( VER.BIN_VER, '미등록') BIN_VER
+            , ISNULL( VER.BIN_VER_STR, '미등록') BIN_VER_STR
+            , PL.PLAT_NM
+        FROM 
+            (
+		    	SELECT 
+		        	PLAT_IDX
+		            ,( SUBSTRING( MAX(BIN_VER), 1, 2) + '.' + SUBSTRING( MAX(BIN_VER), 4, 2) + '.' + SUBSTRING( MAX(BIN_VER), 7, 2) ) AS BIN_VER
+		            , (
+						  CAST(CONVERT(NUMERIC, SUBSTRING( MAX(BIN_VER), 1, 2)) AS VARCHAR) + '.'
+						+ CAST(CONVERT(NUMERIC, SUBSTRING( MAX(BIN_VER), 4, 2)) AS VARCHAR) + '.'
+						+ CAST(CONVERT(NUMERIC, SUBSTRING( MAX(BIN_VER), 7, 2)) AS VARCHAR)
+					  ) AS BIN_VER_STR 
+		        FROM 
+		          	TB_STO_APP_VER
+		     	WHERE SVC_ID = #{SVC_ID} 
+		        GROUP BY PLAT_IDX
+          	  ) VER
+             LEFT JOIN TB_STO_PLAT PL
+         		ON VER.PLAT_IDX = PL. PLAT_IDX
+	</select>
+	
+</mapper>

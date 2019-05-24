@@ -1,0 +1,109 @@
+<script type="text/javascript">
+	$(document).ready(function(){
+	});
+
+	function fn_MainNoticePop(NO_NOTICE){
+		var data = "NO_NOTICE=" + NO_NOTICE;
+		var url = CONTEXT_PATH + "/admin/main";
+		var type = "POST";
+		var target = $("#windowPop");
+		var whideh = 550;
+		var title = '#springMessage("menu.system.noticeDetail")';//"공지 상세";
+		fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+
+</script>
+
+
+<div class="contents-area">
+	<div class="nav">
+		<span>#springMessage("menu.system")</span>
+		<span>#springMessage("menu.system.notice")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.notice")</h2>
+
+	<div class="scroll-area">
+
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<!-- 버튼 영역 -->
+				</td>
+				<td class="txtRight">
+					<!-- 검색 건수 변경 영역 -->
+				</td>
+			</tr>
+		</table>
+
+		<table class="tbl-nb">
+			<caption></caption>
+			<colgroup>
+				<col>
+				<col style="width:120px">
+				<col style="width:140px">
+			</colgroup>
+			<thead>
+				<tr>
+					<th scope="col">#springMessage("common.header.title")</th>
+					<th scope="col">#springMessage("common.header.author")</th>
+					<th scope="col">#springMessage("common.header.registDate")</th>
+				</tr>
+			</thead>
+
+			<tbody>
+			<!--
+				<tr>
+					<td>공지사항 제목</td>
+					<td>관리자</td>
+					<td>2017.01.01</td>
+				</tr>
+			-->
+				#set($j_tot = $list.size())
+				#foreach( $Entbox_notice in $list )
+					<tr onclick="fn_MainNoticePop('$!Entbox_notice.NO_NOTICE')" style="cursor:pointer;">
+						<td style="text-align:left;">
+							$!Entbox_notice.NM_TITLE
+						</td>
+						<td>
+							$!Entbox_notice.ID_INSERT
+						</td>
+						<td>
+							$!Entbox_notice.DT_INSERT
+						</td>
+					</tr>
+				#end
+                
+                #if(!$j_tot || $j_tot==0)
+                    <tr>
+                        <td colspan="3" class="ta_c">#springMessage("common.alert.nodata")</td>
+                    </tr>
+                #end
+							
+			</tbody>
+		</table>
+
+		<!--
+		<div class="pager">
+			<a href="javascript:void(0)" class="_prev"></a>
+			<a href="javascript:void(0)" class="prev"></a>
+			<div class="num">
+				<a href="javascript:void(0)" class="current">1</a>
+				<a href="javascript:void(0)">2</a>
+				<a href="javascript:void(0)">3</a>
+				<a href="javascript:void(0)">4</a>
+				<a href="javascript:void(0)">5</a>
+				<a href="javascript:void(0)">6</a>
+				<a href="javascript:void(0)">7</a>
+				<a href="javascript:void(0)">8</a>
+				<a href="javascript:void(0)">9</a>
+				<a href="javascript:void(0)">10</a>
+			</div>
+				<a href="javascript:void(0)" class="next"></a>
+				<a href="javascript:void(0)" class="_next"></a>
+		</div>
+		-->
+
+	</div> <!-- scroll area end -->
+	
+</div> <!-- contents-area end -->

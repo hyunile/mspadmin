@@ -1,0 +1,251 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function fn_se_select(){
+	fn_RscConfig(1);
+}
+
+function fn_RscConfigList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var url = CONTEXT_PATH + "/admin/mobile/resourceConfig";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM + "&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+	var target = $("#ResConfigTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+$(document).on("click","#RscConfigWrite",function(){
+	var url = CONTEXT_PATH + "/admin/mobile/resourceConfig/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 550;
+	var title = '#springMessage("menu.mobile.config.insert")';//"파일형식 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+$(document).on("click","#RscConfigModify",function(){
+	var FILE_EXT = $(this).parent().parent().find(".FILE_EXT").val();
+//	var url = CONTEXT_PATH + "/admin/mobile/resourceConfig/edit";
+//	var type = "GET";
+//	var data = "FILE_EXT=" + FILE_EXT;
+//	var target = $("#windowPop");
+//	var whideh = 550;
+//	var title = "확장자 수정";
+//	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){  //"삭제 하시겠습니까?"
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/mobile/resourceConfig/delete";
+	var data = "FILE_EXT=" + FILE_EXT;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_RscConfigList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(xhr, ajaxOptions, thrownError){
+            alert(thrownError);
+        }
+	});
+
+});
+
+
+function fn_RscExeWrite(){
+	
+	if( $("#FILE_EXT").val() == "" ){
+		alert('#springMessage("common.alert.extension")');  //"확장자를 입력해 주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/mobile/resourceConfig/regist";
+	var data = $("form[name=frmSenderInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_RscConfigList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(xhr, ajaxOptions, thrownError){
+            alert(thrownError+"[XSS "+'#springMessage("common.button.okay")'+"]"); //확인
+        }
+	});
+}
+
+function fn_RscExeModify(){
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/mobile/resourceConfig/edit";
+	var data = $("form[name=frmSenderInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_RscConfigList( $("#RSCCONFIG_NUM").val() );
+				fn_closePopup();
+			}
+		},
+        error:function(xhr, ajaxOptions, thrownError){
+            alert(thrownError+"[XSS "+'#springMessage("common.button.okay")'+"]");  //확인
+        }
+	});
+}
+
+function fn_RscExeDelete(){
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/mobile/resourceConfig/delete";
+	var data = $("form[name=frmSenderInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_RscConfigList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(xhr, ajaxOptions, thrownError){
+            alert(thrownError+"[XSS "+'#springMessage("common.button.okay")'+"]"); //확인
+        }
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_RscConfigList(1);
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.mobile")</span>
+		<span>#springMessage("menu.mobile.config")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.mobile.config")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" id="RscConfigWrite" class="btn2">#springMessage("menu.mobile.config.extensionIn")</a>	 <!-- 확장자 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		
+		<div class="tbCon" id="ResConfigTableDiv">
+			<table class="tbl-nb" summary="발송자 코드,발송자 이름,상세">
+				<colgroup><!--  2cell  -->
+					<col width="14%"/><col width="auto"/><col width="100px"/><col width="100px"/><col width="70px"/>
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("menu.mobile.upload.fileForm")</th> <!-- 파일 형식 -->
+						<th scope="col">#springMessage("common.header.desc")</th> <!-- 설명 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.writer")</th> <!-- 등록자 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+						<th scope="col"> </th>
+					</tr>
+				</thead>
+				<tbody>
+				#foreach( $resourceExe in $resourceExeList )
+					#set($j_tot = $!resourceExe.TOT_CNT)
+					<tr>
+						<td style="text-align:center;">
+							$esc.xml($!resourceExe.FILE_EXT)
+							<input type="hidden" class="FILE_EXT" value="$!resourceExe.FILE_EXT" />
+						</td>
+						#if(!$resourceExe.EXE_DTL)
+   							<td style="text-align:left;">
+   								$!resourceExe.EXE_DTL
+   							</td>
+						#else
+							<td style="text-align:left;">
+								$esc.xml($!resourceExe.EXE_DTL)
+							</td>
+						#end
+						<td>
+							$!resourceExe.REG_ID
+						</td>
+						<td>
+							$!resourceExe.REG_DTTM
+						</td>
+						<td>
+							<a href="javascript:void(0)" class="btn2" id="RscConfigModify">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+						</td>
+					</tr>
+				#end
+				#if(!$j_tot)
+					<tr>
+						<td colspan="5" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+					</tr>
+				#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="RSCCONFIG_NUM" value="$!R_PAGE_NUM" />
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot"/>
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_RscConfigList" />
+			</div>
+		</div>
+		
+	</form>
+	#### E : 리스트  폼 부분  ####
+</div>

@@ -1,0 +1,148 @@
+<style>
+.jqte_editor, .jqte_source {
+	height: 400px; /*에디터 높이 재정의*/
+	padding:10px;
+	background:#FFF;
+	min-height:100px;
+	max-height:900px;
+	overflow:auto;
+	outline:none;
+	word-wrap:break-word; -ms-word-wrap:break-word;
+	resize:vertical
+}
+.jqte_toolbar {
+	display:none;
+}
+.file-list a{
+	font-size:12px;display:block;padding-top:5px;
+}
+</style>
+<script type="text/javascript">
+$(document).ready(function() {
+	jQuery("textarea[name=MSG_CONT]").jqte();
+	$(".jqte_editor").prop('contenteditable','false');
+});
+	
+</script>
+<div>
+	<form name="frmWrite" method="post">
+	#### S : 리스트  폼 부분  ####
+		<div class="scroll-area">
+			<table class="full-width">
+				<caption></caption>
+				<colgroup>
+					<col>
+					<col style="width:10px">
+					<col>
+				</colgroup>
+				<tr>
+					<td class="tbl-wrap valignTop">
+						<table class="tbl full-width">
+							<colgroup>
+								<col style="width:88px">
+								<col style="width:103px">
+								<col style="width:88px">
+								<col style="width:103px">
+							</colgroup>
+							<tr>
+								<th>#springMessage("common.text.registDate")</th> <!-- 등록일시 -->
+								<td colspan="3">$!itemInfo.REG_DT</td>
+							</tr>
+							<tr>
+								<th>#springMessage("common.header.author")</th> <!-- 작성자 -->
+								<td colspan="3">
+									$!itemInfo.SENDER_NM
+								</td>
+							</tr>
+							<tr>
+								<th><label for="groupName">#springMessage("menu.push.receiverPerson")</label></th> <!-- 수신자 -->
+								<td colspan="3">
+									$!itemInfo.RECV_NM
+									#if($!itemInfo.RECV_TYPE == "0")
+									(#springMessage("menu.securePush.msgSend.receiveType.individual")) <!-- 개인 -->
+									#elseif($!itemInfo.RECV_TYPE == "1")
+									(#springMessage("menu.securePush.msgSend.receiveType.dept")) <!-- 부서 -->
+									#else
+									(#springMessage("menu.securePush.msgSend.receiveType.group")) <!-- 그룹 -->
+									#end
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.msgType.volatile")</th> <!-- 휘발성 -->
+								<td>$!itemInfo.VOLATILE_YN</td>
+								<th>#springMessage("menu.securePush.msgSend.msgType.urgent")</th> <!-- 긴급 -->
+								<td>$!itemInfo.URGENT_YN</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.securePush.msgSend.expireDate")</th> <!-- 삭제일시 -->
+								<td colspan="3">
+									$!itemInfo.EXPIRE_DT
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.push.sendManage.reserveTime")</th> <!-- 예약시간 -->
+								<td colspan="3">
+									$!itemInfo.RESERV_DT
+								</td>
+							</tr>
+							<tr>
+								<th>#springMessage("menu.push.sendManage.sendStatus")</th> <!-- 발송상태 -->
+								<td>
+									#if($!itemInfo.RESERV_STATUS == "1")
+									#springMessage("menu.stats.push.send") <!-- 발송 -->
+									#else
+									#springMessage("menu.securePush.msgSend.status.notSend") <!-- 미발송 -->
+									#end
+								</td>
+								<th>#springMessage("menu.securePush.msgSend.msgType.fwdAllow")</th> <!-- 전달가능 -->
+								<td>$!itemInfo.FWD_ALLOW_YN</td>
+							</tr>
+							<tr>
+								<th>#springMessage("common.text.upFile")</th> <!-- 첨부파일 -->
+								<td colspan="3">
+									<div class="file-list" style="height: 175px;">
+									#foreach( $fileInfo in $itemInfo.fileList )
+									<a href="$!{CONTEXT_PATH}/admin/securepush/reserveMsg/downMsgFile?FILE_ID=$fileInfo.FILE_ID">$!fileInfo.FILE_NM</a>
+									#end
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+					<td></td>
+					<td class="tbl-wrap valignTop">
+						<table class="tbl-editor full-width">
+							<caption>#springMessage("menu.securePush.msgSend.enterTitleCont")</caption> <!-- 제목/내용 입력 -->
+							<colgroup>
+								<col style="width:380px">
+							</colgroup>
+							<tr>
+								<td>
+									<input type="text" name="TITLE" id="TITLE" maxlength="20" class="title" placeholder="#springMessage('common.header.title')" value="$!itemInfo.TITLE" readonly/> <!-- 제목 -->
+								</td>
+							</tr>
+							<tr>
+								<td class="editor-body">
+									<div style="height:405px;">
+										<textarea id="MSG_CONT" name="MSG_CONT" cols="105" rows="45" placeholder="#springMessage('common.alert.inputContents')">$!itemInfo.CONT</textarea> <!-- 내용을 입력해 주세요. -->
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+
+			<div class="btn-wrap">
+				#if($!itemInfo.RESERV_STATUS == "1")
+				<a href="javascript:fn_msgDelete('$!itemInfo.RESERV_SEQ','$!itemInfo.RESERV_STATUS');void(0)" class="btn1 type2" id="pageDeletePop">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+				#else
+				<a href="javascript:fn_msgDelete('$!itemInfo.RESERV_SEQ','$!itemInfo.RESERV_STATUS');void(0)" class="btn1 type2" id="pageDeletePop">#springMessage("common.button.cancelReserv")</a> <!-- 예약취소 -->
+				#end
+				<a href="javascript:fn_closePopup();void(0);" class="btn1 fr">#springMessage("common.button.close")</a> <!-- 닫기 -->
+			</div>
+
+		</div>
+
+	</form>
+</div>

@@ -1,0 +1,63 @@
+<table class="tbList1">
+		       		<colgroup>
+						<col width="auto"/><col width="25%"/><col width="20%"/><col width="12%"/>
+					</colgroup>
+		       		<thead>
+			       		<tr>
+			       			<th scope="col">
+			       				#springMessage("common.text.name") <!-- 이름 -->
+			       			</th>
+							<th scope="col">
+								#springMessage("common.text.phoneNum") <!-- 전화번호 -->
+							</th>
+							<th scope="col">
+								#springMessage("common.text.registDate") <!-- 등록일시 -->
+							</th>
+							<th scope="col">
+								
+							</th>
+			           	</tr>
+			        </thead>
+
+			        <tbody>
+			           	#foreach( $monitorUser in $monitorUserList )
+			           		#set($j_tot = $!monitorUser.TOT_CNT)
+				           	<tr>
+				           		<td style="text-align:left;">
+				           			$esc.xml($!monitorUser.NAME)
+				           			<input type="hidden" class="SUPERVISORSEQ" value="$!monitorUser.SUPERVISORSEQ">
+			       				</td>
+			       				<td>
+				           			$esc.xml($!monitorUser.PHONENO)
+				           		</td>
+				           		<td>
+				           			$esc.xml($!monitorUser.REGDATE)
+				           		</td>
+			       				<td>
+				           			<button type="button" id="monitorUserModify" class="btn_style2">#springMessage("common.button.modify")</button> <!-- 수정 -->
+			       				</td>
+			           		</tr>
+			       		#end
+			       		#if(!$j_tot)
+							<tr>
+								<td colspan="4">
+									#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+								</td>
+							</tr>
+						#end
+
+					</tbody>
+		    	</table>
+		   		<input type="hidden" id="MONITER_NUM" value="$!R_PAGE_NUM">
+		      	<div class="j_page_div">
+		         	##현재 페이지
+		         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+		            ##총 개수
+		            <input type="hidden" name="J_tot" value="$!j_tot">
+		            ##한페이지의 로우수
+		            <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+		            ##한페이지수
+		            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+		            ##이밴트
+		            <input type="hidden" name="j_event" value="fn_monitorUserList">
+		    	</div>

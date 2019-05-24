@@ -1,0 +1,81 @@
+<!--   스토어 > 사용자그룹관리 > 사용자 추가  -->
+<script src="$!{RESOURCES_PATH}/async/jquery/jquery.cookie.js" type="text/javascript"></script>
+<link href="$!{RESOURCES_PATH}/async/src/skin/ui.dynatree.css" rel="stylesheet" type="text/css" id="skinSheet">
+<script src="$!{RESOURCES_PATH}/async/src/jquery.dynatree.js" type="text/javascript"></script>
+
+<form name="frmTempResInfo" method="POST">
+	
+		
+	<div class="example" style="max-height:500px; overflow-y:auto;">
+       	<div id="groupTree"></div>
+    </div>
+	
+	
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:void(0);" onclick="fn_addWriterUser();" class="btn1 type2"><strong>#springMessage("common.button.add")</strong></a><!-- 추가 -->
+		<a href="javascript:void(0);" onclick="fn_closePopup()" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+		
+	</div>
+	<input type="hidden" name="selectKeys" id="selectKeys"/>
+</form>
+
+<script type="text/javascript">
+
+	function userTree(){
+	
+		$("#groupTree").dynatree({
+			checkbox: true,
+			selectMode: 3,
+			debugLevel: 0,
+			initAjax: {
+				url: "../store/userAuth/divisionTree",
+				data: {"parentCd": "0"}
+			},
+			onLazyRead: function(node){
+				node.appendAjax({
+					url: "../store/userAppAuth/divisionTree",
+					data: {"parentCd": node.data.key, "subCnt":node.data.SUB_CNT,"memberCnt": node.data.MEMBER_CNT,"mode": "funnyMode"} // Optional url arguments
+				});
+			},
+			onSelect: function(select, node) {
+				// Get a list of all selected nodes, and convert to a key array:
+				//var selKeys = $.map(node.tree.getSelectedNodes(), function(node){
+				//	return node.data.key;
+				//});
+				var selKeys 	= node.tree.getSelectedNodes();
+				var selKeyDatas = jQuery.map(selKeys, function(node){
+					return node.data.EMP_NO;
+				});
+				var selKeyNames = jQuery.map(selKeys, function(node){
+					return node.data.keyName;
+				});
+				var selRoleNames = jQuery.map(selKeys, function(node){
+					return node.data.role;
+				});
+
+				userIdObj  = selKeyDatas;//.join(", ");
+				userNameObj = selKeyNames;//.join(", ")
+				userRoleObj = selRoleNames;//.join(", ");
+				
+			},
+			
+			onDblClick: function(node, event) {
+				node.toggleSelect();
+			},
+			onKeydown: function(node, event) {
+				if( event.which == 32 ) {
+					node.toggleSelect();
+					return false;
+				}
+			},
+			cookieId: "dynatree-Cb3",
+			idPrefix: "dynatree-Cb3-"
+		});		
+	}
+	
+$(document).ready(function () {
+
+	userTree();
+	
+});
+</script>

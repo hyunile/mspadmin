@@ -1,0 +1,88 @@
+<table style="width:100%" >
+	<colgroup>
+		<col style="width:33%" />	<!--  title column의 size 지정  -->
+		<col style="width:66%;" />	<!--  scroll pane의 size 지정  -->
+	</colgroup>
+	<tr>
+		<td >
+			<div class="scrollPane">
+				<table class="tbl-nb">
+					<colgroup>
+						<col style="width:20%;"/>
+						<col style="width:40%;"/>
+						<col style="width:40%;"/>
+                    </colgroup>
+					<thead>
+						<tr>
+							<th>#springMessage("common.header.number")</th> <!-- 번호 -->
+							<th>#springMessage("common.text.userName")</th> <!-- 사용자명 -->
+							<th>#springMessage("common.text.user")ID</th> <!-- 사용자 -->
+						</tr>
+					</thead>
+		    	#foreach( $row in $statisticsList )
+		       		#set($j_tot = $row.TOT_CNT)
+		            <tr class="joinDiv">
+		            	<td>$!row.RNUM</td>
+		            	<td>$!row.USER_NM</td>
+		            	<td>$!row.USER_ID</td>
+		         	</tr>
+				#end
+				#if(!$j_tot)
+			   		<tr >
+			   			<td align="center" colspan="3">
+							#springMessage("common.alert.nodata")   <!-- 데이터가 없습니다. -->
+			           	</td>
+			       	</tr>
+			   	#end
+				</table>
+			</div>
+		</td>
+		<td>
+			<div  class="scrollPane">
+				<table class="tbl-nb" id="tbList1">
+					<thead>
+						<tr class="joinDiv">
+							#if(!$daylist)
+								<th colspan="31"> </th>
+							#end	
+							
+							#foreach($day in $daylist)
+							<th style="font-weight: bold; width:60px;">$day#springMessage("common.text.day")</th> <!-- 일 -->
+    						#end
+						</tr>
+					</thead>
+					
+					#foreach( $row in $statisticsList )
+					<tr class="joinDiv">
+						#foreach($day in $daylist)
+                        #set($ColunmName="D${foreach.count}")
+						<td>$!row.get( $ColunmName)</td>
+						#end
+					</tr>
+					#end
+					
+					#if(!$j_tot)
+			   		<tr class="joinDiv">
+			   			<td align="center" colspan="31">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+			       	</tr>
+					#end
+				</table>
+			</div>
+		</td>
+	</tr>
+</table>
+				
+
+<input type="hidden" id="CODE_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot" />
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_se_select" />
+</div>

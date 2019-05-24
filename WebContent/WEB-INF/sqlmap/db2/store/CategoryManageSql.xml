@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.category.mapper.CategoryManageDao">
+	
+
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+
+	
+	<select id="selectCategoryTreeList" parameterType="kr.msp.admin.store.category.dto.CategorySearchDto" resultType="kr.msp.admin.store.category.dto.CategoryDto" >
+	    /*  CategoryManageSql   selectCategoryTreeList*/
+	    WITH V_SUB_CATG_CD_LST (CATG_CD, SORT_NO, SORT_KEY, LV, CHILD_CNT) AS
+		(
+		    SELECT  A.CATG_CD, A.SORT_NO
+		    ,       CAST(100+A.SORT_NO AS VARCHAR(100)) || A.CATG_CD SORT_KEY
+		    ,       1 LV
+		    ,       (SELECT COUNT(1) FROM TB_STO_CATG S WHERE S.UP_CATG_CD = CAST(A.CATG_CD AS VARCHAR(100))) CHILD_CNT
+		    FROM    TB_STO_CATG A
+    		WHERE
+    		<if test="LAST_CHK != null and LAST_CHK == 1">    
+			A.CATG_CD = #{CATG_CD}
+			</if>
+			<if test="LAST_CHK == null or LAST_CHK == 0">    
+			A.UP_CATG_CD = #{CATG_CD}
+			</if>
+			UNION  ALL
+		    SELECT  A.CATG_CD, A.SORT_NO
+		    ,       B.SORT_KEY || ' ' || CAST(100+A.SORT_NO AS VARCHAR(100)) || A.CATG_CD SORT_KEY
+		    ,       B.LV + 1 LV
+		    ,       (SELECT COUNT(1) FROM TB_STO_CATG S WHERE S.UP_CATG_CD = CAST(A.CATG_CD AS VARCHAR(100))) CHILD_CNT
+		    FROM    TB_STO_CATG A,V_SUB_CATG_CD_LST B
+    		WHERE   A.UP_CATG_CD = CAST(B.CATG_CD AS VARCHAR(100))
+    	)
+	      SELECT  A.CATG_CD
+	      ,       A.CATG_NM
+	      ,       A.UP_CATG_CD
+	      ,       A.CATG_DESC
+	      ,       A.USE_YN
+	      ,       A.SORT_NO
+	      ,       A.REG_ID
+	      ,       TO_CHAR (A.REG_DT, 'YYYY.MM.DD') AS REG_DT
+	      ,       ROW_NUMBER() OVER() ROW_NUM
+	      ,       C.LV AS MENU_LEVEL
+	      ,       (CASE WHEN C.CHILD_CNT = 0 THEN 1 ELSE 0 END ) LAST_CHK
+	      FROM    TB_STO_CATG A
+	      INNER JOIN TB_STO_SVC B
+	      ON A.SVC_ID = B.SVC_ID
+	      AND B.USE_YN = 'Y'
+	      AND A.USE_YN = 'Y'
+	      INNER JOIN V_SUB_CATG_CD_LST C
+	      ON  A.CATG_CD = C.CATG_CD
+	      ORDER BY C.SORT_KEY, A.CATG_NM
+	  </select><!-- 완료 -->
+	  
+	  
+
+      <select id="selectCategoryDetailList" parameterType="kr.msp.admin.store.category.dto.CategorySearchDto" resultType="kr.msp.admin.store.category.dto.CategoryDto" >
+        /*  CategoryManageSql   selectCategoryDetailList*/
+        WITH V_SUB_CATG_CD_LST (CATG_CD, SORT_NO, SORT_KEY, LV, CHILD_CNT) AS
+		(
+		    SELECT  A.CATG_CD, A.SORT_NO
+		    ,       CAST(100+A.SORT_NO AS VARCHAR(100)) || A.CATG_CD SORT_KEY
+		    ,       1 LV
+		    ,       (SELECT COUNT(1) FROM TB_STO_CATG S WHERE S.UP_CATG_CD = CAST(A.CATG_CD AS VARCHAR(100))) CHILD_CNT
+		    FROM    TB_STO_CATG A
+    		WHERE
+    		<if test="LAST_CHK != null and LAST_CHK == 1">    
+			A.CATG_CD = #{CATG_CD}
+			</if>
+			<if test="LAST_CHK == null or LAST_CHK == 0">    
+			A.UP_CATG_CD = #{CATG_CD}
+			</if>
+			UNION  ALL
+		    SELECT  A.CATG_CD, A.SORT_NO
+		    ,       B.SORT_KEY || ' ' || CAST(100+A.SORT_NO AS VARCHAR(100)) || A.CATG_CD SORT_KEY
+		    ,       B.LV + 1 LV
+		    ,       (SELECT COUNT(1) FROM TB_STO_CATG S WHERE S.UP_CATG_CD = CAST(A.CATG_CD AS VARCHAR(100))) CHILD_CNT
+		    FROM    TB_STO_CATG A,V_SUB_CATG_CD_LST B
+    		WHERE   A.UP_CATG_CD = CAST(B.CATG_CD AS VARCHAR(100))
+    	)
+	      SELECT  A.CATG_CD
+	      ,       A.CATG_NM
+	      ,       A.UP_CATG_CD
+	      ,       A.CATG_DESC
+	      ,       A.USE_YN
+	      ,       A.SORT_NO
+	      ,       A.REG_ID
+	      ,       TO_CHAR (A.REG_DT, 'YYYY.MM.DD') AS REG_DT
+	      ,       ROW_NUMBER() OVER() ROW_NUM
+	      ,       C.LV AS MENU_LEVEL
+	      ,       (CASE WHEN C.CHILD_CNT = 0 THEN 1 ELSE 0 END ) LAST_CHK
+	      FROM    TB_STO_CATG A
+	              INNER JOIN TB_STO_SVC B
+	                    ON A.SVC_ID = B.SVC_ID
+	                        AND B.USE_YN = 'Y'
+	              INNER JOIN V_SUB_CATG_CD_LST C
+	                    ON  A.CATG_CD = C.CATG_CD
+	      ORDER BY C.SORT_KEY, A.CATG_NM            
+      </select><!-- 완료 -->
+      
+      <select id="selectCategoryInfo"  parameterType="kr.msp.admin.store.category.dto.CategorySearchDto"  resultType="kr.msp.admin.store.category.dto.CategoryDto">
+           /*  CategoryManageSql   selectCategoryInfo*/
+          SELECT A.CATG_CD,
+                   A.CATG_NM,
+                   A.CATG_DESC,
+                   A.UP_CATG_CD,
+                   NVL( ( SELECT CATG_NM FROM TB_STO_CATG WHERE CAST(CATG_CD AS VARCHAR(100)) = A.UP_CATG_CD FETCH FIRST 1 ROWS ONLY), 'STORE')  UP_CATG_NM,
+                   A.USE_YN,
+                   A.SORT_NO,
+                   A.SVC_ID,
+                   A.REG_ID,
+                  TO_CHAR ( A.REG_DT, 'YYYY.MM.DD') AS REG_DT
+        FROM TB_STO_CATG A, TB_STO_SVC B
+        WHERE  A.SVC_ID = B.SVC_ID
+        AND  A.CATG_CD = #{CATG_CD}
+        AND  B.USE_YN = 'Y'
+    </select>
+    
+    <select id="selectSvcId"   resultType="String">
+          /* SELECT SVC_ID  */
+         SELECT MAX(SVC_ID) SVC_ID FROM TB_STO_SVC  WHERE USE_YN = 'Y'
+    </select>  
+     
+     <select id="selectCategoryCount" parameterType="kr.msp.admin.store.category.dto.CategoryDto" resultType="int">
+        /*  CategoryManageSql   SaveCategory*/
+        SELECT COUNT(1)
+        FROM TB_STO_CATG
+        <if test="CATG_CD != null and CATG_CD != ''"  >
+        WHERE CATG_CD = #{CATG_CD}
+        </if>
+     </select>
+    <update id="insertCategory" parameterType="kr.msp.admin.store.category.dto.CategoryDto">
+        /*  CategoryManageSql   SaveCategory*/
+        INSERT INTO TB_STO_CATG
+        (
+               CATG_CD, CATG_NM, SORT_NO, USE_YN, UP_CATG_CD, CATG_DESC, SVC_ID, REG_ID, REG_DT
+        ) VALUES (
+               SEQ_TB_STO_CATG.NEXTVAL
+             , #{CATG_NM}
+             , #{SORT_NO}
+             , #{USE_YN}
+             , #{UP_CATG_CD}
+             , #{CATG_DESC}
+             , #{SVC_ID}
+             , #{REG_ID}
+             , (CURRENT TIMESTAMP)
+        )
+     </update>
+    <update id="updateCategory" parameterType="kr.msp.admin.store.category.dto.CategoryDto">
+        /*  CategoryManageSql   SaveCategory*/
+        UPDATE TB_STO_CATG
+        SET
+               CATG_NM = #{CATG_NM}
+             , SORT_NO = #{SORT_NO}
+             , USE_YN   = #{USE_YN}
+             , CATG_DESC   = #{CATG_DESC}
+             , MOD_ID   = #{MOD_ID}
+             , MOD_DT  = (CURRENT TIMESTAMP)
+        WHERE CATG_CD = #{CATG_CD}
+     </update>
+     <update id="updateAllCategoryUseYn" parameterType="kr.msp.admin.store.category.dto.CategoryDto">
+        /*  CategoryManageSql   updateAllCategoryUseYn*/
+        UPDATE TB_STO_CATG
+        SET
+               USE_YN   = #{USE_YN}
+             , MOD_ID   = #{MOD_ID}
+             , MOD_DT  = (CURRENT TIMESTAMP)
+        WHERE UP_CATG_CD = #{CATG_CD}
+     </update>
+   
+   
+     <select id="getAppCountByCatgCd" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_STO_APP
+        <!-- WHERE CAST(CATG_CD AS VARCHAR)= #{value} -->
+        WHERE CATG_CD = #{value}
+     </select>
+     
+     <delete id="deleteCategory" parameterType="kr.msp.admin.store.category.dto.CategoryDto">
+        /*  CategoryManageSql   deleteCategory*/
+        DELETE FROM TB_STO_CATG
+        WHERE 
+        	CATG_CD = #{CATG_CD}
+     </delete>
+   
+</mapper>

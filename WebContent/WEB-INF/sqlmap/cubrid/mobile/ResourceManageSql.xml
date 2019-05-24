@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.mobile.mapper.ResourceManageDao">
+	
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+	<sql id="head">
+		SELECT *
+        FROM ( SELECT 
+                    ROWNUM RNUM
+                   ,COUNT(*) OVER() TOT_CNT
+                   ,A.*
+               FROM (SELECT * FROM (
+	</sql>
+	
+	<sql id="bottom">
+		)
+                    ) A
+             )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+	<!-- 페이징 처리 쿼리 부분 끝 -->
+	
+	<!-- 해당 service의 전체 리소스 -->
+	<select id="selectResourceListByService"  parameterType="String"  resultType="kr.msp.admin.mobile.dto.ResourceFileDto">
+		SELECT * FROM TB_MOB_RSC_FILE
+		where SVC_ID = #{SVC_ID}
+		and REG_DTTM != MOD_DTTM
+		order by rsc_id DESC
+	</select>
+	
+	<!-- 리소스에 해당파일이 존재하는지 체크 -->
+	<select id="selectResourceListByDto"  parameterType="kr.msp.admin.mobile.dto.ResourceFileDto"  resultType="kr.msp.admin.mobile.dto.ResourceFileDto">
+		SELECT * FROM TB_MOB_RSC_FILE
+		where SVC_ID = #{SVC_ID}
+		<if test="FILE_PATH != null and FILE_PATH != ''">
+			AND FILE_PATH = #{FILE_PATH}
+		</if>
+	</select>
+	
+	<!-- 리소스 목록조회 -->
+	<select id="selectResourceList"  parameterType="kr.msp.admin.mobile.dto.ResourceFileDto"  resultType="kr.msp.admin.mobile.dto.ResourceFileDto">
+		<include refid="head"/>
+		SELECT * FROM TB_MOB_RSC_FILE
+		where SVC_ID = #{SVC_ID}
+		<if test="ORDER_TYPE == 'DESC' ">
+			<if test="ORDER_TARGET == 'DEVICE_TYPE' ">
+			    ORDER BY  DEVICE_TYPE DESC
+			</if>
+			<if test="ORDER_TARGET == 'CURRENT_APP_VERSION' ">
+			    ORDER BY  CURRENT_APP_VERSION DESC
+			</if>
+			<if test="ORDER_TARGET == 'PLAT_IDX' ">
+			    ORDER BY  PLAT_IDX DESC
+			</if>
+			<if test="ORDER_TARGET == 'BIN_VER' ">
+			    ORDER BY BIN_VER DESC
+			</if>
+			<if test="ORDER_TARGET == 'RSC_ID' ">
+			    ORDER BY  RSC_ID DESC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_NM' ">
+			    ORDER BY  FILE_NM DESC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_VER' ">
+			    ORDER BY  DPLY_VER DESC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_IDX' ">
+			    ORDER BY  DPLY_IDX DESC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_NM' ">
+			    ORDER BY  DPLY_NM DESC
+			</if>
+			<if test="ORDER_TARGET == 'REG_DTTM' ">
+			    ORDER BY  REG_DTTM DESC
+			</if>	
+			<if test="ORDER_TARGET == 'MOD_DTTM' ">
+			    ORDER BY  MOD_DTTM DESC
+			</if>	
+			<if test="ORDER_TARGET == 'DPLY_TP' ">
+			    ORDER BY  DPLY_TP DESC
+			</if>
+			<if test="ORDER_TARGET == 'USE_YN' ">
+			    ORDER BY  USE_YN DESC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_EXT' ">
+			    ORDER BY  FILE_EXT DESC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_SIZE' ">
+			    ORDER BY  FILE_SIZE DESC
+			</if>
+		</if>
+		<if test="ORDER_TYPE == 'ASC' ">
+			<if test="ORDER_TARGET == 'DEVICE_TYPE' ">
+			    ORDER BY  DEVICE_TYPE ASC
+			</if>
+			<if test="ORDER_TARGET == 'CURRENT_APP_VERSION' ">
+			    ORDER BY  CURRENT_APP_VERSION DESC
+			</if>
+			<if test="ORDER_TARGET == 'PLAT_IDX' ">
+			    ORDER BY  PLAT_IDX ASC
+			</if>
+			<if test="ORDER_TARGET == 'BIN_VER' ">
+			    ORDER BY BIN_VER ASC
+			</if>
+			<if test="ORDER_TARGET == 'RSC_ID' ">
+			    ORDER BY  RSC_ID ASC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_NM' ">
+			    ORDER BY  FILE_NM ASC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_VER' ">
+			    ORDER BY  DPLY_VER ASC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_IDX' ">
+			    ORDER BY  DPLY_IDX ASC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_NM' ">
+			    ORDER BY  DPLY_NM ASC
+			</if>
+			<if test="ORDER_TARGET == 'REG_DTTM' ">
+			    ORDER BY  REG_DTTM ASC
+			</if>	
+			<if test="ORDER_TARGET == 'MOD_DTTM' ">
+			    ORDER BY  MOD_DTTM ASC
+			</if>	
+			<if test="ORDER_TARGET == 'DPLY_TP' ">
+			    ORDER BY  DPLY_TP ASC
+			</if>
+			<if test="ORDER_TARGET == 'USE_YN' ">
+			    ORDER BY  USE_YN ASC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_EXT' ">
+			    ORDER BY  FILE_EXT ASC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_SIZE' ">
+			    ORDER BY  FILE_SIZE ASC
+			</if>
+		</if>
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- 업로드한 신규 리소스목록 조회 -->
+	<select id="selectResourceListByStatus"  parameterType="kr.msp.admin.mobile.dto.ResourceFileDto"  resultType="kr.msp.admin.mobile.dto.ResourceFileDto">
+		<include refid="head"/>
+		SELECT * FROM TB_MOB_RSC_FILE
+		where SVC_ID = #{SVC_ID}
+		AND STS_CD = #{STS_CD}
+		<include refid="bottom"/>
+	</select>
+	
+	<select id="selectResourceListByList"  parameterType="List"  resultType="kr.msp.admin.mobile.dto.ResourceFileDto">
+		SELECT * FROM TB_MOB_RSC_FILE
+		where RSC_FILE_IDX in
+		<foreach item="DEPLOY_ADD_LIST" index="index" collection="list"
+		 	open="(" separator="," close=")">
+			#{DEPLOY_ADD_LIST}
+		</foreach>
+	</select>
+	
+	<!-- 모바일관리 - 서비스목록조회 TODO : common쪽으로 이동하기-->
+	<select id="selectMobServiceList" parameterType="String" resultType="kr.msp.admin.mobile.dto.MobServiceDto">
+	SELECT S1.SVC_ID, S1.SVC_NM, S1.APP_ID
+	FROM TB_SVC S1 ,TB_SVC_AUTH S2,TB_MOB_SVC S3
+	WHERE 
+		S1.SVC_ID = S2.SVC_ID
+		AND S1.SVC_ID = S3.SVC_ID
+		AND NVL(S3.USE_YN ,'N') = 'Y'
+		AND S2.AUTH_GRP_ID IN( SELECT AUTH_GRP_ID FROM TB_SYS_USER_AUTH_GRP
+                    									WHERE USER_ID = #{S_ID_USER}
+                    									)
+	
+	</select>
+	
+	<!-- 리소스 입력 -->
+	<insert id="insertResFile" parameterType="kr.msp.admin.mobile.dto.ResourceFileDto" >
+		INSERT INTO	TB_MOB_RSC_FILE
+		(
+			  RSC_ID
+			, FILE_PATH
+			, FILE_NM
+			, FILE_EXT
+			, FILE_SIZE
+			, REG_DTTM
+			, MOD_DTTM
+			, DEL_YN
+			, STS_CD
+			, SVC_ID
+		) VALUES (
+			(SELECT	IFNULL(MAX(RSC_ID), 0)+1 FROM TB_MOB_RSC_FILE)
+			,#{FILE_PATH}
+			,#{FILE_NM}
+			,#{FILE_EXT}
+			,#{FILE_SIZE}
+			,SYSDATE
+			,SYSDATE
+			,#{DEL_YN}
+			,#{STS_CD}
+			,#{SVC_ID}
+		)
+	</insert>
+	
+	<update id="updateResFile" parameterType="kr.msp.admin.mobile.dto.ResourceFileDto">
+		UPDATE TB_MOB_RSC_FILE
+		<set>
+			MOD_DTTM = SYSDATE ,
+			<if test="FILE_SIZE != null and FILE_SIZE != ''">
+				FILE_SIZE = #{FILE_SIZE},
+			</if>
+			<if test="STS_CD != null and STS_CD != ''">
+				STS_CD = #{STS_CD},
+			</if>
+			<if test="DEL_YN != null and DEL_YN != ''">
+				DEL_YN = #{DEL_YN}
+			</if>
+		</set>
+		WHERE RSC_FILE_IDX = #{RSC_FILE_IDX}
+	</update>
+	    
+    <select id="selectDeployNextVersion"  parameterType="String" resultType="String">
+    	SELECT NVL(MAX(DPLY_VER),0)+1 VERSION
+		FROM TB_MOB_DPLY
+		WHERE SVC_ID = #{SVC_ID}
+    </select>
+    
+    <select id="selectAppId"  parameterType="String" resultType="String">
+    	SELECT APP_ID FROM TB_SVC
+    	WHERE SVC_ID = #{SVC_ID}
+    </select>
+    
+    <!-- 배포 -->
+    <insert id="insertResDeploy" parameterType="kr.msp.admin.mobile.dto.ResDeployDto">
+		INSERT INTO TB_MOB_DPLY
+		(DPLY_NM, DPLY_VER, DPLY_DESC, DPLY_TP, USE_YN, SVC_ID, DPLY_FULL_YN, REF_VER, REG_DTTM,REG_ID)
+		VALUES(#{DPLY_NM}, #{DPLY_VER}, #{DPLY_DESC}, #{DPLY_TP}, #{USE_YN}, #{SVC_ID}, #{DPLY_FULL_YN}, #{REF_VER}, SYSDATE , #{REG_ID})
+	</insert>
+    <select id="getCurrDeploySeqno" resultType="String">
+		SELECT TB_MOB_DPLY_AI_DPLY_IDX.current_value FROM db_root
+	</select>
+	
+	<insert id="insertFileAttach" parameterType="kr.msp.admin.mobile.dto.FileAttachDto">
+		INSERT INTO TB_FILE_ATTACH
+		(FILE_ID, FILE_PATH, FILE_NAME, FILE_EXT, FILE_SIZE, FILE_TYPE, URL_CHILD_PATH, OBJ_CODE, OBJ_ID, REG_DATE, MD5)
+		VALUES(#{FILE_ID}, #{FILE_PATH}, #{FILE_NAME}, #{FILE_EXT}, #{FILE_SIZE}, #{FILE_TYPE}, #{URL_CHILD_PATH}, #{OBJ_CODE}, #{OBJ_ID}, SYSDATE, #{MD5})
+	</insert>
+	
+	<insert id="insertResDeployDetail" parameterType="kr.msp.admin.mobile.dto.ResDeployDetailDto">
+		INSERT INTO TB_MOB_DPLY_DTL
+			(DPLY_IDX, FILE_NM, FILE_PATH, FILE_SIZE, DEL_YN, STS_CD, REG_DTTM, SVC_ID,
+			RSC_ID)
+		SELECT #{DPLY_IDX}, #{FILE_NM}, #{FILE_PATH}, #{FILE_SIZE}, #{DEL_YN}, #{STS_CD}, SYSDATE, #{SVC_ID} ,
+			(select RSC_ID FROM tb_mob_rsc_file where REPLACE(file_path,'\','/')  like '%' || #{FILE_PATH} || '%' and sts_cd='W' and svc_id = #{SVC_ID} ) <!-- sts_cd=W : 최근 업로드된 놈 -->
+		FROM db_root
+	</insert>
+    
+   	<update id="updateResFileStat" parameterType="String">
+		UPDATE TB_MOB_RSC_FILE
+		SET STS_CD = 'C' ,
+		 		MOD_DTTM = SYSDATE
+		WHERE SVC_ID = #{SVC_ID}
+	</update>
+	
+	<!-- 배포 목록조회 -->
+    <select id="selectDeployList"  parameterType="kr.msp.admin.mobile.dto.DeployListDto" resultType="kr.msp.admin.mobile.dto.DeployListDto">
+    	<include refid="head"/>
+    	SELECT 
+		    S1.DPLY_IDX
+		    , S1.DPLY_NM
+		    , S1.DPLY_VER
+		    , TO_CHAR(S1.REG_DTTM, 'YYYY.MM.DD HH24:MI') AS REG_DTTM
+		    , S1.DPLY_DESC
+		    , S1.DPLY_TP
+		    , S1.USE_YN
+		    , S1.SVC_ID
+		    , S1.DPLY_FULL_YN,S1.REF_VER
+            , S3.FILE_IDX
+		    , S3.FILE_ID
+		    , S3.FILE_PATH
+		    , S3.FILE_NAME
+		    , S3.FILE_SIZE
+		    , (SELECT SVC_NM FROM TB_SVC WHERE SVC_ID = S1.SVC_ID) AS SVC_NM 
+		FROM TB_MOB_DPLY S1 
+		INNER JOIN ( SELECT 
+						A.SVC_ID 
+					FROM 
+						TB_SVC_AUTH A , 
+						TB_SYS_USER_AUTH_GRP B ,
+						TB_MOB_SVC C
+					WHERE 
+						A.AUTH_GRP_ID = B.AUTH_GRP_ID 
+						AND B.USER_ID = #{USER_ID}
+						AND A.SVC_ID = C.SVC_ID
+						AND C.USE_YN = 'Y'
+						<if test="SVC_ID != null and SVC_ID != 'all'">
+							AND A.SVC_ID = #{SVC_ID}
+						</if> 
+					) S2
+		ON S1.SVC_ID = S2.SVC_ID
+		LEFT OUTER JOIN TB_FILE_ATTACH S3
+		ON S1.DPLY_IDX = S3.OBJ_ID
+		<if test="ORDER_TYPE == 'DESC' ">
+			<if test="ORDER_TARGET == 'PLAT_IDX' ">
+			    ORDER BY  S1.PLAT_IDX DESC
+			</if>
+			<if test="ORDER_TARGET == 'BIN_VER' ">
+			    ORDER BY  S1.BIN_VER DESC
+			</if>
+			<if test="ORDER_TARGET == 'RSC_ID' ">
+			    ORDER BY  S1.RSC_ID DESC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_NM' ">
+			    ORDER BY  S1.FILE_NM DESC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_VER' ">
+			    ORDER BY  S1.DPLY_VER DESC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_IDX' ">
+			    ORDER BY  S1.DPLY_IDX DESC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_NM' ">
+			    ORDER BY  S1.DPLY_NM DESC
+			</if>
+			<if test="ORDER_TARGET == 'REG_DTTM' ">
+			    ORDER BY  S1.REG_DTTM DESC
+			</if>	
+			<if test="ORDER_TARGET == 'MOD_DTTM' ">
+			    ORDER BY  S1.MOD_DTTM DESC
+			</if>	
+			<if test="ORDER_TARGET == 'DPLY_TP' ">
+			    ORDER BY  S1.DPLY_TP DESC
+			</if>
+			<if test="ORDER_TARGET == 'USE_YN' ">
+			    ORDER BY  S1.USE_YN DESC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_EXT' ">
+			    ORDER BY  S1.FILE_EXT DESC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_SIZE' ">
+			    ORDER BY  S1.FILE_SIZE DESC
+			</if>
+		</if>
+		<if test="ORDER_TYPE == 'ASC' ">
+			<if test="ORDER_TARGET == 'PLAT_IDX' ">
+			    ORDER BY  S1.PLAT_IDX ASC
+			</if>
+			<if test="ORDER_TARGET == 'BIN_VER' ">
+			    ORDER BY  S1.BIN_VER ASC
+			</if>
+			<if test="ORDER_TARGET == 'RSC_ID' ">
+			    ORDER BY  S1.RSC_ID ASC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_NM' ">
+			    ORDER BY  S1.FILE_NM ASC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_VER' ">
+			    ORDER BY  S1.DPLY_VER ASC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_IDX' ">
+			    ORDER BY  S1.DPLY_IDX ASC
+			</if>
+			<if test="ORDER_TARGET == 'DPLY_NM' ">
+			    ORDER BY  S1.DPLY_NM ASC
+			</if>
+			<if test="ORDER_TARGET == 'REG_DTTM' ">
+			    ORDER BY  S1.REG_DTTM ASC
+			</if>	
+			<if test="ORDER_TARGET == 'MOD_DTTM' ">
+			    ORDER BY  S1.MOD_DTTM ASC
+			</if>	
+			<if test="ORDER_TARGET == 'DPLY_TP' ">
+			    ORDER BY  S1.DPLY_TP ASC
+			</if>
+			<if test="ORDER_TARGET == 'USE_YN' ">
+			    ORDER BY  S1.USE_YN ASC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_EXT' ">
+			    ORDER BY  S1.FILE_EXT ASC
+			</if>
+			<if test="ORDER_TARGET == 'FILE_SIZE' ">
+			    ORDER BY  S1.FILE_SIZE ASC
+			</if>
+		</if>
+		<!-- ORDER BY S1.DPLY_IDX DESC -->
+		<include refid="bottom"/>
+	</select>
+    <select id="SelectFileAttach" parameterType="hashmap" resultType="hashmap">
+        select * from TB_FILE_ATTACH where FILE_IDX=#{FILE_IDX}
+    </select>
+    <select id="selectDeployDetailList"  parameterType="kr.msp.admin.mobile.dto.DeployListDto" resultType="kr.msp.admin.mobile.dto.ResDeployDetailDto">
+    	<include refid="head"/>
+		SELECT 	
+			DPLY_DTL_IDX,FILE_NM,FILE_PATH,FILE_SIZE,DEL_YN,STS_CD,REG_DTTM,DPLY_IDX,SVC_ID,RSC_ID
+		FROM TB_MOB_DPLY_DTL
+		WHERE DPLY_IDX = #{DPLY_IDX}
+		ORDER BY FILE_NM
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- 배포 정보 수정 -->
+	<update id="updateDeploy" parameterType="kr.msp.admin.mobile.dto.DeployListDto">
+		UPDATE TB_MOB_DPLY 
+		SET
+			REG_DTTM = SYSDATE ,
+			DPLY_TP= #{DPLY_TP} ,
+		 	USE_YN = #{USE_YN} ,
+	  		DPLY_DESC = #{DPLY_DESC}
+		WHERE DPLY_IDX = #{DPLY_IDX}
+	</update>
+    <!--웹배포압축파일 조회-->
+    <select id="selectWebPlatformDeployZipList" parameterType="kr.msp.admin.mobile.dto.DeployListDto" resultType="kr.msp.admin.mobile.dto.DeployZipDto">
+        SELECT S1.DPLY_IDX, S3.FILE_PATH
+        FROM TB_MOB_DPLY S1 LEFT OUTER JOIN TB_FILE_ATTACH S3
+        ON S1.DPLY_IDX=S3.OBJ_ID
+        WHERE S1.SVC_ID=#{SVC_ID}
+        AND S1.DPLY_TP = #{DPLY_TP}
+        AND S1.USE_YN = 'Y'
+        ORDER BY S1.DPLY_VER ASC
+    </select>
+    <!-- 배포 삭제 리스트 조회-->
+    <select id="getDeployDelFiles"  parameterType="hashmap" resultType="hashMap">
+        select FILE_PATH from TB_MOB_DPLY_DTL
+        where DPLY_IDX=#{DPLY_IDX}
+        and DEL_YN='Y'
+        and SVC_ID=#{SVC_ID}
+    </select>
+    <!--웹배포파일 조회-->
+    <select id="selectWebPlatformDeployList" parameterType="kr.msp.admin.mobile.dto.DeployListDto" resultType="kr.msp.admin.mobile.dto.DeployListDto">
+        SELECT B.FILE_PATH, B.FILE_SIZE, B.FILE_NM AS FILE_NAME, B.SVC_ID
+        FROM TB_MOB_DPLY A, TB_MOB_DPLY_DTL B
+        WHERE A.DPLY_IDX=B.DPLY_IDX
+        AND A.SVC_ID=#{SVC_ID}
+        AND A.USE_YN='Y'
+        AND B.DEL_YN='N'
+    </select>
+	<!-- 배포정보 삭제 1. TB_FILE_ATTACH -->
+	<delete id="deleteFileAttach" parameterType="kr.msp.admin.mobile.dto.DeployListDto">
+		DELETE FROM TB_FILE_ATTACH
+		WHERE OBJ_ID = #{DPLY_IDX}
+	</delete>
+	<!-- 배포정보 삭제 2. tb_mob_dply_dtl -->
+	<delete id="deleteDplyDtl" parameterType="kr.msp.admin.mobile.dto.DeployListDto">
+		DELETE FROM TB_MOB_DPLY_DTL
+		WHERE DPLY_IDX = #{DPLY_IDX}
+	</delete>
+	<!-- 배포정보 삭제 3. tb_mob_dply -->
+	<delete id="deleteDply" parameterType="kr.msp.admin.mobile.dto.DeployListDto">
+		DELETE FROM TB_MOB_DPLY
+		WHERE DPLY_IDX = #{DPLY_IDX}
+	</delete>
+	
+	<!-- 리소스 상세정보 조회 -->
+	<select id="selectResourceListByRSCID"  parameterType="kr.msp.admin.mobile.dto.ResourceFileDetailDto" resultType="kr.msp.admin.mobile.dto.ResourceFileDto">
+		SELECT * FROM TB_MOB_RSC_FILE
+		WHERE RSC_ID = #{RSC_ID}		
+	</select>
+	<!-- 리소스 상세정보 조회(배포관련) -->
+	<select id="selectRSC_FileInfo"  parameterType="kr.msp.admin.mobile.dto.ResourceFileDetailDto" resultType="kr.msp.admin.mobile.dto.ResourceFileDetailDto">
+		/* ResourceManageSql - selectRSC_FileInfo */
+		SELECT DEL_YN, DPLY_NM , DPLY_TP, DPLY_VER, USE_YN, DPLY_DESC, TB_MOB_DPLY_DTL.REG_DTTM
+		FROM TB_MOB_DPLY_DTL,TB_MOB_DPLY
+		WHERE TB_MOB_DPLY_DTL.RSC_ID =  #{RSC_ID}
+		AND TB_MOB_DPLY_DTL.DPLY_IDX = TB_MOB_DPLY.DPLY_IDX
+	</select>
+	
+	<!-- 리소스 삭제  tb_mob_rsc_file -->
+	<delete id="deleteRSC_FILE" parameterType="kr.msp.admin.mobile.dto.ResourceFileDetailDto">
+		DELETE FROM TB_MOB_RSC_FILE
+		WHERE RSC_ID = #{RSC_ID}
+	</delete>
+	
+</mapper>

@@ -1,0 +1,55 @@
+             		<h2 class="tbl-title">#springMessage("menu.stats.store.prevDownNum")</h2><br/> <!-- 전월 다운로드 횟수 -->
+             		
+					<table class="tbl-nb full-width">
+						<colgroup>
+							<col style="width:20%;"/>
+							<col style="width:40%;"/>
+							<col style="width:40%;"/>
+                        </colgroup>
+						<thead>
+    						<tr>
+    							<th>IDX</th>
+    							<th>#springMessage("common.text.appname")</th> <!-- App. 명 -->
+    							<th>#springMessage("menu.stats.store.downNum")</th> <!-- 다운로드 수 -->
+    						</tr>
+						</thead>
+						<tbody>
+			    	#foreach( $row in $prevList )
+			       		#set($j_prev_tot = $row.TOT_CNT)
+			            <tr class="joinDiv">
+			            	<td>$!row.APP_IDX</td>
+			            	<td>$!row.APP_NM</td>
+			            	<td>$!row.CNT</td>
+			         	</tr>
+					#end
+					#if(!$j_prev_tot)
+				   		<tr >
+				   			<td align="center" colspan="3">
+								#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+				           	</td>
+				       	</tr>
+				   	#end
+				   		</tbody>
+					</table>
+						
+		<!-- 
+    	j_now : $!R_PREV_PAGE_NUM<br/>
+    	J_tot : $!j_prev_tot<br/>
+    	j_row :$!R_PREV_ROW_SIZE<br/>
+    	j_page : $!R_PREV_PAGE_SIZE<br/>
+    	j_event : fn_select_prevList<br/>
+		 -->
+		
+        <input type="hidden" id="R_PREV_PAGE_NUM" value="$!R_PREV_PAGE_NUM" />
+        <input type="hidden" id="R_PREV_PAGE_SIZE" value="$!R_PREV_PAGE_SIZE" />		
+		<div class="j_prev_page_div">
+        	##현재 페이지
+        	<input type="hidden" name="j_now" value="$!R_PREV_PAGE_NUM" />
+        	##총 개수
+        	<input type="hidden" name="J_tot" value="$!j_prev_tot" />
+        	<input type="hidden" name="j_row" value="$!R_PREV_ROW_SIZE" />
+        	##한페이지수
+        	<input type="hidden" name="j_page" value="$!R_PREV_PAGE_SIZE" />
+        	##이밴트
+        	<input type="hidden" name="j_event" value="fn_select_prevData" />
+        </div>

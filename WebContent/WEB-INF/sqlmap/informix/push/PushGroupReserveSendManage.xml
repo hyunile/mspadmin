@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.groupReserveSend.mapper.GroupReserveSendManageDao">
+<!-- 이 쿼리는 대상 테이블이 존재하지 않음. admin/push/groupReserveSend/ url에 맵핑된 서비스 로직이 
+   		있기는 함. 사용하지 않는 기능일 경우 차후 서비스 로직과 SQL 제거 필요. -->
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+	
+	<!-- 그룹 발송 조회 리스트 -->
+    <select id="SelectGroupReserveSendList" resultType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+        <include refid="head"/>
+            SELECT 
+			    A.MSGGRPSEQNO
+			   ,A.SEQNO
+			   ,TO_CHAR(A.RESERVEDATE, '%Y.%m.%d %H:%M') AS RESERVEDATE
+			   ,A.APPID
+			   ,A.GROUPSEQ
+			   ,A.SENDERSEQ
+			   ,(SELECT SENDERCODE
+			       FROM T_PUSH_SENDER_INFO B
+			      WHERE A.SENDERSEQ = B.SENDERSEQ) AS SENDERCODE
+			   ,A.MESSAGE   
+			   ,(SELECT TO_CHAR(A.REGDATE, '%Y.%m.%d %H:%M')) AS REGDATE
+			   ,A.STATE
+			FROM T_PUSH_MESSAGE_GROUP A
+			WHERE A.RESERVEDATE != A.REGDATE
+			      AND A.RESERVEDATE > CURRENT
+			              AND A.RESERVEDATE BETWEEN TO_DATE(#{RESERVEDATE_S}, '%Y%m%d %H%M') AND TO_DATE(#{RESERVEDATE_E}, '%Y%m%d %H%M')
+                  AND A.APPID = #{APPID}
+                  <if test="SENDERSEQ != '' and SENDERSEQ != null">
+                  	AND A.SENDERSEQ = #{SENDERSEQ}
+                  </if>
+                  <if test="GROUPSEQ != '' and GROUPSEQ != null">
+                  	AND A.GROUPSEQ = #{GROUPSEQ}
+                  </if>
+			ORDER BY A.RESERVEDATE ASC
+	       <include refid="bottom"/>
+    </select>
+    
+    <!-- 그룹 발송 조회  -->
+    <select id="SelectGroupReserveSendOne" resultType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+            SELECT 
+			    A.MSGGRPSEQNO
+			   ,A.SEQNO
+			   ,TO_CHAR(A.RESERVEDATE, '%Y.%m.%d %H:%M') AS RESERVEDATE
+			   ,A.APPID
+			   ,A.GROUPSEQ
+			   ,A.SENDERSEQ
+			   ,(SELECT SENDERCODE
+			       FROM T_PUSH_SENDER_INFO B
+			      WHERE A.SENDERSEQ = B.SENDERSEQ) AS SENDERCODE
+			   ,A.MESSAGE   
+			   ,TO_CHAR(A.REGDATE, '%Y.%m.%d %H:%M')  AS REGDATE
+			   ,A.STATE
+			FROM T_PUSH_MESSAGE_GROUP A
+			WHERE MSGGRPSEQNO = #{MSGGRPSEQNO}
+    </select>
+    
+    <!-- 그룹 사용자 발송조회 상세 리스트 -->   
+    <select id="SelectGroupUserSendList" resultType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+         <include refid="head"/>
+           SELECT 
+			    A.SEQNO
+			   , TO_CHAR(A.RESERVEDATE, '%Y.%m.%d %H:%M') AS RESERVEDATE
+			   ,A.APPID   
+			   ,A.CUID
+			   ,A.SENDERSEQ
+			   ,(SELECT SENDERCODE
+			      FROM T_PUSH_SENDER_INFO B
+			      WHERE A.SENDERSEQ = B.SENDERSEQ) AS SENDERCODE
+			   ,A.MESSAGE   
+			   ,TO_CHAR(A.REGDATE, '%Y.%m.%d %H:%M') AS REGDATE
+			FROM T_PUSH_MESSAGE A
+			WHERE SEQNO = #{SEQNO}
+			ORDER BY RESERVEDATE ASC, REGDATE DESC
+           <include refid="bottom"/>
+    </select>
+    
+    <!-- 메시지 예약 취소 가능 여부 체크 -->   
+    <select id="SelectMsgDeleteCheck" resultType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+        SELECT 
+		       CASE WHEN RESERVEDATE - 5/24/60 > CURRENT
+		            THEN 'Y'
+		            ELSE 'N'
+		        END AS DELETE_CHK
+		       ,TO_CHAR(RESERVEDATE, '%Y-%m-%d %H:%M:%S') AS RESERVEDATE
+		       ,GROUPSEQ
+		FROM T_PUSH_MESSAGE_GROUP
+		WHERE MSGGRPSEQNO = #{MSGGRPSEQNO}
+    </select>
+    
+    <delete id="DeleteMessage" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+        DELETE FROM T_PUSH_MESSAGE
+        WHERE SEQNO = #{SEQNO}
+    </delete>
+    
+    <delete id="DeleteGroupMessage" parameterType="kr.msp.admin.push.groupReserveSend.dto.GroupReserveSendDto">
+        DELETE FROM T_PUSH_MESSAGE_GROUP
+        WHERE MSGGRPSEQNO = #{MSGGRPSEQNO}
+    </delete>
+	
+	
+	
+</mapper>

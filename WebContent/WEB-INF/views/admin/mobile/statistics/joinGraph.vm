@@ -1,0 +1,92 @@
+
+<link rel="stylesheet" type="text/css" href="$!{RESOURCES_PATH}/js/chart/style.css" /><!--  챠트관련  -->
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/amcharts.js" ></script> <!--  챠트관련  -->
+
+<script type="text/javascript">
+    var chartData = null;		// chart data
+	// 차트 데이터를 추가 함
+	function addChartData(regDt, cnt)
+	{
+			//console.debug("aa regDt="+regDt+", cnt=" + cnt + ", mode=" + (chartData==null ? "new" : "append")  );
+    		
+			
+			if(chartData == null)
+    		{
+    			chartData 	= [{DAY: regDt,		CNT: cnt}];
+    		}
+    		else
+    		{
+    			chartData.push({DAY: regDt,	CNT: cnt});
+    		}
+	}
+	
+	// 차트를 초기하 시킴
+	function initChart()
+	{
+
+		//console.debug("init chart !!");
+
+    	//chart의 타입을 정의..
+        // SERIAL CHART
+        chart = new AmCharts.AmSerialChart();
+        chart.dataProvider = chartData;
+        chart.categoryField = "DAY";
+        chart.startDuration = 0;  //20120615 그래프 액션 없앰 Minwoo.Yoon
+        chart.balloon.color = "#FFFFFF";
+        chart.columnWidth = 0.2; //BAR Width.
+    
+        // AXES
+        // category
+        var categoryAxis = chart.categoryAxis;
+        categoryAxis.fillAlpha = 1;
+        categoryAxis.fillColor = "#FAFAFA";
+        categoryAxis.gridAlpha = 0;
+        categoryAxis.axisAlpha = 0;
+        categoryAxis.gridPosition = "start";
+        categoryAxis.position = "bottom";
+    
+        // value
+        var valueAxis = new AmCharts.ValueAxis();
+        valueAxis.dashLength = 5;
+        valueAxis.axisAlpha = 0;
+        valueAxis.minimum = 0;
+        //valueAxis.maximum = 900000; //그래프 최대값
+        valueAxis.integersOnly = true;
+        valueAxis.gridCount = 10;
+        valueAxis.reversed = false; // this line makes the value axis reversed 
+        chart.addValueAxis(valueAxis);
+    
+    	
+        // prev graph
+        var graph = new AmCharts.AmGraph();
+        graph.title = '#springMessage("menu.stats.store.allJoinNum")'; //"총 가입 건수";
+        graph.type = "line";
+        graph.valueField = "CNT";
+        graph.hidden = false; 									// this line makes the graph initially hidden           
+        graph.balloonText = "([[title]])[[category]]: [[value]]";
+        graph.lineAlpha = 1;
+        graph.bullet = "triangleUp";
+        graph.lineColor = "#FF0000";
+        chart.addGraph(graph);	
+    
+    	
+    	
+        // LEGEND
+        var legend = new AmCharts.AmLegend();
+        legend.markerType = "circle";
+        chart.addLegend(legend);
+    
+		
+        // WRITE
+        chart.write("qtychartdiv");
+	}
+	
+    #foreach( $row in $chartDataList)
+    addChartData("$!{row.REG_DT}", ${row.CNT});
+    #end
+</script>
+
+#set($tmp = '가입자 현황 통계')
+
+		<div id="qtychartdiv" style="width:100%;height:300px;"></div>
+		<div class="popup_content"></div>

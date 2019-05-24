@@ -1,0 +1,500 @@
+<style type="text/css">
+#tooltip {visibility:hidden;}
+</style>
+
+<script type="text/javascript">
+var array = new Array();
+
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	
+	//달력 구현
+	$("#END_DATE_S").datepicker({
+		regional        : "ko",
+		dateFormat      : "yymmdd",
+		showOn          : "button",
+		buttonImage     : CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+		buttonImageOnly : true,
+		altField        : "#END_VIEW_S",
+		altFormat       : "yy.mm.dd"
+	});
+
+	//달력 구현
+	$("#END_DATE_E").datepicker({
+		regional        : "ko",
+		dateFormat      : "yymmdd",
+		showOn          : "button",
+		buttonImage     : CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+		buttonImageOnly : true,
+		altField        : "#END_VIEW_E",
+		altFormat       : "yy.mm.dd"
+	});
+
+	var defaultDate1 = jQuery.datepicker.formatDate("yy.mm.dd", new Date());
+	var defaultDate2 = jQuery.datepicker.formatDate("yymmdd", new Date());
+	
+	$("#END_VIEW_S").val(defaultDate1);
+	$("#END_VIEW_E").val(defaultDate1);
+	
+	$("#END_DATE_S").val(defaultDate2);
+	$("#END_DATE_E").val(defaultDate2);
+
+	var R_SVC_ID = "$!R_SVC_ID";
+
+	if(R_SVC_ID != "" ){
+		$("#orderTarget").val("MOD_DTTM");
+		$("#orderType").val("DESC");
+		$("#STS_CD").val("W");
+		$("#SVC_ID").val(R_SVC_ID);
+    	array = new Array();
+    	fn_resourceList(1);
+	}
+	else // fn_resourceList(); 를 2번 호출 해서 else 문 안으로 로직을 넣음....
+	{
+    	array = new Array();
+    	if(${mobServiceList.size()} == 0){
+    		alert('#springMessage("common.alert.noApp")'); //조회할 App.이 없습니다
+    		//history.go(-1);
+    	}else{
+    		fn_resourceList(1);
+		}
+	}
+});
+
+$(document).on("change","#DATE_CON",function(){
+	var con = $(this).val();
+	if(con == "O"){
+		$("#DATE_P").show();
+	} else {
+		$("#DATE_P").hide();
+	}
+});
+
+function ch_search(){
+	array = new Array();
+	var sfrm=document.frmSearch;
+	if(sfrm.filenm.value.length>0&&sfrm.filenm.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.filenm.value="";
+			sfrm.filenm.focus();
+		}
+	if(sfrm.fileext.value.length>0&&sfrm.fileext.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.fileext.value="";
+			sfrm.fileext.focus();
+		}
+	if(${mobServiceList.size()} == 0){
+		alert('#springMessage("common.alert.noApp")'); //'조회할 App.이 없습니다'
+		return;
+	}
+	fn_resourceList(1);
+}
+
+//서버 리스트 페이징
+function fn_resourceList(PAGE_NUM){
+	if(${mobServiceList.size()} == 0){
+		alert('#springMessage("common.alert.noApp")'); //'조회할 App.이 없습니다'
+		return;
+	}
+	if($("#DATE_CON").val() == "O"){
+		if($("#END_DATE_S").val() == "" ){
+			alert('#springMessage("common.alert.startDate")');  //시작 일자를 입력해 주세요.  
+			return; 
+		}
+
+		if($("#END_DATE_E").val() == "" ){
+			alert('#springMessage("common.alert.endDate")'); //끝 일자를 입력해 주세요.
+			return;
+		}
+
+		if( $("#END_DATE_S").val() +""+ $("#END_HOUR_S").val() +""+ $("#END_MINUTE_S").val() > $("#END_DATE_E").val() +""+ $("#END_HOUR_E").val() +""+ $("#END_MINUTE_E").val()){
+			alert('#springMessage("common.alert.dateError")');  //시작 일자가 끝 일자보다 큽니다.
+			return; 
+		}
+
+		$("#RESOURCEDTTM_S").val( $("#END_DATE_S").val() +""+ $("#END_HOUR_S").val() +""+ $("#END_MINUTE_S").val() );
+		$("#RESOURCEDTTM_E").val( $("#END_DATE_E").val() +""+ $("#END_HOUR_E").val() +""+ $("#END_MINUTE_E").val() );
+	} else {
+		$("#RESOURCEDTTM_S").val( "" );
+		$("#RESOURCEDTTM_E").val( "" );
+	}
+	
+	var url = "$!{CONTEXT_PATH}/admin/mobile/resourceManage";
+	
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#ResTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	
+	$(".CH_RSC_FILE_IDX").each(function(){
+		if( jQuery.inArray( $(this).val() , array) >= 0){
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+			$(this).parent().parent().removeClass().addClass("select");
+		}
+	});
+}
+
+$(document).on("click",".ORDER_TH",function(){
+	var orderTarget = $(this).attr("id");
+	var order = orderTarget.split("OR_");
+	if($("#orderTarget").val() == order[1]){
+	 	if( $("#orderType").val() == "DESC") {
+	 		$("#orderType").val("ASC");
+	 	} else {
+	 		$("#orderType").val("DESC");
+	 	}
+	} else {
+		$("#orderTarget").val(order[1]);
+		$("#orderType").val("DESC");
+	}
+	fn_resourceList(1);
+});
+
+$(document).on("click","#all_check",function(){
+	if($(this).is(":checked")){
+		$(".CH_RSC_FILE_IDX").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+			$(this).parent().parent().removeClass().addClass("on");
+			if(jQuery.inArray( $(this).val() , array) < 0){
+				array[array.length] = $(this).val();
+			}
+		});
+	} else {
+		$(".CH_RSC_FILE_IDX").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+			$(this).parent().parent().removeClass();
+			if(jQuery.inArray( $(this).val() , array) >= 0){
+				array.splice(jQuery.inArray( $(this).val() , array),1);
+			}
+		});
+	}
+});
+
+$(document).on("click",".CH_RSC_FILE_IDX",function(){
+	if($(this).is(":checked")){
+		array[array.length] = $(this).val();
+		$(this).parent().parent().removeClass().addClass("on");
+	} else {
+		array.splice(jQuery.inArray( $(this).val() , array),1);
+		$(this).parent().parent().removeClass();
+	}
+});
+	
+function fn_GoDeployC(objId){	
+	
+	if( array.length <= 0 ){
+		alert('#springMessage("common.alert.noResource")'); // 선택한 리소스 파일이 없습니다.
+		return ;
+	}
+	
+	if(! confirm('#springMessage("common.alert.deployRsc")')){ //리소스 파일을 배포 하시겠습니까?
+		return;
+	}
+	
+	
+	$("#RESOURCE_CON").val( "C" );
+	$("#RESOURCE_LIST").val( array );
+	$("#SVC_NM").val( $("#SVC_ID option:selected").text() );
+	
+	var url = "$!{CONTEXT_PATH}/admin/mobile/resourceManage/deploy";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize();
+	var target = $("#windowPop");
+	var whideh = 750;
+	var title = '#springMessage("menu.mobile.deploy.rscDeployInfo")';//"리소스 배포정보";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	
+}
+
+function fn_GoDeployA(){
+
+	if(! confirm('#springMessage("menu.mobile.manage.alertDeploy")')){ //"전체배포는 이전 배포리소스 파일 포함 전체를 배포합니다.\n\n전체배포를 하시겠습니까?"
+		return;
+	}
+	$("#RESOURCE_CON").val( "A" );
+	$("#RESOURCE_LIST").val( array );
+	$("#SVC_NM").val( $("#SVC_ID option:selected").text() );
+   	
+   	var url = "$!{CONTEXT_PATH}/admin/mobile/resourceManage/deploy";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize();
+	var target = $("#windowPop");
+	var whideh = 750;
+	var title = '#springMessage("menu.mobile.deploy.rscDeployInfo")';//"리소스 배포정보";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+function fn_GoDeployD(){	
+	if( array.length <= 0 ){
+		alert('#springMessage("common.alert.noResource")'); // 선택한 리소스 파일이 없습니다.
+		return ;
+	}
+
+	if(! confirm('#springMessage("common.alert.deployRsc")')){ //리소스 파일을 배포 하시겠습니까?
+		return;
+	}
+	
+	$("#RESOURCE_CON").val( "D" );
+	$("#RESOURCE_LIST").val( array );
+	$("#SVC_NM").val( $("#SVC_ID option:selected").text() );
+   	
+   	var url = CONTEXT_PATH + "/admin/mobile/resourceManage/deploy";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize();
+	var target = $("#windowPop");
+	var whideh = 750;
+	var title = '#springMessage("menu.mobile.deploy.rscDeployInfo")';//"리소스 배포정보";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+function fn_GoDeployS(){
+	if(! confirm('#springMessage("common.alert.deployRsc")')){ //리소스 파일을 배포 하시겠습니까?
+		return;
+	}
+	
+	$("#RESOURCE_CON").val( "S" );
+	$("#RESOURCE_LIST").val( array );
+	$("#SVC_NM").val( $("#SVC_ID option:selected").text() );
+   	
+   	var url = CONTEXT_PATH + "/admin/mobile/resourceManage/deploy";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize();
+	var target = $("#windowPop");
+	var whideh = 750;
+	var title = '#springMessage("menu.mobile.deployInfo")';//"배포정보 입력";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+function fn_RSCDELETE(){
+	if( array.length <= 0 ){
+		alert('#springMessage("common.alert.noResource")'); // 선택한 리소스 파일이 없습니다.
+		return ;
+	}
+	
+	if(! confirm('#springMessage("common.alert.deleteRsc")')){ //리소스 파일을 삭제 하시겠습니까?
+		return;
+	}
+	
+	$("#RESOURCE_LIST").val( array );
+	var url =  CONTEXT_PATH + "/admin/mobile/resourceManage/delete";
+	var data = $("form[name=frmSearch]").serialize();
+	
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){	
+            	array = new Array();
+            	fn_resourceList(1);
+			}
+		}
+	});
+}
+
+$(document).on("click","#RscConfigModify",function(){
+	var CH_RSC_FILE_IDX = $(this).parent().parent().find(".CH_RSC_FILE_IDX").attr("id");
+	
+	var RSC_ID = $(this).parent().parent().find("#RSC_ID").val();
+	
+	var url =  CONTEXT_PATH + "/admin/mobile/resourceManage/info";
+	var data = "CH_RSC_FILE_IDX=" + CH_RSC_FILE_IDX + "&RSC_ID=" + RSC_ID;
+	var type = "GET";
+	var target = $("#windowPop");
+	var whideh = 650;
+	var title = '#springMessage("menu.mobile.deploy.rscDetail")';//"리소스 상세정보";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	
+});
+
+
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_resourceList(1);
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.mobile")</span>
+		<span>#springMessage("menu.mobile.manage")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.mobile.manage")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+	
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		
+	
+		<table class="tbl-search">
+    		<colgroup>
+				<col style="width:80px">
+				<col style="width:160px">
+				<col style="width:80px">
+				<col style="width:260px">
+				<col>
+			</colgroup>
+
+    		<thead>
+    			## 1
+    			<tr>
+    				<th scope="row">#springMessage("common.text.appname")</th><!-- App. 명 -->
+    				<td>
+    					<select id="SVC_ID" name="SVC_ID" style="width:150px">
+    						#foreach( $mobService in $mobServiceList )
+    							<option value="$mobService.SVC_ID">$mobService.SVC_NM</option>
+    						#end
+    					</select>
+    				</td>
+    				<th scope="row">#springMessage("menu.mobile.manage.fileName")</th> <!-- 파일명 -->
+    				<td>
+    					<input type="text" id="filenm" name="FILE_NM" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}">
+    				</td>
+    				<td>
+    					<a href="javascript:ch_search();" class="tbl-btn2" title="#springMessage('menu.mobile.manage.titleText')">#springMessage("common.button.view")</a>	<!-- 조회     검색옵션에 따라 조회합니다. -->
+    				</td>
+    			</tr>
+    			## 2
+        		<tr>
+        			<th scope="row">#springMessage("menu.mobile.manage.fileStatus")</th> <!-- 파일 상태 -->
+        			<td>
+        				<select name="STS_CD" id="STS_CD" style="width:150px;vertical-align:middle;">
+        					<option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+        					<option value="W" selected="selected" >#springMessage("menu.mobile.manage.new")</option> <!-- 신규-->
+        					<option value="C">#springMessage("menu.mobile.manage.deploy")</option> <!-- 배포 -->
+        				</select>					
+        			</td>
+    				<th scope="row">#springMessage("menu.mobile.upload.fileForm")</th> <!-- 파일 형식 -->
+    				<td>
+    					<input type="text" id="fileext" name="FILE_EXT" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}">
+    				</td>
+    				<td></td>
+        		</tr>
+    			## 3
+    			<tr>
+    				<th scope="row">#springMessage("menu.mobile.manage.term")</th> <!-- 기간 -->
+        			<td>
+        				<select id="DATE_CON" style="width:150px">
+    						<option value="X">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+    						<option value="O">#springMessage("menu.mobile.manage.choice")</option> <!-- 선택 -->
+    					</select>					
+        			</td>
+        			<th></th>
+        			<td></td>
+        			<td></td>
+    			</tr>
+				## 3
+    			<tr id="DATE_P" style="display:none;" >
+					<th scope="row">#springMessage("menu.mobile.manage.termSelect")</th> <!-- 기간 선택 -->
+					<td  colspan="4">
+									
+						<input type="text" name="END_VIEW_S" id="END_VIEW_S" readonly="readonly" style="width: 100px;" />
+						<input type="hidden" name="END_DATE_S" id="END_DATE_S" style="width: 0px; border-style: none;" />
+			         	
+			         	&nbsp;
+			         	<select name="END_HOUR_S" id="END_HOUR_S" style="width: 50px;">
+			         		#foreach ( $item in [0..23] )
+			         			#if($item < 10)
+			         				<option value="0$item">$item</option>
+			         			#else
+			         				<option value="$item">$item</option>
+			         			#end
+				   			#end
+			   		    </select>
+			   		    시&nbsp;
+			   		    <select name="END_MINUTE_S" id="END_MINUTE_S" style="width: 50px;">
+			         		#foreach ( $item in [0..59] )
+			         			#if($item < 10)
+			         				<option value="0$item">$item</option>
+			         			#else
+			         				<option value="$item">$item</option>
+			         			#end
+				   			#end
+			   		    </select>
+			   		    분
+			   		    <input type="hidden" name="RESOURCEDTTM_S" id="RESOURCEDTTM_S">
+			   		    &nbsp; ~ 
+			   		    <input type="text" name="END_VIEW_E" id="END_VIEW_E" readonly="readonly" style="width: 100px;" />
+			   		    <input type="hidden" name="END_DATE_E" id="END_DATE_E" style="width: 0px; border-style: none;" />
+			
+			         	&nbsp;
+				     	<select name="END_HOUR_E" id="END_HOUR_E" style="width: 50px;">
+				     		#foreach ( $item in [0..23] )
+				     			#if($item < 10)
+				     				<option value="0$item">$item</option>
+				     			#else
+				     				<option value="$item">$item</option>
+				     			#end
+				   			#end
+					    </select>
+					    시&nbsp;
+					    <select name="END_MINUTE_E" id="END_MINUTE_E" style="width: 50px;">
+				     		#foreach ( $item in [0..59] )
+				     			#if($item < 10)
+				     				<option value="0$item">$item</option>
+				     			#else
+				     				<option value="$item">$item</option>
+				     			#end
+				   			#end
+					    </select>
+					    분
+				    <input type="hidden" name="RESOURCEDTTM_E" id="RESOURCEDTTM_E">
+						
+                    </td>
+    			</tr>
+    			
+   			</thead>
+		</table>
+				
+		<input type="hidden" name="RESOURCEDTTM_E" id="RESOURCEDTTM_E">
+		<input type="hidden" id="orderTarget" name="ORDER_TARGET" value="FILE_NM"/>
+   		<input type="hidden" id="orderType" name="ORDER_TYPE" value="ASC"/>
+   		<input type="hidden" id="RESOURCE_CON" name="RESOURCE_CON"/>
+   		<input type="hidden" id="RESOURCE_LIST" name="RESOURCE_LIST"/>
+   		<input type="hidden" id="SVC_NM" name="SVC_NM" />
+   		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+
+	</form>
+	
+	<form name="frmList" method="post">
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" onclick="fn_RSCDELETE()" title="#springMessage('common.button.delete')">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+					<a href="javascript:void(0)" class="btn2" onclick="fn_GoDeployC()" title="#springMessage('menu.mobile.manage.button.selectDeploy')">#springMessage("menu.mobile.manage.button.selectDeploy")</a>	<!-- 선택 배포 -->
+					<a href="javascript:void(0)" class="btn2" onclick="fn_GoDeployS()" title="#springMessage('menu.mobile.manage.button.searchDeploy')">#springMessage("menu.mobile.manage.button.searchDeploy")</a>	<!-- 조회 항목 배포 -->
+					<a href="javascript:void(0)" class="btn2" onclick="fn_GoDeployA()" title="#springMessage('menu.mobile.manage.button.allDeploy')">#springMessage("menu.mobile.manage.button.allDeploy")</a>			<!-- 전체 배포 -->
+					<a href="javascript:void(0)" class="btn2" onclick="fn_GoDeployD()" title="#springMessage('menu.mobile.manage.button.deleteDeploy')">#springMessage("menu.mobile.manage.button.deleteDeploy")</a>	<!-- 삭제 배포 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		
+		#### S : 리스트  폼 부분  ####
+		<div id="ResTableDiv">
+		</div>
+	
+	</form>
+	
+</div>

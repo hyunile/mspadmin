@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<!-- Appenders -->
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{MM/dd HH:mm:ss}, %-5p (%C{3}) : %m%n"/>
+		</layout>
+	</appender>
+
+	<appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="encoding" value="UTF-8"/>
+		<param name="Threshold" value="info"/>
+		<param name="File" value="C:/home/uracle/msp-server/logs/mps_stdout.log"/>
+		<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+		<param name="Append" value="true"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{MM/dd HH:mm:ss}, %-5p (%C{3}) : %m%n"/>
+		</layout>
+	</appender>
+    <!--User Access URL Log File-->
+    <appender name="EVENTLOG" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="encoding" value="UTF-8"/>
+        <param name="Threshold" value="info"/>
+        <param name="File" value="C:/home/uracle/msp-server/logs/event/mps_event.log"/>
+        <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <param name="Append" value="true"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{MM/dd HH:mm:ss}, %-5p : %m%n"/>
+        </layout>
+    </appender>
+
+	<!-- Application Loggers -->
+
+	<logger name="kr.msp">
+		<level value="debug" />
+	</logger>
+
+	<logger name="org.springframework.core">
+		<level value="info" />
+	</logger>
+
+	<logger name="org.springframework.ui">
+		<level value="info" />
+	</logger>
+
+	<logger name="org.springframework.beans">
+		<level value="info" />
+	</logger>
+
+	<logger name="org.springframework.context">
+		<level value="info" />
+	</logger>
+
+	<logger name="org.springframework.web">
+		<level value="info" />
+	</logger>
+
+	<logger name="org.springframework.jndi">
+		<level value="info" />
+	</logger>
+
+    <logger name="java.sql">
+        <level value="debug"/>
+        <appender-ref ref="console"/>
+    </logger>
+
+    <logger name="org.apache.velocity">
+	    <level value="info"></level>
+	</logger>
+
+
+    <logger name="kr.msp.admin.common.interceptor.EventExpirationCheckInterceptor">
+        <level value="info"/>
+        <appender-ref ref="EVENTLOG"/>
+    </logger>
+
+	<!-- Root Logger -->
+	<root>
+		<priority value="info" />
+		<appender-ref ref="console" />
+		<!--<appender-ref ref="FILE" />-->
+	</root>
+
+</log4j:configuration>

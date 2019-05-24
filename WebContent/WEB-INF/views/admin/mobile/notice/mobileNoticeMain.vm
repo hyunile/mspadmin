@@ -1,0 +1,453 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+});
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+function ch_search(){
+	var sfrm=document.frmSearch;
+	var sval=$("#conSelect").val();
+	if(sval==0){
+		if(sfrm.title.value.length>0&&sfrm.title.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.title.value="";
+			sfrm.title.focus();
+		}
+	}else if(sval==1){
+		if(sfrm.cont.value.length>0&&sfrm.cont.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.cont.value="";
+			sfrm.cont.focus();
+		}
+	}
+	fn_noticeList(1);
+}
+
+function fn_noticeList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/mobile/notice";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#noticeTableDiv");
+	fn_getList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//공지사항 등록 화면
+$(document).on("click","#noticeWrite",function(){
+	var url = CONTEXT_PATH + "/admin/mobile/notice/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 850;
+	var title = '#springMessage("menu.mobile.notice.insert")';//"모바일 공지사항 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+
+	//달력 구현
+	$("#START_DATE").datepicker({
+		regional: "ko",
+		dateFormat: "yymmdd",
+		showOn: "button",
+		buttonImage: CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+		buttonImageOnly: true,
+		altField: "#START_VIEW",
+		altFormat: "yy.mm.dd"
+	});
+	$("#END_DATE").datepicker({
+		regional: "ko",
+		dateFormat: "yymmdd",
+		showOn: "button",
+		buttonImage: CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+		buttonImageOnly: true,
+		altField: "#END_VIEW",
+		altFormat: "yy.mm.dd"
+	});
+	
+	var defaultDate1 = $.datepicker.formatDate("yy.mm.dd", new Date());
+	var defaultDate2 = $.datepicker.formatDate("yymmdd", new Date());
+	
+	$("#START_VIEW").val(defaultDate1);
+	$("#END_VIEW").val(defaultDate1);
+	
+	$("#START_DATE").val(defaultDate2);
+	$("#END_DATE").val(defaultDate2);
+});
+
+//공지사항 등록
+function fn_save(){
+
+	if( $("form[name=frmNotice]").find("input[name=TITLE]").val() == ""){
+		alert('#springMessage("common.alert.inputTitle")'); //"제목을 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("textarea[name=CONT]").val() == ""){
+		alert('#springMessage("common.alert.inputContents")'); //"내용을 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("input[name=START_DATE]").val() == ""){
+		alert('#springMessage("menu.mobile.notice.alert.inputStartDate")'); //"게시기간 시작일자를 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("input[name=END_DATE]").val() == ""){
+		alert('#springMessage("menu.mobile.notice.alert.inputEndDate")');  //"게시기간 종료일자를 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("select[name=USE_YN]").val() == ""){
+		alert('#springMessage("common.alert.noUseYN")');  //"사용여부을 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("select[name=APP_ID]").val() == ""){
+		alert('#springMessage("menu.mobile.notice.alert.inputAppName")');  //"App.명을 선택 해 주세요."
+		return ;
+	}
+		
+
+	var now = new Date();
+	var nowTime = now.getFullYear() + ""
+				+ (((now.getMonth()+1) < 10) ? "0" + (now.getMonth()+1) : (now.getMonth()+1)) + ""
+				+ ((now.getDate() < 10) ? "0" + now.getDate() : now.getDate()) + ""
+				+ ((now.getHours() < 10) ? "0" + now.getHours() : now.getHours()) + ""
+				+ ((now.getMinutes() < 10) ? "0" + now.getMinutes() : now.getMinutes());
+
+	$("#START_DTTM").val( $("#START_DATE").val() +""+ $("#START_HOUR").val() +""+ $("#START_MINUTE").val() );
+	$("#END_DTTM").val( $("#END_DATE").val() +""+ $("#END_HOUR").val() +""+ $("#END_MINUTE").val() );
+
+	if( Number($("#END_DTTM").val()) < Number($("#START_DTTM").val()) ){
+		alert('#springMessage("menu.mobile.notice.alert.checkShowDate")');  //"게시기간이 올바르지 않습니다. 게시기간을 확인해 주세요."
+		return ;
+	};
+	if( Number($("#END_DTTM").val()) < Number(nowTime) ){
+		alert('#springMessage("menu.mobile.notice.alert.checkEndDate")'); //"게시종료일자가 올바르지 않습니다. 게시종료일자는 현재이후를 입력해 주세요"
+		return ;
+	};
+
+	if(! confirm('#springMessage("menu.mobile.notice.alert.insertNew")')){  // "새로운 공지사항을 등록하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/mobile/notice/regist";
+	var data = $("form[name=frmNotice]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_noticeList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(xhr, ajaxOptions, thrownError){
+            alert(thrownError+"[XSS "+'#springMessage("common.button.okay")'+"]"); //확인
+        }
+	});
+}
+
+//공지사항 수정 화면
+$(document).on("click","#noticeInfo",function(){
+	var NOTC_IDX = $(this).parent().parent().find(".NOTC_IDX").val();
+	var url = CONTEXT_PATH + "/admin/mobile/notice/edit";
+	var type = "GET";
+	var data = "NOTC_IDX=" + NOTC_IDX;
+	var target = $("#windowPop");
+	var whideh = 850;
+	var title = ' #springMessage("menu.mobile.notice.update")';//"모바일 공지사항 수정";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+
+	//달력 구현
+	$("#START_DATE").datepicker({
+		regional: "ko",
+		dateFormat: "yymmdd",
+		showOn: "button",
+		buttonImage: CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+		buttonImageOnly: true,
+		altField: "#START_VIEW",
+		altFormat: "yy.mm.dd"
+	});
+	$("#END_DATE").datepicker({
+		regional: "ko",
+		dateFormat: "yymmdd",
+		showOn: "button",
+		buttonImage: CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+		buttonImageOnly: true,
+		altField: "#END_VIEW",
+		altFormat: "yy.mm.dd"
+	});
+
+	$("#START_VIEW").val( $("#START_DTTM").val().substring(0,4) +'#springMessage("common.text.year")'+ $("#START_DTTM").val().substring(4,6) + '#springMessage("common.text.month")' + $("#START_DTTM").val().substring(6,8) +'#springMessage("common.text.day")' ); //년, 월, 일
+	$("#START_DATE").val( $("#START_DTTM").val().substring(0,8) );
+	$("#START_HOUR").val( $("#START_DTTM").val().substring(8,10) );
+	$("#START_MINUTE").val( $("#START_DTTM").val().substring(10,12) );
+	
+	$("#END_VIEW").val( $("#END_DTTM").val().substring(0,4) +'#springMessage("common.text.year")'+ $("#END_DTTM").val().substring(4,6) + '#springMessage("common.text.month")' + $("#END_DTTM").val().substring(6,8) +'#springMessage("common.text.day")' ); //년, 월, 일
+	$("#END_DATE").val( $("#END_DTTM").val().substring(0,8) );
+	$("#END_HOUR").val( $("#END_DTTM").val().substring(8,10) );
+	$("#END_MINUTE").val( $("#END_DTTM").val().substring(10,12) );
+	
+	$("#APP_ID").val( $("#HIDDEN_APP_ID").val());
+
+});
+
+//공지사항 수정
+function fn_modify(){
+
+	if( $("form[name=frmNotice]").find("input[name=TITLE]").val() == ""){
+		alert('#springMessage("common.alert.inputTitle")'); //"제목을 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("textarea[name=CONT]").val() == ""){
+		alert('#springMessage("common.alert.inputContents")'); //"내용을 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("input[name=START_DATE]").val() == ""){
+		alert('#springMessage("menu.mobile.notice.alert.inputStartDate")'); //"게시기간 시작일자를 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("input[name=END_DATE]").val() == ""){
+		alert('#springMessage("menu.mobile.notice.alert.inputEndDate")');  //"게시기간 종료일자를 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("select[name=USE_YN]").val() == ""){
+		alert('#springMessage("common.alert.noUseYN")');  //"사용여부을 입력해 주세요."
+		return ;
+	} else if( $("form[name=frmNotice]").find("select[name=APP_ID]").val() == ""){
+		alert('#springMessage("menu.mobile.notice.alert.inputAppName")');  //"App.명을 선택 해 주세요."
+		return ;
+	}
+
+	
+
+	var now = new Date();
+	var nowTime = now.getFullYear() + ""
+				+ (((now.getMonth()+1) < 10) ? "0" + (now.getMonth()+1) : (now.getMonth()+1)) + ""
+				+ ((now.getDate() < 10) ? "0" + now.getDate() : now.getDate()) + ""
+				+ ((now.getHours() < 10) ? "0" + now.getHours() : now.getHours()) + ""
+				+ ((now.getMinutes() < 10) ? "0" + now.getMinutes() : now.getMinutes());
+
+	$("#START_DTTM").val( $("#START_DATE").val() +""+ $("#START_HOUR").val() +""+ $("#START_MINUTE").val() );
+	$("#END_DTTM").val( $("#END_DATE").val() +""+ $("#END_HOUR").val() +""+ $("#END_MINUTE").val() );
+
+	if( Number($("#END_DTTM").val()) < Number($("#START_DTTM").val()) ){
+		alert('#springMessage("menu.mobile.notice.alert.checkShowDate")'); //"게시기간이 올바르지 않습니다. 게시기간을 확인해 주세요."
+		return ;
+	};
+	if( Number($("#END_DTTM").val()) < Number(nowTime) ){
+		alert('#springMessage("menu.mobile.notice.alert.checkEndDate")'); //"게시종료일자가 올바르지 않습니다. 게시종료일자는 현재이후를 입력해 주세요"
+		return ;
+	};
+
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/mobile/notice/edit";
+	var data = $("form[name=frmNotice]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_noticeList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(xhr, ajaxOptions, thrownError){
+            alert(thrownError+"[XSS "+'#springMessage("common.button.okay")'+"]"); //확인
+        }
+	});
+}
+
+//공지사항 삭제
+function fn_delete(){
+	if(! confirm('#springMessage("common.alert.doDelete")')){  //"삭제 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/mobile/notice/delete";
+	var data = $("form[name=frmNotice]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_noticeList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//공통코드 리스트 페이지 호출(공통)
+function fn_getList( url, type, data, target ){
+
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_noticeList(1);
+}
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.mobile")</span>
+		<span>#springMessage("menu.system.noticeManage")</span>
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.noticeManage")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:120px">
+				<col style="width:200px">
+				<col>
+			</colgroup>
+			<thead>
+				<tr>
+					<td align="right">
+						<select id="conSelect" title="#springMessage('menu.mobile.notice.title.selectSearch')" class="w120"> <!-- 검색항목선택 -->
+	      						<option value="0">#springMessage("common.header.title")</option> <!-- 제목 -->
+	      						<option value="1">#springMessage("common.header.contents")</option> <!-- 내용 -->
+	      						<option value="2">#springMessage("common.text.appname")</option> <!-- App. 명 -->
+						</select>
+					</td>
+					<td>
+						<input class="se_con" type="text" id="title" name="TITLE" class="inputField" title="#springMessage('common.header.title')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/><!-- 제목 -->
+						<input class="se_con" type="text" id="cont" name="CONT" class="inputField" title="#springMessage('common.header.contents')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 내용 -->
+						<select class="se_con" name="APP_ID" title="#springMessage('menu.mobile.notice.title.selectService')" onchange="fn_noticeList(1)"> <!-- 서비스명 선택 -->
+	      						<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+	      					#foreach( $mobileSvc in $mobileSvcList )
+	      						<option value="$!mobileSvc.APP_ID" >$!mobileSvc.SVC_NM</option>
+	      					#end
+	      					</select>
+	                  </td>
+	                  <td>
+	                  	<a href="javascript:ch_search();" class="tbl-btn2">#springMessage("common.button.view")</a> <!-- 조회 -->
+	                  </td>
+				</tr>
+			</thead>
+		</table>
+				 
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+
+	</form>
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" id="noticeWrite" class="btn2">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+
+		<div class="tbCon" id="noticeTableDiv">
+			<table class="tbl-nb" summary="제목,등록자,등록일,수정자,수정일,상세">
+				<colgroup><!--  6cell  -->
+					<col width="auto"/><col width="20%"/><col width="10%"/><col width="10%"/><col width="10%"/><col width="70px"/>
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("common.header.title")</th> <!-- 제목 -->
+						<th scope="col">#springMessage("common.text.appname")</th> <!-- App. 명 -->
+						<th scope="col">#springMessage("common.header.useYN")</th> <!-- 사용여부 -->
+						<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+						<th scope="col">#springMessage("common.header.modifyDate")</th> <!-- 수정일 -->
+						<th scope="col"> </th>
+					</tr>
+				</thead>
+				<tbody>
+				#foreach( $mobileNotic in $mobileNoticeList )
+					#set($j_tot = $mobileNotic.TOT_CNT)
+					<tr>
+						<td >
+							$esc.xml($!mobileNotic.TITLE)
+							<input type="hidden" class="NOTC_IDX" value="$!mobileNotic.NOTC_IDX"/>
+						</td>
+						<td >
+							$esc.xml($!mobileNotic.SVC_NM)
+						</td>
+						<td>
+							#if($mobileNotic.USE_YN == "Y")
+								#springMessage("common.header.nowUse") <!-- 사용중 -->
+							#else
+								#springMessage("common.header.useStop") <!-- 사용중지 -->
+							#end
+						</td>
+						<td>
+							$!mobileNotic.REG_DTTM
+						</td>
+						<td>
+							$!mobileNotic.MOD_DTTM
+						</td>
+						<td>
+							<a href="javascript:void(0)" class="btn2" id="noticeInfo">#springMessage("common.button.modify")</a> <!-- 수정 -->
+						</td>
+					</tr>
+				#end
+				#if(!$j_tot)
+					<tr>
+						<td colspan="6" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+					</tr>
+				#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="NOTICE_NUM" value="$!R_PAGE_NUM"/>
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot"/>
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_noticeList"/>
+			</div>
+			
+		</div>
+		
+
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

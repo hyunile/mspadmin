@@ -1,0 +1,373 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/jEasyUiTree/easyui.css" >
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/jEasyUiTree/icon.css">
+<script type="text/javascript" src="$RESOURCES_PATH/jEasyUiTree/jquery.easyui.min.js"></script>
+
+<script type="text/javascript">
+var userIdObj;
+var userNameObj;
+var userRoleObj;
+
+//사용자 추가.
+function fn_addUser(){
+	var url = CONTEXT_PATH + "/admin/store/userAppAuth/addUser";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var width = 500;
+	var title = '#springMessage("common.text.user")'+' '+'#springMessage("common.button.add")'; //"사용자 추가";
+	
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+}
+
+function fn_addAppUser(){
+	//var nodes = $('#resTree').tree('getChecked');
+	//var nodes = $("#selectKeys").val();
+
+	var nodes = userIdObj;
+	
+	//if(nodes.length == 0){
+	if(nodes == ''){
+		alert('#springMessage("menu.store.appManage.alert.addUserCheck")'); //추가할 사용자를 한개 이상 체크하세요.
+		return false;
+	}
+	
+	if(! confirm('#springMessage("menu.store.userGroup.alert.doAdd")')){ //"추가 하시겠습니까?"
+		return;
+	}
+	
+	$("#user_null").remove();
+	
+	var grp_array = new Array();
+	var user_array = new Array();
+	
+	$(".EMP_NO").each(function(){
+		user_array[user_array.length] = $(this).val(); 
+	});
+	
+	$(".GRP_ID").each(function(){
+	
+		grp_array[grp_array.length] = $(this).val(); 
+	});
+	
+	html_Str = "";
+	
+	if($(".tabOverClass").attr("id") == "summaryList"){  //userDefinedGroupSelected
+	
+		for(x=0 ; x<nodes.length; x++) {
+			if(nodes[x].attributes == null ){
+				if( jQuery.inArray( nodes[x] , grp_array) < 0 ){
+				
+					
+				
+					var str_cd_nm = userRoleObj[x];
+					var str_name = userNameObj[x];
+			
+					html_Str += "<tr>";
+					html_Str += "<td>";
+					html_Str += "<input type='checkbox' class='ch_user' value=" + nodes[x] + " id=" + nodes[x]+ " >";
+					html_Str += "<label for=" + nodes[x]+ " ></label>";
+					html_Str += "</td>";
+					html_Str += "<td colspan='3'>";
+					html_Str += str_name;
+					html_Str += "<input type='hidden' class='GRP_ID' name='GRP_ID' value=" + nodes[x] + " >";
+					html_Str += "</td>";
+					html_Str += "</tr>";
+					grp_array[grp_array.length] = nodes[x];
+				}
+			} else {
+				if( jQuery.inArray( nodes[x] , user_array) < 0 ){
+			
+					
+					var str_cd_nm = userRoleObj[x];
+					var str_name = userNameObj[x];
+			
+					html_Str += "<tr>";
+					html_Str += "<td>";
+					html_Str += "<input type='checkbox' class='ch_user' value=" + nodes[x] + " id=" + nodes[x]+ " >";
+					html_Str += "<label for=" + nodes[x]+ " ></label>";
+					html_Str += "</td>";
+					html_Str += "<td>";
+					html_Str += str_cd_nm;
+					html_Str += "</td>";
+					html_Str += "<td>";
+					html_Str += str_name;
+					html_Str += "</td>";
+					html_Str += "<td>";
+					html_Str += nodes[x];
+					html_Str += "<input type='hidden' class='EMP_NO' name='EMP_NO' value=" + nodes[x] + " >"; 
+					html_Str += "</td>";
+					html_Str += "</tr>";
+					user_array[user_array.length] = nodes[x];
+				}
+			}
+		}
+	} else {
+		for(x=0 ; x<nodes.length; x++) {
+			//if( nodes[x].id != "por" && jQuery.inArray( nodes[x].id , user_array) < 0 ){
+			if( jQuery.inArray( nodes[x] , user_array) < 0 ){
+				//var str_cd_nm = "";
+				
+				var str_cd_nm = userRoleObj[x];
+				var str_name = userNameObj[x];
+					
+				html_Str += "<tr>";
+				html_Str += "<td>";
+				html_Str += "<input type='checkbox' class='ch_user' value=" + nodes[x] + " id=" + nodes[x]+ " >";
+				html_Str += "<label for=" + nodes[x]+ " ></label>";
+				html_Str += "</td>";
+				html_Str += "<td>";
+				html_Str += str_cd_nm;
+				html_Str += "</td>";
+				html_Str += "<td>";
+				html_Str += str_name;
+				html_Str += "</td>";
+				html_Str += "<td>";
+				html_Str += nodes[x];
+				html_Str += "<input type='hidden' class='EMP_NO' name='EMP_NO' value=" + nodes[x] + " >"; 
+				html_Str += "</td>";
+				html_Str += "</tr>";
+				user_array[user_array.length] = nodes[x];
+			}
+		}
+	}
+	
+	$("#addUserTable").append( html_Str );
+	fn_closePopup();
+}
+
+function fn_deleteUser(){
+	
+	var con = 0;
+	
+	$(".ch_user").each(function(){
+		if($(this).is(":checked")){
+			con = 1;
+		}
+	});
+	
+	if(con != 1){
+		alert('#springMessage("menu.store.userGroup.alert.checkRemove")'); //"제거 할 사용자를 체크해 주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("menu.store.userGroup.alert.doRemove")')){ //"제거 하시겠습니까?"
+		return;
+	}
+	
+	$(".ch_user").each(function(){
+		if($(this).is(":checked")){
+			$(this).parent().parent().remove();
+		}
+	});
+};
+
+$(document).on("click","#ch_UserAll",function(){
+	if($(this).is(":checked")){
+		$(".ch_user").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+			$(this).parent().parent().removeClass().addClass("selected");
+		});
+	} else {
+		$(".ch_user").each(function(){
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+			$(this).parent().parent().removeClass();
+		});
+	}
+});
+
+$(document).on("click",".ch_user",function(){
+	if($(this).is(":checked")){
+		$(this).parent().parent().removeClass().addClass("selected");
+	} else {
+		$(this).parent().parent().removeClass();
+	}
+});
+
+$(document).on("click",".tabOutClass",function(){
+	$(".tabOverClass").removeClass().addClass("tabOutClass");
+	$(this).removeClass().addClass("tabOverClass");
+/*	
+	if($(this).attr("id") == "summaryList"){
+		fn_GotUserAuth();
+	} else {
+		fn_GoUserDivison();
+	}
+*/
+});
+
+function fn_GotUserAuth(){
+	//var url = CONTEXT_PATH + "/admin/store/userAppAuth/addUserAuth";
+	var url = CONTEXT_PATH + "/admin/store/userAppAuth/addUser";
+	var type = "GET";
+	var data = "";
+	var target = $("#image_list");
+	fn_getCommonList( url, type, data , target );
+}
+
+function fn_GoUserDivison(){
+	
+	alert('fn_GoUserDivison');
+
+	var url = CONTEXT_PATH + "/admin/store/userAppAuth/addUserDivision";
+	var type = "GET";
+	var data = "";
+	var target = $("#image_list");
+	fn_getCommonList( url, type, data , target );
+}
+
+function fn_appAuthRegist(){
+
+	if(($(".EMP_NO").length + $(".GRP_ID").length) < 1){
+		alert('#springMessage("menu.store.appManage.alert.noUserIn")');//"등록할 사용자가 없습니다."
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doSave")')){ //"저장하시겠습니까?"
+		return;
+	}
+	
+	var grp_array = new Array();
+	var user_array = new Array();
+	var app_array = new Array();
+	
+	$(".GRP_ID").each(function(){
+		grp_array[grp_array.length] = $(this).val(); 
+	});
+	
+	$(".EMP_NO").each(function(){
+		user_array[user_array.length] = $(this).val(); 
+	});
+	
+	$(".APP_IDX").each(function(){
+		app_array[app_array.length] = $(this).val(); 
+	});
+	
+	$("#GRP_ID_LIST").val(grp_array);
+	$("#EMP_NO_LIST").val(user_array);
+	$("#APP_IDX_LIST").val(app_array);
+
+	var url = CONTEXT_PATH + "/admin/store/userAppAuth/regist";
+	var data = $("form[name=AppValueList]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+			}
+		}
+	});
+}
+</script>
+
+<div class="contents-area" class="open">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>
+	#### E : 프로그램 위치 기술 부분  ####
+	
+	<form name="AppValueList" method="post">
+		<input type="hidden" id="EMP_NO_LIST" name="EMP_NO_LIST" >
+		<input type="hidden" id="GRP_ID_LIST" name="GRP_ID_LIST" >
+		<input type="hidden" id="APP_IDX_LIST" name="APP_IDX_LIST">
+	</form>
+	
+	#### S : 조회 폼 부분  ####
+	<form name="AuthList" method="get">
+		#### S : 리스트  폼 부분  ####
+		
+		<div class="tbCon" id="menuAuthMainFrom">
+			
+			<table class="full-width">
+				<caption></caption>
+				<colgroup>
+					<col>
+					<col style="width:20px">
+					<col>
+				</colgroup>
+				<tr>
+					<td class="tbl-wrap valignTop">
+					
+						<h2 class="tbl-title">App #springMessage("common.text.list")</h2>		<!-- 목록 -->
+						<table class="tbl-nb full-width">
+							<colgroup>
+								<col width="40%"/>
+								<col width="60%"/>
+							</colgroup>
+							<thead>
+								<tr>
+									<th>#springMessage("menu.store.userGroup.category")</th> <!-- 카테고리 -->
+									<th>#springMessage("common.text.appname")</th> <!-- App 명 -->
+								</tr>
+							</thead>
+							<tbody>
+								#foreach( $AppInfo in $AppList )
+									<tr class="app_data">
+										<td style="text-align:center;" >
+											$AppInfo.CATG_NM
+										</td>
+										<td style="text-align:center;" >
+											$AppInfo.APP_NM
+											<input type="hidden" class="APP_IDX" name="APP_IDX" value="$AppInfo.APP_IDX">
+										</td>
+									</tr>
+								#end
+							</tbody>
+						</table>
+						
+					</td>
+					
+					<td class="txtCenter">
+					</td>
+					
+					<td class="tbl-wrap valignTop">
+						
+						<h2 class="tbl-title">#springMessage("common.text.user") #springMessage("common.text.list")</h2> <!-- 사용자 목록 -->
+						<table class="tbl-nb full-width">
+							<colgroup>
+								<col width="17%"/>
+								<col width="26%"/>
+								<col width="26%"/>
+								<col width="31%"/>
+							</colgroup>
+							<thead>
+								<tr >
+									<th><input type="checkbox" id="ch_UserAll"/><label for="ch_UserAll"></label></th>
+									<th>#springMessage("menu.store.user.position")</th> <!-- 직위 -->
+									<th>#springMessage("common.text.name")</th> <!-- 이름 -->
+									<th>#springMessage("menu.store.user.number")</th> <!-- 사번 -->
+								</tr>
+							</thead>
+							<tbody id="addUserTable">
+								<tr id="user_null">
+									<td colspan="4" >
+										#springMessage("menu.store.appManage.alert.addUser") <!--사용자를 추가 해주세요. -->
+									</td>			
+								</tr>
+							</tbody>
+						</table>
+						
+					</td>
+				</tr>
+			</table>
+
+		</div>
+			
+		<div class="btnArea ta_r">
+			<a href="javascript:void(0)" id="BTN_REMOVE" name="BTN_REMOVE" onclick="fn_deleteUser();" class="btn1 fr">#springMessage("common.button.remove")</a>	<!-- 제거 -->
+			<a href="javascript:void(0)" id="BTN_ADD" name="BTN_ADD" onClick="fn_addUser();" class="btn1 fr">#springMessage("common.button.add")</a>	<!-- 추가 -->
+			<a href="javascript:void(0)" id="BTN_SAVE" name="BTN_SAVE" onClick="fn_appAuthRegist();" class="btn1 fr">#springMessage("common.button.save")</a>	<!-- 저장 -->
+		</div>
+		
+		#### E : 리스트  폼 부분  ####
+	</form>
+</div>
+

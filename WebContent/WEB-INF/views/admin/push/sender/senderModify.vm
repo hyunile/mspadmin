@@ -1,0 +1,50 @@
+<form name="frmSenderInfo" method="POST">
+	
+	<table class="tbl" summary="발송자 코드,발송자 이름">
+		<colgroup><!--  2cell  -->
+			<col width="30%"/><col width="auto"/>
+		</colgroup>
+		<tr>
+			<th scope="row">
+				<label for="SENDERCODE" class="required">#springMessage("menu.push.setting.senderCode")</label> <!-- 발송자 코드 -->
+			</th>
+			<td>
+			#if($pushSenderOne)
+				<input type="hidden" name="SENDERSEQ" value="$!pushSenderOne.SENDERSEQ" />
+				<input type="hidden" name="SENDERCODE" value="$!pushSenderOne.SENDERCODE" />
+				$!pushSenderOne.SENDERCODE
+			#else
+				<input type="hidden" id="CHECK_CODE" value="0" />
+				<input type="text" id="SENDERCODE" name="SENDERCODE" onchange="fn_code_change()" style="width:160px;"/>
+				<a href="javascript:void(0)" class="btn2" onclick="fn_check_code()">#springMessage("menu.push.appManage.sameCheck")</a>  <!-- 중복체크 -->
+			#end
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="SENDERNAME" class="required">#springMessage("menu.push.setting.senderName")</label> <!-- 발송자 이름 -->
+			</th>
+			<td>
+				<input type="text" id="SENDERNAME" name="SENDERNAME" value="$!pushSenderOne.SENDERNAME" />
+			</td>
+		</tr>
+		<tr>
+			<th scope="row">
+				<label for="SENDERDESC">#springMessage("menu.push.setting.senderDesc")</label> <!-- 발송자 설명 -->
+			</th>
+			<td>
+				<input type="text" id="SENDERDESC" name="SENDERDESC" value="$!pushSenderOne.SENDERDESC" />
+			</td>
+		</tr>
+	</table>
+		
+	<div class="btn-wrap txtCenter">
+	#if(!$pushSenderOne)
+		<a href="javascript:void(0)" onclick="fn_senderWrite();" class="btn1">#springMessage("common.button.save")</a>	<!-- 저장 -->
+	#else
+		<a href="javascript:void(0)" onclick="fn_senderModify();" class="btn1">#springMessage("common.button.modify")</a>	<!--수정  -->
+		<a href="javascript:void(0)" onclick="fn_senderDelete();" class="btn1 type2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+	#end
+		<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div> 
+</form>

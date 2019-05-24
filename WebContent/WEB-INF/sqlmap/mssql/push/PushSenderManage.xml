@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.sender.mapper.PushSenderManageDao">
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT CONVERT(integer, #{PAGE_SIZE}) PAGE_SIZE
+	, CONVERT(integer, #{PAGE_NUM}) PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	
+	 <!--  발송자 리스트 조회  -->
+    <select id="SelectSenderList" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto" resultType="kr.msp.admin.push.sender.dto.PushSenderDto">
+        <include refid="head"/>
+	        SELECT 
+			    SENDERSEQ
+			   ,SENDERCODE
+			   ,SENDERNAME
+			   ,SENDERDESC
+			   ,REGID
+			   ,CONVERT(VARCHAR(10), REGDT, 120) REGDT
+			   ,MODID
+			   ,CONVERT(VARCHAR(10), MODDT, 120) MODDT 
+			   ,ROW_NUMBER() OVER(ORDER BY SENDERSEQ DESC) PAGE_KEY
+			FROM T_PUSH_SENDER_INFO
+			WHERE ISDELETED = 'N'
+        <include refid="bottom"/>
+    </select>
+    
+    <!--  발송자 조회  -->
+    <select id="SelectSenderOne" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto" resultType="kr.msp.admin.push.sender.dto.PushSenderDto">
+    	SELECT 
+			    SENDERSEQ
+			   ,SENDERCODE
+			   ,SENDERNAME
+			   ,SENDERDESC
+			   ,REGID
+			   ,CONVERT(VARCHAR(10), REGDT, 120) REGDT
+			   ,MODID
+			   ,CONVERT(VARCHAR(10), MODDT, 120) MODDT 
+			FROM T_PUSH_SENDER_INFO
+			WHERE ISDELETED = 'N'
+			AND SENDERSEQ = #{SENDERSEQ}
+    </select>
+    
+    <!--  발송자 코드 중복 조회  -->
+    <select id="SelectSenderDupCheck" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto" resultType="java.lang.Integer">
+        SELECT COUNT(*) AS COUNT
+		FROM T_PUSH_SENDER_INFO
+		WHERE ISDELETED = 'N' AND SENDERCODE = #{SENDERCODE}
+    </select>
+    
+    <!--  발송자 등록  -->
+    <insert id="InsertSender" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto">
+        INSERT INTO T_PUSH_SENDER_INFO (
+        							SENDERSEQ
+                                   ,SENDERCODE
+                                   ,SENDERNAME
+                                   ,ISDELETED
+                                   ,SENDERDESC
+                                   ,REGID
+								   ,REGDT
+                                )
+		SELECT	(SELECT ISNULL(MAX(SENDERSEQ), 0) + 1 FROM T_PUSH_SENDER_INFO) SENDERSEQ
+						,#{SENDERCODE} SENDERCODE
+						,#{SENDERNAME} SENDERNAME
+						,'N' ISDELETED
+						,#{SENDERDESC} SENDERDESC
+						,#{REGID} REGID
+						,GETDATE() REGDT
+    </insert>
+    
+    <!--  발송자 수정  -->
+    <update id="UpdateSender" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto">
+        UPDATE T_PUSH_SENDER_INFO
+		   SET SENDERCODE = #{SENDERCODE}
+			  ,SENDERNAME = #{SENDERNAME}
+			  ,SENDERDESC = #{SENDERDESC}
+			  ,MODID = #{MODID}
+			  ,MODDT = GETDATE()
+		   WHERE SENDERSEQ = #{SENDERSEQ}
+    </update>
+    
+    <!--  발송자 수정 - 삭제 -->
+    <update id="UpdateSenderDelete" parameterType="kr.msp.admin.push.sender.dto.PushSenderDto">
+        UPDATE T_PUSH_SENDER_INFO
+		   SET ISDELETED = 'Y'
+	     WHERE SENDERSEQ = #{SENDERSEQ}
+    </update>
+    
+    
+</mapper>

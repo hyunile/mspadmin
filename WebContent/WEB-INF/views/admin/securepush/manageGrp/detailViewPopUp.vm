@@ -1,0 +1,41 @@
+<div>
+	<p style="font-size:16px;margin-top:4px;margin-bottom:10px;color:#333;line-height:23px;">#springMessage("menu.securePush.manageGrp.grpName"): $!itemInfo.GRP_NM&nbsp;<span class="$!itemInfo.GRP_COLOR"></span></p> <!-- 그룹명 -->
+	<table class="tbl noMargin">
+		<colgroup>
+			<col style="width:420px">
+		</colgroup>
+		<thead>
+			<tr>
+				<td >
+					<p style="text-align:center;">#springMessage("menu.securePush.manageGrp.member")</p> <!-- 구성원 -->
+				</td>
+			</tr>
+		</thead>
+	</table>
+	<div class="tblScroll">
+		<table class="tbl">
+			<caption></caption>
+			<colgroup>
+				<col style="width:420px">
+			</colgroup>
+			<tbody>
+				#foreach( $groupUser in $itemInfo.groupUserList )
+					#if($groupUser.Dept)
+				<tr>
+					<td>$!groupUser.DEPT_NM ($!groupUser.FULL_NM)</td>
+				</tr>
+					#else
+				<tr>
+					<td>$!groupUser.USER_NM ($!groupUser.USER_FULL_NM)</td>
+				</tr>
+					#end
+				#end
+			</tbody>
+		</table>
+	</div>
+	<div class="btn-wrap">
+		<a href="javascript:fn_grpDelete('$!itemInfo.GRP_ID');void(0)" class="btn1 type2">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+		<a href="javascript:fn_goSelectOrgPop('$!itemInfo.GRP_ID');void(0);" class="btn1 type2">#springMessage("common.button.modify")</a> <!-- 수정 -->
+		<a href="javascript:fn_closePopup();void(0);" class="btn1 fr">#springMessage("common.button.close")</a> <!-- 닫기 -->
+	</div>
+</div>

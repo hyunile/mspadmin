@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.notice.mapper.NoticeManageDao">
+
+
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+
+
+	<select id="selectMainNoticePopData"  parameterType="kr.msp.admin.store.notice.dto.NoticeDto" resultType="kr.msp.admin.store.notice.dto.NoticeDto">
+	    SELECT
+	    		A.BOARD_IDX,
+                A.BOARD_DETAIL_TYPE,
+                A.BOARD_TITLE,
+                A.BOARD_CONTENT,
+                A.REG_ID,
+                TO_CHAR (A.REG_DT, 'YYYY.MM.DD') AS REG_DT,
+                A.MOD_ID,
+                TO_CHAR (A.MOD_DT, 'YYYY.MM.DD') AS MOD_DT,
+                A.BOARD_TYPE,
+                A.USE_YN,
+                A.SVC_ID,
+                A.HIT,
+                ( SELECT CD_NM  FROM TB_SYS_CD_INFO WHERE CD_GRP_ID = 'ST001' AND CD_ID = A.BOARD_DETAIL_TYPE  AND USE_YN = 'Y') BOARD_DETAIL_TYPE_NM
+         FROM TB_STO_BOARD  A
+	     WHERE A.BOARD_IDX = #{BOARD_IDX} 
+	     AND A.BOARD_TYPE = #{BOARD_TYPE}
+	</select><!-- 완료 -->
+	
+	<!-- 공지사항 조회 -->
+    <select id="selectNoticeList" parameterType="kr.msp.admin.store.notice.dto.NoticeSearchDto" resultType="kr.msp.admin.store.notice.dto.NoticeDto" >
+        <include refid="head"/>
+			SELECT  noti.BOARD_IDX,
+                        noti.BOARD_TYPE,
+                        noti.BOARD_TITLE,
+                        noti.BOARD_CONTENT,
+                        noti.REG_ID,
+                        TO_CHAR (noti.REG_DT, 'YYYY.MM.DD') AS REG_DT,
+                        noti.MOD_ID,
+                        TO_CHAR (noti.MOD_DT, 'YYYY.MM.DD') AS MOD_DT,
+                        noti.BOARD_DETAIL_TYPE,
+                        noti.USE_YN,
+                        NVL(noti.SVC_ID,'1') SVC_ID,
+                        noti.HIT,
+                       ( SELECT CD_NM  FROM TB_SYS_CD_INFO WHERE CD_GRP_ID = 'ST001' AND CD_ID = noti.BOARD_DETAIL_TYPE  AND USE_YN = 'Y') BOARD_DETAIL_TYPE_NM
+             FROM TB_STO_BOARD  noti
+            <where>
+			USE_YN = 'Y'
+			AND noti.BOARD_TYPE = #{BOARD_TYPE}
+			<if test="BOARD_TITLE != null">
+				AND BOARD_TITLE LIKE '%' || #{BOARD_TITLE} || '%'
+			</if>
+			<if test="BOARD_CONTENT != null">
+				AND BOARD_CONTENT LIKE '%' || #{BOARD_CONTENT} || '%'
+			</if>
+		</where>
+        ORDER BY noti.REG_DT DESC
+        <include refid="bottom"/>
+    </select><!-- 완료 -->
+    
+	    
+   <!-- 공통코드  리스트 조회 -->
+    <select id="selectCommonCodeList" parameterType="String"  resultType="kr.msp.admin.store.notice.dto.NoticeCommonDto">
+        SELECT B.CD_ID,  B.CD_NM
+ 		FROM  TB_SYS_CD_GRP A, TB_SYS_CD_INFO  B
+ 		WHERE  A.CD_GRP_ID = #{commonCode}
+ 		AND A.CD_GRP_ID = B.CD_GRP_ID
+ 		AND A.USE_YN = 'Y'
+ 		AND B.USE_YN = 'Y'
+		ORDER BY SORT_NO		
+    </select><!-- 완료 -->
+    
+    
+    <!-- 신규번호 조회 -->
+    <select id="selectNewNoNotice" resultType="java.lang.String">
+        SELECT
+             LPAD(NVL(MAX(BOARD_IDX), 0)+1, 10 , '0') AS BOARD_IDX
+        FROM TB_STO_BOARD
+    </select><!-- 완료 -->
+    
+    <select id="selectStoreFileList"  parameterType="kr.msp.admin.store.notice.dto.NoticeDto"  resultType="kr.msp.admin.store.notice.dto.NoticeFileDto">
+		SELECT A.FILE_IDX, A.FILE_PATH,A.FILE_NAME, A.FILE_SAVE_NAME, A.FILE_EXT, A.FILE_SIZE, A.REG_DT, A.MOD_DT, A.STS_CD, B.SVC_ID, A.BOARD_IDX
+        FROM TB_STO_FILE A, TB_STO_BOARD B
+		WHERE   A.BOARD_IDX = #{BOARD_IDX}
+		AND A.BOARD_IDX = B.BOARD_IDX
+	</select>
+    
+    <!-- 공지사항 등록-->
+    <insert id="insertNotice" parameterType="kr.msp.admin.store.notice.dto.NoticeDto">
+		INSERT INTO TB_STO_BOARD(
+		             BOARD_IDX
+		            ,BOARD_DETAIL_TYPE
+		            ,BOARD_TITLE
+		            ,BOARD_CONTENT
+		            ,REG_ID
+		            ,REG_DT
+		            ,USE_YN
+		            ,BOARD_TYPE
+		            ,SVC_ID
+		            ,HIT
+		        )VALUES(
+		             #{BOARD_IDX}
+		            ,#{BOARD_DETAIL_TYPE}
+		            ,#{BOARD_TITLE}
+		            ,#{BOARD_CONTENT}
+		            ,#{REG_ID}
+		            ,(CURRENT TIMESTAMP)
+		            ,'Y'
+		            ,'NOTICE'
+		            ,#{SVC_ID}
+		            ,0
+		        )
+    </insert>
+    
+    <!-- 팝업 수정 -->
+    <update id="updateNotice" parameterType="kr.msp.admin.store.notice.dto.NoticeDto">
+		UPDATE TB_STO_BOARD
+		    SET BOARD_TITLE     = #{BOARD_TITLE}
+		       ,BOARD_CONTENT  = #{BOARD_CONTENT}
+		       ,BOARD_DETAIL_TYPE		=#{BOARD_DETAIL_TYPE}
+		       ,MOD_ID  = #{MOD_ID}
+		       ,MOD_DT = (CURRENT TIMESTAMP)
+		WHERE BOARD_IDX = #{BOARD_IDX}
+    </update>
+    
+    <!-- 조회수 수정 -->
+    <update id="updateNoticeHit" parameterType="kr.msp.admin.store.notice.dto.NoticeDto">
+		UPDATE TB_STO_BOARD
+		SET  HIT = (SELECT max(HIT)+1 FROM TB_STO_BOARD where  BOARD_IDX = #{BOARD_IDX} )
+		WHERE BOARD_IDX = #{BOARD_IDX}
+    </update><!-- 완료 -->
+           
+     <!-- 공지사항삭제 -->
+    <delete id="deleteNotice" parameterType="kr.msp.admin.store.notice.dto.NoticeDto">
+        DELETE FROM TB_STO_BOARD
+        WHERE BOARD_IDX = #{BOARD_IDX}
+    </delete>
+
+ 	<!-- 파일정보 입력 -->
+	<insert id="insertStoreFile" parameterType="kr.msp.admin.store.notice.dto.NoticeFileDto" >
+		INSERT INTO	TB_STO_FILE (FILE_IDX, FILE_PATH, FILE_NAME, FILE_SAVE_NAME, FILE_EXT, FILE_SIZE, REG_DT, REG_ID,  BOARD_IDX)
+		VALUES (SEQ_TB_STO_FILE.NEXTVAL, #{FILE_PATH}, #{FILE_NAME}, #{FILE_SAVE_NAME}, #{FILE_EXT}, #{FILE_SIZE},  (CURRENT TIMESTAMP), #{REG_ID}, #{BOARD_IDX})
+	</insert>
+	<!-- 공지사항별 파일정보 전부삭제 -->
+	<delete id="deleteNoticeFileAll" parameterType="kr.msp.admin.store.notice.dto.NoticeDto">
+        DELETE FROM TB_STO_FILE
+        WHERE BOARD_IDX = #{BOARD_IDX}
+    </delete>
+	<!--공지사항별  파일정보 선택삭제 -->
+	<delete id="deleteNoticeFile" parameterType="kr.msp.admin.store.notice.dto.NoticeFileDto">
+        DELETE FROM TB_STO_FILE
+        WHERE FILE_IDX = #{FILE_IDX}
+    </delete>      
+</mapper>

@@ -1,0 +1,64 @@
+<table class="tbl-nb" summary="제목,등록자,등록일,수정자,수정일,상세">
+	<colgroup><!--  6cell  -->
+		<col width="auto"/><col width="20%"/><col width="10%"/><col width="10%"/><col width="10%"/><col width="70px"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("common.header.title")</th> <!-- 제목 -->
+			<th scope="col">#springMessage("common.text.appname")</th> <!-- App. 명 -->
+			<th scope="col">#springMessage("common.header.useYN")</th> <!-- 사용여부 -->
+			<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+			<th scope="col">#springMessage("common.header.modifyDate")</th> <!-- 수정일 -->
+			<th scope="col"> </th>
+		</tr>
+	</thead>
+	<tbody>
+	#foreach( $mobileNotic in $mobileNoticeList )
+		#set($j_tot = $mobileNotic.TOT_CNT)
+		<tr>
+			<td >
+				$esc.xml($!mobileNotic.TITLE)
+				<input type="hidden" class="NOTC_IDX" value="$!mobileNotic.NOTC_IDX"/>
+			</td>
+			<td >
+				$esc.xml($!mobileNotic.SVC_NM)
+			</td>
+			<td>
+				#if($mobileNotic.USE_YN == "Y")
+					#springMessage("common.header.nowUse") <!-- 사용중 -->
+				#else
+					#springMessage("common.header.useStop") <!-- 사용중지 -->
+				#end
+			</td>
+			<td>
+				$!mobileNotic.REG_DTTM
+			</td>
+			<td>
+				$!mobileNotic.MOD_DTTM
+			</td>
+			<td>
+				<a href="javascript:void(0)" class="btn2" id="noticeInfo">#springMessage("common.button.modify")</a> <!-- 수정 -->
+			</td>
+		</tr>
+	#end
+	#if(!$j_tot)
+		<tr>
+			<td colspan="6" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+	#end
+	</tbody>
+</table>
+
+<input type="hidden" id="NOTICE_NUM" value="$!R_PAGE_NUM"/>
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_noticeList"/>
+</div>

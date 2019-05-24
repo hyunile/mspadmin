@@ -1,0 +1,28 @@
+<!-- 
+화면 : 모바일관리 개발 화면 - 개발완료후 제거
+url : admin/mobile
+작성자 : 장문규
+ -->
+
+<div id="conWrap">
+
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="headerBg">
+		<div class="innerNavi">
+			<a href="#"><img src="/resources/img/icon/icon_home.gif" alt="home"/></a> <span>모바일</span> <span>리소스 관리</span> <span>배포관리</span> <strong>목록</strong>
+		</div>
+		<div class="tb_tit">
+			<h3>테스트 개발 페이지</h3>
+		</div>
+	</div>
+	#### E : 프로그램 위치 기술 부분  ####
+	<div class="contents">
+		<h3>테스트 </h3>
+		<div class="searchBox">
+			<ul><ui> <a href="/admin/mobile/rsc/upload" > 리소스 업로드</a> </ui></ul>
+			<ul><ui> <a href="/admin/mobile/rsc/deployList" > 배포관리</a></ui></ul>
+			<ul><ui> <a href="/admin/mobile/rsc/" > 리소스 관리</a></ui></ul>
+		</div>
+	</div>
+</div>
+

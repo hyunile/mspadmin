@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.campaign.campaignPush.mapper.TestGroupUserDao">
+
+
+    <!--  ================================================================================================= -->
+    <!-- begin of paging query -->
+    <!--  ================================================================================================= -->
+    <!-- head of paging query -->
+    <sql id="head">
+        WITH LST AS
+        (
+        SELECT A.*
+        ,		ROW_NUMBER() OVER () RNUM
+        FROM
+        (
+    </sql>
+    <!-- tail of paging query -->
+    <sql id="bottom">
+        ) A
+        )
+        SELECT  A.*
+        ,       (SELECT COUNT(1) FROM LST) TOT_CNT
+        FROM    LST A
+        WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+        AND     #{PAGE_SIZE} * #{PAGE_NUM}
+    </sql>
+    <!--  ================================================================================================= -->
+    <!-- end of paging query -->
+    <!--  ================================================================================================= -->
+
+    <!--테스트 그룹 사용자 리스트 조회 -->
+    <select id="selectTestGroupUser" parameterType="hashmap" resultType="kr.msp.admin.campaign.campaignPush.dto.TestGroupUserDTO" >
+        <include refid="head"/>
+        SELECT UGI.GROUPSEQ,UGI.GROUPNAME,PUI.CUID,PUI.CNAME,PUI.PSID,PUI.PNSID,PUI.PHONENO
+        FROM T_PUSH_USER_INFO PUI, T_PUSH_USER_GROUP UG, T_PUSH_USER_GROUP_INFO UGI
+        WHERE UGI.GROUPTYPE='T'
+        and UGI.GROUPSEQ=UG.GROUPSEQ
+        and UG.CUID=PUI.CUID
+        and UGI.ISDELETED='N'
+        <if test="searchKey != null and  searchKey != ''">
+            <if test="searchKey == 'CUID'">
+                AND PUI.CUID LIKE '%' || #{searchWord} || '%'
+            </if>
+            <if test="searchKey == 'CNAME'">
+                AND PUI.CNAME LIKE '%' || #{searchWord} || '%'
+            </if>
+            <if test="searchKey == 'PHONENO'">
+                AND PUI.PHONENO LIKE '%' || #{searchWord} || '%'
+            </if>
+        </if>
+        <if test="PNSID != null and PNSID != ''">
+            AND PUI.PNSID=#{PNSID}
+        </if>
+        <include refid="bottom"/>
+    </select>
+
+</mapper>

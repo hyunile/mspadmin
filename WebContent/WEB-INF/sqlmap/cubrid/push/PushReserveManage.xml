@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.ReserveServiceDao">
+
+    <!--  ================================================================================================= -->
+    <!-- begin of paging query -->
+    <!--  ================================================================================================= -->
+    <sql id="head">
+        SELECT *
+        FROM ( SELECT
+        ROWNUM RNUM
+        ,COUNT(*) OVER() TOT_CNT
+        ,A.*
+        FROM (SELECT * FROM (
+    </sql>
+
+    <sql id="bottom">
+        )
+        ) A
+        )
+        WHERE RNUM BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+    </sql>
+    <!--  ================================================================================================= -->
+    <!-- end of paging query -->
+    <!--  ================================================================================================= -->
+
+    <!-- 예약발송 리스트 -->
+    <select id="selectReserveMsg" parameterType="hashmap" resultType="kr.msp.admin.push.reserve.dto.ReserveMsgDto">
+        <include refid="head"/>
+        SELECT
+        RESERVE_SEQNO,
+        APP_ID,
+        MESSAGE,
+        SOUNDFILE,
+        BADGENO,
+        PRIORITY,
+        EXT,
+        SENDERCODE,
+        SERVICECODE,
+        TO_CHAR(RESERVEDATE, 'YYYY.MM.DD hh24:mi') as RESERVEDATE,
+        TYPE,
+        ATTACHFILE,
+        GROUPSEQ,
+        CUID,
+        TO_CHAR(REGDATE, 'YYYY.MM.DD hh24:mi') as REGDATE,
+        PROCESS_FLAG
+        FROM T_PUSH_RESERVE_MSG
+        <where>
+            <if test="RESERVEDATE_S != null and RESERVEDATE_S != '' and RESERVEDATE_E != null">
+                RESERVEDATE BETWEEN TO_DATETIME(#{RESERVEDATE_S}, 'YYYY.MM.DD hh24:mi') AND TO_DATETIME(#{RESERVEDATE_E}, 'YYYY.MM.DD hh24:mi')
+            </if>
+            <if test="APPID != null and APPID!=''">
+                AND APP_ID=#{APPID}
+            </if>
+        </where>
+        ORDER BY RESERVEDATE DESC
+        <include refid="bottom"/>
+    </select>
+</mapper>

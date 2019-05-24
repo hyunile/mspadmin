@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.user.mapper.PushUserManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+    <sql id="head">
+        SELECT viewC.*
+        FROM (
+        SELECT
+        (ROW_NUMBER() OVER()) AS "RNUM"
+        ,COUNT(*) OVER() AS "TOT_CNT"
+        ,viewB.*
+        FROM (SELECT viewA.* FROM (
+    </sql>
+
+    <sql id="bottom">
+        ) AS viewA
+      ) AS viewB
+    ) AS viewC
+    WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+    </sql>
+	
+	<!-- 고객 리스트 조회 -->
+	<select id="SelectPushUserService" parameterType="kr.msp.admin.push.user.dto.PushUserDto" resultType="kr.msp.admin.push.user.dto.PushUserDto">
+        <include refid="head"/>
+        SELECT "USERSEQNO"
+        ,"PUSHKEY"
+        ,"DEVICEID"
+        ,"PNSID"
+        ,"CUID"
+        ,"CNAME"
+        ,"APPID"
+        ,"PHONENO"
+        ,TO_CHAR( "REGDATE", 'YYYY.MM.DD HH24') AS "REGDATE"
+        ,TO_CHAR( "MODDATE", 'YYYY.MM.DD HH24') AS "MODDATE"
+        FROM "T_PUSH_USER_INFO"
+        WHERE "PUSHKEY" is not NULL
+        <if test="CUID != null and CUID != ''">
+            AND "CUID" LIKE #{CUID} || '%'
+        </if>
+        <if test="CNAME != null and CNAME != ''">
+            AND "CNAME" LIKE #{CNAME} || '%'
+        </if>
+        <if test="PHONENO != null and PHONENO != ''">
+            AND "PHONENO" LIKE #{PHONENO} || '%'
+        </if>
+        <if test="APPID != null and APPID != ''">
+			AND "APPID" LIKE #{APPID} || '%'
+		</if>
+
+        <include refid="bottom"/>
+
+	</select>
+	
+	<select id="SelectPushUserCount" parameterType="kr.msp.admin.push.user.dto.PushUserDto" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+        FROM "T_PUSH_USER_INFO"
+        WHERE "PUSHKEY" is not NULL
+		<if test="CUID != null and CUID != ''">
+			AND "CUID" LIKE #{CUID} || '%'
+		</if>
+		<if test="CNAME != null and CNAME != ''">
+			AND "CNAME" LIKE #{CNAME} || '%'
+		</if>
+		<if test="PHONENO != null and PHONENO != ''">
+			AND "PHONENO" LIKE #{PHONENO} || '%'
+		</if>
+		<if test="APPID != null and APPID != ''">
+			AND "APPID" LIKE #{APPID} || '%'
+		</if>
+	</select>
+	
+	<!-- 고객 리스트 조회 (푸쉬서비스에 등록된 고객만 조회) -->
+	<select id="SelectPushUserServiceRegistration" parameterType="kr.msp.admin.push.user.dto.PushUserDto" resultType="kr.msp.admin.push.user.dto.PushUserDto">
+        <include refid="head"/>
+        SELECT "USERSEQNO"
+        ,"PUSHKEY"
+        ,"PSID"
+        ,"PNSID"
+        ,"DEVICEID"
+        ,"CUID"
+        ,"CNAME"
+        ,"APPID"
+        ,"PHONENO"
+        ,"REGDATE"
+        ,"MODDATE"
+        FROM  "T_PUSH_USER_INFO"
+        WHERE "PUSHKEY" is not NULL
+        <if test="APPID != null and APPID != ''">
+            AND "APPID" = #{APPID}
+        </if>
+        <if test="CUID != null and CUID != ''">
+            AND "CUID" LIKE #{CUID} || '%'
+        </if>
+        <if test="CNAME != null and CNAME != ''">
+            AND "CNAME" LIKE #{CNAME} || '%'
+        </if>
+        <if test="PHONENO != null and PHONENO != ''">
+            AND "PHONENO" LIKE #{PHONENO} || '%'
+        </if>
+        <include refid="bottom"/>
+	</select>
+	
+	<!-- 고객수 조회 (푸쉬서비스에 등록된 고객만 조회) -->
+	<select id="SelectPushUserServiceRegistrationCount" parameterType="kr.msp.admin.push.user.dto.PushUserDto" resultType="java.lang.Integer">
+		SELECT COUNT(U."CUID")
+		FROM "T_PUSH_USER" AS U, "T_PUSH_USER_APP" AS A
+		WHERE U."ISDELETED" = 'N'
+		AND U."CUID" = A."CUID"
+		<if test="CUID != null and CUID != ''">
+			AND "CUID" LIKE #{CUID} || '%'
+		</if>
+		<if test="CNAME != null and CNAME != ''">
+			AND "CNAME" LIKE #{CNAME} || '%'
+		</if>
+		<if test="PHONENO != null and PHONENO != ''">
+			AND "PHONENO" LIKE #{PHONENO} || '%'
+		</if>
+	</select>
+
+    <!-- NEW 고객수 조회 (푸쉬서비스에 등록된 고객만 조회) -->
+    <select id="SelectPushServiceRegCount" parameterType="hashmap" resultType="java.lang.Integer">
+        SELECT COUNT(*) as "TOT_CNT" FROM "T_PUSH_USER_INFO"
+    </select>
+
+	<!-- 고객 CUID 중복 체크 -->
+	<select id="PushUserCheck" parameterType="kr.msp.admin.push.user.dto.PushUserDto" resultType="java.lang.Integer">
+		SELECT COUNT("CUID") FROM "T_PUSH_USER" WHERE "CUID" = #{CUID}
+	</select>
+	
+	
+	<!-- 고객 정보 등록 -->
+    <insert id="InsertPushUser" parameterType="kr.msp.admin.push.user.dto.PushUserDto">
+        INSERT INTO "T_PUSH_USER" (
+		                          "CUID"
+		                         ,"CNAME"
+		                         ,"PHONENO"
+		                         ,"REGDATE"
+		                         ,"MODDATE"
+		                         ,"ISDELETED"
+		                        ) VALUES (
+		                          #{CUID}
+		                         ,#{CNAME}
+		                         ,#{PHONENO}
+		                         ,now()
+		                         ,now()
+		                         ,'N'
+		                        )
+    </insert>
+    
+    <!-- 고객 단건 조회 -->
+	<select id="SelectPushUserOne" parameterType="kr.msp.admin.push.user.dto.PushUserDto" resultType="kr.msp.admin.push.user.dto.PushUserDto">
+		SELECT "USERSEQNO"
+			,"PUSHKEY"
+            ,"CUID"
+            ,"CNAME"
+            ,"PHONENO"
+            ,TO_CHAR( "REGDATE", 'YYYY.MM.DD HH24') AS "REGDATE"
+            ,TO_CHAR( "MODDATE", 'YYYY.MM.DD HH24') AS "MODDATE"
+            ,"APPID"
+            ,"PSID"
+            ,"DEVICEID"
+            ,"PNSID"
+        FROM "T_PUSH_USER_INFO"
+        WHERE "PUSHKEY" = #{PUSHKEY}
+	</select>
+	
+	<!-- 고객 수정 -->
+	<update id="UpdatePushUser" parameterType="kr.msp.admin.push.user.dto.PushUserDto">
+		UPDATE 	"T_PUSH_USER_INFO"
+		SET 	"CNAME" = #{CNAME}
+				,"PHONENO" = #{PHONENO}
+		WHERE 	"PUSHKEY" = #{PUSHKEY}
+	</update>
+	
+	<!-- 고객 정보 수정 - 삭제-->
+    <update id="updateUserDelete" parameterType="kr.msp.admin.push.user.dto.PushUserDto">
+         DELETE FROM "T_PUSH_USER_INFO"
+         WHERE "PUSHKEY" = #{PUSHKEY}
+    </update>
+</mapper>

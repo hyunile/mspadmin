@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.event.mapper.EventSchedulerPDao">
+	
+	<select id="selectCampaignPushAdminRsrvDTOList" parameterType="kr.msp.admin.campaign.campaignPush.dto.CampaignPushAdminRsrvDTO" resultType="kr.msp.admin.campaign.campaignPush.dto.CampaignPushAdminRsrvDTO">
+		SELECT RESERVE_SEQNO, APP_ID, MESSAGE, SOUNDFILE, BADGENO, PRIORITY, EXT, SENDERCODE, SERVICECODE, DATE_FORMAT(RESERVEDATE, '%Y%m%d %H%i%s') AS RESERVEDATE, TYPE, DB_IN, ATTACHFILE, GROUPSEQ, CUID, REGDATE, PROCESS_FLAG, RESERVETYPE, ISCONDITION 
+		FROM T_PUSH_RESERVE_MSG
+	</select>
+	
+	<delete id="deleteCampaignPushAdminRsrvDTO" parameterType="kr.msp.admin.campaign.campaignPush.dto.CampaignPushAdminRsrvDTO">
+		DELETE FROM T_PUSH_RESERVE_MSG WHERE RESERVE_SEQNO = #{RESERVE_SEQNO}
+	</delete>
+</mapper>

@@ -1,0 +1,119 @@
+<script language="javascript" type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/charJs/chartJs.js"></script> <!--  챠트관련  -->
+<script language="javascript" type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/charJs/mspCommonCharJs.js"></script> <!--  챠트관련  -->
+
+<script type="text/javascript">
+
+	$(document).ready(function(){
+		setDataBarData();
+		renderChart();
+	});
+	
+	var data = "";
+	function setDataBarData(){
+		var dbData = "";
+        var chartLableList = [];
+        var chatrDataList= [];
+        #if($!{jsonList})
+        	dbData = $!{jsonList};
+        #end
+        
+        if(dbData!=""){
+            for(var i=0; i<dbData.length; i++){
+                var chartLable =dbData[i].DT;
+
+                if("$!{req_priodType}"=="D"){
+                	chartLable = chartLable.substring(8,10)+"일";
+                }
+                
+                chartLableList.push(chartLable);
+                chatrDataList.push(dbData[i].CNT);
+            }
+        }
+        
+        var charTitleLabel = "";
+        #if($ChartLabel)
+        	charTitleLabel = "$ChartLabel";
+        	charTitleLabel = charTitleLabel.replace("&nbsp;", ""); 
+        #end
+        
+        data = {
+			    labels: chartLableList,
+			    datasets: [
+			        {
+			            label: charTitleLabel,
+			            backgroundColor:getMspBackgroundColor(chatrDataList.length),
+			            borderColor: getMspBorderColor(chatrDataList.length),
+			            borderWidth: 1,
+			            data: chatrDataList,
+			        }
+			    ]
+			};
+	}
+	
+	
+	function renderChart() {
+		var ctx = document.getElementById("cvsChart");
+		ctx.innerHTML = '';
+		var myRadarChart = new Chart(ctx, {
+											type : "bar",
+											data : data,
+											options : getMspCharBarOptions()
+											}
+									);
+	}
+
+</script>
+<div>
+    <div id="blockDiv" style="margin-bottom: 10px" class="scrollPane">
+	    <div id="content">
+	        <canvas id="cvsChart" width="800" height="400"></canvas>
+	    </div>
+	</div>
+    
+    <table class="tbl-nb" style="width:100%">
+        <colgroup>
+            <col style="width:15%;"/>
+            <col style="width:85%;"/>
+        </colgroup>
+        <thead>
+        <tr>
+            <th>#springMessage("common.text.dayType")</th> <!-- 일자 -->
+        	<th>#springMessage("menu.stats.mobile.accessNum")</th> <!-- 접속수 -->
+        </tr>
+        </thead>
+        #foreach( $row in $statisticsList )
+        #set($cntPercent = 90 * $!row.CNT / $!MaxCnt)
+        #set($j_tot = $row.size())
+    
+        <tr>
+            <td>$!row.DT</td>
+            <td style="text-align:left;">
+				<div style="float:left;height:15px; width:$cntPercent%;background-color: orange;"/> 
+				<p style="font-weight: bold; color: #000000">($!row.CNT)</p>
+##         	   <table border=1 style="height:2px; width:$cntPercent%;"><tr><td style="background-color: orange;">$!row.CNT</td></tr></table>
+			</td>
+        </tr>
+    	#end
+    	
+        #if(!$j_tot)
+        <tr>
+            <td align="center" colspan="3"> #springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+        </tr>
+        #end
+    </table>
+    
+    
+    <input type="hidden" id="CODE_NUM" value="$!R_PAGE_NUM" />
+    <div class="j_page_div">
+    ##현재 페이지
+        <input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+    ##총 개수
+        <input type="hidden" name="J_tot" value="$!j_tot" />
+    ##한페이지의 로우수
+        <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+    ##한페이지수
+        <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    ##이밴트
+        <input type="hidden" name="j_event" value="fn_se_select" />
+    </div>
+</div>		

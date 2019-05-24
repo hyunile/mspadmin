@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.common.mapper.InterDao">
+	<select id="selectCommonCode" parameterType="kr.msp.admin.common.dto.CommonCodeDto" resultType="kr.msp.admin.common.dto.CommonCodeDto">
+     	SELECT CD_ID
+              ,CD_NM 
+              ,CD_GRP_ID
+        FROM   TB_SYS_CD_INFO
+        WHERE  CD_GRP_ID = #{CD_GRP_ID}
+        AND    USE_YN = 'Y'
+        ORDER  BY SORT_NO
+	</select>
+</mapper>

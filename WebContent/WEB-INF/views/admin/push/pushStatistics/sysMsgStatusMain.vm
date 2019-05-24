@@ -1,0 +1,242 @@
+<style type="text/css">
+    div.scrollPane{overflow-x:scroll;overflow-y:hidden;float:left; width:100%;}			/* 결과 화면의 SCROLL 을 위한 DIV Style [ScrollPane] */
+</style>
+<script type="text/javascript">
+
+    var CONTEXT_PATH= '$!{CONTEXT_PATH}';
+    $(document).ready(function(){
+        //공통 페지징 처리
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+        //레이어 팝업 사용
+        $(".window").css({width:"650px", height:"650px"});
+
+        /*
+        $.datepicker.setDefaults({
+            buttonImageOnly: true, // 버튼에 있는 이미지만 표시한다.
+            changeMonth: false, // 월을 바꿀수 있는 셀렉트 박스를 표시한다.
+            changeYear: true, // 년을 바꿀 수 있는 셀렉트 박스를 표시한다.
+            minDate: '-50y', // 현재날짜로부터 100년이전까지 년을 표시한다.
+            nextText: '#springMessage("menu.stats.mobile.nextMonth")', //'다음 달', // next 아이콘의 툴팁.
+            prevText: '#springMessage("menu.stats.mobile.prevMonth")', //'이전 달', // prev 아이콘의 툴팁.
+            numberOfMonths: [1,1], // 한번에 얼마나 많은 월을 표시할것인가. [2,3] 일 경우, 2(행) x 3(열) = 6개의 월을 표시한다.
+            stepMonths: 1, // next, prev 버튼을 클릭했을때 얼마나 많은 월을 이동하여 표시하는가.
+            yearRange: 'c-10:c+10', // 년도 선택 셀렉트박스를 현재 년도에서 이전, 이후로 얼마의 범위를 표시할것인가.
+            showButtonPanel: true, // 캘린더 하단에 버튼 패널을 표시한다.
+            currentText: '#springMessage("menu.stats.mobile.today")', //'오늘 날짜' , // 오늘 날짜로 이동하는 버튼 패널
+            closeText: '#springMessage("common.button.close")', //'닫기',  // 닫기 버튼 패널
+            dateFormat: "yymmdd", // 텍스트 필드에 입력되는 날짜 형식.
+            showAnim: "slideDown", //애니메이션을 적용한다.
+            showMonthAfterYear: true , // 월, 년순의 셀렉트 박스를 년,월 순으로 바꿔준다.
+            dayNamesMin: ['#springMessage("common.text.sun")','#springMessage("common.text.mon")',
+      					'#springMessage("common.text.tues")','#springMessage("common.text.wed")',
+      					'#springMessage("common.text.thurs")','#springMessage("common.text.fri")',
+      					'#springMessage("common.text.sat")'], //['일', '월', '화', '수', '목', '금', '토'], // 요일의 한글 형식.
+         	monthNamesShort: ['1'+'#springMessage("common.text.month")','2'+'#springMessage("common.text.month")',
+                            '3'+'#springMessage("common.text.month")','4'+'#springMessage("common.text.month")',
+                            '5'+'#springMessage("common.text.month")','6'+'#springMessage("common.text.month")',
+                            '7'+'#springMessage("common.text.month")','8'+'#springMessage("common.text.month")',
+                            '9'+'#springMessage("common.text.month")','10'+'#springMessage("common.text.month")',
+                            '11'+'#springMessage("common.text.month")','12'+'#springMessage("common.text.month")']
+          				//['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'] // 월의 한글 형식.
+        });
+
+        //달력 구현
+        $("#START_DT").datepicker({
+            regional        : "ko",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true
+        });
+
+        //달력 구현
+        $("#END_DT").datepicker({
+            regional        : "ko",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true
+        });
+		*/
+		
+        //달력 초기화
+        fn_mp_init_datePicker("START_DT", "START_DT");
+        fn_mp_init_datePicker("END_DT", "END_DT");
+
+        var defaultDate1 = $.datepicker.formatDate("yymmdd", new Date());
+        var defaultYear = defaultDate1.substring(0,4);
+        var defaultMonth = defaultDate1.substring(4,6);
+        var defaultDay = defaultDate1.substring(6,8);
+        var defaultEndDate = lastMonDay(defaultYear,defaultMonth); //현재달 마지막 날 구하기
+
+        $("#START_DT").val((Number(defaultYear)-1)+""+defaultMonth+"01");
+        $("#END_DT").val(defaultDate1);
+
+    });
+
+    function chkSubmit(){
+        var sfrm=document.frmSearch;
+
+        var startDate = $("#START_DT").val();
+        if (!startDate) {
+        	alert('#springMessage("menu.stats.mobile.alert.inputStart")'); //"검색 시작일을 입력해 주세요."
+            return false;
+        }
+
+        var endDate = $("#END_DT").val();
+        if (!endDate) {
+            alert('#springMessage("menu.stats.mobile.alert.inputEnd")'); //검색 종료일을 입력해 주세요.
+            return false;
+        }
+
+        if (startDate > endDate) {
+            alert('#springMessage("menu.stats.mobile.alert.checkDate")'); //검색 시작일이 종료일 보다 작아야 합니다.
+            return false;
+        }
+
+        return true;
+    }
+    function fn_se_select(pageNo)
+    {
+        var url = CONTEXT_PATH + "/admin/push/sysSentStatus";
+        var targetDivID = "joinTableDiv";
+        var formName = "frmSearch";
+
+        var type = "POST";
+        var data = $("form[name="+formName+"]").serialize() + "&PAGE_NUM=" + pageNo;
+        var target = $("#"+targetDivID);
+
+        fn_getCommonList( url, type, data , target );
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+
+    // 조회
+    $(document).on("click","#goSearch",function(){
+        if(chkSubmit()){
+            fn_se_select(1);
+        }
+    });
+
+
+    // 조회 시작일 종료일 셋팅
+    function setSearchDay(){
+        //선택된 달의 첫날과 마지막날로 셋팅
+        var SelYY = $("#S_DT_YY").val();
+        var SelMM = $("#S_DT_MM").val();
+        $("#START_DT").val(SelYY+""+SelMM+"01");
+        $("#END_DT").val(SelYY+""+SelMM+""+lastMonDay(SelYY,SelMM));
+    }
+
+    // 설정한 달의 마지막날 구하기
+    function lastMonDay(YYYY,MM){
+        var int_d = new Date(YYYY,MM,1);
+        var d = new Date(int_d-1);
+        return d.getDate();
+    }
+    function csvDown(sendate){
+        if(confirm('#springMessage("menu.stats.push.alert.csvDown1")'+'('+sendate+')'+'#springMessage("menu.stats.push.alert.csvDown2")')){ // 선택된 날짜     //로 발송된 발송정보 CSV파일을 다운 받으시겠습니까?
+            document.location.href="$!{DEFAULT_RECEIVER_HOST}/rcv_sentLogDownLoad.ctl?SENDATE="+sendate+"&SEQNO=0";
+        }
+    }
+	
+	function fn_changeRowSize(){
+    	fn_commonSetRowSize();
+    	fn_se_select(1);
+    }
+</script>
+<!--  calendar frame  -->
+<!-- 
+<div id="dialogPop" title="플랫폼 관리" style="display:none;"></div>
+ -->
+
+<div class="contents-area">
+
+#### S : 프로그램 위치 기술 부분  ####
+    <div class="nav">
+		<span>#springMessage("menu.stats")</span>		<!-- 통계 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>
+#### E : 프로그램 위치 기술 부분  ####
+
+#### S : 조회 폼 부분  ####
+    <form name="frmSearch" method="post">
+        <input type="hidden" id="rtnCd" value="$!rtnCd" />
+        <input type="hidden" id="rtnMsg" value="$!rtnMsg" />
+		
+		
+    		<table class="tbl-search">
+    			<colgroup>
+					<col style="width:100px">
+					<col style="width:400px">
+					<col>					
+				</colgroup>
+    			<thead>
+    			## 1
+    			<tr>
+                    <th>#springMessage("menu.stats.push.sendCode")</th> <!-- 발송자 코드 -->
+                    <td>
+                        <select name="SENDERCODE" class="w90">
+                            <option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+                            #foreach($senderCode in $senderCodeList)
+                            <option value="$senderCode.SENDERCODE">$senderCode.SENDERNAME</option>
+                            #end
+                        </select>
+                    </td>
+                    <td></td>
+                </tr>
+    			##2
+    			<tr>
+                    <th>#springMessage("menu.stats.push.viewDate")</th> <!-- 조회날짜 -->
+                    <td>
+                        <input type="text" id="START_DT" name="START_DT" class="datepicker sDate" readonly placeholder="날짜선택" value="$!searchParam.START_DT" maxlength="8">
+	       				<label for="START_DT"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+	                        &nbsp;&nbsp;~&nbsp;&nbsp;
+	                    <input type="text" id="END_DT" name="END_DT" class="datepicker sDate" readonly placeholder="날짜선택" value="$!searchParam.END_DT" maxlength="8">
+	       				<label for="START_DT"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+                    </td>
+                    <td>
+                    	<a href="javascript:void(0)" id="goSearch" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+                    </td>
+                </tr>
+                </thead>
+    		</table>
+    	
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+		
+    </form>
+    
+    <form class="frmList" name="frmJoinList" method="post">
+        
+        #### S : 리스트  폼 부분  ####
+            
+		<div class="btn_sel_group">
+	          <table class="tbl-info">
+				<caption></caption>
+				<tr>
+					<td>
+						
+					</td>
+					<td class="txtRight">
+						#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+						<div class="tbl-info-select">
+							<label for="num">#springMessage("common.select.options_10")</label>
+							<select id="selRowSize" onchange="fn_changeRowSize()">
+	            				<option value="10">#springMessage("common.select.options_10")</option>
+	            				<option value="30">#springMessage("common.select.options_30")</option>
+	            				<option value="50">#springMessage("common.select.options_50")</option>
+	            			</select>
+						</div>
+					</td>
+				</tr>
+			</table>
+		
+         <div id="joinTableDiv">
+             <!--  templete vm include  -->
+             #parse ("/admin/push/pushStatistics/sysMsgStatusList.vm")
+         </div>
+            
+       	<br><br>
+    #### E : 리스트  폼 부분  ####
+    </form>
+</div>

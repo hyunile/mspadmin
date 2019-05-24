@@ -1,0 +1,47 @@
+	<h2 class="tbl-title">#springMessage("menu.push.user.inList")</h2> <!-- 등록된 리스트 -->
+	<table class="tbl-nb full-width" summary="항목선택,CUID,이름,전화번호">
+
+		<thead>
+			<tr>
+				<th scope="col" style="width: 40px"><input id="in_all_check" type="checkbox" title="#springMessage('common.title.selectAllList')" /><label for="in_all_check"></label></th> <!-- 전체항목선택 -->
+				<th scope="col">#springMessage("login.userid")</th> <!-- 아이디 -->
+				<th scope="col">#springMessage("common.text.userName")</th> <!-- 사용자명 -->
+			</tr>
+		</thead>
+		<tbody>
+		#foreach( $pushUser in $pushInUserList )
+			#set($j_tot = $!pushUser.TOT_CNT)
+			<tr class="check_tr">
+				<td>
+					<input type="checkbox" class="CUID" id="$!pushUser.CUID" value="$!pushUser.CUID" title="#springMessage('common.title.selectOne')" /> <!-- 항목선택 -->
+					<label for="$!pushUser.CUID"></label>
+				</td>
+				<td style="text-align:left;">
+					$esc.xml($!pushUser.CUID)
+				</td>
+				<td style="text-align:left;">
+					$esc.xml($!pushUser.CNAME)
+				</td>
+			</tr>
+		#end
+		#if(!$j_tot)
+			<tr>
+				<td colspan="3" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+			</tr>
+		#end
+		</tbody>
+	</table>
+
+	<input type="hidden" id="IN_USER_NUM" value="$!R_PAGE_NUM" />
+	<div class="j_page_div">
+		##현재 페이지
+		<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+		##총 개수
+		<input type="hidden" name="J_tot" value="$!j_tot" />
+		##한페이지의 로우수
+		<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+		##한페이지수
+		<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+		##이밴트
+		<input type="hidden" name="j_event" value="fn_InUserList" />
+	</div>

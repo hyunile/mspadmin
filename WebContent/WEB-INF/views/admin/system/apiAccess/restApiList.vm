@@ -1,0 +1,59 @@
+<h4 class="title">#springMessage("menu.system.restApiList")</h4> <!-- REST API 목록-->
+<table class="tbList1" summary="항목선택,CUID,이름,전화번호">
+	<colgroup><!--  4cell  -->
+		<col width="10%"/><col width="auto"/><col width="20%"/><col width="70px"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("common.header.apply")</th> <!-- 적용 -->
+			<th scope="col">#springMessage("menu.system.apiURL")</th> <!-- API URL -->
+			<th scope="col">#springMessage("menu.push.appManage.insertDate")</th> <!-- 등록일자 -->
+			<th scope="col"> </th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $restApi in $restApiList )
+        	#set($j_tot = $!restApi.TOT_CNT)
+	       	<tr>
+	       		<td>
+	       			
+	       			#if($!restApi.USE_YN == "Y")
+	       				<input type="checkbox" id="ch_api" value="$!restApi.API_IDX" checked="checked"/>
+			       	#else 
+			       		<input type="checkbox" id="ch_api" value="$!restApi.API_IDX" />
+			       	#end
+	       			<input type="hidden" class="API_IDX" value="$!restApi.API_IDX">
+       			</td>
+       			<td style="text-align:left;">
+	       			$esc.xml($!restApi.URL_PATH)
+	       		</td>
+	       		<td>
+	       			$!restApi.REG_DTTM
+	       		</td>
+       			<td>
+	       			<button type="button" id="restApiModify" class="btn_style2"><span>#springMessage("common.button.modify")</span></button><!-- 수정 -->
+       			</td>
+        	</tr>
+       	#end
+       	#if(!$j_tot)
+			<tr>
+				<td colspan="4">
+					#springMessage("common.alert.nodata")<!-- 데이터가 없습니다. -->
+				</td>
+			</tr>
+		#end
+	</tbody>
+</table>
+<input type="hidden" id="RESTAPI_NUM" value="$!R_PAGE_NUM">
+<div class="j_page_div">
+ 	##현재 페이지
+ 	<input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+    ##총 개수
+    <input type="hidden" name="J_tot" value="$!j_tot">
+    ##한페이지의 로우수
+    <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+    ##한페이지수
+    <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_restApiList">
+</div>

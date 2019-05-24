@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.monitoring.mapper.MonitoringManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+    <sql id="head">
+    SELECT viewC.*
+    FROM (
+      SELECT
+            (ROW_NUMBER() OVER()) AS "RNUM"
+            ,COUNT(*) OVER() AS "TOT_CNT"
+            ,viewB.*
+      FROM (SELECT viewA.* FROM (
+    </sql>
+
+    <sql id="bottom">
+        ) AS viewA
+      ) AS viewB
+    ) AS viewC
+    WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+    </sql>
+	
+	<!-- 서버 상태 리스트 조회 -->
+    <select id="SelectServerList" parameterType="kr.msp.admin.push.monitoring.dto.MonitoringDto" resultType="kr.msp.admin.push.monitoring.dto.MonitoringDto">
+		<include refid="head"/>
+	        SELECT 
+			    A."SERVERTYPE"
+			   ,A."SERVERNAME""
+			   ,A."IPADDRESS""
+			   ,A."PORT""
+			   ,B."STATUS""
+			FROM t_push_server_info A
+			     LEFT OUTER JOIN t_push_server_status B ON (A."IPADDRESS" = B."IPADDRESS" AND A."PORT" = B."PORT")
+			ORDER BY "SERVERTYPE" DESC
+		<include refid="bottom"/>
+    </select>
+    
+    <!-- 서버 장애 리스트조회 -->
+    <select id="SelectServerLogList" parameterType="kr.msp.admin.push.monitoring.dto.MonitoringDto" resultType="kr.msp.admin.push.monitoring.dto.MonitoringDto">
+       <include refid="head"/>
+            SELECT DISTINCT
+                   "IPADDRESS"
+                  ,"PORT"
+                  ,TO_CHAR("REGDATE", 'YYYY.MM.DD HH24:MI:SS') AS "REGDATE"
+                  ,"SERVERNAME"
+                  ,"SERVERTYPE"
+			FROM t_push_alert_log
+			WHERE "IPADDRESS" = #{IPADDRESS}
+			AND "PORT" = #{PORT}
+            ORDER BY "REGDATE" DESC
+        <include refid="bottom"/>
+    </select>
+	
+</mapper>

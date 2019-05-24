@@ -1,0 +1,248 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+$response.setContentType("text/html")
+###set( $sessionid = $request.getSession().getId())
+##$response.setHeader("SET-COOKIE", "JSESSIONID=$sessionid;Path=/; HttpOnly")
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<meta http-equiv="content-type" content="applicaton/xhtml+xml;charset=utf-8" />
+<title>#springMessage("header.title")</title>
+<link rel="shortcut icon" href="$RESOURCES_PATH/img/favicon_morphues.png" />
+<!--  <link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/common_admin_old.css" />  -->
+<!--  <link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery.treeview.css" />  -->
+<link rel="stylesheet" type="text/css" href="$!{RESOURCES_PATH}/css/smoothness/jquery-ui-1.10.3.custom.css" />
+
+<!--  공통 - 기본 디자인 skin 선택  -->
+<!--   <link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/mp_admin_style.css" />	skin: default  -->
+<link rel="stylesheet" type="text/css" href="$!{RESOURCES_PATH}/css/mp_skin_red/css/mp_admin_style.css" />	<!--   skin: red  -->
+<link rel="stylesheet" type="text/css" href="$!{RESOURCES_PATH}/css/mp_admin_dev_style.css" />	<!--   skin: red  -->
+<!--  <link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/mp_skin_blue/css/mp_admin_style.css" />	skin: blue   -->
+
+
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/jquery/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/common.js"></script>
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/jquery/jquery-ui-1.10.3.custom.min.js"></script>
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/jquery/i18n/jquery.ui.datepicker-ko.js"></script>
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/common_ui.js"></script>			<!--  UI 관련 공통 js 추가 :: 2013-11-06 txs  -->
+<style type="text/css">
+textarea					{resize: none}		/* textarea resizing 하지 않도록 함. */
+textarea.nonScroll	{width:93%;}		/* 스크롤 하지 않는 textarea */
+</style>
+##[endif]
+<!--  <script type="text/javascript" src="js/template_on.js"></script>  -->
+<script type="text/javascript">
+//root path 경로 지정
+var UNICODE_BYTES = "$!{UNICODE_BYTES}";
+var CONTEXT_PATH;
+var RESOURCES_PATH;
+
+//공통 - 기본 다이얼로그 디자인 변경
+function fn_dialogDesign(uid) { 
+	var obj = jQuery('div[aria-describedby="'+uid+'"]');//해당팝업객체 ID
+	jQuery(".ui-dialog-titlebar-close",obj).hide();//디폴트 close 제거 후 이벤트객체 추가
+	jQuery('.ui-dialog-titlebar'      ,obj).css({'height':'40px'})
+						  .append('<button type="button" class="btn_close '+uid+'" style="position:absolute;cursor:pointer;">닫기</button>');
+	jQuery('.ui-dialog-title'         ,obj).css('padding-top', '8px');
+}
+
+jQuery(document).ready(function(){
+	CONTEXT_PATH = $("#CONTEXT_PATH").val();
+	RESOURCES_PATH = $("#RESOURCES_PATH").val();
+    jQuery(".m_menu").find("a").click(function(){
+
+        var submenu = jQuery(this).nextAll("ul");
+        if(jQuery(this).nextAll(".Left_Menu_level").val() == 2){
+	        if( submenu.is(":visible") ){
+	            submenu.slideUp();
+	        }else{ 
+	        	jQuery(".m_menu").find("ul").slideUp();
+	            submenu.slideDown();
+	        }
+		}
+    });
+
+    fn_OnMenu();
+    fn_titleMenuNavi();
+    
+});
+
+function fn_titleMenuNavi(){
+	var top_nm = $("#Left_MenuTop_Id").prevAll("h2").find("strong").text();
+	var navi_str = "<a href='$CONTEXT_PATH/'><img src='$RESOURCES_PATH/img/icon/icon_home.gif' alt='home'/></a>";
+	var menu_su =  $(".m_menu").find(".on").length;
+	if(menu_su == 0){
+		navi_str += " <strong>" + top_nm + "</strong>";
+//		$(".tb_tit").html("<h3>공지사항</h3>");
+	}else if( menu_su == 1 ){
+		navi_str += " <span>" + top_nm + "</span> <strong>" + $(".on").text().replace(top_nm,'') + "</strong>";
+		//navi_str += " > <strong>" + $(".on").text() + "</strong>";
+		$(".tb_tit").html("<h3>" + $(".m_menu").find(".on").text() + "</h3>");
+	} else if(menu_su == 2){
+		$(".m_menu").find(".on").each(function(su){
+			if(su == 0){
+				navi_str += " > <span>" + top_nm + "</span> > <span>" + $(this).text() + "</span>";
+				//navi_str += " > <span>" + $(this).text() + "</span>";
+			} else if(su == 1){
+				navi_str += " <strong>" + $(this).text() + "</strong>";
+				$(".tb_tit").html("<h3>" + $(this).text() + "</h3>");
+			}
+		});
+	}
+	$(".innerNavi").html(navi_str);
+}
+
+function fn_OnMenu(){
+	if(jQuery("#S_ID_LEFT_MENU").val() != ""){
+		var onMenu = jQuery("#" + jQuery("#S_ID_LEFT_MENU").val());
+		onMenu.addClass("on");
+		if(onMenu.nextAll(".Left_Menu_level").val() == 3){
+			//onMenu.parents(".s_menu").prevAll("a").addClass("on");
+			onMenu.parents(".s_menu").show();
+		}
+	}
+}
+
+function fn_logOut(){
+	document.location.href = "$CONTEXT_PATH/logOut";
+}
+
+function GO_MENU_URL(goMenuId,goMenuUrl){
+	if(goMenuUrl != ""){
+		var goMenuTopId = jQuery("#Left_MenuTop_Id").val();
+		document.location.href = CONTEXT_PATH + "/common/go_menu_url?goMenuUrl="+ goMenuUrl + "&goMenuId=" + goMenuId + "&goMenuTopId=" + goMenuTopId;
+//        document.location.href = CONTEXT_PATH + goMenuUrl + "?goMenuId=" + goMenuId + "&goMenuTopId=" + goMenuTopId;
+	}
+}
+
+function GO_TOP_URL(goMenuTopId,goMenuUrl){
+//	alert(CONTEXT_PATH + "/common/go_menu_url?goMenuUrl="+goMenuUrl+"&goMenuId=&goMenuTopId=" + goMenuTopId);
+	document.location.href = CONTEXT_PATH + "/common/go_menu_url?goMenuUrl="+goMenuUrl+"&goMenuId=&goMenuTopId=" + goMenuTopId;
+}
+
+function fn_goHome(){
+	var goMenuTopId = jQuery("#Left_MenuTop_Id").val();
+	document.location.href = CONTEXT_PATH + "/common/go_menu_url?goMenuUrl=&goMenuId=&goMenuTopId=" + goMenuTopId;
+}
+
+</script>
+</head>
+
+<body>
+## header ##################
+<p id="skipnavi"> <!-- Main Menu -->
+	<a href="#container">본문 바로가기</a>
+	<a href="#mainMenu">주메뉴 바로가기</a>
+	<a href="#secNavi">부메뉴 바로가기</a>
+</p>
+
+<div id="header">
+	<div class="header">
+		<h1><a href="javascript:fn_goHome();"><img src="$RESOURCES_PATH/img/header/logo_#springMessage("login.logo.image").gif" alt='<spring:message code="header.title"/>'/></a></h1>
+		<p class="logout"><strong>$!S_NM_USER</strong> 님 <a href="javascript:fn_logOut()" class="btn_logout">로그아웃</a></p>
+	</div>
+
+	## GNB ########
+	<div class="all_menu">
+		<ul class="gnb" id="mainMenu">
+			#foreach( $top_map in $menuMap.topList )
+             	<li class="menu">
+             		#if($S_ID_TOP_MENU == $!top_map.ID_MENU)
+             			<a class="on">$top_map.NM_MENU</a>
+             		#else
+             			<a href="javascript:GO_TOP_URL('$!top_map.ID_MENU','$!top_map.MENU_URL')">$top_map.NM_MENU</a>
+             		#end
+              	</li>
+           	#end
+		</ul>
+	</div>
+</div>
+
+
+## // header ##
+
+## content ##
+<div id="container">
+
+## leftmenu ###
+<div id="secNavi"> <!-- Left Sub Menu -->
+	<div id="secNavi_1">
+		<input type="hidden" id="S_ID_LEFT_MENU" value="$!S_ID_LEFT_MENU">
+		<input type="hidden" id="CONTEXT_PATH" value="$CONTEXT_PATH">
+		<input type="hidden" id="RESOURCES_PATH" value="$RESOURCES_PATH">
+		#set( $left_su = 0 )
+		#set( $left_su2 = 0 )
+			#foreach( $layoutLeftMenu in $menuMap.leftList )
+				#if($layoutLeftMenu.MENU_LEVEL == 1)
+					<h2>
+						<strong>$!layoutLeftMenu.NM_MENU</strong>
+					</h2>
+					<input type="hidden" id="Left_MenuTop_Id" value="$!layoutLeftMenu.ID_MENU">
+					<ul class="m_menu">
+				#end
+				#if($layoutLeftMenu.MENU_LEVEL == 2)
+					#if($left_su != 0)
+						#if($left_su2 == 2)
+							</ul>
+						#end
+						</li>
+					#end
+					<li>
+						<a id="$!layoutLeftMenu.ID_MENU" href="javascript:GO_MENU_URL('$!layoutLeftMenu.ID_MENU','$!layoutLeftMenu.MENU_URL')" >$!layoutLeftMenu.NM_MENU</a>
+						<input type="hidden" class="Left_Menu_Url" value="$!layoutLeftMenu.MENU_URL">
+						<input type="hidden" class="Left_Menu_level" value="$!layoutLeftMenu.MENU_LEVEL">
+					#set( $left_su = $left_su + 1 )
+					#set( $left_su2 = 1 )
+				#end
+				#if($layoutLeftMenu.MENU_LEVEL == 3)
+					#if($left_su2 == 1)
+						<ul class="s_menu">
+					#end
+					<li>
+						<a id="$!layoutLeftMenu.ID_MENU" href="javascript:GO_MENU_URL('$!layoutLeftMenu.ID_MENU','$!layoutLeftMenu.MENU_URL');">$!layoutLeftMenu.NM_MENU</a>
+						<input type="hidden" class="Left_Menu_Url" value="$!layoutLeftMenu.MENU_URL">
+						<input type="hidden" class="Left_Menu_level" value="$!layoutLeftMenu.MENU_LEVEL">
+					</li>
+					#set( $left_su = $left_su + 1 )
+					#set( $left_su2 = 2 )
+				#end
+			#end
+			#if($left_su != 0)
+				#if($left_su2 == 2)
+					</ul>
+				#end
+				</li>
+			#end
+		</ul>
+	</div>
+</div>
+##leftmenu##
+${screen_content}
+
+</div>
+
+<div id="footer">
+	<div class="footer_area">
+		<address>#springMessage("login.bottom.address")</address>
+		<p>Copyright222 <span>#springMessage("login.bottom.corpname")</span> All rights reserved. #springMessage("login.bottom.homepage") </p>
+	</div>
+</div>
+
+
+<div id="layerpopup" style="position:absolute; z-index:10; top:0px; left:0px;">
+	<div class="mask lightbox_bg"></div>
+	<div id="windowModalPop" class="window"  style="position:absolute; z-index:0; display:none; background-color:#FFFFFF;">
+		<div id='windowPop'></div>
+	</div>
+</div>
+<!--  팝업레이어 위의 최상위 레이어  -->
+<div id="layerpopup2" style="position:absolute; z-index: 100; top:0px; left:0px;">
+	<div class="mask2 lightbox_bg"></div>
+	<div class="window2"  style="position:absolute; z-index:0; display:none; background-color:#FFFFFF;">
+		<div id='windowPop2'></div>
+	</div>
+</div>
+
+<!--  도대체 어디서 툴팁을 가져다 쓰려고 만든건지 몰라도.. css에서 tooltip객체를 찾도록 설정되 있어서 발생 하는 에러를 없애려고 그냥 하나 만들어 넣음...;;  -->
+<div id="tooltip"></div>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function fn_pnsidList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var url = CONTEXT_PATH + "/admin/push/pnsid";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM+"&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+	var target = $("#pnsidTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//PNS ID 등록 화면
+$(document).on("click","#pnsidWrite",function(){
+	var url = CONTEXT_PATH + "/admin/push/pnsid/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 400;
+	var title = "PNS ID "+'#springMessage("common.button.regist")'; //등록
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//PNS ID 수정 화면
+$(document).on("click","#pnsidModify",function(){
+	var VNAME = $(this).parent().parent().find(".VNAME").val();
+	var url = CONTEXT_PATH + "/admin/push/pnsid/edit";
+	var type = "GET";
+	var data = "VNAME=" + VNAME;
+	var target = $("#windowPop");
+	var whideh = 400;
+	var title = "PNS ID "+'#springMessage("common.button.modify")'; //수정
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//PNS ID 중복 체크
+function fn_pnsid_check(){
+	var url = CONTEXT_PATH + "/admin/push/pnsid/check";
+	var data = $("form[name=frmPnsidInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#CHECK_CODE").val("1");
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//PNS ID 코드 변경
+function fn_pnsid_change(){
+	$("#CHECK_CODE").val("0");
+}
+
+//PNS ID 등록
+function fn_pnsidWrite(){
+
+	if( $("form[name=frmPnsidInfo]").find("input[name=VNAME]").val() == ""){
+		alert("KEY"+'#springMessage("common.alert.doInput")'); //을 입력해주세요.
+		return;
+	} else if($("#CHECK_CODE").val() == '0'){
+		alert('#springMessage("menu.push.appManage.alert.doSameCheck")'); //"중복체크를 해주새요."
+		return;
+	}else if( $("form[name=frmPnsidInfo]").find("input[name=VVALUE]").val() == ""){
+		alert("VALUE"+'#springMessage("common.alert.doInput")'); //을 입력해주세요.
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/pnsid/regist";
+	var data = $("form[name=frmPnsidInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_pnsidList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//PNS ID 수정
+function fn_pnsidModify(){
+
+	if( $("form[name=frmPnsidInfo]").find("input[name=VVALUE]").val() == ""){
+		alert("VALUE"+'#springMessage("common.alert.doInput")'); //을 입력해주세요.
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/pnsid/edit";
+	var data = $("form[name=frmPnsidInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_pnsidList($("#PNSID_NUM").val());
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//PNS ID 삭제
+function fn_pnsidDelete(){
+
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/pnsid/delete";
+	var data = $("form[name=frmPnsidInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_pnsidList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_pnsidList(1);
+}
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.push.setting")</span>			<!-- 설정 -->
+		<span>PNS ID</span>	<!-- 메시지 구분 설정 -->
+	</div>
+	<h2 class="page-title">PNS ID</h2>
+    #### E : 프로그램 위치 기술 부분  ####
+
+    <form name="frmList" method="post">
+    #### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="pnsidWrite">#springMessage("common.button.regist")</a> <!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+    	
+	    <div id="pnsidTableDiv">
+	       	<table class="tbl-nb" summary="KEY,VALUE,상세">
+	       		<colgroup><!--  3cell  -->
+					<col width="46%"/>
+					<col width="auto"/>
+					<col width="70px"/>
+				</colgroup>
+	       		<thead>
+		       		<tr>
+		       			<th scope="col">
+		       				KEY
+		       			</th>
+		       			<th scope="col">
+							VALUE
+						</th>
+						<th scope="col">
+							 
+						</th>
+		           	</tr>
+		        </thead>
+	
+		        <tbody>
+		           	#foreach( $pushPnsid in $pushPnsidList )
+		           		#set($j_tot = $!pushPnsid.TOT_CNT)
+			           	<tr>
+			           		<td>
+			           			$esc.xml($!pushPnsid.VNAME)
+			           			<input type="hidden" class="VNAME" value="$!pushPnsid.VNAME">
+		       				</td>
+		       				<td>
+			           			$esc.xml($!pushPnsid.VVALUE)
+			           		</td>
+		       				<td>
+		       					<a href="javascript:void(0)" class="btn2" id="pnsidModify">#springMessage("common.header.detail")</a> <!-- 상세 -->
+		       				</td>
+		           		</tr>
+		       		#end
+		       		#if(!$j_tot)
+						<tr>
+							<td colspan="3">
+								#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+							</td>
+						</tr>
+					#end
+				</tbody>
+	    	</table>
+	   		<input type="hidden" id="PNSID_NUM" value="$!R_PAGE_NUM" />
+	      	<div class="j_page_div">
+	         	##현재 페이지
+	         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+	            ##총 개수
+	            <input type="hidden" name="J_tot" value="$!j_tot" />
+	            ##한페이지의 로우수
+	            <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+	            ##한페이지수
+	            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+	            ##이밴트
+	            <input type="hidden" name="j_event" value="fn_pnsidList" />
+	    	</div>
+		</div>
+		
+    
+	#### E : 리스트  폼 부분  ####
+</form>
+</div>

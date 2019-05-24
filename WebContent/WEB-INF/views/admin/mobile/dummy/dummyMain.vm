@@ -1,0 +1,317 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페이징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+	
+});
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+function ch_search(){
+	var sfrm=document.frmSearch;
+	var sval=$("#conSelect").val();
+	if(sval==0){
+		if(sfrm.apiurl.value.length>0&&sfrm.apiurl.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.apiurl.value="";
+			sfrm.apiurl.focus();
+		}
+	}else if(sval==1){
+		if(sfrm.apinm.value.length>0&&sfrm.apinm.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.apinm.value="";
+			sfrm.apinm.focus();
+		}
+	}
+	fn_dummyList(1);
+}
+
+function fn_dummyList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/mobile/dummy";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#dummyTableDiv");
+	fn_getList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//가상API 등록 화면
+$(document).on("click","#dummyWrite",function(){
+	var url = CONTEXT_PATH + "/admin/mobile/dummy/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 650;
+	var title = "가상 API 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+
+});
+
+//가상API 서비스 등록
+function fn_save(){
+
+	if( $("form[name=frmDummy]").find("textarea[name=apiNm]").val() == ""){
+		alert('#springMessage("common.alert.apiNameIn")'); //API명을 입력 해주세요.
+		return ;
+	}else if( $("form[name=frmDummy]").find("input[name=apiUrl]").val() == ""){
+		alert('#springMessage("common.alert.urlIn")'); //API URL을 입력 해주세요.
+		return ;
+	} else if( $("form[name=frmDummy]").find("select[name=APP_ID]").val() == ""){
+		alert('#springMessage("common.alert.appNameIn")'); //App.명을 선택 해주세요.
+		return ;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doSave")')){ //"저장 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/mobile/dummy/regist";
+	var data = $("form[name=frmDummy]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_dummyList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+
+//공지사항 수정 화면
+$(document).on("click","#dummyInfo",function(){
+	var dummyIdx = $(this).parent().parent().find(".dummyIdx").val();
+	
+	var url = CONTEXT_PATH + "/admin/mobile/dummy/edit";
+	var type = "GET";
+	var data = "dummyIdx=" + dummyIdx;
+	var target = $("#windowPop");
+	var width = 650;
+	var title = "가상 API 수정";
+	
+	
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+
+});
+
+//공지사항 수정
+function fn_modify(){
+
+	if( $("form[name=frmDummy]").find("input[name=apiUrl]").val() == ""){
+		alert('#springMessage("common.alert.urlIn")'); //API URL을 입력 해주세요.
+		return ;
+	} else if( $("form[name=frmDummy]").find("textarea[name=apiNm]").val() == ""){
+		alert('#springMessage("common.alert.apiNameIn")'); //API명을 입력 해주세요.
+		return ;
+	} else if( $("form[name=frmDummy]").find("select[name=svcId]").val() == ""){
+		alert('#springMessage("common.alert.serviceIn")'); //서비스을 입력해주세요.
+		return ;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+	
+
+	var url = CONTEXT_PATH + "/admin/mobile/dummy/edit";
+	var data = $("form[name=frmDummy]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_dummyList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//공지사항 삭제
+function fn_delete(){
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/mobile/dummy/delete";
+	var data = $("form[name=frmDummy]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_dummyList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//공통코드 리스트 페이지 호출(공통)
+function fn_getList( url, type, data, target ){
+
+	var AjaxHTML = jQuery.ajax({
+		url: url ,
+		type: type ,
+		data: data ,
+		dataType: "html" ,
+		async: false
+	}).responseText;
+
+	target.html(AjaxHTML);
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_dummyList(1);
+}
+
+</script>
+
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="header_bg">
+		<div class="inner_navi"></div>
+		<div class="tb_tit"></div>
+	</div>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		<fieldset class="search_type">
+			<legend>검색폼</legend>
+			<table>
+				<caption>가상 API 서비스 관리</caption>
+				<tr>
+					<td class="par_30">
+						<select id="conSelect" title="#springMessage('menu.mobile.notice.title.selectSearch')" class="w120"> <!-- 검색항목선택 -->
+    						<option value="0">API URL</option>
+    						<option value="1">#springMessage("common.text.apiName")</option> <!-- API 명 -->
+    						<option value="2">#springMessage("common.text.appname")</option> <!-- App. 명 -->
+    					</select>
+    					<input class="se_con" type="text" id="apiurl" name="apiUrl" class="inputField" title="API URL" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+    					<input class="se_con" type="text" id="apinm" name="apiNm" class="inputField" title="API 명" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+    					<select class="se_con" name="svcId" title="#springMessage('menu.mobile.notice.title.selectService')" onchange="fn_dummyList(1)"> <!-- 서비스명 선택 -->
+    						<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+    					#foreach( $a in $mobileSvcList )
+    						<option value="$!a.SVC_ID" >$!a.SVC_NM</option>
+    					#end
+    					</select>
+						
+					</td>
+				</tr>
+			</table>
+			<button type="button" onclick="ch_search()" class="btn_inquiry">#springMessage("common.button.view")</button> <!-- 조회 -->
+			<!--  기본은 상세검색버튼, 상세검색이 열렸을 경우 닫기버튼이 활성화  --> 
+			<!-- <button type="button" class="fbtn_detail">상세검색</button> -->
+			<!-- <button type="button" class="fbtn_close">닫기</button> -->
+			<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+		</fieldset>
+	</form>
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<div class="contents">
+			<div class="btn_sel_group">
+            	<div class="fl">
+					<button type="button" class="btn_basic" id="dummyWrite"><span>#springMessage("common.button.regist")</span></button> <!-- 등록 -->
+				</div>
+            	<div class="fr">
+            		<p>#springMessage("common.header.searchResult") <span id="spaTotCnt"></span></p> <!-- 검색결과 -->
+            		<select id="selRowSize" title="#springMessage('common.title.selectOne')" onchange="fn_changeRowSize()"> <!-- 항목선택 -->
+            			<option value="10">#springMessage("common.select.options_10")</option> <!-- 10개씩 보기 -->
+            			<option value="30">#springMessage("common.select.options_30")</option> <!-- 30개씩 보기 -->
+            			<option value="50">#springMessage("common.select.options_50")</option> <!-- 50개씩 보기 -->
+            		</select>	
+            	</div>
+            </div>
+			<div class="tbCon" id="dummyTableDiv">
+				<table class="tb_list" summary="제목,등록자,등록일,수정자,상세">
+					<colgroup><!--  6cell  -->
+                		<col width="60%"/>
+                		<col width="20%"/>
+                		<col width="10%"/>
+                		<col width="10%"/>
+                		<col width="70px"/>
+                	</colgroup>
+                	<thead>
+                		<tr>
+                			<th scope="col">API URL</th>
+                			<th scope="col">#springMessage("common.text.apiName")</th> <!-- API 명 -->
+                			<th scope="col">#springMessage("common.text.appname")</th> <!-- App. 명 -->
+                			<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+                			<th scope="col"></th>
+                		</tr>
+                	</thead>
+					<tbody>
+					#foreach( $a in $dummyList )
+						#set($j_tot = $a.TOT_CNT)
+						<tr>
+							<td style="text-align:left;">
+								$esc.xml($!a.apiUrl)
+								<input type="hidden" class="dummyIdx" value="$!a.dummyIdx"/>
+							</td>
+							<td style="text-align:left;">
+								$esc.xml($!a.apiNm)
+							</td>
+							<td style="text-align:left;">
+								$esc.xml($!a.svcNm)
+							</td>
+							<td>
+								$esc.xml($!a.regDttm)
+							</td>
+							<td>
+								<button type="button" id="dummyInfo" class="sbtn">#springMessage("common.button.modify")</button> <!-- 수정 -->
+							</td>
+						</tr>
+					#end
+					#if(!$j_tot)
+						<tr>
+							<td colspan="6" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+						</tr>
+					#end
+					</tbody>
+				</table>
+
+				<input type="hidden" id="NOTICE_NUM" value="$!R_PAGE_NUM"/>
+				<div class="j_page_div">
+					##현재 페이지
+					<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+					##총 개수
+					<input type="hidden" name="J_tot" value="$!j_tot"/>
+					##한페이지의 로우수
+					<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+					##한페이지수
+					<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+					##이밴트
+					<input type="hidden" name="j_event" value="fn_dummyList"/>
+				</div>
+			</div>
+		</div>
+
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

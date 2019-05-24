@@ -1,0 +1,127 @@
+
+<script type="text/javascript">
+
+    jQuery(document).ready(function(){
+        //공통 페지징 처리
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+        
+        //메시지가 있으면 출력 
+        if($("#rtnMsg").val() != "" ){
+            alert($("#rtnMsg").val());
+        }
+        jQuery("input[name=SEARCH_GRP_NM]").focus();
+        
+        // order by 관련 화면 그리기
+        var target = $("#orderTarget").val();
+        var type = $("#orderType").val();
+        
+        if(target == "GRP_NM"){
+            if(type == "DESC"){
+                $("#orderGrpNm").text('#springMessage("menu.push.user.groupName")'+" ▽"); //그룹명
+            }else{
+                $("#orderGrpNm").text('#springMessage("menu.push.user.groupName")'+" △"); //그룹명 △
+            }
+        }else if(target == "EMP_NM"){
+            if(type == "DESC"){
+                $("#orderEmpNm").text('#springMessage("common.text.memberName")'+" ▽"); //회원명
+            }else{
+                $("#orderEmpNm").text('#springMessage("common.text.memberName")'+" △"); //회원명
+            }
+        }else if(target == "USERID"){
+            if(type == "DESC"){
+                $("#orderUserId").text('#springMessage("common.text.member")'+"ID ▽"); //회원
+            }else{
+                $("#orderUserId").text('#springMessage("common.text.member")'+"ID △"); //회원
+            }
+        }else if(target == "CD_NM"){
+            if(type == "DESC"){
+                $("#orderDeptNm").text('#springMessage("common.text.teamName")'+" ▽"); //부서명
+            }else{
+                $("#orderDeptNm").text('#springMessage("common.text.teamName")'+" △"); //부서명
+            }
+        }
+    });
+    
+</script>
+
+<form name="formList" id="formList"  method="post"  >
+    <input type="hidden" id="TOTAL_CNT" value="$groupList.size()"><!-- 일련번호 -->
+    <h4 class="st1">#springMessage("menu.store.userGroup.info")</h4> <!-- 사용자그룹정보 -->
+    
+    <table class="tbList1"  id="GroupInfoList">
+        <colgroup>
+            <col width="5%"></col>
+            <col width="5%"></col>
+            <col width="30%"></col>
+            <col width="25%"></col>
+            <col width="20%"></col>
+            <col width="15%"></col>
+        </colgroup>
+        
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="checkAll" title="#springMessage('common.title.selectAll')" /></th> <!-- 전체선택 -->
+                <th>NO</th>
+                <th id="orderGrpNm"  style="cursor:pointer;">#springMessage("menu.push.user.groupName")</th> <!-- 그룹명 -->
+                <th id="orderEmpNm" style="cursor:pointer;">#springMessage("common.text.memberName")</th> <!-- 회원명 -->
+                <th id="orderUserId" style="cursor:pointer;">#springMessage("common.text.member")ID</th> <!-- 회원 -->
+                <th id="orderDeptNm" style="cursor:pointer;">#springMessage("common.text.teamName")</th> <!-- 부서명 -->
+            </tr>
+        </thead>
+        <tbody>
+            #foreach( $userGroup in $userGroupList )
+                #set($j_tot = $userGroup.TOT_CNT)
+                 <tr>
+                    <td><input type="checkbox" class="chkCls" value="$userGroup.UG_IDX" title="#springMessage('common.title.selectOne')"/></td> <!-- 항목선택 -->
+                    <td>$!userGroup.RNUM </td>
+                    <td  style="text-align:left;">
+                        <input type="hidden" name="GRP_ID" id="GRP_ID"  value="$!userGroup.GRP_ID" /> <!-- 그룹ID --> 
+                        $!userGroup.GRP_NM <!-- 그룹명 -->
+                    </td>
+                    <td  style="text-align:left;">
+                        <input type="hidden" name="EMP_NO" id="EMP_NO"  value="$!userGroup.EMP_NO" /> 
+                        $!userGroup.EMP_NM<!-- 그룹명 -->
+                    </td>
+                    <td  style="text-align:left;">$!userGroup.USERID </td>
+                    <td  style="text-align:left;">$!userGroup.DEPT_NM </td>
+                   
+                </tr>
+            #end
+            #if(!$j_tot)
+                <tr >
+                    <td align="center" colspan="6">
+                        #springMessage("menu.store.user.noSearch") <!-- 검색된 정보가 없습니다. -->
+                    </td>
+                </tr>
+            #end
+        </tbody>
+    </table>
+              
+   
+
+    
+<input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+    <div class="j_page_div">
+        ##현재 페이지
+        <input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+        ##총 개수
+        <input type="hidden" name="J_tot" value="$!j_tot" />
+        ##한페이지의 로우수
+        <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+        ##한페이지수
+        <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+        ##이밴트R
+        <input type="hidden" name="j_event" value="fn_groupList" />
+    </div>
+</form>
+
+   <div class="btnArea ta_r" id="btn_1">
+         <button type="button" class="btn_style1" id="btn_save"  ><strong>#springMessage("common.button.regist")</strong></button> <!-- 등록 -->
+        #if( $userGroupList.size() > 0)
+            
+            <button type="button" class="btn_style1"  id="btn_delete" ><strong>#springMessage("common.button.delete")</strong></button> <!-- 삭제 -->
+        #end    
+    </div>
+
+
+  

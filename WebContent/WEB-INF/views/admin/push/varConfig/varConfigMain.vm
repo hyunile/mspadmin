@@ -1,0 +1,265 @@
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function fn_varList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var url = CONTEXT_PATH + "/admin/push/varConfig";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM +"&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+	var target = $("#varTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//단말 변수 등록 화면
+$(document).on("click","#varWrite",function(){
+	var url = CONTEXT_PATH + "/admin/push/varConfig/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var width = 500;
+	var title = '#springMessage("menu.push.setting.deviceIn")';//"단말 변수 등록";
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//다말 변수 수정 화면
+$(document).on("click","#varModify",function(){
+	var VNAME = $(this).parent().parent().find(".VNAME").val();
+	var url = CONTEXT_PATH + "/admin/push/varConfig/edit";
+	var type = "GET";
+	var data = "VNAME=" + VNAME;
+	var target = $("#windowPop");
+	var width = 500;
+	var title = '#springMessage("menu.push.setting.deviceUpdate")'; //"단말 변수 수정";
+	fn_getCommonPopupDiv( url, type, data , target , width, title );
+});
+
+//단말변수 체크
+function fn_var_check(){
+
+	if( $("form[name=frmVarConfigInfo]").find("input[name=VNAME]").val() == ""){
+		alert("KEY"+'#springMessage("common.alert.doInput2")'); //를 입력해주세요.
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/varConfig/check";
+	var data = $("form[name=frmVarConfigInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#CHECK_CODE").val("1");
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//단말변수 코드 변경
+function fn_var_change(){
+	$("#CHECK_CODE").val("0");
+}
+
+//단말변수 등록
+function fn_varWrite(){
+
+	if( $("form[name=frmVarConfigInfo]").find("input[name=VNAME]").val() == ""){
+		alert("KEY"+'#springMessage("common.alert.doInput2")'); //를 입력해주세요.
+		return;
+	} else if($("#CHECK_CODE").val() == '0'){
+		alert('#springMessage("menu.push.appManage.alert.doSameCheck")'); //중복체크를 해주세요.
+		return;
+	}else if( $("form[name=frmVarConfigInfo]").find("input[name=VVALUE]").val() == ""){
+		alert("VALUE"+'#springMessage("common.alert.doInput2")'); //를 입력해주세요.
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/varConfig/regist";
+	var data = $("form[name=frmVarConfigInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_varList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//단말변수 수정
+function fn_varModify(){
+
+	if( $("form[name=frmVarConfigInfo]").find("input[name=VVALUE]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.senderNameIn")'); //발송자 이름을 입력해주세요.
+		return;
+	}
+
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/varConfig/edit";
+	var data = $("form[name=frmVarConfigInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_varList($("#VAR_NUM").val());
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//단말변수 삭제
+function fn_varDelete(){
+
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/varConfig/delete";
+	var data = $("form[name=frmVarConfigInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_varList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_varList(1);
+}
+
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>						<!-- 푸시 -->
+		<span>#springMessage("menu.push.setting")</span>				<!-- 설정 -->
+		<span>#springMessage("menu.push.setting.deviceIn")</span>		<!-- 단말 변수 등록 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.push.setting.deviceIn")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="varWrite">#springMessage("common.button.regist")</a> <!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+            
+		<div id="varTableDiv">
+		
+			<table class="tbl-nb" summary="KEY,VALUE,상세">
+				<colgroup><!--  3cell  -->
+					<col width="auto"/><col width="auto"/><col width="70px"/>
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">KEY</th>
+						<th scope="col">VALUE</th>
+						<th scope="col"> </th>
+					</tr>
+				</thead>
+				<tbody>
+				#foreach( $varConfig in $varConfigList )
+					#set($j_tot = $!varConfig.TOT_CNT)
+					<tr>
+						<td >
+							$esc.xml($!varConfig.VNAME)
+							<input type="hidden" class="VNAME" value="$!varConfig.VNAME" />
+						</td>
+						<td >
+							$esc.xml($!varConfig.VVALUE)
+						</td>
+						<td>
+							<a href="javascript:void(0)" class="btn2" id="varModify">#springMessage("common.header.detail")</a> <!-- 상세 -->
+						</td>
+					</tr>
+				#end
+				#if(!$j_tot)
+					<tr>
+						<td colspan="3" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+					</tr>
+				#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="VAR_NUM" value="$!R_PAGE_NUM" />
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot" />
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_varList" />
+			</div>
+			
+		</div>
+
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

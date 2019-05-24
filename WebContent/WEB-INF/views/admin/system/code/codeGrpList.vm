@@ -1,0 +1,75 @@
+<table class="tbl-nb" >
+				<colgroup><!--  8cell  -->
+					<col style="width:80px">
+					<col>
+					<col style="width:120px">
+					<col style="width:120px">
+					<col style="width:120px">
+					<col style="width:120px">
+					<col style="width:60px">
+					<col style="width:60px">
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("common.header.groupCode")</th> <!-- 그룹코드 -->
+						<th scope="col">#springMessage("common.header.groupCodeName")</th> <!-- 그룹코드명 -->
+						<th scope="col">#springMessage("common.header.author")</th> <!-- 작성자 -->
+						<th scope="col">#springMessage("common.header.registDate")</th> <!-- 작성일 -->
+						<th scope="col">#springMessage("common.header.modifyUser")</th> <!-- 수정자 -->
+						<th scope="col">#springMessage("common.header.modifyDate")</th> <!-- 수정일 -->
+						<th scope="col"> </th>
+						<th scope="col"> </th>
+					</tr>
+				</thead>
+				<tbody>
+					#foreach( $codeGroup in $codeGroupList )
+						#set($j_tot = $codeGroup.TOT_CNT)
+						<tr>
+							<td >
+								$!codeGroup.CD_GRP
+								<input type="hidden" class="CD_GRP" value="$!codeGroup.CD_GRP"/>
+							</td>
+							<td >
+								$esc.xml($!codeGroup.NM_GRP)
+							</td>
+							<td >
+								$!codeGroup.ID_INSERT
+							</td>
+							<td >
+								$!codeGroup.DT_INSERT
+							</td>
+							<td >
+								$!codeGroup.ID_UPDATE
+							</td>
+							<td >
+								$!codeGroup.DT_UPDATE
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="btn2" id="codeModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="btn2" id="codeGrpClick">#springMessage("common.button.detail")</a> <!-- 상세 -->
+							</td>
+						</tr>
+					#end
+					#if(!$j_tot)
+						<tr>
+							<td colspan="8" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+						</tr>
+					#end
+				</tbody>
+			</table>
+
+			<input type="hidden" id="CODE_NUM" value="$!R_PAGE_NUM" />
+			<div class="j_page_div">
+				##현재 페이지
+				<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+				##총 개수
+				<input type="hidden" name="J_tot" value="$!j_tot" />
+				##한페이지의 로우수
+				<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+				##한페이지수
+				<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+				##이밴트
+				<input type="hidden" name="j_event" value="fn_codeGrpList" />
+			</div>

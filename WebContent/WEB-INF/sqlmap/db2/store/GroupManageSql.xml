@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.group.mapper.GroupManageDao">
+
+
+
+
+	<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+
+
+
+
+
+
+	<!-- 그룹 리스트 조회 -->
+	<select id="selectGroupList" parameterType="kr.msp.admin.store.group.dto.GroupSearchDto"   resultType="kr.msp.admin.store.group.dto.GroupDto">
+        /*  GroupManageSql   selectGroupList*/
+	    <include refid="head"/>
+	    SELECT 
+              GRP_ID, GRP_NM, USE_YN, REG_DT, REG_ID
+        FROM TB_STO_GROUP
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+        	<if test="SEARCH_GRP_NM != null">
+            	AND GRP_NM LIKE '%' || #{SEARCH_GRP_NM} || '%'
+        	</if>
+        </trim>
+        <if test="ORDER_TYPE == 'DESC' ">
+            ORDER BY  ${ORDER_TARGET} DESC
+        </if>
+        <if test="ORDER_TYPE == 'ASC' ">
+            ORDER BY  ${ORDER_TARGET} ASC
+        </if>
+        <include refid="bottom"/>    
+    </select>
+    
+	<select id="selectStoGroupOne" parameterType="kr.msp.admin.store.group.dto.GroupDto" resultType="kr.msp.admin.store.group.dto.GroupDto">
+	    SELECT 
+              GRP_ID, GRP_NM, USE_YN, REG_DT, REG_ID
+        FROM TB_STO_GROUP
+        WHERE GRP_ID = #{GRP_ID}
+	</select>
+    	  
+	<!-- 그룹 이름  중복체크-->
+	<select id="checkDupGroupName"  resultType="java.lang.Integer" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+         /*  GroupManageSql checkDupGroupName  */
+        SELECT COUNT(GRP_NM)  CNT
+        FROM TB_STO_GROUP
+        WHERE  USE_YN = 'Y'
+        AND  GRP_NM = #{GRP_NM}
+    </select>
+	
+    <!-- 그룹 저장-->
+    <select id="selectGroupCount" parameterType="kr.msp.admin.store.group.dto.GroupDto" resultType="int">
+        /*  GroupManageSql saveGroup  */
+        SELECT COUNT(1) CNT 
+        FROM TB_STO_GROUP
+        WHERE GRP_ID   = #{GRP_ID}
+    </select>
+    <insert id="insertGroupInfo" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+        /*  GroupManageSql saveGroup  */
+        INSERT INTO TB_STO_GROUP
+        (
+             GRP_ID, GRP_NM,  USE_YN, REG_ID, REG_DT
+        ) VALUES(
+        	SEQ_TB_STO_GROUP.NEXTVAL,
+            #{GRP_NM},
+            'Y',
+            #{REG_ID},
+            (CURRENT TIMESTAMP)
+        )
+    </insert>
+    <update id="updateGroupInfo" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+        /*  GroupManageSql saveGroup  */
+        UPDATE TB_STO_GROUP
+        SET
+              MOD_ID    = #{MOD_ID}
+            , MOD_DT    = (CURRENT TIMESTAMP)
+            , GRP_NM    = #{GRP_NM}
+            , USE_YN	= #{USE_YN}
+        WHERE GRP_ID   = #{GRP_ID}
+    </update>
+    
+    <!-- 그룹삭제-->
+    <delete id="deleteGroup" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+       /* GroupManageSql  deleteGroup  */
+        DELETE FROM TB_STO_GROUP WHERE GRP_ID = #{GRP_ID}
+    </delete>
+    
+    <delete id="deleteuUserGroup" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+        DELETE FROM TB_STO_USERGROUP WHERE GRP_ID = #{GRP_ID}
+    </delete>
+    
+    <delete id="deleteuAppGroup" parameterType="kr.msp.admin.store.group.dto.GroupDto">
+        DELETE FROM  TB_STO_AUTH  WHERE GRP_ID = #{GRP_ID} AND AUTH_TYPE = '01'
+    </delete>
+   
+</mapper>

@@ -1,0 +1,52 @@
+<form name="frmGroupInfo" method="POST">
+	
+		<table class="tbl" summary="그룹명,그룹설명,첫화면메뉴">
+			<colgroup><!--  4cell  -->
+				<col width="20%" />
+				<col width="auto" />
+			</colgroup>
+			<tr>
+				<th scope="row">
+					<label for="ID_GROUP" class="required">#springMessage("menu.push.user.groupName")</label> <!--그룹명  -->
+				</th>
+				<td>
+				#if($groupOne)
+					<input type="hidden" id="GRP_ID" name="GRP_ID" value="$!groupOne.GRP_ID" />
+				#end
+					<input type="text" class="width50" id="GRP_NM" name="GRP_NM" value="$!groupOne.GRP_NM" />
+				</td>
+			</tr>
+			<tr>
+				<th scope="row">
+					<label for="USE_YN">#springMessage("common.header.useYN")</label> <!-- 사용여부 -->
+				</th>
+				<td>
+					<select id="USE_YN" name="USE_YN">
+						#if($!groupOne.USE_YN == "Y")
+							<option value="Y" selected="selected" >#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+						#else
+							<option value="Y">#springMessage("common.header.use_Y")</option>  <!-- 사용 -->
+						#end
+						
+						#if($!groupOne.USE_YN == "N")
+							<option value="N" selected="selected" >#springMessage("common.header.use_N")</option> <!-- 미사용 -->
+						#else
+							<option value="N">#springMessage("common.header.use_N")</option> <!-- 미사용 -->
+						#end
+						
+					</select>
+				</td>
+			</tr>
+		</table>
+
+	
+	<div class="btn-wrap txtCenter">
+	#if(!$groupOne)
+		<a href="javascript:void(0);" onclick="fn_groupWrite();" class="btn1"><strong>#springMessage("common.button.save")</strong></a><!-- 저장 -->
+	#else
+		<a href="javascript:void(0);" onclick="fn_groupModify();" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+		<a href="javascript:void(0);" onclick="fn_groupDelete();" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+	#end
+		<a href="javascript:void(0);" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div>
+</form>

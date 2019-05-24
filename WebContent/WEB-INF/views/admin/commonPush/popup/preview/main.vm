@@ -1,0 +1,205 @@
+<script type="text/javascript">
+    $(document).ready(function(){
+		//공통 페지징 처리
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+		
+    	//검색메뉴 hide
+    	$(".se_con").each(function(i){
+    		if(i != 0){
+    			$(this).hide();
+    		}
+    	});
+    	
+    	selPreviewType('radio2_1');
+    	
+    });
+    
+    $(document).on("change","#conSelect",function(){
+    	var su = $(this).val();
+    	$(".se_con").hide();
+    	$(".se_con").val("");
+    	$(".se_con:eq(" + su + ")").show();
+    });
+    
+	//공통코드 페이지 호출(공통)
+    function fn_getPage( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+	
+	// 검색
+    function ch_search(){
+    	var sfrm=document.popupFrmSearch;
+    	var sval=$("#conSelect").val();
+    	if(sval==0){
+    		if(sfrm.TEMPLATECODE.value.length>0&&sfrm.TEMPLATECODE.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.TEMPLATECODE.value="";
+    			sfrm.TEMPLATECODE.focus();
+    		}
+    	}
+    	fn_getTemplateList(1);
+    }
+    
+    //페이징 처리
+    function fn_getTemplateList(PAGE_NUM){
+    	var url = CONTEXT_PATH + "/admin/commonPush/popup/template";
+    	var type = "POST";
+    	var data = $("form[name=popupFrmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+		var target = $("#divPopupList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}', true);
+    }
+	
+	//미리보기 종류 선책
+	function selPreviewType(previewType){
+	
+		if(previewType == "radio2_1"){
+			$("#and_title").show();
+			$("#and_content").hide();
+			$("#ios_title").hide();
+			$("#app_content").hide();
+		} else if(previewType == "radio2_2"){
+			$("#and_title").hide();
+			$("#and_content").hide();
+			$("#ios_title").show();
+			$("#app_content").hide();
+		} else if(previewType == "radio2_3"){
+			$("#and_title").hide();
+			$("#and_content").hide();
+			$("#ios_title").hide();
+			$("#app_content").show();
+		} 
+	}
+</script>
+<style type="text/css">
+/*
+.container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+}
+*/
+.video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+</style>
+
+	
+	<form name="popPreviewForm" method="post">		
+		
+			<table class="full-width" align="center">
+			
+			<colgroup>
+				<col style="width:300px;"/>
+			</colgroup>
+			<tr>
+				<td>
+					<span class="tb_radio">
+						<input type="radio" id="radio2_1" name="radio2" onclick="selPreviewType('radio2_1')" checked /><label for="radio2_1">Android #springMessage("menu.push")</label> <!-- 푸시 -->
+						<input type="radio" id="radio2_2" name="radio2" onclick="selPreviewType('radio2_2')"/><label for="radio2_2">IOS #springMessage("menu.push") </label> <!-- 푸시 -->
+						<input type="radio" id="radio2_3" name="radio2" onclick="selPreviewType('radio2_3')"/><label for="radio2_3">#springMessage("menu.push.sendManage.appMessage")</label> <!-- 앱 내 메시지 -->
+					</span>
+				</td>
+			</tr>
+			
+			<tr><td> <br> </td></tr>
+			
+			<tr>
+				<th>
+				
+					<!-- Android 푸시 -->
+					<div class="top-push" id="and_title"  align="center">
+						<img src="$RESOURCES_PATH/images/sub/push_img.jpg" alt="">
+						<div class="push">
+							<div class="img-wrap">
+								<div class="img-center">
+									#if($!imageUploadUrl != '')
+										<img src="$!imageUploadUrl" width="290px" height="120px" style="margin-left:5px;" />
+									#else
+										<img src="$RESOURCES_PATH/images/sub/push_bg.jpg" alt="" class="preview">
+									#end
+								
+								</div>
+							</div>
+							<div>$!MESSAGE</div>
+							<span>$!EXT</span>
+						</div>
+					</div>
+					
+					<!-- IOS 푸시 -->
+					<div class="popup-push" id="ios_title">
+						<img src="$RESOURCES_PATH/images/sub/push_img.jpg" alt="">
+						<div class="push">
+							<div class="img-wrap">
+								<div class="img-center">
+									#if($!imageUploadUrl != '')
+										<img src="$!imageUploadUrl" width="290px" height="120px" style="margin-left:5px;" />
+									#else
+										<img src="$RESOURCES_PATH/images/sub/push_bg.jpg" alt="" class="preview">
+									#end
+								</div>
+							</div>
+							<div>Preview</div>
+							<span>$!MESSAGE</span>
+							<div class="button-wrap">
+								<a href="javascript:void(0)" class="close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+								<a href="javascript:void(0)" class="view">#springMessage("common.button.view1")</a> <!-- 보기 -->
+							</div>
+						</div>
+					</div>	
+					
+					<!--  앱 내 메시지 -->
+					<div class="popup-push" id="app_content">
+						<img src="$RESOURCES_PATH/images/sub/push_img.jpg" alt="">
+						<div class="push">
+							<!-- content -->
+							<div >
+								
+								<strong>$!MESSAGE</strong>
+								<br><br>
+								<strong>$!EXT</strong>
+								
+								<br>
+								#if($!htmlContentsUrl != '')
+								<div class="container">
+									<iframe style="margin-left:5px;" width ="290"  height = "320"  src = "$!htmlContentsUrl" frameborder="0" allowfullscreen >
+									</iframe>
+								</div>
+								#end
+								
+								#if($!VideoUrl != '')
+								<!--
+									<iframe style="margin-left:5px;" width ="290" height = "220" src = "$!VideoUrl" frameborder = "0" allowfullscreen/>
+								-->	
+								#end
+							</div>
+							<!-- content end -->
+						</div>
+					</div>	
+
+				</th>
+			</tr>
+		</table>
+		
+	</form>
+	
+	<br><br>
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div>
+	

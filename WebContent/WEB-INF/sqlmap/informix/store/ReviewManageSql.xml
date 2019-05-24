@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.msp.admin.store.review.mapper.StoreReviewDao">
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+SELECT  *
+FROM( 
+	 SELECT ROW_NUMBER() OVER() AS RNUM
+	 		, COUNT(*) OVER() AS TOT_CNT
+	 		, A.*
+     FROM(
+   		  SELECT * 
+   		  FROM(
+</sql>
+	
+<!-- tail of paging query -->
+<sql id="bottom">
+		  ) 
+     ) AS A
+)
+WHERE RNUM BETWEEN ((#{PAGE_NUM} - 1) *  #{PAGE_SIZE}) + 1 AND (#{PAGE_NUM} *  #{PAGE_SIZE})
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+		<!-- begin of sort -->
+	<sql id="order">
+		<if test="ORDER_FIELD != null and ORDER_FIELD != ''">   
+			ORDER BY ${ORDER_FIELD} ${ORDER_TYPE} 
+		</if>
+	</sql>
+	<!-- end of sort -->
+	
+	
+    <select id="selectReviewList" parameterType="kr.msp.admin.store.review.dto.StoreReviewParamDto" resultType="kr.msp.admin.store.review.dto.StoreReviewDto">
+        <include refid="head"/><!-- include head of paging query-->
+			SELECT  REVIEW.RV_NO,      REVIEW.APP_PLAT_IDX,   APP.APP_NM,	REVIEW.TITLE,      REVIEW.CONTENT,    REVIEW.HIT,    REVIEW.USE_YN
+			,             REVIEW.REG_ID,     TO_CHAR(REVIEW.REG_DT, '%Y.%m.%d') REG_DT
+			,             REVIEW.MOD_ID,    TO_CHAR(REVIEW.MOD_DT, '%Y.%m.%d') MOD_DT
+			FROM    TB_STO_APP_REVIEW REVIEW
+							INNER JOIN TB_STO_APP_PLAT APP_PLAT
+								ON REVIEW.APP_PLAT_IDX = APP_PLAT.APP_PLAT_IDX
+							INNER JOIN TB_STO_APP APP
+								ON APP.APP_IDX = APP_PLAT.APP_IDX
+			WHERE   REVIEW.USE_YN = 'Y'
+					<if test="USERID != null and USERID != ''">   
+					AND REVIEW.REG_ID = #{USERID}
+					</if>
+					<if test="SC_ALL != null and SC_ALL != ''">   
+					AND    ( (APP.APP_NM   LIKE '%' || #{SC_ALL} || '%') OR (REVIEW.CONTENT LIKE '%' || #{SC_ALL} || '%') )
+					</if>
+					<if test="SC_APP != null and SC_APP != ''">   
+					AND    ( APP.APP_NM   LIKE '%' || #{SC_APP} || '%')
+					</if>
+					<if test="SC_CONTENT != null and SC_CONTENT != ''">   
+					AND    ( REVIEW.CONTENT LIKE '%' || #{SC_CONTENT} || '%')
+					</if>
+		<include refid="order"/><!-- include sort query-->
+
+        <include refid="bottom"/><!-- include tail of paging query-->
+    </select>
+
+	
+
+	
+	<update id="deleteReviewInfo"  parameterType="java.util.HashMap" >
+		UPDATE TB_STO_APP_REVIEW
+		SET   
+		        USE_YN       = 'N'
+		,       MOD_ID       = #{USERID}
+		,       MOD_DT      = CURRENT
+		<trim prefix="WHERE"  prefixOverrides="AND|OR" >
+			<foreach collection="PARAM_BEAN" item="array" index="index" >
+				OR RV_NO = ${PARAM_BEAN[index].getRV_NO()}
+			</foreach>
+		</trim>
+	</update>
+	
+	<select id="selectReviewInfo" parameterType="kr.msp.admin.store.review.dto.StoreReviewDto" resultType="kr.msp.admin.store.review.dto.StoreReviewDto">
+	    SELECT 
+	    	REVIEW.RV_NO
+	    	, REVIEW.APP_PLAT_IDX
+	    	, APP.APP_NM
+	    	, REVIEW.TITLE
+	    	, REVIEW.CONTENT
+	    	, REVIEW.HIT
+	    	, REVIEW.USE_YN
+		    , REVIEW.REG_ID
+		    , TO_CHAR(REVIEW.REG_DT, '%Y.%m.%d') REG_DT
+		    , REVIEW.MOD_ID,    TO_CHAR(REVIEW.MOD_DT, '%Y.%m.%d') MOD_DT
+		FROM 
+			TB_STO_APP_REVIEW REVIEW
+		    INNER JOIN TB_STO_APP_PLAT APP_PLAT
+		ON REVIEW.APP_PLAT_IDX = APP_PLAT.APP_PLAT_IDX
+		    INNER JOIN TB_STO_APP APP
+		ON APP.APP_IDX = APP_PLAT.APP_IDX
+		WHERE 
+			REVIEW.USE_YN = 'Y'
+			AND REVIEW.RV_NO = #{RV_NO}
+	</select>	
+</mapper>

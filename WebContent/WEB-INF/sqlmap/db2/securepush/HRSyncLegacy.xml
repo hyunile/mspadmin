@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.securepush.schedule.mapper.HRSyncLegacyDao">
+
+	<resultMap type="kr.msp.admin.securepush.schedule.dto.DeptDto" id="DeptDto">
+		<result property="DEPT_CD"	column="DEPT_CD"/>
+		<result property="DEPT_NM"	column="DEPT_NM"/>
+		<result property="FULL_NM"	column="FULL_NM"/>
+		<result property="UP_DEPT_CD"	column="UP_DEPT_CD"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.securepush.schedule.dto.EmpDto" id="EmpDto">
+		<result property="USER_ID"	column="USER_ID"/>
+		<result property="EMP_NO"	column="EMP_NO"/>
+		<result property="USER_NM"	column="USER_NM"/>
+		<result property="DEPT_CD"	column="DEPT_CD"/>
+		<result property="DEPT_NM"	column="DEPT_NM"/>
+		<result property="POS_CD"	column="POS_CD"/>
+		<result property="POS_NM"	column="POS_NM"/>
+		<result property="POSITION"	column="POSITION"/>
+		<result property="FULL_NM"	column="FULL_NM"/>
+		<result property="TEL_NO"	column="TEL_NO"/>
+		<result property="CELL_NO"	column="CELL_NO"/>
+		<result property="EMAIL"	column="EMAIL"/>
+		<result property="PHOTO_PATH"	column="PHOTO_PATH"/>
+		<result property="RESP_CD"	column="RESP_CD"/>
+		<result property="RESP_NM"	column="RESP_NM"/>
+		<result property="WORK_YN"	column="WORK_YN"/>
+		<result property="REG_DT"	column="REG_DT"/>
+	</resultMap>
+
+
+	<!-- 레거시 인사 DB 부서 목록 조회 -->
+	<select id="selectDeptList" parameterType="hashmap" resultMap="DeptDto">
+		SELECT GROUPCODE AS DEPT_CD
+			, NAME AS DEPT_NM
+			, PARENTGROUPCODE AS UP_DEPT_CD
+			, FULLPATHNAME AS FULL_NM
+		FROM KMS.CDGROUP 
+		WHERE FULLPATHNAME NOT LIKE '%폐기%' 
+			AND FULLPATHNAME NOT LIKE '%퇴직%'
+		ORDER BY GROUPCODE
+    </select>
+    
+    <!-- 레거시 인사 DB 사원 정보 조회. -->
+    <select id="selectEmpList" parameterType="hashmap" resultMap="EmpDto">
+    <![CDATA[
+    	SELECT T1.NAME AS USER_NM
+    		,T1.ACCOUNT AS EMP_NO
+    		,T1.GROUPCODE AS DEPT_CD
+    		,T2.NAME AS DEPT_NM
+    		,T1.POSITION
+    		,T1.EMAIL
+    		,T1.MOBILEPHONE AS CELL_NO
+    		,T1.OFFICEPHONE AS TEL_NO 
+    	FROM KMS.CDUSER T1 
+    	LEFT OUTER JOIN KMS.CDGROUP T2
+    	ON T1.GROUPCODE = T2.GROUPCODE  
+    	WHERE T1.GROUPNAME NOT LIKE '%퇴직부서%' 
+    		AND T2.NAME NOT LIKE '%폐기부서%'
+    		AND LENGTH(LTRIM(RTRIM(T1.GROUPCODE))) <> 0 
+    	ORDER BY T1.ACCOUNT
+	]]>
+    </select>
+	
+</mapper>

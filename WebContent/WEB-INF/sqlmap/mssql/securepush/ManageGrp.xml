@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.securepush.manageGrp.mapper.ManageGrpDao">
+
+	<resultMap type="kr.msp.admin.securepush.manageGrp.dto.GroupDto" id="GroupDto">
+		<result property="GRP_ID"	column="GRP_ID"/>
+		<result property="GRP_NM"	column="GRP_NM"/>
+		<result property="GRP_COLOR"	column="GRP_COLOR"/>
+		<result property="REG_DT"	column="REG_DT"/>
+		<result property="REG_ID"	column="REG_ID"/>
+		<result property="REG_NM"	column="REG_NM"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.securepush.manageGrp.dto.GroupUserDto" id="GroupUserDto">
+		<result property="GRP_ID"	column="GRP_ID"/>
+		<result property="DEPT_CD"	column="DEPT_CD"/>
+		<result property="DEPT_NM"	column="DEPT_NM"/>
+		<result property="FULL_NM"	column="FULL_NM"/>
+		<result property="USER_ID"	column="USER_ID"/>
+		<result property="USER_NM"	column="USER_NM"/>
+		<result property="USER_FULL_NM"	column="USER_FULL_NM"/>
+	</resultMap>
+
+<!--  ================================================================================================= -->
+<!-- begin of paging query -->
+<!--  ================================================================================================= -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--  ================================================================================================= -->
+<!-- end of paging query -->
+<!--  ================================================================================================= -->
+    
+	
+	<select id="selectGroupList" parameterType="kr.msp.admin.securepush.manageGrp.dto.ManageGrpParamDto" resultMap="GroupDto">
+		SELECT
+			T1.GRP_ID
+            ,T1.GRP_NM
+            ,T1.GRP_COLOR
+            ,T1.REG_ID
+            ,T2.USER_NM AS REG_NM
+            ,CONVERT(VARCHAR(19), T1.REG_DT, 121) AS REG_DT
+        FROM TB_SPUSH_GROUP T1
+        LEFT OUTER JOIN TB_SPUSH_USER T2
+        ON T1.REG_ID = T2.USER_ID
+        <where>
+	        <if test="REG_ID != null and REG_ID != ''">
+	        T1.REG_ID = #{REG_ID}
+	        </if>
+	        <if test="GRP_ID != null and GRP_ID != ''">
+	        AND T1.GRP_ID = #{GRP_ID}
+	        </if>
+	        <if test="GRP_NM != null and GRP_NM != ''">
+			AND T1.GRP_NM LIKE '%' + #{GRP_NM}+ '%' 
+			</if>
+			<if test="REG_NM != null and REG_NM != ''">
+			AND T2.USER_NM LIKE '%' + #{REG_NM}+ '%' 
+			</if>
+	        <if test="REG_START_DATE != null and REG_START_DATE != '' and REG_END_DATE != null and REG_END_DATE != ''">
+        	AND T1.REG_DT BETWEEN convert(datetime,substring(#{REG_START_DATE},1,8) + ' ' + substring(#{REG_START_DATE},9,2) 
+        	+ ':' + substring(#{REG_START_DATE},11,2) + ':' + substring(#{REG_START_DATE},13,2)) 
+        		AND convert(datetime,substring(#{REG_END_DATE},1,8) + ' ' + substring(#{REG_END_DATE},9,2) 
+        	+ ':' + substring(#{REG_END_DATE},11,2) + ':' + substring(#{REG_END_DATE},13,2)) 
+        	</if>
+	    </where>
+        ORDER BY T1.REG_DT DESC
+    </select>
+    
+    <select id="selectGroupListByPage" parameterType="kr.msp.admin.securepush.manageGrp.dto.ManageGrpParamDto" resultMap="GroupDto">
+    	<include refid="head"/>
+		SELECT
+			T1.GRP_ID
+            ,T1.GRP_NM
+            ,T1.GRP_COLOR
+            ,T1.REG_ID
+            ,T2.USER_NM AS REG_NM
+            ,CONVERT(VARCHAR(19), T1.REG_DT, 121) AS REG_DT
+            ,ROW_NUMBER() OVER(ORDER BY T1.REG_DT DESC) PAGE_KEY 
+        FROM TB_SPUSH_GROUP T1
+        LEFT OUTER JOIN TB_SPUSH_USER T2
+        ON T1.REG_ID = T2.USER_ID
+        <where>
+	        <if test="REG_ID != null and REG_ID != ''">
+	        T1.REG_ID = #{REG_ID}
+	        </if>
+	        <if test="GRP_ID != null and GRP_ID != ''">
+	        AND T1.GRP_ID = #{GRP_ID}
+	        </if>
+	        <if test="GRP_NM != null and GRP_NM != ''">
+			AND T1.GRP_NM LIKE '%' + #{GRP_NM}+ '%'  
+			</if>
+			<if test="REG_NM != null and REG_NM != ''">
+			AND T2.USER_NM LIKE '%' + #{REG_NM}+ '%' 
+			</if>
+	        <if test="REG_START_DATE != null and REG_START_DATE != '' and REG_END_DATE != null and REG_END_DATE != ''">
+        	AND T1.REG_DT BETWEEN convert(datetime,substring(#{REG_START_DATE},1,8) + ' ' + substring(#{REG_START_DATE},9,2) 
+        	+ ':' + substring(#{REG_START_DATE},11,2) + ':' + substring(#{REG_START_DATE},13,2)) 
+        		AND convert(datetime,substring(#{REG_END_DATE},1,8) + ' ' + substring(#{REG_END_DATE},9,2) 
+        	+ ':' + substring(#{REG_END_DATE},11,2) + ':' + substring(#{REG_END_DATE},13,2)) 
+        	</if>
+	    </where>
+        
+        <include refid="bottom"/>
+    </select>
+    
+    <select id="getGroupInfo" parameterType="string" resultMap="GroupDto">
+		SELECT Top 1 
+			T1.GRP_ID
+            ,T1.GRP_NM
+            ,T1.GRP_COLOR
+            ,T1.REG_ID
+            ,T2.USER_NM AS REG_NM
+            ,CONVERT(VARCHAR(19), T1.REG_DT, 121) AS REG_DT
+        FROM TB_SPUSH_GROUP T1
+        LEFT OUTER JOIN TB_SPUSH_USER T2
+        ON T1.REG_ID = T2.USER_ID
+        WHERE
+	        T1.GRP_ID = #{GRP_ID}
+    </select>
+    
+    <select id="getGroupCntByName" parameterType="string" resultType="int">
+		SELECT
+			COUNT(GRP_ID)
+        FROM TB_SPUSH_GROUP
+        WHERE
+	        GRP_NM = #{GRP_NM}
+    </select>
+    
+    <select id="selectGroupUserList" parameterType="kr.msp.admin.securepush.manageGrp.dto.ManageGrpParamDto" resultMap="GroupUserDto">
+		SELECT
+			T1.GRP_ID
+			,T1.EMP_NO
+			,T1.DEPT_CD
+			,T2.DEPT_NM
+			,T2.FULL_NM
+			,T1.USER_ID
+			,T3.USER_NM
+			,T4.FULL_NM AS USER_FULL_NM
+        FROM TB_SPUSH_GROUP_USER T1 
+        LEFT OUTER JOIN TB_SPUSH_DEPT T2
+        ON T1.DEPT_CD = T2.DEPT_CD
+        LEFT OUTER JOIN TB_SPUSH_USER T3
+        ON T1.USER_ID = T3.USER_ID AND T3.USE_YN = 'Y'
+        LEFT OUTER JOIN TB_SPUSH_DEPT T4
+        ON T3.DEPT_CD = T4.DEPT_CD
+        WHERE
+        	<if test="GRP_ID != null and GRP_ID != ''">
+        	T1.GRP_ID = #{GRP_ID} 
+        	</if>
+	 	ORDER BY T1.GRP_ID
+    </select>
+    
+    <insert id="insertGroup" parameterType="kr.msp.admin.securepush.manageGrp.dto.GroupDto">
+    	INSERT INTO TB_SPUSH_GROUP(
+    		GRP_NM
+    		, GRP_COLOR
+    		, REG_ID
+    		, REG_DT
+    	)VALUES(
+    		#{GRP_NM}
+    		, #{GRP_COLOR}
+    		, #{REG_ID}
+    		, GETDATE()
+    	)
+    	<selectKey keyProperty="GRP_ID" resultType="String" order="AFTER">
+		 	SELECT @@IDENTITY as GRP_ID 
+		</selectKey>
+    </insert>
+    
+    <insert id="insertGroupUsers" parameterType="java.util.List">
+        INSERT INTO TB_SPUSH_GROUP_USER(GRP_ID, EMP_NO, DEPT_CD, USER_ID) 
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=" , ">
+			(#{item.GRP_ID}, #{item.EMP_NO}, #{item.DEPT_CD}, #{item.USER_ID})
+		</foreach>
+ 	</insert>
+ 	
+ 	<delete id="deleteGroup" parameterType="hashmap">
+        DELETE FROM TB_SPUSH_GROUP 
+        WHERE 
+        	REG_ID=#{REG_ID} AND GRP_ID=#{GRP_ID}
+ 	</delete>
+ 	
+ 	<delete id="deleteGroupUser" parameterType="string">
+ 		DELETE FROM TB_SPUSH_GROUP_USER
+ 		WHERE GRP_ID=#{GRP_ID}
+ 	</delete>
+	
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.monitorSession.mapper.MonitorSessionDao">
+<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+	
+	
+	<!-- 푸시 사용자 리스트 조회 -->
+	<select id="selectPushUserList" parameterType="kr.msp.admin.push.monitorSession.dto.MonitorSessionDto" resultType="kr.msp.admin.push.monitorSession.dto.MonitorSessionDto">
+		<include refid="head"/>
+		SELECT APPID, CUID, PSID, PHONENO
+		FROM T_PUSH_USER_INFO
+		WHERE(PNSID = 'UPNS' OR PNSID = 'UPNC')
+		<if test="APPID != null and APPID != ''">
+			AND APPID = #{APPID}
+		</if>
+		<if test="CUID != null and CUID != ''">
+			AND CUID LIKE  '%' || #{CUID} || '%'
+		</if>
+		<include refid="bottom"/>
+	</select>
+	
+	
+	<!-- 푸시 사용자 조회 -->
+	<select id="selectPushUser" parameterType="kr.msp.admin.push.monitorSession.dto.MonitorSessionDto" resultType="kr.msp.admin.push.monitorSession.dto.MonitorSessionDto">
+		SELECT APPID, CUID, PSID, PHONENO, DEVICEID, CNAME
+		FROM T_PUSH_USER_INFO
+		WHERE PSID = #{PSID}
+	</select>
+</mapper>

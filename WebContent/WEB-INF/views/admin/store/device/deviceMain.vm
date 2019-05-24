@@ -1,0 +1,178 @@
+
+<style type="text/css">
+.groupModify {cursor:pointer;}
+</style>
+<script type="text/javascript">
+	jQuery(document).ready(function(){
+		//공통 페지징 처리
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	});
+	
+	jQuery(document).on('mouseover', "img.fileview", function(event) {
+			jQuery('img', "#hoverpopup").attr('src', '${CONTEXT_PATH}/admin/store/download?fileName='+jQuery(this).attr('fname'));
+			//alert(jQuery('img', "#hoverpopup").attr('src'));
+			var pos = jQuery(this).position();
+			//jQuery("#hoverpopup").css({"top":pos.top - 15,"left": pos.left + 30, "display": "block"});
+            jQuery("#hoverpopup").css({"top":pos.top - 15,"left": pos.left - 110, "display": "block"});
+	}).on('mouseout', "img.fileview", function(event) {
+			jQuery("#hoverpopup").css("display", "none");      
+    });
+	
+	jQuery(document).on("change","#conSelect",function(){
+		var su = jQuery(this).val();
+		jQuery(".se_con").hide();
+		jQuery(".se_con").val("");
+		jQuery(".se_con:eq(" + su + ")").show();
+	});
+	
+	function ch_search(){
+		var sfrm=document.frmSearch;
+    	var sval=$("#conSelect").val();
+    	if(sval==0){
+    		if(sfrm.dv_search.value.length>0&&sfrm.dv_search.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.dv_search.value="";
+    			sfrm.dv_search.focus();
+    		}
+    	}else if(sval==1){
+    		if(sfrm.br_search.value.length>0&&sfrm.br_search.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.br_search.value="";
+    			sfrm.br_search.focus();
+    		}
+    	}else if(sval==2){
+    		if(sfrm.mf_search.value.length>0&&sfrm.mf_search.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.mf_search.value="";
+    			sfrm.mf_search.focus();
+    		}
+    	}
+		fn_deviceList(1);
+	}
+		
+	//테이블 리스트 갱신페이지 구현
+	function fn_deviceList(PAGE_NUM){
+		var url  = "device";
+		var data = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+		var target = jQuery("#deviceTableDiv");
+		var type = "POST";
+		//common.js 에 정의
+		fn_getCommonList( url, type, data, target );
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	}
+	//등록화면이동(GET)
+	function fn_newWrite(){
+		document.location.href = "deviceAdd";
+	}
+	//상세화면이동(POST)
+	jQuery(document).on('click','.groupModify',function(){
+		jQuery('input[name=DEVC_IDX]').val(	jQuery('input', jQuery(this).closest('tr')).val() );
+		jQuery('form[name=frm]').submit();
+	});
+		
+	function fn_modifyUseYN(devcId, isUseYn){
+    		
+		var url = 'edit_useyn';
+		var data = $("form[name=frmSearch]").serialize() 
+						+ "&PAGE_NUM=" + 1
+						+ "&TMP_DEVC_ID=" + devcId
+						+ "&USE_YN=" + (isUseYn ? "Y" : "N");
+		var target = $("#deviceTableDiv");
+		var type = "POST";
+		fn_getCommonList( url, type, data, target );
+	
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	}
+	
+	function fn_changeRowSize(){
+    	fn_commonSetRowSize();
+    	fn_deviceList(1);
+    }
+	
+</script>
+
+<div class="contents-area">
+
+	<form name="frm" method="post" action="selectDevice" style="display:none;">
+		<input type="hidden" name="DEVC_IDX" value=""/>
+	</form>
+	
+	<div id="hoverpopup" class="hoverpopup" runat="server" style="border:solid 1px blue; position: absolute;background-color:grey;z-index:9;width:100px;height:120px;top:0px;left:0px;display:none;">
+		<img src="" width="100px" height="120px" alt="단말기사진"/>
+	</div>
+	
+	#### S : 프로그램 위치 기술 부분  ####
+    <div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>	
+    #### E : 프로그램 위치 기술 부분  ####
+
+   #### S : 조회 폼 부분  ####
+   
+	<form name="frmSearch" method="post">
+   		<table class="tbl-search">
+   			<colgroup>
+				<col style="width:300px">
+				<col>
+			</colgroup>
+			
+			<thead>
+   			<tr>
+   				<td>
+   					<select id="conSelect" class="w120">
+           	            <option value="0">#springMessage("menu.store.appManage.modelName")</option> <!-- 모델명 -->
+           	            <option value="1">#springMessage("menu.store.appManage.brandName")</option> <!-- 브랜드명 -->
+           	          	<option value="2">#springMessage("menu.store.appManage.makeName")</option> <!-- 제조사명 -->
+           		    </select>
+					<input class="se_con" type="text" id="dv_search" name="DEVC_ID" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+           		    <input class="se_con" type="text" id="br_search" name="BRD_NM" style="display:none" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+           	        <input class="se_con" type="text" id="mf_search" name="MFG_NM" style="display:none" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+				</td>
+				<td>
+					<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+				</td>
+   			</tr>
+   			</thead>
+        </table>
+		
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+		<input type="hidden" name="ORDER_FIELD" />
+		<input type="hidden" name="ORDER_TYPE" />
+       </form>
+   
+	
+	
+   	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" onclick="fn_newWrite();" title="#springMessage("common.button.regist")">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+	           				<option value="10">#springMessage("common.select.options_10")</option>
+	           				<option value="30">#springMessage("common.select.options_30")</option>
+	           				<option value="50">#springMessage("common.select.options_50")</option>
+	           			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+			
+		<div id="deviceTableDiv">
+		<!--  templete vm include  -->					
+		#parse ("/admin/store/device/deviceList.vm")
+        </div>
+	   
+    
+	</form>
+    #### E : 리스트  폼 부분  ####
+
+</div>	

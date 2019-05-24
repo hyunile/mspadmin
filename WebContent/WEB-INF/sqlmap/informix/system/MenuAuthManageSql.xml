@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.system.menuAuth.mapper.SystemMenuAuthDao">
+	
+	<resultMap type="kr.msp.admin.system.menuAuth.dto.MenuAuthDto" id="MenuAuthDto">
+		<result property="YN_SELECT" column="select_yn"/>
+		<result property="YN_INSERT" column="insert_yn"/>
+		<result property="YN_UPDATE" column="update_yn"/>
+		<result property="YN_DELETE" column="delete_yn"/>
+		<result property="ID_INSERT" column="reg_id"/>
+		<result property="DT_INSERT" column="reg_dttm"/>
+		<result property="ID_UPDATE" column="mod_id"/>
+		<result property="DT_UPDATE" column="mod_dttm"/>
+		<result property="YN_EXCEL" column="excel_yn"/>
+		<result property="ID_GROUP" column="auth_grp_id"/>
+		<result property="ID_MENU" column="menu_id"/>
+		<result property="ID_MENU_PARENT" column="up_menu_id"/>
+		<result property="NM_MENU" column="menu_nm"/>
+		<result property="MENU_LEVEL" column="menu_level"/>
+		<result property="ROWSU" column="rowsu"/>
+		<result property="MENU_URL" column="menu_url"/>
+	</resultMap>
+	
+	<resultMap type="kr.msp.admin.system.group.dto.AuthGroupDto" id="AuthGroupDto">
+		<result property="ID_GROUP" column="auth_grp_id"/>
+		<result property="NM_GROUP" column="auth_grp_nm"/>
+		<result property="DESC_GROUP" column="auth_grp_desc"/>
+		<result property="ID_INSERT" column="reg_id"/>
+		<result property="DT_INSERT" column="reg_dttm"/>
+		<result property="ID_UPDATE" column="mod_id"/>
+		<result property="DT_UPDATE" column="mod_dttm"/>
+		<result property="ID_FIRST_MENU" column="intro_menu_id"/>
+		<result property="NM_FIRST_MENU" column="nm_first_menu"/>
+	</resultMap>
+	
+	<!-- 그룹별 메뉴권한 정보 조회 -->
+    <select id="SelectMenuAuthGroup" parameterType="kr.msp.admin.system.menuAuth.dto.MenuAuthDto" resultMap="MenuAuthDto">
+     	/* dbg : SelectMenuAuthGroup */
+		SELECT T1.*
+			,CASE WHEN LEVEL = 1 THEN 'TOP_MENU'
+				WHEN CONNECT_BY_ISLEAF = 1 THEN 'PROGRAM'
+				ELSE 'SUB_MENU'
+				END AS MENU_TYPE
+			,LEVEL AS MENU_LEVEL
+			,ROW_NUMBER() OVER() AS ROWSU 
+		FROM
+		(
+			SELECT
+			     A.MENU_ID
+			    ,A.UP_MENU_ID
+			    ,B.AUTH_GRP_ID
+			    ,A.MENU_NM
+			    ,B.SELECT_YN
+			    ,B.INSERT_YN
+			    ,B.UPDATE_YN
+			    ,B.DELETE_YN
+			    ,B.EXCEL_YN
+			    ,A.SORT_NO
+			FROM TB_SYS_MENU A
+			LEFT OUTER JOIN TB_SYS_MENU_AUTH B 
+			ON (
+				A.MENU_ID = B.MENU_ID 
+				AND B.AUTH_GRP_ID = #{ID_GROUP} 
+			)
+		)T1
+		START WITH T1.UP_MENU_ID IS NULL
+		CONNECT BY PRIOR T1.MENU_ID = T1.UP_MENU_ID
+		ORDER SIBLINGS BY T1.SORT_NO
+    </select><!-- 완료 -->
+    
+    <!-- 권한그룹 정보 조회 -->
+    <select id="SelectAuthGroupAll" resultMap="AuthGroupDto">
+         /* dbg : SelectAuthGroupAll */
+        
+		SELECT
+		     A.AUTH_GRP_ID
+		    ,A.AUTH_GRP_NM
+		    ,A.AUTH_GRP_DESC
+		    ,A.INTRO_MENU_ID
+		    ,B.MENU_NM AS NM_FIRST_MENU
+		    ,A.REG_ID
+		    ,CAST(A.REG_DTTM AS DATE) AS REG_DTTM
+		    ,A.MOD_ID
+		    ,CAST(A.MOD_DTTM AS DATE) AS MOD_DTTM
+		FROM TB_SYS_AUTH_GRP A
+		LEFT OUTER JOIN TB_SYS_MENU B ON (A.INTRO_MENU_ID = B.MENU_ID)
+        ORDER BY AUTH_GRP_NM ASC
+    </select><!-- 성공 -->
+    
+    <delete id="DelectMenuAuth" parameterType="kr.msp.admin.system.menuAuth.dto.MenuAuthDto" >
+         /* dbg : DelectMenuAuth */
+        	DELETE FROM TB_SYS_MENU_AUTH
+        WHERE AUTH_GRP_ID = #{ID_GROUP}
+    </delete><!-- 성공 -->
+    
+    <insert id="InsertMenuAuth" parameterType="kr.msp.admin.system.menuAuth.dto.MenuAuthDto" >
+         /* dbg : InsertMenuAuth */
+    	INSERT INTO TB_SYS_MENU_AUTH(
+			AUTH_GRP_ID
+		   	,MENU_ID
+		  	,SELECT_YN
+		   	,INSERT_YN
+		   	,UPDATE_YN
+		 	,DELETE_YN
+		   	,EXCEL_YN
+		   	,REG_ID
+		   	,REG_DTTM 
+		   	,MOD_DTTM 
+		)VALUES(
+		  	#{ID_GROUP}
+			,#{ID_MENU}
+			,#{YN_SELECT}
+			,#{YN_INSERT}
+			,#{YN_UPDATE}
+			,#{YN_DELETE}
+			,#{YN_EXCEL}
+			,#{ID_INSERT}
+			,CURRENT
+			,CURRENT
+		)
+    </insert><!-- 성공 -->
+    
+    <select id="selectMenuAuthByMenuUrl" resultType="kr.msp.admin.system.menuAuth.dto.MenuAuthBDTO">
+     	SELECT A.MENU_ID, A.MENU_NM, A.MENU_URL, B.AUTH_GRP_ID
+		FROM TB_SYS_MENU A
+		LEFT OUTER JOIN TB_SYS_MENU_AUTH B
+		ON A.MENU_ID = B.MENU_ID
+		WHERE A.MENU_URL IS NOT NULL
+		ORDER BY A.MENU_ID
+    </select>
+    
+    <select id="selectMenuAuthByUserAuth" parameterType="kr.msp.admin.system.menuAuth.dto.MenuAuthBDTO" resultType="kr.msp.admin.system.menuAuth.dto.MenuAuthBDTO">
+     	SELECT A.MENU_ID, A.MENU_NM, A.MENU_URL, B.AUTH_GRP_ID
+		FROM TB_SYS_MENU A
+		LEFT OUTER JOIN TB_SYS_MENU_AUTH B
+		ON A.MENU_ID = B.MENU_ID
+		WHERE  AUTH_GRP_ID = #{AUTH_GRP_ID}
+		ORDER BY A.MENU_ID
+    </select>
+    
+</mapper>

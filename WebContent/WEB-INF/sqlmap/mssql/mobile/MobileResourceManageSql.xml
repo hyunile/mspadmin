@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.mobile.resourceManage.mapper.ResourceManageDao">
+
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (
+						<choose>
+			<when  test="ORDER_TARGET != null and ORDER_TARGET != ''">
+			<if test="ORDER_TYPE == 'DESC' ">
+				<if test="ORDER_TARGET == 'PLAT_IDX' ">
+				   ORDER BY  PLAT_IDX DESC
+				</if>
+				<if test="ORDER_TARGET == 'BIN_VER' ">
+				    ORDER BY  BIN_VER DESC
+				</if>
+				<if test="ORDER_TARGET == 'RSC_ID' ">
+			    		ORDER BY  RSC_ID DESC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_NM' ">
+			    		ORDER BY  FILE_NM DESC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_VER' ">
+					ORDER BY  DPLY_VER DESC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_IDX' ">
+					ORDER BY  DPLY_IDX DESC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_NM' ">
+				    ORDER BY  DPLY_NM DESC
+				</if>
+				<if test="ORDER_TARGET == 'REG_DTTM' ">
+				    ORDER BY  REG_DTTM DESC
+				</if>	
+				<if test="ORDER_TARGET == 'MOD_DTTM' ">
+				    ORDER BY  MOD_DTTM DESC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_TP' ">
+				    ORDER BY  DPLY_TP DESC
+				</if>
+				<if test="ORDER_TARGET == 'USE_YN' ">
+				    ORDER BY  USE_YN DESC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_EXT' ">
+				    ORDER BY  VER.FILE_EXT DESC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_SIZE' ">
+				    ORDER BY  VER.FILE_SIZE DESC
+				</if>
+			</if>
+			<if test="ORDER_TYPE == 'ASC' ">
+				<if test="ORDER_TARGET == 'PLAT_IDX' ">
+				   ORDER BY  PLAT_IDX ASC
+				</if>
+				<if test="ORDER_TARGET == 'BIN_VER' ">
+				    ORDER BY  BIN_VER ASC
+				</if>
+				<if test="ORDER_TARGET == 'RSC_ID' ">
+			    		ORDER BY  RSC_ID ASC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_NM' ">
+			    		ORDER BY  FILE_NM ASC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_VER' ">
+					ORDER BY  DPLY_VER ASC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_IDX' ">
+					ORDER BY  DPLY_IDX ASC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_NM' ">
+				    ORDER BY  DPLY_NM ASC
+				</if>
+				<if test="ORDER_TARGET == 'REG_DTTM' ">
+				    ORDER BY  REG_DTTM ASC
+				</if>	
+				<if test="ORDER_TARGET == 'MOD_DTTM' ">
+				    ORDER BY  MOD_DTTM ASC
+				</if>
+				<if test="ORDER_TARGET == 'DPLY_TP' ">
+				    ORDER BY  DPLY_TP ASC
+				</if>
+				<if test="ORDER_TARGET == 'USE_YN' ">
+				    ORDER BY  USE_YN ASC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_EXT' ">
+				    ORDER BY  FILE_EXT ASC
+				</if>
+				<if test="ORDER_TARGET == 'FILE_SIZE' ">
+				    ORDER BY  FILE_SIZE ASC
+				</if>
+			</if>
+		</when >
+				<otherwise>
+					ORDER BY PAGE_KEY
+				</otherwise >
+			</choose>
+						) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	<!--  조회  -->
+    <select id="SelectResourceManage" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto" resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+        <include refid="head"/>
+        SELECT
+        RSC_FILE_IDX
+        , FILE_NM
+        , SUBSTRING(FILE_PATH, LEN(#{DEPLOY_PATH})+1, LEN(FILE_PATH)) FILE_PATH
+        , FILE_EXT
+        , FILE_TP
+        , FILE_SIZE
+        , DEL_YN
+        , STS_CD
+        , REPLACE(CONVERT(CHAR(19), REG_DTTM, 121), '-', '.') REG_DTTM
+        , REPLACE(CONVERT(CHAR(19), MOD_DTTM, 121), '-', '.') MOD_DTTM
+        , SVC_ID
+        , RSC_ID
+        <if test="ORDER_TARGET == 'FILE_NM'">
+        	<if test="ORDER_TYPE == 'DESC' ">
+        		, ROW_NUMBER() OVER(ORDER BY  FILE_NM DESC) PAGE_KEY
+	        </if>
+	        <if test="ORDER_TYPE == 'ASC' ">
+	             , ROW_NUMBER() OVER(ORDER BY FILE_NM ASC) PAGE_KEY
+	         </if>
+        </if>
+        
+        <if test="ORDER_TARGET == 'MOD_DTTM'">
+        	<if test="ORDER_TYPE == 'DESC' ">
+                , ROW_NUMBER() OVER(ORDER BY  MOD_DTTM DESC) PAGE_KEY
+	        </if>
+	        <if test="ORDER_TYPE == 'ASC' ">
+                , ROW_NUMBER() OVER(ORDER BY  MOD_DTTM ASC) PAGE_KEY
+	         </if>
+        </if>
+        
+        
+        FROM TB_MOB_RSC_FILE
+        WHERE
+        SVC_ID = #{SVC_ID}
+        <if test="FILE_NM != null and FILE_NM != ''">
+            AND FILE_NM LIKE  #{FILE_NM} + '%'
+        </if>
+        <if test="FILE_EXT != null and FILE_EXT != ''">
+            AND FILE_EXT = #{FILE_EXT}
+        </if>
+        <if test="STS_CD != null and STS_CD != ''">
+            AND STS_CD = #{STS_CD}
+        </if>
+        <if test="RESOURCEDTTM_S != null and RESOURCEDTTM_S != ''" >
+            AND MOD_DTTM
+            BETWEEN convert(datetime,substring(#{RESOURCEDTTM_S},1,8) + ' ' + substring(#{RESOURCEDTTM_S},9,2) + ':' + substring(#{RESOURCEDTTM_S},11,2) + ':00')
+            AND convert(datetime,substring(#{RESOURCEDTTM_E},1,8) + ' ' + substring(#{RESOURCEDTTM_E},9,2) + ':' + substring(#{RESOURCEDTTM_E},11,2) + ':00')
+        </if>
+        
+        <include refid="bottom"/>
+    </select>
+	
+	<select id="SelectResourceDeployVersion" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceDeployDto" resultType="java.lang.String">
+	    /* SELECT SUBSTRING(CAST(1000000 + ISNULL(MAX(CAST(DPLY_VER AS INT)),0)+1 AS VARCHAR), 2, 6) VERSION */
+	    SELECT ISNULL(MAX(CAST(DPLY_VER AS INT)),0)+1 VERSION 
+		FROM TB_MOB_DPLY
+		WHERE SVC_ID = #{SVC_ID}
+	</select>
+	
+	<select id="SelectResourceAll" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto" resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+	    SELECT 
+	    	RSC_FILE_IDX
+			, FILE_NM
+			, FILE_PATH
+			, FILE_EXT
+			, FILE_TP
+			, FILE_SIZE
+			, DEL_YN
+			, STS_CD
+			, REG_DTTM
+			, MOD_DTTM
+			, SVC_ID
+			, RSC_ID
+		FROM TB_MOB_RSC_FILE
+		WHERE 
+			SVC_ID = #{SVC_ID}
+			AND DEL_YN = 'N'
+	</select>
+	
+	<select id="selectAppid" parameterType="java.lang.String" resultType="java.lang.String" >
+		SELECT APP_ID FROM TB_SVC WHERE SVC_ID = #{SVC_ID}
+	</select>
+	
+	<select id="selectResourceListByList"  parameterType="List"  resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+		SELECT * FROM TB_MOB_RSC_FILE
+		where RSC_FILE_IDX in
+		<foreach item="DEPLOY_ADD_LIST" index="index" collection="list"
+		 	open="(" separator="," close=")">
+			#{DEPLOY_ADD_LIST}
+		</foreach>
+	</select>
+	
+	<insert id="insertResDeploy" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceDeployDto">
+		INSERT INTO TB_MOB_DPLY
+			( DPLY_NM
+			, DPLY_VER
+			, DPLY_DESC
+			, DPLY_TP
+			, USE_YN
+			, SVC_ID
+			, DPLY_FULL_YN
+			, REF_VER
+			, REG_DTTM
+			,REG_ID )
+		VALUES
+			( #{DPLY_NM}
+			, #{DPLY_VER}
+			, #{DPLY_DESC}
+			, #{DPLY_TP}
+			, #{USE_YN}
+			, #{SVC_ID}
+			, #{DPLY_FULL_YN}
+			, #{REF_VER}
+			, GETDATE() 
+			, #{REG_ID} )
+	</insert>
+	
+	<select id="getCurrDeploySeqno" resultType="java.lang.String">
+		<!--  SELECT  SEQ_TB_MOB_DPLY.CURRVAL -->
+		SELECT CONVERT(VARCHAR(5), IDENT_CURRENT('TB_MOB_DPLY')) CURRVAL
+	</select>
+	
+	<insert id="insertFileAttach" parameterType="kr.msp.admin.mobile.resourceManage.dto.FileAttachDto">
+		INSERT INTO TB_FILE_ATTACH
+			( 
+			  FILE_ID
+			, FILE_PATH
+			, FILE_NAME
+			, FILE_EXT
+			, FILE_SIZE
+			, FILE_TYPE
+			, URL_CHILD_PATH
+			, OBJ_CODE
+			, OBJ_ID
+			, REG_DATE
+			, MD5 )
+		VALUES
+			( 
+			  #{FILE_ID}
+			, #{FILE_PATH}
+			, #{FILE_NAME}
+			, #{FILE_EXT}
+			, #{FILE_SIZE}
+			, #{FILE_TYPE}
+			, #{URL_CHILD_PATH}
+			, #{OBJ_CODE}
+			, #{OBJ_ID}
+			, GETDATE()
+			, #{MD5} )
+	</insert>
+	
+	<insert id="insertResDeployDetail" parameterType="kr.msp.admin.mobile.resourceManage.dto.ResDeployDetailDto">
+		INSERT INTO TB_MOB_DPLY_DTL
+			( 
+			  DPLY_IDX
+			, FILE_NM
+			, FILE_PATH
+			, FILE_SIZE
+			, DEL_YN
+			, STS_CD
+			, REG_DTTM
+			, SVC_ID
+			, RSC_ID )
+		SELECT 
+			  #{DPLY_IDX}
+			, #{FILE_NM}
+			, #{FILE_PATH}
+			, #{FILE_SIZE}
+			, #{DEL_YN}
+			, #{STS_CD}
+			, GETDATE()
+			, #{SVC_ID} 
+			, #{RSC_ID}
+	</insert>
+	
+	<update id="updateResFileStat" parameterType="java.lang.String">
+		UPDATE TB_MOB_RSC_FILE
+		SET STS_CD = 'C' ,
+		 		MOD_DTTM = GETDATE()
+		WHERE SVC_ID = #{SVC_ID}
+	</update>
+	
+	<update id="updateResFileStatCh" parameterType="List">
+	    UPDATE TB_MOB_RSC_FILE
+		SET STS_CD = 'C' ,
+		 		MOD_DTTM = GETDATE()
+		WHERE RSC_FILE_IDX in
+		<foreach item="DEPLOY_ADD_LIST" index="index" collection="list"
+		 	open="(" separator="," close=")">
+			#{DEPLOY_ADD_LIST}
+		</foreach>
+	</update>
+	
+	<delete id="resourceManageDelete" parameterType="List">
+	    DELETE FROM TB_MOB_RSC_FILE
+	    WHERE RSC_FILE_IDX in
+		<foreach item="DEPLOY_ADD_LIST" index="index" collection="list"
+		 	open="(" separator="," close=")">
+			#{DEPLOY_ADD_LIST}
+		</foreach>
+	</delete>
+	
+	<select id="seleSctResourceListByRSCID"  parameterType="kr.msp.admin.mobile.resourceManage.dto.ResDeployDetailDto" resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+		SELECT * FROM TB_MOB_RSC_FILE
+		WHERE RSC_ID = #{RSC_ID}		
+	</select>
+	
+	<select id="selectRSC_FileInfo"  parameterType="kr.msp.admin.mobile.resourceManage.dto.ResDeployDetailDto" resultType="kr.msp.admin.mobile.resourceManage.dto.ResourceFileDetailDto">
+		/* MobileResourceManageSql - selectRSC_FileInfo */
+		SELECT 
+			DEL_YN
+			, DPLY_NM
+			, DPLY_TP
+			, DPLY_VER
+			, USE_YN
+			, DPLY_DESC
+			, TB_MOB_DPLY_DTL.REG_DTTM
+		FROM 
+			TB_MOB_DPLY_DTL
+			,TB_MOB_DPLY
+		WHERE 
+			TB_MOB_DPLY_DTL.RSC_ID =  #{RSC_ID}
+		AND TB_MOB_DPLY_DTL.DPLY_IDX = TB_MOB_DPLY.DPLY_IDX
+	</select>
+	
+	
+	
+	<select id="SelectResourceSearch" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto" resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+		SELECT 
+			RSC_FILE_IDX
+			, FILE_NM
+			, FILE_PATH
+			, FILE_EXT
+			, FILE_TP
+			, FILE_SIZE
+			, DEL_YN
+			, STS_CD
+			, REG_DTTM
+			, MOD_DTTM
+			, SVC_ID
+			, RSC_ID
+		FROM TB_MOB_RSC_FILE
+		WHERE
+			SVC_ID = #{SVC_ID}
+			<if test="FILE_NM != null and FILE_NM != ''">
+				AND FILE_NM LIKE '%' + #{FILE_NM} + '%'
+			</if>
+			<if test="FILE_EXT != null and FILE_EXT != ''">
+				AND FILE_EXT = #{FILE_EXT}
+			</if>
+			<if test="STS_CD != null and STS_CD != ''">
+				AND STS_CD = #{STS_CD}
+			</if>
+			<if test="RESOURCEDTTM_S != null and RESOURCEDTTM_S != ''" >
+				AND MOD_DTTM
+				BETWEEN convert(datetime,substring(#{RESOURCEDTTM_S},1,8) + ' ' + substring(#{RESOURCEDTTM_S},9,2) + ':' + substring(#{RESOURCEDTTM_S},11,2) + ':00')
+            	AND convert(datetime,substring(#{RESOURCEDTTM_E},1,8) + ' ' + substring(#{RESOURCEDTTM_E},9,2) + ':' + substring(#{RESOURCEDTTM_E},11,2) + ':00')
+			</if>
+	</select>
+</mapper>

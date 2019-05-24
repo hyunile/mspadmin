@@ -1,0 +1,48 @@
+<table class="tb_list"  id="sortableTable" summary="항목선택,리소스ID,파일명,확장자,크기">
+	<colgroup >
+		<col  width="AUTO"/>
+		<col  width="AUTO"/>
+		<col  width="AUTO"/>
+		<col  width="AUTO"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th>#springMessage("common.text.serviceName")</th> <!-- 서비스명 -->
+			<th>CUID</th>
+			<th>#springMessage("menu.push.monitoring.contactServer")</th> <!-- 접속서버 -->
+			<th>#springMessage("menu.push.monitoring.loginTime")</th> <!-- 로그인시간 -->
+			<th>#springMessage("menu.mobile.deploy.status")</th> <!-- 상태 -->
+		</tr>
+	</thead>
+	<tbody>
+		#foreach( $monitorSession in $monitorSessionList )
+		#set($j_tot = $!monitorSession.TOT_CNT)
+		<tr class="trMonitorSession" style="cursor:pointer;">
+			<td style="text-align:left;"><input id="PSID" type="hidden" value="$monitorSession.PSID"/>$!monitorSession.SVC_NM</td>
+			<td style="text-align:left;">$!monitorSession.CUID</td>
+			<td style="text-align:left;">$!monitorSession.SERVERNAME</td>
+			<td style="text-align:left;">$!monitorSession.LOGIN_TIME</td>
+            <td>$!monitorSession.LOGIN</td>
+		</tr>	
+		#end	
+		
+		#if(!$j_tot)
+		<tr>
+			<td colspan="5" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+		#end
+	</tbody>
+</table>
+
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM"/>
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot"/>
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE"/>
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE"/>
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_getList"/>
+</div>

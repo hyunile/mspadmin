@@ -1,0 +1,82 @@
+<form name="frmPopUser" method="post">
+<div class="popup_content">
+	<!--  table List  -->
+	<table class="tbl">
+			<colgroup>
+		        <col width="10%"></col>
+		        <col width="30%"></col>
+		        <col width="30%"></col>
+		        <col width="30%"></col>
+		    </colgroup>
+			<thead>
+				<tr>
+					<th>
+						<input type="checkbox" id="all_user" >
+			       		<label for="all_user"></label>
+			       	</th>
+			       	<th>
+			       		#springMessage("menu.store.user.position") <!-- 직위 -->
+					</th>
+					<th>
+						#springMessage("common.text.name") <!-- 이름 -->
+			       	</th>
+			       	<th>
+			       		#springMessage("menu.store.user.number")	 <!-- 사번 -->
+				    </th>
+			   	</tr>
+		   	</thead>
+		   	<tbody>
+		   		#set($j_tot = 0)
+			   	#foreach( $userOne in $userList )
+			   		#set($j_tot = $!userOne.TOT_CNT)
+			       	<tr>
+			       		<td>
+			       			<input type="checkbox" class="del_user" name="DEL_AUTH_ID" id="chk_$!userOne.AUTH_ID" value="$!userOne.AUTH_ID">
+			       			<label for="chk_$!userOne.AUTH_ID"></label>
+			   			</td>
+			   			#if(!$userOne.EMP_NO)
+				   			<td colspan="3" >
+				   				$!userOne.EMP_NM 전부
+				       		</td>
+						#else
+							<td>
+				   				$!userOne.CD_NM
+				       		</td>
+				       		<td>
+				       			$!userOne.EMP_NM
+		       				</td>
+				   			<td>
+								$!userOne.EMP_NO
+							</td>
+						#end 
+			   		</tr>
+				#end
+				#if($j_tot == 0)
+					<tr>
+						<td colspan="4">
+							#springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+						</td>
+					</tr>
+				#end
+			</tbody>
+		</table>
+		<input type="hidden" id="APPUSER_NUM" value="$!R_PAGE_NUM" />
+		<div class="j_page_div">
+			##현재 페이지
+			<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+			##총 개수
+			<input type="hidden" name="J_tot" value="$!j_tot" />
+			##한페이지의 로우수
+			<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+			##한페이지수
+			<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+			##이밴트
+			<input type="hidden" name="j_event" value="fn_appAuthList" />
+		</div>
+	<!--  btnArea  -->
+	<div class="btnArea ta_r">
+		<button type="button" onclick="fn_go_delete_user()" class="btn2"><span>#springMessage("common.button.delete")</span></button> <!-- 삭제 -->
+		<button type="button" onclick="fn_closePopup()" class="btn2"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+	</div>
+</div>
+</form>

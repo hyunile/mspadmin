@@ -1,0 +1,74 @@
+<table class="tbl-nb" summary="그룹명,그룹멤버수,등록일시,변경일시,상세">
+	<colgroup><!--  5cell  -->
+		<col width="25%"/>
+		<col width="7%"/>
+		<col width="auto"/>
+		<col width="auto"/>
+		<col width="15%"/>
+		<col width="15%"/>
+		<col width="70px"/>
+	</colgroup>
+	<thead>
+		<tr>
+			<th scope="col">#springMessage("menu.push.user.groupName")</th> <!-- 그룹명 -->
+			<th scope="col">#springMessage("menu.push.user.groupNum")</th> <!-- 그룹멤버수 -->
+			<th scope="col">#springMessage("menu.push.user.groupDesc")</th> <!-- 그룹설명 -->
+			<th scope="col">#springMessage("menu.push.user.groupType")</th> <!-- 그룹종류 -->
+			<th scope="col">#springMessage("common.header.author")</th> <!-- 작성자 -->
+			<th scope="col">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+			<th scope="col"></th>
+		</tr>
+	</thead>
+	<tbody>
+	#foreach( $pushUserGroup in $pushUserGroupList )
+		#set($j_tot = $pushUserGroup.TOT_CNT)
+		<tr>
+			<td >
+				$!pushUserGroup.GROUPNAME
+				<input type="hidden" class="GROUPSEQ" value="$!pushUserGroup.GROUPSEQ"/>
+			</td>
+			<td >
+				$!pushUserGroup.GROUPCNT
+			</td>
+			<td >
+				$!pushUserGroup.GROUPDESC
+			</td>
+			<td >
+				#if($pushUserGroup.GROUPTYPE == "T")
+					#springMessage("menu.push.user.testSendGroup") <!-- 테스트발송 그룹   -->
+				#else
+					#springMessage("menu.push.user.generalSendGroup") <!-- 일반발송 그룹 -->
+				#end
+			</td>
+			<td >
+				$!pushUserGroup.REGID
+			</td>
+			<td>
+				$!pushUserGroup.REGDATE
+			</td>
+			<td>
+				<a href="javascript:void(0)" id="groupModify" class="tbl-btn1">#springMessage("common.button.modify")</a> <!--수정  -->
+			</td>
+		</tr>
+	#end
+	#if(!$j_tot)
+		<tr>
+			<td colspan="7" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+		</tr>
+	#end
+	</tbody>
+</table>
+
+<input type="hidden" id="GROUP_NUM" value="$!R_PAGE_NUM" />
+<div class="j_page_div">
+	##현재 페이지
+	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot" />
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+	##이밴트
+	<input type="hidden" name="j_event" value="fn_groupList" />
+</div>

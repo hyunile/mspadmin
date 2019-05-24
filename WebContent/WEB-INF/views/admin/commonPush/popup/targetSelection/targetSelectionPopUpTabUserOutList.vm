@@ -1,0 +1,51 @@
+	<h2 class="tbl-title">#springMessage("menu.push.sendManage.targetList")</h2>	<!-- 대상자 목록 -->
+	
+	<table class="tbl-nb full-width" id="tblOutUser" summary="항목선택,아이디,구분,디바이스ID">
+		<thead>
+			<tr>
+				<th scope="col" style="width: 10%"><input type="checkbox" id="checkAllOutUser" onClick="fn_checkAllOutUserClickHandler($(this))" /><label for="checkAllOutUser"></label></th>
+                <th scope="col" style="width: AUTO">#springMessage("login.userid")</th> <!-- 아이디 -->
+                <th scope="col" style="width: AUTO">#springMessage("common.text.name")</th> <!-- 이름 -->
+                <th scope="col" style="width: AUTO">PNSID</th>
+			</tr>
+		</thead>
+		<tbody>
+		#foreach( $pushUser in $pushUserList )
+			#set($j_tot = $!pushUser.TOT_CNT)
+			<tr class="check_tr" onClick="fn_OutUserTrClickHandler($(this))">
+				<td>
+					<input type="checkbox" class="classCheckOutUser" id="$!pushUser.USERID" value="$!pushUser.USERID" title="#springMessage('common.title.selectOne')" /> <!-- 항목선택 -->
+					<label for="$!pushUser.USERID" onClick="fn_OutUserTrClickHandler($(this).parent().parent())"></label>
+				</td>
+				<td class="classUserID" style="text-align:left; overflow:hidden;">
+					$!pushUser.USERID
+				</td>
+				<td class="classCNAME" style="text-align:left; overflow:hidden;">
+					$!pushUser.CNAME
+				</td>
+				<td class="classPNSID" style="text-align:left; overflow:hidden;">
+					$!pushUser.PNSID
+				</td>
+			</tr>
+		#end
+		#if(!$j_tot)
+			<tr>
+				<td colspan="4" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+			</tr>
+		#end
+		</tbody>
+	</table>
+
+	<input type="hidden" id="OUT_USER_NUM" value="$!R_PAGE_NUM" />
+	<div class="j_page_div">
+		##현재 페이지
+		<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+		##총 개수
+		<input type="hidden" name="J_tot" value="$!j_tot" />
+		##한페이지의 로우수
+		<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+		##한페이지수
+		<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+		##이밴트
+		<input type="hidden" name="j_event" value="fn_userSearch" />
+	</div>

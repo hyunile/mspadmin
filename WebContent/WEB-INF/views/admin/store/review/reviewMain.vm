@@ -1,0 +1,114 @@
+<div id="conWrap">
+<script type="text/javascript">
+
+	$(document).ready(function(){
+		//검색 폼 초기화
+		fn_mp_initSelectOptionElement("conSelect_dtType");
+	});
+	
+	
+	//테이블 리스트 갱신페이지 구현
+	function fn_select(PAGE_NUM){
+		$("form[name=frmSearch]>input[name=PAGE_NUM]").val(PAGE_NUM)
+	
+		var url  = CONTEXT_PATH + "/admin/store/review/list";
+		var data = jQuery("form[name=frmSearch]").serialize();
+		
+		
+		var target = jQuery(".tbCon");
+		var type = "POST";
+		//common.js 에 정의
+		fn_getCommonList( url, type, data, target );
+		//fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	}
+	
+	
+	function fn_delete()
+	{
+		retval = "";
+	    $(":checkbox[class='ck_row']:checked").each(function(i){
+    		if(i>0)
+    			retval = retval + "#";
+    		retval = retval + $(this).attr("RV_NO");
+    	});
+		
+		if(retval == "")
+		{
+			alert('#springMessage("menu.store.notice.alert.chooseDelete")'); //삭제할 항목을 선택 해 주세요.
+			return false;
+		}
+		else if(confirm('#springMessage("menu.store.notice.alert.doDelete")')) //삭제한 리뷰는 복구할 수 없습니다. 선택한 리뷰를 삭제 시키겠습니까?
+		{
+			$("form[name=frmSearch]>input[name=DELEV_DATA]").val(retval);
+			fn_getCommonList(CONTEXT_PATH + "/admin/store/review/deleteReview", "POST", jQuery("form[name=frmSearch]").serialize(), jQuery('.tbCon') );
+		}
+	}
+	
+	
+	
+</script>
+	<form name="frm" method="post" action="selectDevice" style="display:none;">
+		<input type="hidden" name="DEVC_IDX" value=""/>
+	</form>
+
+	#### S : 프로그램 위치 기술 부분  ####
+    <div class="header_bg">
+    	<div class="inner_navi"></div>
+    	<div class="tb_tit"></div>
+    </div>
+    #### E : 프로그램 위치 기술 부분  ####
+
+   #### S : 조회 폼 부분  ####
+	  <fieldset class="search_type">
+    	<form name="frmSearch" method="post">
+    		<table>
+    			<tr>
+                    <td>
+						<select name="SC_GBN"  id="conSelect_dtType" valueClass="conInput_date" class="w120">
+        					<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+        					<option value="0" >#springMessage("menu.store.notice.appSearch")</option> <!-- 앱검색 -->
+        					<option value="1">#springMessage("menu.store.notice.contentSearch")</option> <!-- 내용검색 -->
+        					<option value="2">#springMessage("menu.store.notice.allSearch")</option> <!-- 전체검색 -->
+        				</select>
+						<input class="conInput_date" type="text" name="SC_APP" />
+    					<input class="conInput_date" type="text" name="SC_CONTENT" />
+    					<input class="conInput_date" type="text" name="SC_ALL" />
+					</td>
+                </tr>
+				
+            </table>
+			<button type="button" onclick="fn_select(1)" class="btn_inquiry">#springMessage("common.button.view")</button> <!-- 조회  -->
+			
+			
+			<input type="hidden" name="ORDER_FIELD" />
+        	<input type="hidden" name="ORDER_TYPE" />
+        	
+        	<input type="hidden" name="PAGE_NUM" value="$!{R_PAGE_NUM}"/>
+        	<input type="hidden" name="DELEV_DATA"/>
+			<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+        </form>
+    </fieldset>
+
+	
+   	#### S : 리스트  폼 부분  ####
+	<div class="contents">
+		<div class="btn_sel_group">
+        	<div class="fl">
+				<button type="button" class="btn_basic" onclick="fn_delete();">#springMessage("common.button.delete")</button> <!-- 삭제 -->
+			</div>
+        	<div class="fr">
+        		<p>#springMessage("common.header.searchResult") <span id="spaTotCnt"></span></p> <!-- 검색결과  -->
+        		<select id="selRowSize" title="#springMessage('common.title.selectOne')" onchange="fn_changeRowSize()"> <!-- 항목선택 -->
+        			<option value="10">#springMessage("common.select.options_10")</option> <!-- 10개씩 보기 -->
+            		<option value="30">#springMessage("common.select.options_30")</option> <!-- 30개씩 보기 -->
+            		<option value="50">#springMessage("common.select.options_50")</option> <!-- 50개씩 보기 -->
+        		</select>	
+        	</div>
+        </div>
+		<div class="tbCon">
+            <!--  templete vm include  -->
+            #parse ("/admin/store/review/reviewList.vm")
+	    </div>
+    </div>
+    #### E : 리스트  폼 부분  ####
+</div>	

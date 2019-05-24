@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.common.mainHome.mapper.MainHomeDao">
+	<!-- push -->
+	<select id="selectPushSendStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO">
+			 SELECT SUM(SEND_CNT) AS GNR_SEND_CNT, 
+			 	SUM(READ_CNT) AS GNR_READ_CNT,
+			 	SUM(REV_CNT) AS GNR_RECV_CNT,
+			 	SUM(FAIL_CNT) AS GNR_FAIL_CNT
+			 FROM T_PUSH_MSG_RECV_MASTER
+			 WHERE RESERVEDATE BETWEEN TO_DATE(#{FROM_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD') AND TO_DATE(#{TO_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD hh24:mi:ss')
+			 <if test="SENDERID != null and SENDERID != ''">
+			 	AND SENDERID=#{SENDERID}
+			 </if>
+	</select>
+	
+	<select id="selectPushReserveStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO">
+			SELECT *
+			FROM(
+				SELECT COUNT(*) AS GNR_TOT_CNT 
+				FROM T_PUSH_RESERVE_MSG
+				WHERE PROCESS_FLAG = 'Y'
+				) A,
+				(
+				SELECT COUNT(*) AS GNR_FAIL_CNT
+				FROM T_PUSH_RESERVE_MSG
+				WHERE PROCESS_FLAG = 'F'
+			    ) B
+	</select>
+	
+	<select id="selectPushRegistStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO">
+			SELECT TO_CHAR(T1.REGDATE, 'YYYY.MM.DD') DT, COUNT(*) AS CNT
+	        FROM T_PUSH_USER_INFO T1
+	        WHERE T1.REGDATE BETWEEN TO_DATE(#{FROM_DATE}, 'YYYY.MM.DD') AND TO_DATE(#{TO_DATE}, 'YYYY.MM.DD hh24:mi:ss')
+	        GROUP BY TO_CHAR(T1.REGDATE, 'YYYY.MM.DD')
+	        ORDER BY TO_CHAR(T1.REGDATE, 'YYYY.MM.DD') ASC
+	</select>
+	
+	<select id="selectPushSendTotStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummayPushDTO">
+			SELECT SUM(SENT_CNT) AS GNR_TOT_CNT,
+				SUM(UPNS_SENT_CNT) AS UPNS_SENT_CNT,
+				SUM(APNS_SENT_CNT) AS APNS_SENT_CNT,
+				SUM(GCM_SENT_CNT) AS GCM_SENT_CNT
+			FROM T_PUSH_SYSMSG_SENTINFO
+			WHERE TO_DATE(SENDDATE, 'YYYYMMDD') BETWEEN TO_DATE(#{FROM_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD') AND TO_DATE(#{TO_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD hh24:mi:ss')
+	</select>
+	<!-- store  -->
+	<select id="selectStoreAppListStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayStoreDTO" resultType="kr.msp.admin.common.mainHome.dto.StoreAppListStatDTO">
+			SELECT APP_IDX, APP_NM, REG_DTTM 
+			FROM TB_STO_APP
+			WHERE ROWNUM &lt;= 3
+	</select>
+	
+	<select id="selectStoreAppDownloadStatSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayStoreDTO" resultType="kr.msp.admin.common.mainHome.dto.StoreAppDownloadStatDTO">
+			SELECT A.*, D.APP_NM
+			FROM(
+			    SELECT BIN_NO, EMP_NO, COUNT(*) AS CNT
+			    FROM TB_STO_DL 
+			    WHERE REG_DTTM BETWEEN TO_DATE(#{FROM_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD') AND TO_DATE(#{TO_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD hh24:mi:ss')
+			    AND ROWNUM &lt;= 3
+			    GROUP BY BIN_NO, EMP_NO
+			    ) A
+			    LEFT OUTER JOIN TB_STO_USER B
+			    ON A.EMP_NO = B.EMP_NO
+			    LEFT OUTER JOIN TB_STO_AUTH C
+			    ON A.EMP_NO = C.EMP_NO
+			    LEFT OUTER JOIN TB_STO_APP D
+			    ON C.APP_IDX = D.APP_IDX
+	</select>
+	
+
+	<select id="selectStoreQABoardSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayStoreDTO" resultType="kr.msp.admin.common.mainHome.dto.StoreQABoardDTO">
+			SELECT   BOARD_IDX, BOARD_TITLE, REG_DT
+			FROM     TB_STO_BOARD
+			WHERE ROWNUM &lt;= 6  
+	</select>
+	
+	<!-- mobile -->
+	<select id="selectMobileResourceDeployListSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayMobileDTO" resultType="kr.msp.admin.common.mainHome.dto.MobileResourceDeployListDTO">
+		SELECT A.*, B.SVC_NM
+		FROM(
+		      SELECT A.DPLY_IDX, A.DPLY_NM, A.DPLY_VER, A.REG_DTTM, A.DPLY_DESC, A.SVC_ID
+		      FROM TB_MOB_DPLY A 
+		      INNER JOIN(
+		                SELECT A.SVC_ID
+		                FROM TB_SVC_AUTH A
+		                INNER JOIN(
+		                					SELECT *
+		                          FROM TB_SYS_USER_AUTH_GRP
+		                          WHERE USER_ID = 'admin'  
+		                          )B
+		                ON A.AUTH_GRP_ID = B.AUTH_GRP_ID
+		                INNER JOIN(
+		                					SELECT *
+		                          FROM TB_MOB_SVC
+		                          WHERE USE_YN = 'Y'
+		                          ) C
+		                ON A.SVC_ID = C.SVC_ID
+		                ) B
+		      ON A.SVC_ID = B.SVC_ID
+		      WHERE rownum &lt;= 3
+		      ORDER BY  A.DPLY_IDX DESC
+		      
+		) A
+		LEFT OUTER JOIN TB_SVC B
+		ON A.SVC_ID = B.SVC_ID
+	</select>
+	
+	<select id="selectMobilePeriodStatySummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayMobileDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummaryDailyGraph">
+			SELECT TO_CHAR(T1.REG_DTTM, 'YYYY.MM.DD') AS DT, COUNT(*) AS CNT
+			FROM   TB_MOB_EVENT_LOG T1
+			WHERE  REG_DTTM BETWEEN TO_DATE(#{FROM_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD') AND TO_DATE(#{TO_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD hh24:mi:ss')
+			 
+			GROUP BY TO_CHAR(T1.REG_DTTM, 'YYYY.MM.DD')
+			ORDER BY TO_CHAR(T1.REG_DTTM, 'YYYY.MM.DD') ASC
+	</select>
+	
+	
+	<select id="selectMobileProtocolStatusSummary" parameterType="kr.msp.admin.common.mainHome.dto.MainHomeSummayMobileDTO" resultType="kr.msp.admin.common.mainHome.dto.MainHomeSummaryDailyGraph">
+			SELECT TO_DATE(TO_CHAR(T1.REG_DTTM, 'YYYY.MM.DD'), 'YYYY.MM.DD') AS DT, COUNT(*) AS CNT
+			FROM TB_MOB_EVENT_LOG T1
+			WHERE T1.REG_DTTM BETWEEN TO_DATE(#{FROM_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD') AND TO_DATE(#{TO_DATE,mode=IN,jdbcType=VARCHAR}, 'YYYY.MM.DD hh24:mi:ss') 
+				  AND T1.COMP_CD IS NOT NULL 
+			GROUP BY TO_CHAR(T1.REG_DTTM, 'YYYY.MM.DD')
+			ORDER BY TO_CHAR(T1.REG_DTTM, 'YYYY.MM.DD') ASC
+	</select>
+	
+</mapper>

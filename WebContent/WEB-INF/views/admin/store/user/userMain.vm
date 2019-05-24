@@ -1,0 +1,408 @@
+<style type="text/css">
+	.clsDetailPopup  	{cursor:pointer}
+</style>
+<script type="text/javascript">
+	$(document).ready(function(){
+		//공통 페지징 처리
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+		
+		//검색메뉴 hide
+		$(".se_con").each(function(i) {
+			if(i != 0) {
+				$(this).hide();
+			}
+		});
+		
+		//레이어 팝업 사용
+		//$(".window").css({width:"650px", height:"650px"});
+		
+		//메시지가 있으면 출력 
+		if($("#rtnCd").val() != "empty") {
+			alert($("#rtnMsg").val());
+		}
+	});
+
+	$(document).on("change","#conSelect",function() {
+		var su = $(this).val();
+		$(".se_con").hide();
+		$(".se_con").val("");
+		$(".se_con:eq(" + su + ")").show();
+	});
+
+	function ch_search() {
+		var sfrm=document.frmSearch;
+    	var sval=$("#conSelect").val();
+    	if(sval==0){
+    		if(sfrm.empnm.value.length>0&&sfrm.empnm.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.empnm.value="";
+    			sfrm.empnm.focus();
+    		}
+    	}else if(sval==1){
+    		if(sfrm.empno.value.length>0&&sfrm.empno.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.empno.value="";
+    			sfrm.empno.focus();
+    		}
+    	}
+		fn_userList(1);
+	}
+
+	//리스트 페이지 구현
+	function fn_userList(PAGE_NUM) {
+		$("#PAGE_NUM").attr("value", PAGE_NUM);
+		
+		var url    = CONTEXT_PATH + "/admin/store/user";
+		var data   = $("form[name=frmSearch]").serialize();
+		var target = $("#userTableDiv");
+		var type   = "POST";
+		fn_getPage(url, type, data, target);
+	
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	}
+	
+	//팝업 등록 (화면)
+	/*function fn_newWrite() {
+        var url    = CONTEXT_PATH + "/admin/store/user/edit";
+    	var type   = "GET";
+    	var data   = "EMP_NO=";
+    	var target = $("#windowPop");
+    	var width  = 700;
+    	var title  = "회원정보 등록";
+		
+    	fn_getCommonPopupDiv(url, type, data , target , width, title);
+	}*/
+
+//------------------------------------------------------------------------------------------------------
+//
+//		함수명 : fn_mp_validation
+//
+//
+//		설명 : 
+//			
+//			특정 Element가 값이 지정 되었는지를 검사함.
+//			만약 비어 있다면(값을 입력하지 않았다면) 지정한 errMsg로 팝업을 띄움
+//
+//		파라메터 :
+//			- frmName	
+//								: String
+//								: Form Element의 name 
+//			- objName
+//								: 검사할 Element의 이름
+//			- type
+//								: 검사할 Element의 타입
+//
+//			- errMsg
+//								: String
+//								: 에러시 팝업 메시지
+//
+//		반환값 : 
+//					true : 성공(값이 있음)
+//					false : 실패(값이 없음)
+//
+//
+//				
+//------------------------------------------------------------------------------------------------------
+
+	function fn_mp_validation(frmName, objName, type, errMsg) {
+		var obj    = null;
+		var retval = true;
+		
+		switch(type) {
+			case 'input'    : obj = $("form[name="+frmName+"]").find("input[name="+objName+"]");	break;
+			case 'select'   : obj = $("form[name="+frmName+"]").find("select[name="+objName+"]");	break;
+			case 'textarea' : obj = $("form[name="+frmName+"]").find("textarea[name="+objName+"]");	break;
+			default: {
+				obj    = false;
+				retval = false;
+				alert('타입(' + type+')은 정의되지 않은 타입임.!');
+			}
+			break;
+		} // end switch
+	
+		retval = (obj) && (obj.val() != "");
+		
+		if(!retval) {
+			if(obj) {
+				obj.focus();
+			} else {
+				// 디버깅용!!
+				alert(objName + "을 찾을 수 없음.!!");
+			}
+			if(errMsg) {
+		 		alert(errMsg);
+			}
+			retval = false;
+		}
+		return retval;
+	}
+	
+	//팝업 등록
+	/*function fn_save() {
+		var frmName   = "frmUserInfo";
+		var isValidOk = fn_mp_validation(frmName,    "EMP_NO",      "input",  "사번을 입력해주세요.")  
+						&& fn_mp_validation(frmName, "EMP_NM",      "input",  "이름을 입력해주세요.")
+        				&& fn_mp_validation(frmName, "EMP_CD",      "select", "직원코드를 입력해주세요.")
+        				&& fn_mp_validation(frmName, "DIVISION_ID", "select", "부서코드을 입력해주세요.")
+        				&& fn_mp_validation(frmName, "EMAIL",       "input",  "이메일을 입력해주세요.");
+    	
+    	if(!isValidOk) {
+    		return;
+       	}
+    	if($("#empno_con").val() == 'X') {
+    		alert("사번 중복체크를 해주세요.");
+    		return;
+    	}
+    	if( $("#USERID").val() != "" &&  $("#userid_con").val() == 'X') {
+    		alert("사용자 아이디 중복체크를 해주세요.");
+    		return;
+    	}
+		
+		document.frmUserInfo.action = CONTEXT_PATH + "/admin/store/user/regist";
+        document.frmUserInfo.submit();
+	}*/
+	
+	$(document).on("change","#EMP_NO",function() {
+		$("#empno_con").val("X");
+	});
+	
+	$(document).on("change","#USERID",function() {
+		$("#userid_con").val("X");
+	});
+
+	function fn_modifyUseYN(empno, isUseYn) {
+    		
+		var frmName = "frmUserInfo";
+    	
+    	//	var confirmMsg = "";
+        //	if(isUseYn)
+        //	{
+        //		confirmMsg = "[허용] 상태로 바꾸시겠습니까?"
+        //	}
+        //	else
+        //	{
+        //		confirmMsg = "[중지] 상태로 바꾸시겠습니까?"
+        //	}
+    	//
+    	//if(confirm(confirmMsg))
+		{
+			//$("#EMP_NO").attr("value",empno);	
+			
+   			var url    = CONTEXT_PATH + "/admin/store/user/edit_useyn";
+    		var data   = $("form[name=frmSearch]").serialize() 
+						+ "&TMP_EMP_NO=" + empno
+						+ "&USE_YN=" + (isUseYn ? "Y" : "N");
+   			var target = $("#userTableDiv");
+    		var type   = "POST";
+			
+    		fn_getPage( url, type, data, target );
+    		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+		}
+	}
+	
+	//팝업 수정
+	function fn_modify() {
+		var frmName   = "frmUserInfo";
+		var isValidOk = fn_mp_validation(frmName,    "EMP_NM",      "input",  '#springMessage("menu.push.user.alert.nameIn")')  //이름을 입력해주세요.
+						&& fn_mp_validation(frmName, "DEPT_CD",     "select", '#springMessage("menu.store.user.alert.teamCodeIn")') //부서코드를 입력해주세요.
+        				&& fn_mp_validation(frmName, "EMP_CD",      "select", '#springMessage("menu.store.user.alert.workCodeIn")') //직원코드를 입력해주세요.
+        				&& fn_mp_validation(frmName, "DIVISION_ID", "select", '#springMessage("menu.store.user.alert.teamCodeIn")') //부서코드을 입력해주세요.
+        				&& fn_mp_validation(frmName, "EMAIL",       "input",  '#springMessage("menu.store.user.alert.emailIn")'); //이메일을 입력해주세요.
+							
+		if(isValidOk) {
+    		//var url  = "/admin/store/user/edit";
+    		//var data = $("form[name=frmUserInfo]").serialize();		
+			document.frmUserInfo.action = CONTEXT_PATH + "/admin/store/user/edit";
+            document.frmUserInfo.submit(); 
+       }
+	}
+	
+	//팝업 삭제
+	function fn_delete() {
+		var url  = CONTEXT_PATH + "/admin/store/user/delete";
+		var data = $("form[name=frmUserInfo]").serialize();
+		if(confirm('#springMessage("menu.store.user.alert.notRestore")'+"\n"+'#springMessage("common.alert.doDelete")')) { //삭제하면 복구할 수 없습니다.  삭제 하시겠습니까?
+    		jQuery.ajax( {
+    			url      : url,
+    			type     : "POST",
+    			data     : data,
+    			dataType : "json",
+    			success  : function(data) {
+					if(data.result < 0) {
+    					fn_closePopup();
+						alert(data.msg);
+    				} else if(data.result >= 0) {
+    					fn_userList(1);
+    					fn_closePopup();
+						alert(data.msg);
+    				}
+    			}
+    		});
+		}
+	}
+	
+	//팝업 상세 (화면)
+	$(document).on("click",".clsDetailPopup", function() {
+        var url    = CONTEXT_PATH + "/admin/store/user/edit";
+    	var type   = "GET";
+    	//var data = "EMP_NO=" + $(this).parent().find("#EMP_NO").val();
+    	var data   = "EMP_NO=" + $(this).parent().parent().find("#EMP_NO").val();
+    	var target = $("#windowPop");
+    	var width  = 700;
+    	var title  = '#springMessage("menu.store.user.userDetail")'; //"회원정보 상세";
+		
+    	fn_getCommonPopupDiv(url, type, data , target , width, title);
+	});
+
+	//공통코드 페이지 호출(공통)
+	function fn_getPage(url, type, data, target) {
+		var AjaxHTML = jQuery.ajax( {
+			url      : url ,
+			type     : type ,
+			data     : data ,
+			dataType : "html" ,
+			async    : false
+		}).responseText;
+		
+		target.html(AjaxHTML);
+	}
+	
+	// 마스크 및 파업창 닫기
+	$(document).on("click","#maskClose",function(e) {
+		fn_closePopup();
+	});
+	
+	function fn_empnoCheck() {
+		var url  = CONTEXT_PATH + "/admin/store/user/empnoCh";
+		var data = $("form[name=frmUserInfo]").serialize();
+		
+    	jQuery.ajax( {
+    		url      : url,
+    		type     : "POST",
+    		data     : data,
+    		dataType : "json",
+    		success  : function(data) {
+    			alert(data.msg)
+				if(data.result > 0) {
+    				$("#empno_con").val("Y");
+    			}
+    		}
+    	});
+	}
+	
+	function fn_useridCheck() {
+		var url  = CONTEXT_PATH + "/admin/store/user/useridCh";
+		var data = $("form[name=frmUserInfo]").serialize();
+		jQuery.ajax( {
+    		url      : url,
+    		type     : "POST",
+    		data     : data,
+    		dataType : "json",
+    		success  : function(data) {
+    			alert(data.msg)
+				if(data.result > 0) {
+    				$("#userid_con").val("Y");
+    			}
+    		}
+    	});
+	}
+	
+	function fn_changeRowSize(){
+		fn_commonSetRowSize();
+		fn_userList(1);
+	}
+</script>
+
+<div class="contents-area">
+
+	#### S : 프로그램 위치 기술 부분  ####
+   <div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>	
+	#### E : 프로그램 위치 기술 부분  ####
+	
+	#### S : 조회 폼 부분  ####
+	
+	<form name="frmSearch" method="post">
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:100px">
+				<col style="width:100px">
+				<col style="width:300px">
+				<col>
+			</colgroup>
+			
+			<thead>
+			<tr>
+				<th>#springMessage("menu.store.user.rank")</th> <!-- 직급 -->
+                   <td>
+					<select name="EMP_CD" class="w90 par_30">
+                           <option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+                           #foreach( $empCd in $empList )
+                               #if($userDto.EMP_CD == $empCd.EMP_CD)
+                                   <option value="$!empCd.EMP_CD" selected="selected">$!empCd.CD_NM</option>
+                               #else
+                                   <option value="$!empCd.EMP_CD">$!empCd.CD_NM</option>
+                               #end
+                           #end
+					</select>
+				</td>
+				<td>
+					<select id="conSelect" class="w90">
+                           <option value="0">#springMessage("common.text.name")</option> <!-- 이름 -->
+                           <option value="1">#springMessage("menu.store.user.userNum")</option> <!-- 회원번호 -->
+					</select>
+					<input class="se_con" type="text" id="empnm" name="EMP_NM" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+					<input class="se_con" type="text" id="empno" name="EMP_NO" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+                 </td>
+                 <td>
+                 	<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+                 </td>
+               </tr>
+               </thead>
+           </table>
+		
+		<input type="hidden" name="ORDER_FIELD" />
+   		<input type="hidden" name="ORDER_TYPE" />
+   		<input type="hidden" id="PAGE_NUM" name="PAGE_NUM" value="$!R_PAGE_NUM" />
+   		<input type="hidden" id="rtnCd" value="$!rtnCd" />
+   		<input type="hidden" id="rtnMsg" value="$!rtnMsg" />
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+   	</form>
+    
+   	
+	<form class="frmList" name="frmUserList" method="post">
+    	
+        	#### S : 리스트  폼 부분  ####
+  		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+	           				<option value="10">#springMessage("common.select.options_10")</option>
+	           				<option value="30">#springMessage("common.select.options_30")</option>
+	           				<option value="50">#springMessage("common.select.options_50")</option>
+	           			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+	
+        <div id="userTableDiv">
+			#parse ("/admin/store/user/userList.vm")
+        </div>
+   
+		<input type="hidden" id="SVC_ID" value="$!SVC_ID" />
+        
+    #### E : 리스트  폼 부분  ####
+	</form>
+</div>

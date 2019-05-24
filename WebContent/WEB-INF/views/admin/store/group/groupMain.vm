@@ -1,0 +1,296 @@
+<script type="text/javascript">
+    var tot_cnt_v = 0; //단계 카운트
+    var add_flag = ""; //처음 행추가 클릭 flag
+
+    jQuery(document).ready(function(){
+        //공통 페지징 처리
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+        
+        //메시지가 있으면 출력 
+        if($("#rtnMsg").val() != "" ){
+            alert($("#rtnMsg").val());
+        }
+        
+        jQuery("input[name=SEARCH_GRP_NM]").focus();
+    });
+    
+    //검색
+    function fn_select(){
+        $("#orderTarget").val("REG_DT");
+        $("#orderType").val("DESC");
+		ch_search();
+    }
+	
+	function ch_search(){
+		var sfrm=document.frmSearch.grpnm;
+		if(sfrm.value.length>0&&sfrm.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.value="";
+			sfrm.focus();
+		}
+		fn_groupList(1);
+	}
+        
+    function fn_groupList(PAGE_NUM){
+        var orderTarget = $("#orderTarget").val();
+        var orderType = $("#orderType").val();
+     
+        var url  = CONTEXT_PATH + "/admin/store/group";
+        var data = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM+"&ORDER_TARGET=" + orderTarget + "&ORDER_TYPE="+orderType;
+    
+        var target = jQuery("#groupTableDiv");
+        var type = "POST";
+        //common.js 에 정의
+        fn_getCommonList( url, type, data, target );
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+    
+//저장전에 유효성 체크 
+function validCheck(){
+    
+    var rtn = "true";
+    //행추가시, 그룹명 체크
+    jQuery('.grpNm').each( function(j){
+            
+        var nm = $(this).val();
+       
+        if(nm == null || nm == ""){
+            alert('#springMessage("menu.push.user.alert.groupIn")'); //"그룹명을 입력해주세요."
+            rtn = "false";
+            return false;  //each 반복문을 벗어난다. 
+        }
+    });
+     
+    
+    if(rtn == "true"){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+    
+    //DESC <-> ASC 변경 함수
+    function changeOrderType(){
+        if($("#orderType").val() == "DESC"){
+            $("#orderType").val("ASC");
+        }else{
+            $("#orderType").val("DESC");
+        }
+    }
+    
+    //컬럼 클릭 -> ORDER BY
+    $(document).on("click","#orderGrpNm",function( e ){ //그룹명
+        $("#orderTarget").val("GRP_NM");
+        changeOrderType();
+        fn_groupList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderRegId",function( e ){ //등록자
+        $("#orderTarget").val("REG_ID");
+        changeOrderType();
+        fn_groupList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderRegDt",function( e ){ //등록일
+        $("#orderTarget").val("REG_DT");
+        changeOrderType();
+        fn_groupList(jQuery('#PAGE_NUM').val());
+    });
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+
+//그룹 등록 팝업
+function fn_GoWriter(){
+	var url = CONTEXT_PATH + "/admin/store/group/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 600;
+	var title = '#springMessage("menu.push.user.groupIn")';//"그룹 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+}
+
+//그룹 등록
+function fn_groupWrite(){
+	if( $("form[name=frmGroupInfo]").find("input[name=GRP_NM]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.groupIn")'); //"그룹명을 입력해주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doSave")')){ //"저장하시겠습니까?"
+ 		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/store/group/regist";
+	var data = $("form[name=frmGroupInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_groupList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+
+
+//그룹 수정 화면
+$(document).on("click","#groupModify",function(){
+	var GRP_ID = $(this).parent().parent().find(".GRP_ID").val();
+	var url = CONTEXT_PATH + "/admin/store/group/edit";
+	var type = "GET";
+	var data = "GRP_ID=" + GRP_ID;
+	var target = $("#windowPop");
+	var whideh = 600;
+	var title = '#springMessage("menu.push.user.groupUpdate")'; //"그룹 수정";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+
+//그룹 수정
+function fn_groupModify(){
+
+	if( $("form[name=frmGroupInfo]").find("input[name=GRP_NM]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.groupIn")'); //"그룹명을 입력해주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/store/group/edit";
+	var data = $("form[name=frmGroupInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_groupList(jQuery('#PAGE_NUM').val());
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+//그룹 삭제
+function fn_groupDelete(){
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/store/group/delete";
+	var data = $("form[name=frmGroupInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_groupList(1);
+				fn_closePopup();
+			}
+		}
+	});
+}
+
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_groupList(1);
+}
+</script>
+<div class="contents-area"> 
+    #### S : 프로그램 위치 기술 부분  ####
+    <div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>	
+    #### E : 프로그램 위치 기술 부분  ####
+
+   #### S : 조회 폼 부분  ####
+    
+   	<form name="frmSearch" method="post">
+   		<table class="tbl-search">
+   			<colgroup>
+				<col style="width:100px">
+				<col style="width:200px">
+				<col>
+			</colgroup>
+			
+			<thead>
+   			<tr>
+				<th>#springMessage("menu.push.user.groupName")</th> <!-- 그룹명  -->
+                <td>
+					<input class="se_con" id="grpnm" type="text" name="SEARCH_GRP_NM" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}" />
+				</td>
+				<td>
+					<a href="javascript:void(0)" onclick="fn_select()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+				</td>
+            </tr>
+            </thead>
+        </table>
+		
+		<input type="hidden" id="rtnCd" value="$!rtnCd" />
+		<input type="hidden" id="rtnMsg" value="$!rtnMsg" />
+        <input type="hidden" id="orderTarget" value="REG_DT"/>
+		<input type="hidden" id="orderType" value="DESC"/>
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+	</form>
+    
+
+    #### S : 리스트  폼 부분  ####
+   
+    <table class="tbl-info">
+		<caption></caption>
+		<tr>
+			<td>
+				<a href="javascript:void(0)" class="btn2" onclick="fn_GoWriter();" title="#springMessage("common.button.regist")">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+			</td>
+			<td class="txtRight">
+				#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+				<div class="tbl-info-select">
+					<label for="num">#springMessage("common.select.options_10")</label>
+					<select id="selRowSize" onchange="fn_changeRowSize()">
+           				<option value="10">#springMessage("common.select.options_10")</option>
+           				<option value="30">#springMessage("common.select.options_30")</option>
+           				<option value="50">#springMessage("common.select.options_50")</option>
+           			</select>
+				</div>
+			</td>
+		</tr>
+	</table>
+       
+			
+            
+    <div id="groupTableDiv">
+		<form name="formList" id="formList"  method="post">
+	    	<input type="hidden" id="TOTAL_CNT" value="$groupList.size()"><!-- 일련번호 -->
+	    </form>
+	    <!--  templete vm include  -->                    
+	    #parse ("/admin/store/group/groupList.vm")
+    </div>
+        
+   
+  
+  
+    #### E : 리스트  폼 부분  ####
+
+
+</div>  

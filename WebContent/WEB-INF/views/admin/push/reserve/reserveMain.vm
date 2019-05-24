@@ -1,0 +1,323 @@
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        //공통 페지징 처리
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+        //검색메뉴 hide
+        $(".se_con").each(function(i){
+            if(i != 0){
+                $(this).hide();
+            }
+        });
+
+        //달력 구현 --> 신규 디자인 형태로 변경
+        /*
+        $("#END_VIEW_S").datepicker({
+            regional: "ko",
+            dateFormat: "yymmdd",
+            showOn: "button",
+            buttonImage: CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly: true,
+            altField: "#END_VIEW_S",
+            altFormat: "yy.mm.dd"
+        });
+
+        //달력 구현
+        $("#END_VIEW_E").datepicker({
+            regional: "ko",
+            dateFormat: "yymmdd",
+            showOn: "button",
+            buttonImage: CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly: true,
+            altField: "#END_VIEW_E",
+            altFormat: "yy.mm.dd"
+        });
+		*/
+		
+        $("#END_VIEW_S").val($.datepicker.formatDate("yy.mm.dd", new Date()));
+        $("#END_VIEW_E").val($.datepicker.formatDate("yy.mm.dd", new Date()));
+    });
+
+    //일반 MSG 발송 예약 리스트 검색
+    function fn_se_select(){
+        if( $("#END_VIEW_S").val() == ""){
+            alert('#springMessage("common.alert.startDate")'); //"시작 일자을 입력해주세요."
+            
+            return;
+        }
+        if( $("#END_VIEW_E").val() == "" ){
+            alert('#springMessage("common.alert.endDate")'); //"끝 일자을 입력해주세요."
+            return;
+        }
+        if( $("#END_DATE_S").val() +""+ $("#END_HOUR_S").val() +""+ $("#END_MINUTE_S").val() > $("#END_DATE_E").val() +""+ $("#END_HOUR_E").val() +""+ $("#END_MINUTE_E").val()){
+            alert('#springMessage("common.alert.dateError")'); //"시작 일자가 끝 일자보다 큽니다."
+            return;
+        }
+
+        $("#RESERVEDATE_S").val( $("#END_VIEW_S").val() +" "+ $("#END_HOUR_S").val() +":"+ $("#END_MINUTE_S").val() );
+        $("#RESERVEDATE_E").val( $("#END_VIEW_E").val() +" "+ $("#END_HOUR_E").val() +":"+ $("#END_MINUTE_E").val() );
+
+        fn_RserveList(1);
+    }
+
+    //일반 MSG 발송 예약 리스트 페이징
+    function fn_RserveList(PAGE_NUM){
+    	var senderCode = "";
+    	if($request.getSession().getAttribute("S_ID_AUTH_GRP") == "0000000003") {
+    		senderCode = '$request.getSession().getAttribute("S_ID_USER")';
+    	}
+    
+        var url = CONTEXT_PATH + "/admin/push/reserveSend";
+        var type = "POST";
+        var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM + "&SENDER_CODE=" + senderCode;
+        var target = $("#reserveSendTableDiv");
+        fn_getCommonList( url, type, data , target );
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+
+    //일반 MSG 발송 예약 리스트 삭제
+    function reserveCancel(seqno) {
+        if (confirm('#springMessage("common.alert.doDelete")')) { //삭제 하시겠습니까?
+            var url = CONTEXT_PATH + "/admin/push/reserveSend/delete";
+            var data = {};
+            data["RESERVE_SEQNO"] = seqno;
+            jQuery.ajax({
+                url: url,
+                type: "POST",
+                data: data,
+                dataType: "json",
+                success: function (data) {
+                    if (data.resultCode == "0000") {
+                        fn_RserveList(1);
+                    } else {
+                        alert(data.resultMsg);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(thrownError);
+                }
+            });
+        }
+    }
+
+	function fn_changeRowSize(){
+		fn_commonSetRowSize();
+		fn_RserveList(1);
+	}
+</script>
+
+<div class="contents-area">
+#### S : 프로그램 위치 기술 부분  ####
+    <div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.push.sendManage")</span>			<!-- 발송 관리 -->
+		<span>#springMessage("menu.push.sendManage.reserveSend")</span>	<!-- 예약 발송 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.push.sendManage.reserveSend")</h2>
+#### E : 프로그램 위치 기술 부분  ####
+
+#### S : 조회 폼 부분  ####
+    <form name="frmSearch" method="post">
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:100px">
+				<col style="width:600px">
+				<col>
+			</colgroup>
+			
+			<thead>
+				<tr>
+					<th>#springMessage("menu.push.sendManage.reserveTime")</th> <!-- 예약시간 -->
+					<td>
+						<input type="text" name="END_VIEW_S" id="END_VIEW_S" readonly="readonly" class="datepicker sDate" placeholder="날짜선택">
+						<label for="sDate"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+						<select name="END_HOUR_S" id="END_HOUR_S" class="w60">
+	                    #foreach ( $item in [0..23] )
+	                        #if($item < 10)
+	                        <option value="0$item">$item</option>
+	                        #else
+	                        <option value="$item">$item</option>
+	                        #end
+	                    #end
+	                	</select>
+						#springMessage("common.text.hour")&nbsp; <!-- 시 -->
+		                <select name="END_MINUTE_S" id="END_MINUTE_S" class="w60">
+	                    #foreach ( $item in [0..59] )
+	                        #if($item < 10)
+	                        <option value="0$item">$item</option>
+	                        #else
+	                        <option value="$item">$item</option>
+	                        #end
+	                    #end
+	               	 	</select>
+						#springMessage("common.text.minite") <!-- 분 -->
+						<input type="hidden" name="RESERVEDATE_S" id="RESERVEDATE_S">&nbsp; ~ &nbsp;
+						
+						<input type="text" name="END_VIEW_E" id="END_VIEW_E" readonly="readonly" class="datepicker sDate" placeholder="날짜선택">
+						<label for="sDate"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+						&nbsp;
+						<select name="END_HOUR_E" id="END_HOUR_E" class="w60">
+	                    #foreach ( $item in [0..23] )
+	                        #if($item < 10)
+	                        <option value="0$item">$item</option>
+							#else
+							<option value="$item">$item</option>
+	                        #end
+	                    #end
+	                	</select>
+						#springMessage("common.text.hour")&nbsp; <!-- 시 -->
+						<select name="END_MINUTE_E" id="END_MINUTE_E" class="w60">
+	                    #foreach ( $item in [0..59] )
+	                        #if($item < 10)
+	                        <option value="0$item">$item</option>
+							#else
+	                        <option value="$item">$item</option>
+	                        #end
+	                    #end
+	                	</select>
+						#springMessage("common.text.minite") <!-- 분 -->
+						<input type="hidden" name="RESERVEDATE_E" id="RESERVEDATE_E">
+					</td>
+					<td>
+						<a href="javascript:void(0)" onclick="fn_se_select()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+					</td>
+				</tr>
+				<tr>
+	                <th>APPID</th>
+	                <td>
+						<select name="APPID">
+							<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							#foreach($pushService in $pushServiceList)
+	                        <option value="$pushService.APPID">$pushService.APPID</option>
+							#end
+						</select>
+					</td>
+					<td></td>
+	            </tr>
+			</thead>
+        </table>
+        
+        <input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+    </form>
+               	
+
+    <form name="frmList" method="post">
+    #### S : 리스트  폼 부분  ####
+        
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+			
+            
+          <div id="reserveSendTableDiv">
+
+              <table class="tbl-nb">
+                  <colgroup><!--  7cell  -->
+                      <col width="150px"/>
+						<col width="auto"/>
+						<col width="140px"/>
+						<col width="80px"/>
+                      	<col width="80px"/>
+						<col width="80px"/>
+                  </colgroup>
+                  <thead>
+                      <tr>
+                          <th scope="col">APPID</th>
+                          <th scope="col">#springMessage("menu.stats.push.message")</th> <!-- 메세지 -->
+                          <th scope="col">#springMessage("menu.push.sendManage.reserveDate")</th> <!-- 예약일 -->
+                          <th scope="col">#springMessage("menu.push.sendManage.sendForm")</th> <!-- 발송형태 -->
+                          <th scope="col">#springMessage("menu.mobile.deploy.status")</th> <!-- 상태 -->
+                          <th scope="col">#springMessage("common.button.cancel")/#springMessage("common.button.delete")</th> <!-- 취소/삭제 -->
+                      </tr>
+                  </thead>
+                  <tbody>
+				     #foreach( $reserveMsgDto in $reserveMsgDtoList )
+				      #set($j_tot = $reserveMsgDto.TOT_CNT)
+				      #set($PROCESS_FLAG="예약")
+				      #set($SEND_TYPE="전체")
+				      #set($PROCESS_COLOR="#000000")
+				
+				      #if($reserveMsgDto.PROCESS_FLAG == "R")
+				          #set($PROCESS_FLAG="발송대기")
+				          #set($PROCESS_COLOR="GRAY")
+				      #elseif($reserveMsgDto.PROCESS_FLAG == "Y")
+				          #set($PROCESS_FLAG="발송중")
+				          #set($PROCESS_COLOR="BLUE")
+				      #elseif($reserveMsgDto.PROCESS_FLAG == "F")
+				          #set($PROCESS_FLAG="실패")
+				          #set($PROCESS_COLOR="RED")
+				      #end
+				
+				      #if($reserveMsgDto.TYPE=="E")
+				          #set($SEND_TYPE="개별")
+				      #elseif($reserveMsgDto.TYPE == "G")
+				          #set($SEND_TYPE="그룹")
+				      #elseif($reserveMsgDto.TYPE == "C")
+				          #set($SEND_TYPE="CSV")
+				      #end
+                      <tr class="no_select">
+
+                          <td id="check_td">
+                              $!{reserveMsgDto.APP_ID}
+                          </td>
+                          <td id="check_td">
+                              $!{reserveMsgDto.MESSAGE}
+                          </td>
+                          <td id="check_td" >
+                              $!{reserveMsgDto.RESERVEDATE}
+                          </td>
+                          <td id="check_td">
+                              $SEND_TYPE
+                          </td>
+                          <td id="check_td" style="color: $PROCESS_COLOR">
+                              $PROCESS_FLAG
+                          </td>
+                          <td>
+                              #if($reserveMsgDto.PROCESS_FLAG!="Y")
+                                  <a href="javascript:void(0)" id="reserveSendDelete" onclick="javascript:reserveCancel('$reserveMsgDto.RESERVE_SEQNO');" class="tbl-btn1">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+                              #end
+                          </td>
+                      </tr>
+                      #end
+                      #if(!$j_tot)
+                      <tr><td colspan="6"> #springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. --></tr>
+                       #end
+                   </tbody>
+               </table>
+				<input type="hidden" id="SEND_NUM" value="$!R_PAGE_NUM">
+               
+               <div class="j_page_div">
+               ##현재 페이지
+                   <input type="hidden" name="j_now" value="$!R_PAGE_NUM">
+               ##총 개수
+                   <input type="hidden" name="J_tot" value="$!j_tot">
+               ##한페이지의 로우수
+                   <input type="hidden" name="j_row" value="$!R_ROW_SIZE">
+               ##한페이지수
+                   <input type="hidden" name="j_page" value="$!R_PAGE_SIZE">
+               ##이밴트
+                   <input type="hidden" name="j_event" value="fn_RserveList">
+               </div>
+           </div>
+
+        
+    #### E : 리스트  폼 부분  ####
+    </form>
+</div>

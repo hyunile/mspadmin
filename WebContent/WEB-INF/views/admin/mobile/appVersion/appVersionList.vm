@@ -1,0 +1,70 @@
+<script type="text/javascript">
+	$(document).ready(function () {
+	    // order by 관련 화면 그리기
+	    var target = $("#ORDER_TARGET").val();
+	    var type = $("#ORDER_TYPE").val();
+	    
+		if(type == "DESC"){
+	 		$("#OR_" + target).text( $("#OR_" + target).text() + " ▽");
+	  	}else{
+	  		$("#OR_" + target).text( $("#OR_" + target).text() + " △");
+	   	}
+	});
+</script>
+						<table class="tbl-nb full-width" summary="항목선택,CUID,이름,전화번호">
+							<colgroup><!--  4cell  -->
+								<col width="auto"/>
+								<col width="23%"/>
+								<col width="27%"/>
+								<col width="16%"/>
+							</colgroup>
+							<thead>
+								<tr>
+									<th scope="col" class="order_th" id="OR_PLAT_IDX">#springMessage("menu.mobile.version.platform")</th> <!-- 플랫폼유형 -->
+									<th scope="col" class="order_th" id="OR_BIN_VER">#springMessage("menu.mobile.deploy.version")</th> <!-- 버전 -->
+									<th scope="col" class="order_th" id="OR_REG_DTTM">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+									<th scope="col" > </th>
+								</tr>
+							</thead>
+							<tbody>
+							#foreach( $appVersion in $appVersionList )
+								#set($j_tot = $!appVersion.TOT_CNT)
+								<tr>
+									<td style="text-align:left;">
+										$!appVersion.PLAT_NM
+										<input type="hidden" class="APP_VER_ID" value="$!appVersion.APP_VER_ID">
+									</td>
+									<td >
+										$!appVersion.BIN_VER_STR
+									</td>
+									<td>
+										$!appVersion.REG_DTTM
+									</td>
+									<td>
+										<a href="javascript:void(0)" class="btn2" id="fn_appVerDelete">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+									</td>
+								</tr>
+							#end
+		
+							#if(!$j_tot)
+								<tr>
+									<td colspan="4" class="ta_c">#springMessage("common.alert.nodata")</td> <!-- 데이터가 없습니다. -->
+								</tr>
+							#end
+							</tbody>
+						</table>
+						
+						<input type="hidden" id="VER_NUM" value="$!R_PAGE_NUM" />
+				      	<div class="j_page_div">
+				         	##현재 페이지
+				         	<input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+				            ##총 개수
+				            <input type="hidden" name="J_tot" value="$!j_tot" />
+				            ##한페이지의 로우수
+				            <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+				            ##한페이지수
+				            <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+				            ##이밴트
+				            <input type="hidden" name="j_event" value="fn_appVersionList" />
+				    	</div>
+					

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <jdbc>
+        <driverClassName>com.microsoft.sqlserver.jdbc.SQLServerDriver</driverClassName>
+        <url>+Um1gu42Jlg3bCnvDmjVKsHlBRl4RM82L/fM5qtoOIA6SqJ35jmd+lfKdKIcjaqROXM0xCQqD4O3RyferBQ+7Q==</url>
+        <username>vTn+Iu2LqRJIl3f4EfbtBg==</username>
+        <password>NFCBNYUzfNNrutkD4TpmDw==</password>
+    </jdbc>
+</configuration>

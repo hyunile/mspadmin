@@ -1,0 +1,282 @@
+<script type="text/javascript">
+    jQuery(document).ready(function(){
+        //공통 페지징 처리
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+        
+        //메시지가 있으면 출력 
+        if($("#rtnMsg").val() != "" ){
+            alert($("#rtnMsg").val());
+        }
+        jQuery("input[name=APP_NM]").focus();
+       
+    });
+    
+    //DESC <-> ASC 변경 함수
+    function changeOrderType(){
+        if($("#orderType").val() == "DESC"){
+            $("#orderType").val("ASC");
+        }else{
+            $("#orderType").val("DESC");
+        }
+    }
+    
+    //컬럼 클릭 -> ORDER BY
+    $(document).on("click","#orderAppNm",function( e ){ //App 명
+        $("#orderTarget").val("APP_NM");
+        changeOrderType();
+        fn_appInfoList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderPlatform",function( e ){ //플랫폼
+        $("#orderTarget").val("PLATFORM");
+        changeOrderType();
+        fn_appInfoList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderPakgId",function( e ){ //App ID
+        $("#orderTarget").val("PAKG_ID");
+        changeOrderType();
+        fn_appInfoList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderUserNm",function( e ){ //등록자
+        $("#orderTarget").val("USER_NM");
+        changeOrderType();
+        fn_appInfoList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderStsCd",function( e ){ //상태
+        $("#orderTarget").val("STS_CD");
+        changeOrderType();
+        fn_appInfoList(jQuery('#PAGE_NUM').val());
+    });
+    $(document).on("click","#orderRegDt",function( e ){ //등록일
+        $("#orderTarget").val("REG_DT");
+        changeOrderType();
+        fn_appInfoList(jQuery('#PAGE_NUM').val());
+    });
+    
+    jQuery(document).on('mouseover', "img.fileview", function(event) {
+            jQuery('img', "#hoverpopup").attr('src', '$CONTEXT_PATH/admin/store/download?fileName='+jQuery(this).attr('fname'));
+            var pos = jQuery(this).position();
+            jQuery("#hoverpopup").css({"top":pos.top - 15,"left": pos.left + 30, "display": "block"});
+    }).on('mouseout', "img.fileview", function(event) {
+            jQuery("#hoverpopup").css("display", "none");      
+    });
+    
+    //검색조건
+    jQuery(document).on("change","#conSelect",function(){
+        var su = jQuery(this).val();
+        jQuery(".se_con").hide();
+        jQuery(".se_con").val("");
+        jQuery(".se_con:eq(" + su + ")").show();
+    });
+    
+    //플랫폼 검색조건 선택시, page를 1로 초기화
+    jQuery(document).on("change","#PLATFORM",function(){
+        jQuery('#PAGE_NUM').val("1");
+    });
+    
+    //검색
+    function fn_select(){
+        $("#orderTarget").val("APP_IDX");
+        $("#orderType").val("DESC");
+        var pageNum = jQuery('#PAGE_NUM').val();
+        ch_search();
+    }
+    
+	function ch_search(){
+		var sfrm=document.frmSearch;
+    	var sval=$("#conSelect").val();
+    	if(sval==0){
+    		if(sfrm.nm_search.value.length>0&&sfrm.nm_search.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.nm_search.value="";
+    			sfrm.nm_search.focus();
+    		}
+    	}else if(sval==1){
+    		if(sfrm.id_search.value.length>0&&sfrm.id_search.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.id_search.value="";
+    			sfrm.id_search.focus();
+    		}
+    	}
+		fn_appInfoList(1);
+	}
+	
+    //테이블 리스트 갱신페이지 구현
+    function fn_appInfoList(PAGE_NUM){
+        var orderTarget = $("#orderTarget").val();
+        var orderType = $("#orderType").val();
+        
+        var url  =  CONTEXT_PATH + "/admin/store/appInfo";
+        var data = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM +"&ORDER_TARGET=" + orderTarget + "&ORDER_TYPE="+orderType;
+        var target = jQuery("#appInfoTableDiv");
+        var type = "POST";
+        //common.js 에 정의
+        fn_getCommonList( url, type, data, target );
+        fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+    
+    //등록화면이동(GET)
+    function fn_newWrite(){
+        document.location.href = "appInfoAdd";
+    }
+    
+    //상세화면이동(POST)
+    jQuery(document).on('click','span.groupModify',function(){
+        jQuery('input[name=APP_IDX]').val(  jQuery('input', jQuery(this).closest('tr')).val() );
+        document.formList.action   = "appInfo/detailList";
+        document.formList.submit();
+    });
+    
+	//리스트 삭제
+    $(document).on("click","#deleteSelected",function( e ){ 
+       
+		var cnt = $(".chkCls:checkbox:checked").length;
+       
+        if(cnt < 1){
+             alert('#springMessage("menu.store.appManage.alert.chooseApp")'); //"한 개 이상 App정보를 선택하셔야 합니다"
+        }else{
+             if(confirm('#springMessage("menu.store.appManage.alert.doDelete")')){ //선택한 APP 정보는  하위 관련 DB를 모두 삭제합니다.\n\n삭제하시겠습니까?
+                var checkBoxList = [];
+                $('.chkCls:not(#checkAll):checkbox:checked').each(function(i) {
+                       checkBoxList.push($(this).val());
+                });
+    
+                var data = "DEL_LIST="+checkBoxList;
+              
+                jQuery.ajax({
+                        url: CONTEXT_PATH +"/admin/store/appInfo/deleteList"
+                        ,type:"post"
+                        ,data:data
+                        ,dataType:"json"
+                        ,success:function(data){
+                            alert(data.msg);
+                            if(data.result > 0){
+                                 document.location.href= CONTEXT_PATH + '/admin/store/appInfo';
+                            }
+                     }
+                }) 
+                
+            }
+        }
+    });
+    
+     //사용, 중지 update
+    jQuery(document).on('click', '#stsCdY,#stsCdN', function() {
+        if (confirm('#springMessage("menu.store.appManage.alert.changeStatus")')) { //상태를 변경 하시겠습니까?
+            var url = CONTEXT_PATH + "/admin/store/appInfo/stsCd";
+            var sts_cd = jQuery(this).attr('sts_cd');
+            var app_idx = jQuery(this).attr('app_idx');
+            var data = "APP_IDX=" + app_idx + "&USE_YN=" + sts_cd;
+            jQuery.ajax({
+                url: url,
+                type: "POST",
+                data: data,
+                dataType: "json",
+                success: function (data) {
+                    if (data.result > 0) {
+                        fn_select();
+                    }
+                }
+            });
+        }
+     });
+</script>
+<div class="contents-area"> 
+    #### S : 프로그램 위치 기술 부분  ####
+    <div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>
+    #### E : 프로그램 위치 기술 부분  ####
+    
+
+   #### S : 조회 폼 부분  ####
+   <form name="frmSearch" method="post">
+       
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:100px">
+				<col style="width:200px">
+				<col style="width:100px">
+				<col style="width:200px">
+				<col>
+			</colgroup>
+			
+			<thead>
+			<tr>
+				<td >
+					<select id="conSelect" class="w90">
+                        <option value="0">#springMessage("common.text.appname")</option> <!-- App 명 -->
+                        <option value="1">App ID</option>
+                    </select>
+				</td>
+				<td>
+					<input class="se_con" type="text" id="nm_search" name="APP_NM" onkeydown="javascript:if(event.keyCode==13){ ch_search();return false;}"/>
+					<input class="se_con" type="text" id="id_search" name="PAKG_ID" style="display:none" onkeydown="javascript:if(event.keyCode==13){ ch_search();return false;}"/>	
+				</td>
+				
+                <th>#springMessage("menu.store.appManage.platform")</th> <!-- 플랫폼 -->
+                <td class="par_30">
+					<select name="PLATFORM"  id="PLATFORM"  class="w120">
+                    <option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+                    #foreach( $selectBox in $platformList )
+                        <option value="$!selectBox.PLAT_CD">$!selectBox.PLAT_NM</option>
+                    #end
+             		</select>
+				</td>
+				<td>
+					<a href="javascript:void(0)" onclick="fn_select()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+				</td>
+            </tr>
+            </thead>
+        </table>
+		
+		<input type="hidden" id="rtnCd" value="$!rtnCd" />
+        <input type="hidden" id="rtnMsg" value="$!rtnMsg" />
+   		<input type="hidden" id="orderTarget" value="APP_IDX"/>
+   		<input type="hidden" id="orderType" value="DESC"/>
+        
+   </form>	
+   
+    <form name="formList" method="post"  style="display:none;">
+        <input type="hidden" name="APP_IDX" value=""/>
+    </form>
+    
+    <div class="noticeBox">
+		<h2>#springMessage("menu.store.appManage.newAppRegist")</h2> <!-- 신규 App 등록 -->
+		<p>#springMessage("menu.store.appManage.newAppDesc1")</p>	<!-- 신규로 App을 등록하기 위해서는 총 3단계의 절차를 진행하셔야 합니다. -->
+		<p>#springMessage("menu.store.appManage.newAppDesc2")</p>	<!-- App등록을 위해서  하단의 "App 등록" 버튼을 선택해 주세요. -->
+	</div>
+        
+#### S : 리스트  폼 부분  ####
+	
+	<table class="tbl-info">
+		<caption></caption>
+		<tr>
+			<td>
+				<a href="javascript:void(0)" class="btn2" onclick="fn_newWrite();" title="#springMessage("common.button.regist")">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+				<a href="javascript:void(0)" class="btn2" id="deleteSelected" title="#springMessage('menu.mobile.record.title.deleteDesc')">#springMessage("common.button.delete")</a>	<!-- 선택한 파일들을 서버 및 DB에서 삭제합니다. / 삭제 -->
+			</td>
+			<td class="txtRight">
+				#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+				<div class="tbl-info-select">
+					<label for="num">#springMessage("common.select.options_10")</label>
+					<select id="selRowSize" onchange="fn_changeRowSize()">
+           				<option value="10">#springMessage("common.select.options_10")</option>
+           				<option value="30">#springMessage("common.select.options_30")</option>
+           				<option value="50">#springMessage("common.select.options_50")</option>
+           			</select>
+				</div>
+			</td>
+		</tr>
+	</table>
+
+    <div id="appInfoTableDiv">
+         <!--  templete vm include  -->                    
+         #parse ("/admin/store/appInfo/appInfoList.vm")
+	</div>
+	
+	<br><br>
+#### E : 리스트  폼 부분  ####
+</div>  

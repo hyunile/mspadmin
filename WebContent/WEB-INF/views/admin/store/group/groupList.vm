@@ -1,0 +1,93 @@
+<script type="text/javascript">
+
+$(document).ready(function () {
+    // order by 관련 화면 그리기
+    var target = $("#orderTarget").val();
+    var type = $("#orderType").val();
+    
+    if(target == "GRP_NM"){
+        if(type == "DESC"){
+            $("#orderGrpNm").text('#springMessage("menu.push.user.groupName")'+" ▽"); //그룹명
+        }else{
+            $("#orderGrpNm").text('#springMessage("menu.push.user.groupName")'+" △");
+        }
+    }else if(target == "REG_ID"){
+        if(type == "DESC"){
+            $("#orderRegId").text('#springMessage("menu.mobile.deploy.writer")'+" ▽"); //등록자
+        }else{
+            $("#orderRegId").text('#springMessage("menu.mobile.deploy.writer")'+" △");
+        }           
+    }else if(target == "REG_DT"){
+        if(type == "DESC"){
+            $("#orderRegDt").text('#springMessage("menu.mobile.deploy.date")'+" ▽"); //등록일
+        }else{
+            $("#orderRegDt").text('#springMessage("menu.mobile.deploy.date")'+" △");
+        }
+    }
+});
+
+</script>
+
+    <table class="tbl-nb"  id="GroupInfoList">
+        <colgroup>
+            <col width="40%"/>
+            <col width="20%"/>
+            <col width="20%"/>
+            <col width="10%"/>
+        </colgroup>
+        
+        <thead>
+            <tr>
+                <th  id="orderGrpNm"  style="cursor:pointer;" >#springMessage("menu.push.user.groupName")</th> <!--그룹명  -->
+                <th  id="orderRegId"  style="cursor:pointer;">#springMessage("menu.mobile.deploy.writer")</th> <!-- 등록자  -->
+                <th  id="orderRegDt"  style="cursor:pointer;">#springMessage("menu.mobile.deploy.date")</th> <!-- 등록일 -->
+                <th> </th>
+            </tr>
+        </thead>
+        <tbody>
+            #foreach( $group in $groupList )
+                #set($j_tot = $group.TOT_CNT)
+                 <tr>
+                    <td style="text-align:center;">
+                       <input type="hidden" name="GRP_ID" class="GRP_ID" value="$!group.GRP_ID" /> <!-- 그룹ID --> 
+                       $!group.GRP_NM<!-- 그룹명 -->
+                    </td>
+                    <td>
+                        $!group.REG_ID
+                    </td>
+                    <td>
+                        $!group.REG_DT<!-- 등록일 -->
+                    </td>
+                    <td>
+                    	<a href="javascript:void(0)" class="btn2" id="groupModify">#springMessage("common.button.modify")</a> <!-- 수정 -->
+                        
+                    </td>
+                </tr>
+            #end
+            #if(!$j_tot)
+                <tr >
+                    <td align="center" colspan="4">
+                        	#springMessage("menu.store.user.noSearch") <!-- 검색된 정보가 없습니다. -->
+                    </td>
+                </tr>
+            #end
+        </tbody>
+    </table>
+    
+    <input type="hidden" id="PAGE_NUM" value="$!R_PAGE_NUM" />
+    <div class="j_page_div">
+        ##현재 페이지
+        <input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+        ##총 개수
+        <input type="hidden" name="J_tot" value="$!j_tot" />
+        ##한페이지의 로우수
+        <input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+        ##한페이지수
+        <input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+        ##이밴트R
+        <input type="hidden" name="j_event" value="fn_groupList" />
+    </div>
+
+
+
+  

@@ -1,0 +1,44 @@
+<form name="frmUserInfo" method="POST">
+	<div class="popup_content">
+			<legend>#springMessage("menu.store.notice.serviceInUpdate")</legend> <!-- 서비스 등록/수정 폼 -->
+			<table class="tb_view" summary="사용자ID,사용자명,암호,이메일,연락처,비상연락처,사용여부,사용자그룹">
+				<colgroup><!--  4cell  -->
+					<col width="15%"/><col width="35%"/><col width="15%"/><col width="35%"/>
+				</colgroup>
+				<tr>
+					<th scope="row">
+						#springMessage("common.text.appname") <!-- APP명 -->
+					</td>
+					<td>
+						$!storeReviewOne.APP_NM
+					</td>
+					<th scope="row">
+						#springMessage("menu.store.notice.seeNum") <!-- 조회수 -->
+					</td>
+					<td>
+						$!storeReviewOne.HIT
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						#springMessage("common.header.title") <!-- 제목 -->
+					</th>
+					<td colspan="3" >
+						$!storeReviewOne.TITLE
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						#springMessage("common.header.contents") <!-- 내용 -->
+					</th>
+					<td colspan="3" style="word-wrap: break-word;" >
+						$!storeReviewOne.CONTENT
+					</td>
+				</tr>
+			</table>
+		
+			<div class="btn_pop">
+				<button type="button" onclick="fn_closePopup();" class="btn_basic">#springMessage("common.button.close")</button> <!-- 닫기 -->
+			</div>
+	</div>
+</form>

@@ -1,0 +1,314 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/jEasyUiTree/easyui.css" >
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/jEasyUiTree/icon.css">
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript" src="$RESOURCES_PATH/jEasyUiTree/jquery.easyui.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+		//공통 페지징 처리
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    });
+    
+    $(document).ready(function(){
+        //레이어 팝업 사용
+        $(".window").css({width:"650px", height:"650px"});
+		
+        //달력 구현
+        $("#START_DT").datepicker({
+            regional        : "ko",
+            dateFormat		: "yymmdd",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true,
+            altField: "#START_DT",
+            altFormat: "yy-mm-dd"
+        });
+
+        //달력 구현
+        $("#END_DT").datepicker({
+            regional        : "ko",
+            dateFormat		: "yymmdd",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true,
+            altField: "#END_DT",
+            altFormat: "yy-mm-dd"
+        });
+        
+        var to_day = new Date();
+        $("#END_DT").val($.datepicker.formatDate("yy-mm-dd", to_day));
+        
+        to_day.setMonth(to_day.getMonth()-1);
+        to_day.setDate(to_day.getDate()+1);
+        $("#START_DT").val($.datepicker.formatDate("yy-mm-dd", to_day));
+    });
+    
+    function on_click_sender(){
+	    if(document.getElementById('SENDER_CODE').value == '#springMessage("common.header.author")'+' '+'#springMessage("common.button.search")') { //"작성자 검색"
+	    	document.getElementById('SENDER_CODE').style.color="black";
+	    	document.getElementById('SENDER_CODE').value = "";
+	    }
+    }
+    
+    function focus_out_sender(){
+    	if(document.getElementById('SENDER_CODE').value.trim() == "") {
+    		document.getElementById('SENDER_CODE').style.color="#A6A6A6";
+    		document.getElementById('SENDER_CODE').value = '#springMessage("common.header.author")'+' '+'#springMessage("common.button.search")'; //"작성자 검색"
+    	}
+    }
+    
+    function on_click_agree(APPROVAL_SEQNO){
+    	if(confirm('#springMessage("menu.push.approve.alert.askApprove")')){ //선택한 메세지의 푸쉬 발송을 승인 하시겠습니까?
+    		var url = CONTEXT_PATH + "/admin/campaign/agreeCampaign";
+	    	var data = "APPROVAL_SEQNO=" + APPROVAL_SEQNO;
+	    	
+	    	jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+				cache: false,
+    			success:function(data){
+					var msg;
+					if(data.result == 0){
+						msg = '#springMessage("menu.push.approve.alert.fail")'; //"승인 처리가 실패 되었습니다.\n이미 다른 관리자에 의해 승인 또는 거부 처리가 되었거나\n신청자에 의해 취소가 되었을 수 있습니다."
+					}else{
+						msg = '#springMessage("menu.push.approve.alert.success")'; //"승인 되었습니다.";
+					}
+    				alert(msg);
+    				fn_approvalList(1);
+    				fn_closePopup();
+    			}
+    		});
+		}
+    }
+    
+    function on_click_reject(APPROVAL_SEQNO){
+    	if(confirm('#springMessage("menu.push.approve.alert.askPushDeny")')){ //"선택한 메세지의 푸쉬 발송을\n거부 하시겠습니까?"
+    		var url = CONTEXT_PATH + "/admin/campaign/rejectCampaign";
+	    	var data = "APPROVAL_SEQNO=" + APPROVAL_SEQNO;
+	    	
+	    	jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+				cache: false,
+    			success:function(data){
+					var msg;
+					if(data.result == 0){
+						msg = '#springMessage("menu.push.approve.alert.denyFail")'; //"거부 처리가 실패 되었습니다.\n이미 다른 관리자에 의해 승인 또는 거부 처리가 되었거나\n신청자에 의해 취소가 되었을 수 있습니다."
+					}else{
+						msg = '#springMessage("menu.push.approve.alert.deny")'; //"거부 되었습니다.";
+					}
+    				alert(msg);
+    				fn_approvalList(1);
+    				fn_closePopup();
+    			}
+    		});
+		}
+    }
+    
+    function on_click_cancel(APPROVAL_SEQNO){
+    	if(confirm('#springMessage("menu.push.approve.alert.askPushCancel")')){ //"선택한 메세지의 푸쉬 발송 요청을\n취소 하시겠습니까?"
+    		var url = CONTEXT_PATH + "/admin/campaign/cancelCampaign";
+	    	var data = "APPROVAL_SEQNO=" + APPROVAL_SEQNO;
+	    	
+	    	jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+				cache: false,
+    			success:function(data){
+					var msg;
+					if(data.result == 0){
+						msg = '#springMessage("menu.push.approve.alert.cancelFail")'; //"취소 처리가 실패 되었습니다.\n이미 관리자에 의해 승인 또는 거부 처리가 되었을 수 있습니다."
+					}else{
+						msg = '#springMessage("menu.push.approve.alert.cancel")'; //"취소 되었습니다.";
+					}
+    				alert(msg);
+    				fn_approvalList(1);
+    				fn_closePopup();
+    			}
+    		});
+		}
+    }
+    
+    function pop_preview() {
+    
+    }
+    
+    //조회 검색
+    function get_approval_list(){
+    	var sd = new Date($("#START_DT").val());
+    	var ed = new Date($("#END_DT").val());
+    	var cd = new Date();
+    	if( ed.getTime() > cd.getTime()) {
+			alert('#springMessage("menu.push.approve.alert.endDateError")'); //검색기간 종료일자가 오늘보다 이후 일자입니다.\n다시 입력 하세요.
+			document.getElementById('END_DT').focus();
+			return;
+    	}
+    	
+    	if( sd.getTime() > ed.getTime()) {
+    		alert('#springMessage("menu.push.approve.alert.startDateError")'); //검색기간 시작일자가 종료일자보다 이후 일자입니다.\n다시 입력 하세요.
+    		document.getElementById('START_DT').focus();
+			return;
+    	}
+    
+		fn_approvalList(1);
+    }
+    
+    //페이징 처리
+    function fn_approvalList(PAGE_NUM){
+		var selectRowSize = document.getElementById('selRowSize');
+		
+		var senderCode = "";
+		if(document.getElementById('SENDER_CODE').value != "작성자 검색" && document.getElementById('SENDER_CODE').value.trim() != "") {
+	    	senderCode = document.getElementById('SENDER_CODE').value;
+	    }
+		
+		var appId = "";
+		var approvalFlag = "";
+		if($request.getSession().getAttribute("S_ID_AUTH_GRP") == "0000000003") {
+			approvalFlag = document.getElementById('APPROVAL_FLAG').value;
+		} else {
+			appId = document.getElementById('APP_ID').value;
+		}
+		
+    	var url = CONTEXT_PATH + "/admin/campaign/approve";
+    	var type = "POST";
+    	var data ="START_DT=" + $("#START_DT").val() + "&" + 
+    			  "END_DT=" + $("#END_DT").val() + "&" +
+    			  "APP_ID=" + appId + "&" +
+    			  "APPROVAL_FLAG=" + approvalFlag + "&" +
+    			  "SENDER_CODE=" + senderCode + "&" +
+    			  "CMP_TYPE=" + document.getElementById('CMP_TYPE').value + "&" +
+    			  "PAGE_NUM=" + PAGE_NUM + "&" +
+				  "PAGE_SIZE=" + selectRowSize[selectRowSize.selectedIndex].value;
+    	var target = $("#divList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+    
+    //공통코드 페이지 호출(공통)
+    function fn_getPage( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+	
+	function fn_changeRowSize(){
+    	fn_commonSetRowSize();
+    	fn_approvalList(1);
+	}
+	
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.push.approve")</span>			<!-- 승인요청함 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.push.approve")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:260px">
+				<col style="width:330px">
+				<col>
+			</colgroup>
+			
+			<thead>
+				<tr>
+					<td >
+						<input type="text" id="START_DT" name="START_DT" readonly="readonly" class="datepicker sDate" placeholder="날짜선택">
+						<label for="sDate"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+	                    ~             
+	                    <input type="text" id="END_DT" name="END_DT" class="datepicker sDate" placeholder="날짜선택">
+						<label for="sDate"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+					</td>
+					<td >
+						<select id="CMP_TYPE" name="CMP_TYPE">
+							<option value="">#springMessage("menu.push.sendManage.sendForm") #springMessage("menu.mobile.manage.all")</option> <!-- 발송형태 전체 -->
+							<option value="N">#springMessage("menu.push.approve.general")</option> <!-- 일반 -->
+							<option value="C">#springMessage("menu.push.approve.campaign")</option> <!-- 캠페인 -->
+						</select>
+						
+						<!--
+							"0000000001" -> 관리자
+							"0000000002" -> 슈퍼마케터
+							"0000000003" -> 일반마케터						
+						//-->
+						#if($request.getSession().getAttribute("S_ID_AUTH_GRP") == "0000000003")
+							<select id="APPROVAL_FLAG" name="APPROVAL_FLAG">
+								<option value="">#springMessage("menu.push.approve.status") #springMessage("menu.mobile.manage.all")</option> <!--승인상태 전체  -->
+								<option value="S">#springMessage("menu.push.approve.wait")</option> <!--승인대기  -->
+								<option value="A">#springMessage("menu.push.approve.success")</option> <!--승인완료 -->
+								<option value="R">#springMessage("menu.push.approve.fail")</option> <!--승인거부  -->
+								<option value="C">#springMessage("menu.push.approve.cancel")</option> <!--취소요청  -->
+							</select>
+							
+							<input type="hidden" id="SENDER_CODE" name="SENDER_CODE" value='$request.getSession().getAttribute("S_ID_USER")'/>
+						#else
+							<input class="se_con" type="text" id="SENDER_CODE" name="SENDER_CODE" onfocusout="focus_out_sender()" onclick="on_click_sender();" onkeydown="javascript:if(event.keyCode==13){get_approval_list();return false;}" style="color:#A6A6A6;" value="#springMessage('common.header.author') #springMessage('common.button.search')"/> <!-- 작성자 검색 -->
+						#end
+					</td>
+					<td>
+						<a href="javascript:void(0)" onclick="get_approval_list()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+					</td>
+	            </tr>
+            
+	            #if($request.getSession().getAttribute("S_ID_AUTH_GRP") != "0000000003")
+					<tr>
+		                <td>
+		            		<select id="APP_ID" name="APP_ID">
+								<option value="">App #springMessage("menu.mobile.manage.all")</option><!-- 전체 -->
+								#foreach($pushService in $pushServiceList)
+									<option value="$pushService.APPID">$pushService.APPNAME</option>
+								#end
+							</select>
+						</td>
+						<td></td>
+						<td></td>
+		            </tr>
+				#end
+            </thead>
+        </table>
+	
+	#### E : 조회 폼 부분  ####
+
+	
+		
+			## listView Header
+			<div class="btn_sel_group stats_group">
+            	<div class="fl" id="deployDiv">
+            		<p>#springMessage("common.header.searchResult")<span id="spaTotCnt"></span></p> <!-- 검색결과  -->
+                </div>
+            	<div class="fr">
+            		<select id="selRowSize" title="#springMessage('common.title.selectOne')" onchange="fn_changeRowSize()"> <!-- 항목선택 -->
+            			<option value="10">#springMessage("common.select.options_10")</option> <!-- 10개씩 보기 -->
+            			<option value="10">#springMessage("common.select.options_10")</option> <!-- 10개씩 보기 -->
+            			<option value="30">#springMessage("common.select.options_30")</option> <!-- 30개씩 보기 -->
+            			<option value="50">#springMessage("common.select.options_50")</option> <!-- 50개씩 보기 -->
+            		</select>	
+                </div>
+			</div>
+			
+			## ListView Body
+			<div id="divList">
+				#parse("admin/campaign/approval/approvalList.vm")
+			</div>
+		
+	
+</div>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.mobile.appVersion.mapper.MobileAppVersionDao" >
+
+	<!--  ================================================================================================= -->
+	<!-- begin of paging query -->
+	<!--  ================================================================================================= -->
+	<!-- head of paging query -->
+	<sql id="head">
+	WITH LST AS
+	(
+	        SELECT A.*
+	        ,		ROW_NUMBER() OVER () RNUM
+	        FROM
+	        (
+	</sql>
+	<!-- tail of paging query -->
+	<sql id="bottom">
+	        ) A
+	)
+	SELECT  A.* 
+	,       (SELECT COUNT(1) FROM LST) TOT_CNT
+	FROM    LST A
+	WHERE   RNUM    BETWEEN #{PAGE_SIZE} * (#{PAGE_NUM}-1) + 1
+	                AND     #{PAGE_SIZE} * #{PAGE_NUM}
+	</sql>
+	<!--  ================================================================================================= -->
+	<!-- end of paging query -->
+	<!--  ================================================================================================= -->
+	
+
+
+
+	<!-- 조회 -->
+	<select id="selectMobileAppService" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto" resultType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+		<include refid="head"/>
+		SELECT 
+		    VER.APP_VER_ID
+		    , SVC.SVC_NM
+		    , PL.PLAT_IDX
+		    , PL.PLAT_NM
+		    , TO_NUMBER( SUBSTRING( VER.BIN_VER, 1, 2, OCTETS)) || '.' || TO_NUMBER( SUBSTRING( VER.BIN_VER, 4, 2, OCTETS)) || '.' || TO_NUMBER( SUBSTRING( VER.BIN_VER, 7, 2, OCTETS)) AS BIN_VER
+		    , TO_NUMBER( SUBSTRING( VER.BIN_VER, 1, 2, OCTETS)) || '.' || TO_NUMBER( SUBSTRING( VER.BIN_VER, 4, 2, OCTETS)) || '.' || TO_NUMBER( SUBSTRING( VER.BIN_VER, 7, 2, OCTETS)) AS BIN_VER_STR
+			, VER.REG_ID
+			, VER.MOD_ID
+			, TO_CHAR( VER.REG_DTTM , 'YYYY.MM.DD HH24') AS REG_DTTM 
+			, TO_CHAR( VER.MOD_DTTM , 'YYYY.MM.DD HH24') AS MOD_DTTM 
+		FROM 
+		    TB_STO_APP_VER VER
+		    , TB_SVC SVC
+		    , TB_STO_PLAT PL
+		WHERE 
+		    VER.SVC_ID = SVC.SVC_ID 
+		    AND VER.PLAT_IDX = PL.PLAT_IDX
+		    AND VER.SVC_ID = #{SVC_ID}
+			<if test="PLAT_IDX != null and PLAT_IDX != ''">
+				AND VER.PLAT_IDX = #{PLAT_IDX}
+			</if>
+		<if test="ORDER_TYPE == 'DESC' ">
+			ORDER BY  VER.${ORDER_TARGET} DESC
+		</if>
+		<if test="ORDER_TYPE == 'ASC' ">
+			ORDER BY  VER.${ORDER_TARGET} ASC
+		</if>
+		<include refid="bottom"/>
+	</select>
+	
+	<select id="selectMobileAppServiceOne" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto" resultType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+	    SELECT 
+		     VER.APP_VER_ID
+		    , SVC.SVC_NM
+		    , PL.PLAT_IDX
+		    , PL.PLAT_NM
+		    , VER.BIN_VER
+			, VER.REG_ID
+			, VER.MOD_ID
+			, TO_CHAR( VER.REG_DTTM , 'YYYY.MM.DD') AS REG_DTTM 
+			, TO_CHAR( VER.MOD_DTTM , 'YYYY.MM.DD') AS MOD_DTTM 
+		FROM 
+		    TB_STO_APP_VER VER 
+		    , TB_SVC SVC 
+		    , TB_STO_PLAT PL 
+		WHERE 
+		    VER.SVC_ID = SVC.SVC_ID 
+		    AND VER.PLAT_IDX = PL.PLAT_IDX
+		    AND APP_VER_ID = #{APP_VER_ID}
+	</select>
+	
+	<select id="SelectPlatList" parameterType="kr.msp.admin.mobile.appVersion.dto.PlatListDto" resultType="kr.msp.admin.mobile.appVersion.dto.PlatListDto">
+	    SELECT * FROM TB_STO_PLAT
+	</select>
+	
+	<delete id="deleteMobileAppVersion" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+	    DELETE FROM TB_STO_APP_VER WHERE APP_VER_ID = #{APP_VER_ID}
+	</delete>
+	
+	<update id="updateMobileAppVersion" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+	    UPDATE TB_STO_APP_VER SET
+  			BIN_VER = #{BIN_VER}
+  			, MOD_ID = #{MOD_ID}
+  			, MOD_DTTM = (CURRENT TIMESTAMP)
+  		WHERE 
+  			APP_VER_ID = #{APP_VER_ID}
+	</update>
+	
+	<insert id="insertMobileAppVersion" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+	    INSERT INTO TB_STO_APP_VER 
+	    ( 
+	    	  APP_VER_ID
+	    	, SVC_ID
+  			, BIN_VER
+  			, PLAT_IDX 
+  			, REG_DTTM
+  			, REG_ID
+  			, DOWNLOAD_MARKET_URL
+  			, MEMO 
+		) VALUES ( 
+			SEQ_TB_STO_APP_VER.NEXTVAL
+	    	, #{SVC_ID}
+  			, #{BIN_VER}
+  			, #{PLAT_IDX}
+  			, (CURRENT TIMESTAMP)
+  			, #{REG_ID}
+  			, #{DOWNLOAD_MARKET_URL}
+  			, #{MEMO}
+  		)
+	</insert>
+	
+	<select id="selectMobileAppVersionMax" parameterType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto" resultType="kr.msp.admin.mobile.appVersion.dto.MobileAppVersionDto">
+         SELECT 
+            VER.PLAT_IDX
+            , NVL( VER.BIN_VER, '미등록') BIN_VER
+            , NVL( VER.BIN_VER_STR, '미등록') BIN_VER_STR
+            , PL.PLAT_NM
+        FROM 
+        	TB_STO_PLAT PL
+            LEFT JOIN
+            (
+            SELECT 
+                PLAT_IDX
+                , TO_NUMBER( SUBSTRING( MAX(BIN_VER), 1, 2, OCTETS)) || '.' || TO_NUMBER( SUBSTRING( MAX(BIN_VER), 4, 2, OCTETS)) || '.' || TO_NUMBER( SUBSTRING( MAX(BIN_VER), 7, 2, OCTETS)) AS BIN_VER 
+                , TO_NUMBER( SUBSTRING( MAX(BIN_VER), 1, 2, OCTETS)) || '.' || TO_NUMBER( SUBSTRING( MAX(BIN_VER), 4, 2, OCTETS)) || '.' || TO_NUMBER( SUBSTRING( MAX(BIN_VER), 7, 2, OCTETS)) AS BIN_VER_STR
+            FROM 
+              	TB_STO_APP_VER
+     		WHERE SVC_ID = #{SVC_ID} 
+          	GROUP BY PLAT_IDX  
+            ) VER
+	         ON PL. PLAT_IDX = VER.PLAT_IDX
+	</select>
+	
+</mapper>

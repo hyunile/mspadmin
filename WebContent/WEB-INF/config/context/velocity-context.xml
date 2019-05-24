@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans 
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<beans:bean id="velocityConfig" class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">
+		<beans:property name="resourceLoaderPath" value="${admin.velocity.template.path}"/>
+		<beans:property name="velocityProperties">
+			<beans:props>
+				<beans:prop key="input.encoding">${admin.velocity.charset}</beans:prop>
+				<beans:prop key="output.encoding">${admin.velocity.charset}</beans:prop>
+				<!-- beans:prop key="velocimacro.library">macro.vm</beans:prop -->
+				<!-- beans:prop key="velocimacro.library.autoreload">true</beans:prop -->
+			</beans:props>
+		</beans:property>
+	</beans:bean>
+	
+	<beans:bean id="viewResolver" class="kr.msp.ui.velocity.VelocityLayoutViewResolver">
+		<beans:property name="cache" value="${admin.velocity.layout.cache}" />
+		<beans:property name="suffix" value="${admin.velocity.layout.suffix}" />
+		<beans:property name="contentType" value="${admin.velocity.layout.contentType}" />
+		<beans:property name="layoutKey" value="layout" />
+		<beans:property name="layoutUrl" value="${admin.velocity.layout}" />
+		<beans:property name="screenContentKey" value="screen_content" />
+		<beans:property name="requestContextAttribute" value="context" />
+		<beans:property name="exposeModelAttributes" value="false" />
+		<!-- beans:property name="toolboxConfigLocation" value="/WEB-INF/settings/tools.xml" / -->
+		<beans:property name="dateToolAttribute" value="date" />
+		<beans:property name="toolboxConfigLocation" value="/WEB-INF/config/tools.xml" />
+        <beans:property name="order" value="1"/>
+	</beans:bean>
+</beans:beans>

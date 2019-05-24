@@ -1,0 +1,25 @@
+
+	<h2>[Push] #springMessage("menu.push.sendManage.reserveStat") </h3> <!-- 예약현황 -->
+	<p style="visibility: hidden;">#springMessage("menu.push.sendManage.reserveStat")</p> <!-- 예약현황 -->
+	<a href="javascript:GO_MENU_URL_favori('0000000019','0000000013','/admin/push/reserveSend');" class="more">#springMessage("common.button.moreView")</a> <!-- 더보기 -->
+
+
+<div class="mstatus" style="width:50%;">
+	<strong class="status1"><span>#springMessage("common.text.success")</span></strong> <!-- 성공 -->
+	<dl>
+		<dt class="bul1">#springMessage("menu.push.approve.general")</dt> <!-- 일반 -->
+		<dd><a href="#">$gnr_suc_cnt #springMessage("common.text.gun")</a></dd> <!-- 건 -->
+		<dt class="bul2">#springMessage("menu.push.approve.campaign")</dt> <!-- 캠페인 -->
+		<dd><a href="#">$cmp_suc_cnt #springMessage("common.text.gun")</a></dd> <!-- 건 -->
+	</dl>
+</div>
+<div class="mstatus" style="width:50%;">
+	<strong class="status2"><span>#springMessage("common.text.fail")</span></strong> <!-- 실패 -->
+	<dl>
+		<dt class="bul1">#springMessage("menu.push.approve.general")</dt> <!-- 일반 -->
+		<dd><a href="#">$gnr_fail_cnt #springMessage("common.text.gun")</a></dd> <!-- 건 -->
+		<dt class="bul2">#springMessage("menu.push.approve.campaign")</dt> <!-- 캠페인 -->
+		<dd>$cmp_fail_cnt #springMessage("common.text.gun")</dd> <!-- 건 -->
+	</dl>
+</div>
+

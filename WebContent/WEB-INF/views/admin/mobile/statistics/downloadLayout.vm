@@ -1,0 +1,60 @@
+
+					<!--  templete vm include  -->					
+					<table style="width:100%;">
+                    	<tr>
+                    		<td valign="top" style="width:300px;padding:10px;">
+                    			<!--  count of prev month  -->
+								<div id="prevListTableDiv">
+                    			#parse ("/admin/store/statistics/downloadPrevList.vm")
+								</div>
+                    		</td>
+                    		<td rowspan="2" style="width:60%;padding:10px;">
+                    			<!--  count of range  -->
+                        		<div class="detail_searchBox">
+                        			<p>
+                        				<table class="search">
+											<tr>
+                        						<th>#springMessage("menu.stats.store.dayChoose")</th> <!-- 기간선택 -->
+                        						<td colspan="2" style="height:28px;">
+        											<!--  Begin DatePicker -->
+                                                    <input class="datePicker_dtB" type="text" id="S_DT" value="$!searchParam.START_DT" maxlength="8" style="width:58px;"/>
+                                                    <input class="datePicker_dtB" type="hidden" id="PIK_BTN_BEGIN" style="width: 0px; border-style: none; background-color:transparent;"/>
+        											<!--  End DatePicker -->
+        											~
+        											<!--  Begin DatePicker -->
+        											<input class="datePicker_dtE" type="text" id="E_DT"  value="$!searchParam.END_DT" maxlength="8"  style="width:58px;"/>
+        											<input class="datePicker_dtE" type="hidden" id="PIK_BTN_END" style="width: 0px; border-style: none; background-color:transparent;" />
+        											<!--  End DatePicker -->
+                        						</td>
+                        					</tr>											
+                        					<tr>
+                        						<th>#springMessage("common.text.appname")</th> <!-- App명 -->
+                        						<td colspan="2" style="height:28px;">
+                        							<select id="AP_IDX">
+                                					    	#foreach( $row in $appCodeList )
+                                            		          	<option value="$!{row.APP_IDX}" #if($!searchParam.APP_IDX==$!{row.APP_IDX}) selected='selected' #end>$!{row.APP_NM}</option>
+                        									#end								
+                                    			    </select>
+                        						</td>
+                                                <td >
+                                                    <button type="button" onclick="fn_select_rangeData(1)" class="btn_search">#springMessage("common.button.search")</button> <!-- 검색 -->
+                                                </td>
+                        					</tr>
+                        				</table>
+                        			</p>
+                        		</div>
+								<div id="rangeListTableDiv">
+									#parse ("/admin/store/statistics/downloadRangeList.vm")
+								</div>
+                    		</td>
+                    	</tr>
+                    	<tr>
+                    		<td style="width:40%;padding:10px;">
+                    			<!--  count of current month  -->
+								<div id="curListTableDiv">
+                    			#parse ("/admin/store/statistics/downloadCurrentList.vm")
+								</div>
+                    		</td>
+                    	</tr>
+                    </table>
+					

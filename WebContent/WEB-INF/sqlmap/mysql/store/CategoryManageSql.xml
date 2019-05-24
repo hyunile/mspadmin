@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.store.category.mapper.CategoryManageDao">
+	
+	<select id="selectCategoryTreeList" parameterType="kr.msp.admin.store.category.dto.CategorySearchDto" resultType="kr.msp.admin.store.category.dto.CategoryDto" >
+	    /*  CategoryManageSql   selectCategoryTreeList*/
+		    CALL FN_TREE_CATG(1, #{CATG_CD,mode=IN,jdbcType=VARCHAR}, 1, 4, #{LAST_CHK,mode=IN,jdbcType=VARCHAR})
+	  </select><!-- 완료 -->
+	  
+	  
+
+      <select id="selectCategoryDetailList" parameterType="kr.msp.admin.store.category.dto.CategorySearchDto" resultType="kr.msp.admin.store.category.dto.CategoryDto" >
+           /*  CategoryManageSql   selectCategoryDetailList*/
+			CALL FN_TREE_CATG(1, #{CATG_CD,mode=IN,jdbcType=VARCHAR}, 1, 4, #{LAST_CHK,mode=IN,jdbcType=VARCHAR})
+			
+      </select><!-- 완료 -->
+      
+      <select id="selectCategoryInfo"  parameterType="kr.msp.admin.store.category.dto.CategorySearchDto"  resultType="kr.msp.admin.store.category.dto.CategoryDto">
+           /*  CategoryManageSql   selectCategoryInfo*/
+          SELECT A.CATG_CD,
+                   A.CATG_NM,
+                   A.CATG_DESC,
+                   A.UP_CATG_CD,
+                   IFNULL( ( SELECT CATG_NM FROM TB_STO_CATG WHERE CONCAT(CATG_CD) = A.UP_CATG_CD LIMIT 0, 1 ) , 'STORE')  UP_CATG_NM,
+                   A.USE_YN,
+                   A.SORT_NO,
+                   A.SVC_ID,
+                   A.REG_ID,
+                  DATE_FORMAT(A.REG_DT, '%Y.%m.%d') AS REG_DT
+        FROM TB_STO_CATG A, TB_STO_SVC B
+        WHERE  A.SVC_ID = B.SVC_ID
+        AND  CONCAT(A.CATG_CD)= #{CATG_CD}
+        AND  B.USE_YN = 'Y'
+    </select>
+    
+    <select id="selectSvcId"   resultType="String">
+          /* SELECT SVC_ID  */
+         SELECT MAX(SVC_ID) SVC_ID FROM TB_STO_SVC  WHERE USE_YN = 'Y'
+    </select>  
+     
+    <!-- 
+    <update id="SaveCategory" parameterType="kr.msp.admin.store.category.dto.CategoryDto">
+        /*  CategoryManageSql   SaveCategory*/
+        MERGE INTO TB_STO_CATG
+        USING DUAL
+        ON (CATG_CD = #{CATG_CD}) 
+        WHEN MATCHED THEN
+        UPDATE SET
+               CATG_NM = #{CATG_NM}
+             , SORT_NO = #{SORT_NO}
+             , USE_YN   = #{USE_YN}
+             , CATG_DESC   = #{CATG_DESC}
+             , MOD_ID   = #{MOD_ID}
+             , MOD_DT  = NOW()
+        WHEN NOT MATCHED THEN
+        INSERT (
+               CATG_CD, CATG_NM, SORT_NO, USE_YN, UP_CATG_CD, CATG_DESC, SVC_ID, REG_ID, REG_DT
+        ) VALUES (
+               SEQ_TB_STO_CATG.NEXTVAL
+             , #{CATG_NM}
+             , #{SORT_NO}
+             , #{USE_YN}
+             , #{UP_CATG_CD}
+             , #{CATG_DESC}
+             , #{SVC_ID}
+             , #{REG_ID}
+             , NOW()
+        )
+     </update>
+     -->
+     <select id="selectCategoryCount" parameterType="kr.msp.admin.store.category.dto.CategoryDto" resultType="int">
+        /*  CategoryManageSql   SaveCategory*/
+        SELECT COUNT(1)
+        FROM TB_STO_CATG
+        WHERE CATG_CD = #{CATG_CD}
+     </select>
+    <update id="insertCategory" parameterType="kr.msp.admin.store.category.dto.CategoryDto">
+        /*  CategoryManageSql   SaveCategory*/
+        INSERT INTO TB_STO_CATG
+        (
+               CATG_NM, SORT_NO, USE_YN, UP_CATG_CD, CATG_DESC, SVC_ID, REG_ID, REG_DT
+        ) VALUES (
+               #{CATG_NM}
+             , #{SORT_NO}
+             , #{USE_YN}
+             , #{UP_CATG_CD}
+             , #{CATG_DESC}
+             , #{SVC_ID}
+             , #{REG_ID}
+             , NOW()
+        )
+     </update>
+    <update id="updateCategory" parameterType="kr.msp.admin.store.category.dto.CategoryDto">
+        /*  CategoryManageSql   SaveCategory*/
+        UPDATE TB_STO_CATG
+        SET
+               CATG_NM = #{CATG_NM}
+             , SORT_NO = #{SORT_NO}
+             , USE_YN   = #{USE_YN}
+             , CATG_DESC   = #{CATG_DESC}
+             , MOD_ID   = #{MOD_ID}
+             , MOD_DT  = NOW()
+        WHERE CATG_CD = #{CATG_CD}
+     </update>
+     <update id="updateAllCategoryUseYn" parameterType="kr.msp.admin.store.category.dto.CategoryDto">
+        /*  CategoryManageSql   updateAllCategoryUseYn*/
+        UPDATE TB_STO_CATG
+        SET
+               USE_YN   = #{USE_YN}
+             , MOD_ID   = #{MOD_ID}
+             , MOD_DT  = NOW()
+        WHERE UP_CATG_CD = #{CATG_CD}
+     </update>
+   
+   
+     <select id="getAppCountByCatgCd" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM TB_STO_APP
+        <!-- WHERE CAST(CATG_CD AS VARCHAR)= #{value} -->
+        WHERE CATG_CD = #{value}
+     </select>
+     
+     <delete id="deleteCategory" parameterType="kr.msp.admin.store.category.dto.CategoryDto">
+        /*  CategoryManageSql   deleteCategory*/
+        DELETE FROM TB_STO_CATG
+        WHERE 
+        	CATG_CD = #{CATG_CD}
+     </delete>
+   
+</mapper>

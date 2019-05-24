@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.msp.admin.mobile.statistics.mapper.StatisticsJoinDao">
+
+    <resultMap type="kr.msp.admin.mobile.statistics.dto.SvcCodeDto" id="SvcCodeDto">
+        <result property="SVC_ID"				column = "SVC_ID" 			/>
+        <result property="SVC_NM"				column = "SVC_NM" 			/>
+    </resultMap>
+
+    <!--  ================================================================================================= -->
+    <!-- begin of paging query -->
+    <!--  ================================================================================================= -->
+    <sql id="head">
+    SELECT *
+    , @RN TOT_CNT
+    FROM
+    (
+        SELECT A.*
+        ,	(@RN := @RN + 1) AS RNUM
+        FROM
+        (
+    </sql>
+
+    <!-- tail of paging query -->
+    <sql id="bottom">
+        ) A
+        , (SELECT @RN := 0, @TOT := 0) R
+    ) A
+    WHERE RNUM BETWEEN ((${PAGE_NUM} - 1) *  ${PAGE_SIZE}) + 1 AND (${PAGE_NUM} *  ${PAGE_SIZE})
+    </sql>
+
+    <!--Select mobile Service Code-->
+    <select id="selectSvcCode" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+      	SELECT S1.SVC_ID, S1.SVC_NM, S1.APP_ID
+	    FROM TB_SVC S1 ,TB_SVC_AUTH S2,TB_MOB_SVC S3, TB_SYS_USER_AUTH_GRP S4
+	    WHERE S1.SVC_ID = S2.SVC_ID
+		AND S1.SVC_ID = S3.SVC_ID
+		AND ifnull(S3.USE_YN ,'N') = 'Y'
+		AND S2.AUTH_GRP_ID=S4.AUTH_GRP_ID
+		AND USER_ID= #{S_ID_USER}
+	</select>
+
+    <!-- Select List Of DownloadStatistics -->
+    <select id="selectSvcId"  resultMap="SvcCodeDto">
+			SELECT  A.SVC_ID
+			,            A.SVC_NM
+			FROM    TB_SVC A
+			            INNER JOIN TB_STO_SVC B
+			                ON A.SVC_ID = B.SVC_ID
+			WHERE B.USE_YN = 'Y'
+			ORDER BY SVC_NM
+			
+    </select>
+
+    <!-- Period Statistics per Time  -->
+    <select id="selectPeriodTimeStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT DATE_FORMAT(T1.REG_DTTM, '%H') DT, COUNT(*) AS CNT
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        GROUP BY DATE_FORMAT(T1.REG_DTTM, '%H')
+        ORDER BY DATE_FORMAT(T1.REG_DTTM, '%H') ASC
+    </select>
+
+    <!-- Period Statistics per Day  -->
+    <select id="selectPeriodDayStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT DATE_FORMAT(T1.REG_DTTM, '%Y%m%d') DT, COUNT(*) AS CNT
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        GROUP BY DATE_FORMAT(T1.REG_DTTM, '%Y%m%d')
+        ORDER BY DATE_FORMAT(T1.REG_DTTM, '%Y%m%d') ASC
+    </select>
+
+    <!-- Period Statistics per Week  -->
+    <select id="selectPeriodWeekStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT DATE_FORMAT(T1.REG_DTTM, '%w') DT, COUNT(*) AS CNT
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        GROUP BY DATE_FORMAT(T1.REG_DTTM, '%w')
+        ORDER BY DATE_FORMAT(T1.REG_DTTM, '%w') ASC
+    </select>
+
+    <!-- OS Statistics  -->
+    <select id="selectPerioOSStatistics"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT OS_NM, COUNT(*) AS CNT
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        AND OS_NM IS NOT NULL
+        <if test="SVC_ID != null and SVC_ID!=''" >
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        GROUP BY OS_NM
+        ORDER BY CNT desc
+    </select>
+
+
+    <!-- Select List Of StoreMember -->
+    <select id="selectUserStatistics" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        <include refid="head"/>
+        SELECT
+        USER_NM,   USER_ID,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 0 day) THEN 1 ELSE 0 END) D1,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 1 day) THEN 1 ELSE 0 END) D2,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 2 day) THEN 1 ELSE 0 END) D3,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 3 day) THEN 1 ELSE 0 END) D4,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 4 day) THEN 1 ELSE 0 END) D5,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 5 day) THEN 1 ELSE 0 END) D6,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 6 day) THEN 1 ELSE 0 END) D7,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 7 day) THEN 1 ELSE 0 END) D8,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 8 day) THEN 1 ELSE 0 END) D9,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 9 day) THEN 1 ELSE 0 END) D10,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 10 day) THEN 1 ELSE 0 END) D11,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 11 day) THEN 1 ELSE 0 END) D12,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 12 day) THEN 1 ELSE 0 END) D13,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 13 day) THEN 1 ELSE 0 END) D14,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 14 day) THEN 1 ELSE 0 END) D15,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 15 day) THEN 1 ELSE 0 END) D16,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 16 day) THEN 1 ELSE 0 END) D17,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 17 day) THEN 1 ELSE 0 END) D18,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 18 day) THEN 1 ELSE 0 END) D19,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 19 day) THEN 1 ELSE 0 END) D20,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 20 day) THEN 1 ELSE 0 END) D21,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 21 day) THEN 1 ELSE 0 END) D22,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 22 day) THEN 1 ELSE 0 END) D23,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 23 day) THEN 1 ELSE 0 END) D24,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 24 day) THEN 1 ELSE 0 END) D25,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 25 day) THEN 1 ELSE 0 END) D26,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 26 day) THEN 1 ELSE 0 END) D27,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 27 day) THEN 1 ELSE 0 END) D28,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 28 day) THEN 1 ELSE 0 END) D29,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 29 day) THEN 1 ELSE 0 END) D30,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 30 day) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        AND T1.USER_NM IS NOT NULL
+        <if test="SVC_ID!= null and SVC_ID != 0 and SVC_ID!=''">
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        <if test="USER_ID != null and USER_ID != '' "  >
+            AND T1.USER_ID LIKE '%' || #{USER_ID} || '%'
+        </if>
+        <if test="USER_NM != null and USER_NM != '' "  >
+            AND T1.USER_NM LIKE '%' || #{USER_NM} || '%'
+        </if>
+        GROUP BY     USER_NM,   USER_ID
+        <include refid="bottom"/>
+    </select>
+
+
+    <!-- Select User Statistics Chart-->
+    <select id="selectUserStatisticChart" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 0 day) THEN 1 ELSE 0 END) D1,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 1 day) THEN 1 ELSE 0 END) D2,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 2 day) THEN 1 ELSE 0 END) D3,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 3 day) THEN 1 ELSE 0 END) D4,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 4 day) THEN 1 ELSE 0 END) D5,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 5 day) THEN 1 ELSE 0 END) D6,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 6 day) THEN 1 ELSE 0 END) D7,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 7 day) THEN 1 ELSE 0 END) D8,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 8 day) THEN 1 ELSE 0 END) D9,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 9 day) THEN 1 ELSE 0 END) D10,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 10 day) THEN 1 ELSE 0 END) D11,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 11 day) THEN 1 ELSE 0 END) D12,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 12 day) THEN 1 ELSE 0 END) D13,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 13 day) THEN 1 ELSE 0 END) D14,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 14 day) THEN 1 ELSE 0 END) D15,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 15 day) THEN 1 ELSE 0 END) D16,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 16 day) THEN 1 ELSE 0 END) D17,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 17 day) THEN 1 ELSE 0 END) D18,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 18 day) THEN 1 ELSE 0 END) D19,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 19 day) THEN 1 ELSE 0 END) D20,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 20 day) THEN 1 ELSE 0 END) D21,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 21 day) THEN 1 ELSE 0 END) D22,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 22 day) THEN 1 ELSE 0 END) D23,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 23 day) THEN 1 ELSE 0 END) D24,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 24 day) THEN 1 ELSE 0 END) D25,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 25 day) THEN 1 ELSE 0 END) D26,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 26 day) THEN 1 ELSE 0 END) D27,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 27 day) THEN 1 ELSE 0 END) D28,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 28 day) THEN 1 ELSE 0 END) D29,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 29 day) THEN 1 ELSE 0 END) D30,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 30 day) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        AND T1.USER_NM IS NOT NULL
+        <if test="SVC_ID!= null and SVC_ID != 0 and SVC_ID!=''">
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+            AND T1.${SearchKey} Like  '%${SearchWord}%'
+        </if>
+    </select>
+
+    <!-- Select User Excel Statistics -->
+    <select id="selectUserStatisticsExcel" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+        USER_NM,   USER_ID,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 0 day) THEN 1 ELSE 0 END) D1,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 1 day) THEN 1 ELSE 0 END) D2,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 2 day) THEN 1 ELSE 0 END) D3,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 3 day) THEN 1 ELSE 0 END) D4,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 4 day) THEN 1 ELSE 0 END) D5,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 5 day) THEN 1 ELSE 0 END) D6,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 6 day) THEN 1 ELSE 0 END) D7,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 7 day) THEN 1 ELSE 0 END) D8,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 8 day) THEN 1 ELSE 0 END) D9,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 9 day) THEN 1 ELSE 0 END) D10,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 10 day) THEN 1 ELSE 0 END) D11,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 11 day) THEN 1 ELSE 0 END) D12,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 12 day) THEN 1 ELSE 0 END) D13,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 13 day) THEN 1 ELSE 0 END) D14,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 14 day) THEN 1 ELSE 0 END) D15,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 15 day) THEN 1 ELSE 0 END) D16,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 16 day) THEN 1 ELSE 0 END) D17,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 17 day) THEN 1 ELSE 0 END) D18,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 18 day) THEN 1 ELSE 0 END) D19,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 19 day) THEN 1 ELSE 0 END) D20,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 20 day) THEN 1 ELSE 0 END) D21,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 21 day) THEN 1 ELSE 0 END) D22,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 22 day) THEN 1 ELSE 0 END) D23,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 23 day) THEN 1 ELSE 0 END) D24,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 24 day) THEN 1 ELSE 0 END) D25,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 25 day) THEN 1 ELSE 0 END) D26,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 26 day) THEN 1 ELSE 0 END) D27,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 27 day) THEN 1 ELSE 0 END) D28,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 28 day) THEN 1 ELSE 0 END) D29,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 29 day) THEN 1 ELSE 0 END) D30,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 30 day) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        AND T1.USER_NM IS NOT NULL
+        <if test="SVC_ID!= null and SVC_ID != 0 and SVC_ID!=''">
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+            AND T1.${SearchKey} Like  '%${SearchWord}%'
+        </if>
+        GROUP BY     USER_NM,   USER_ID
+    </select>
+    <!-- Protocol Statistic-->
+    <select id="selectProtocolStatistics" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        <include refid="head"/>
+        SELECT
+        T1.COMP_CD,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 0 day) THEN 1 ELSE 0 END) D1,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 1 day) THEN 1 ELSE 0 END) D2,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 2 day) THEN 1 ELSE 0 END) D3,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 3 day) THEN 1 ELSE 0 END) D4,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 4 day) THEN 1 ELSE 0 END) D5,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 5 day) THEN 1 ELSE 0 END) D6,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 6 day) THEN 1 ELSE 0 END) D7,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 7 day) THEN 1 ELSE 0 END) D8,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 8 day) THEN 1 ELSE 0 END) D9,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 9 day) THEN 1 ELSE 0 END) D10,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 10 day) THEN 1 ELSE 0 END) D11,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 11 day) THEN 1 ELSE 0 END) D12,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 12 day) THEN 1 ELSE 0 END) D13,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 13 day) THEN 1 ELSE 0 END) D14,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 14 day) THEN 1 ELSE 0 END) D15,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 15 day) THEN 1 ELSE 0 END) D16,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 16 day) THEN 1 ELSE 0 END) D17,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 17 day) THEN 1 ELSE 0 END) D18,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 18 day) THEN 1 ELSE 0 END) D19,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 19 day) THEN 1 ELSE 0 END) D20,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 20 day) THEN 1 ELSE 0 END) D21,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 21 day) THEN 1 ELSE 0 END) D22,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 22 day) THEN 1 ELSE 0 END) D23,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 23 day) THEN 1 ELSE 0 END) D24,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 24 day) THEN 1 ELSE 0 END) D25,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 25 day) THEN 1 ELSE 0 END) D26,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 26 day) THEN 1 ELSE 0 END) D27,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 27 day) THEN 1 ELSE 0 END) D28,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 28 day) THEN 1 ELSE 0 END) D29,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 29 day) THEN 1 ELSE 0 END) D30,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 30 day) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        AND T1.COMP_CD IS NOT NULL
+        <if test="SVC_ID!= null and SVC_ID != 0 and SVC_ID!=''">
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+            AND T1.${SearchKey} Like  '%${SearchWord}%'
+        </if>
+        GROUP BY T1.COMP_CD
+        <include refid="bottom"/>
+    </select>
+
+    <!-- Protocol Chart Statistic-->
+    <select id="selectProtocolStatisticsChart" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 0 day) THEN 1 ELSE 0 END) D1,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 1 day) THEN 1 ELSE 0 END) D2,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 2 day) THEN 1 ELSE 0 END) D3,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 3 day) THEN 1 ELSE 0 END) D4,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 4 day) THEN 1 ELSE 0 END) D5,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 5 day) THEN 1 ELSE 0 END) D6,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 6 day) THEN 1 ELSE 0 END) D7,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 7 day) THEN 1 ELSE 0 END) D8,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 8 day) THEN 1 ELSE 0 END) D9,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 9 day) THEN 1 ELSE 0 END) D10,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 10 day) THEN 1 ELSE 0 END) D11,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 11 day) THEN 1 ELSE 0 END) D12,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 12 day) THEN 1 ELSE 0 END) D13,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 13 day) THEN 1 ELSE 0 END) D14,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 14 day) THEN 1 ELSE 0 END) D15,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 15 day) THEN 1 ELSE 0 END) D16,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 16 day) THEN 1 ELSE 0 END) D17,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 17 day) THEN 1 ELSE 0 END) D18,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 18 day) THEN 1 ELSE 0 END) D19,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 19 day) THEN 1 ELSE 0 END) D20,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 20 day) THEN 1 ELSE 0 END) D21,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 21 day) THEN 1 ELSE 0 END) D22,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 22 day) THEN 1 ELSE 0 END) D23,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 23 day) THEN 1 ELSE 0 END) D24,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 24 day) THEN 1 ELSE 0 END) D25,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 25 day) THEN 1 ELSE 0 END) D26,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 26 day) THEN 1 ELSE 0 END) D27,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 27 day) THEN 1 ELSE 0 END) D28,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 28 day) THEN 1 ELSE 0 END) D29,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 29 day) THEN 1 ELSE 0 END) D30,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 30 day) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        AND T1.COMP_CD IS NOT NULL
+        <if test="SVC_ID!= null and SVC_ID != 0 and SVC_ID!=''">
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+            AND T1.${SearchKey} Like  '%${SearchWord}%'
+        </if>
+    </select>
+
+    <!-- Protocol Excel Statistic-->
+    <select id="selectProtocolStatisticsExcel" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+        T1.COMP_CD,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 0 day) THEN 1 ELSE 0 END) D1,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 1 day) THEN 1 ELSE 0 END) D2,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 2 day) THEN 1 ELSE 0 END) D3,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 3 day) THEN 1 ELSE 0 END) D4,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 4 day) THEN 1 ELSE 0 END) D5,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 5 day) THEN 1 ELSE 0 END) D6,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 6 day) THEN 1 ELSE 0 END) D7,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 7 day) THEN 1 ELSE 0 END) D8,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 8 day) THEN 1 ELSE 0 END) D9,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 9 day) THEN 1 ELSE 0 END) D10,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 10 day) THEN 1 ELSE 0 END) D11,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 11 day) THEN 1 ELSE 0 END) D12,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 12 day) THEN 1 ELSE 0 END) D13,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 13 day) THEN 1 ELSE 0 END) D14,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 14 day) THEN 1 ELSE 0 END) D15,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 15 day) THEN 1 ELSE 0 END) D16,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 16 day) THEN 1 ELSE 0 END) D17,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 17 day) THEN 1 ELSE 0 END) D18,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 18 day) THEN 1 ELSE 0 END) D19,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 19 day) THEN 1 ELSE 0 END) D20,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 20 day) THEN 1 ELSE 0 END) D21,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 21 day) THEN 1 ELSE 0 END) D22,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 22 day) THEN 1 ELSE 0 END) D23,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 23 day) THEN 1 ELSE 0 END) D24,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 24 day) THEN 1 ELSE 0 END) D25,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 25 day) THEN 1 ELSE 0 END) D26,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 26 day) THEN 1 ELSE 0 END) D27,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 27 day) THEN 1 ELSE 0 END) D28,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 28 day) THEN 1 ELSE 0 END) D29,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 29 day) THEN 1 ELSE 0 END) D30,
+        SUM(CASE DATE_FORMAT(T1.REG_DTTM, '%Y-%m-%d') WHEN date_add(DATE_FORMAT('${START_DT}', '%y%m%d'),interval 30 day) THEN 1 ELSE 0 END) D31
+        FROM TB_MOB_EVENT_LOG T1
+        WHERE DATE_FORMAT(T1.REG_DTTM,'%Y%m%d') BETWEEN DATE_FORMAT('${START_DT}', '%Y%m%d') AND DATE_FORMAT('${END_DT}', '%Y%m%d')
+        AND T1.COMP_CD IS NOT NULL
+        <if test="SVC_ID!= null and SVC_ID != 0 and SVC_ID!=''">
+            AND T1.SVC_ID = ${SVC_ID}
+        </if>
+        <if test="SearchWord !=null and SearchWord !=''">
+            AND T1.${SearchKey} Like  '%${SearchWord}%'
+        </if>
+        GROUP BY T1.COMP_CD
+    </select>
+
+
+
+</mapper>

@@ -1,0 +1,202 @@
+<script language="JavaScript">
+    var isPopupOpen = "Y";
+    var REQ_SEQNO ="";
+    function getSendInfo(){
+        var progressTableObj = document.getElementById("progressTable");
+        var nowWidth = progressTableObj.style.width;
+        nowWidth = nowWidth.replace("%","");
+        if(nowWidth<100){
+            //리시버로 부터 현재 발송상황을 알아온다. 팝업이 열려 있을때 만 호출
+            if(isPopupOpen=="Y"){
+                getReceiverSendStatus();
+            }
+        }else{
+            stopGetSendInfo();
+        }
+    }
+    //ajax로 Controller호출. httpclient연결 호출 리시버로 부터 발송 정보 받아온다.
+    function getReceiverSendStatus(){
+        REQ_SEQNO = "${SEQNO}";
+        var url = CONTEXT_PATH + "/admin/push/getReceiverSendStatus";
+        var param = {};
+        param["SEQNO"] = "${SEQNO}";
+        param["RECEIVER_HOSTURL"] = "${RECEIVER_HOSTURL}"
+        jQuery.ajax({
+            url: url,
+            type: "POST",
+            data: param,
+            dataType: "json",
+            success: function (data) {
+//                alert(JSON.stringify(data.callbackData));
+                if (data.callbackData.resultCode == "0000") {
+                    //리시버에서 받은 메세지 상태정보
+                    var pushMsgSentInfo = data.callbackData.bodyData.sentInfo;
+                    if(pushMsgSentInfo!=""){  // 진행중
+                        var SENT_CNT = Number(pushMsgSentInfo.send_CNT);
+                        var FAIL_CNT = Number(pushMsgSentInfo.fail_CNT);
+                        var READ_CNT = pushMsgSentInfo.read_CNT
+                        var PROCESS_CNT = SENT_CNT+FAIL_CNT;
+                        var TOTAL_SEND_CNT = Number(pushMsgSentInfo.total_SEND_CNT);
+                        var processPercent = (PROCESS_CNT*100)/TOTAL_SEND_CNT;
+                        var progressTableObj = document.getElementById("progressTable");
+                        progressTableObj.style.width = processPercent+"%";
+                        document.getElementById("StatusTD").innerHTML=PROCESS_CNT+"/"+TOTAL_SEND_CNT;
+                        document.getElementById("SentCNT_TD").innerHTML=SENT_CNT+"건";
+                        document.getElementById("FailCNT_TD").innerHTML=FAIL_CNT+"건";
+                        document.getElementById("ReadCNT_TD").innerHTML=READ_CNT+"건";
+                        timerID = setTimeout("getSendInfo()",1500); // 다시 리시버 상태값 호출
+                    }else{ // 메모리에서는 발송 완료 되어 빈값을 리턴.
+                        document.getElementById("progressTD").innerHTML='#springMessage("menu.push.sendManage.sendSuccess")';  //발송완료
+                        stopGetSendInfo();
+                        //마지막으로 DB에 업데이트 된 정보를 Display 함
+                       getSentInfo(REQ_SEQNO);
+                    }
+                } else {
+                    stopGetSendInfo();
+                    alert(data.callbackData.resultMsg);
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                stopGetSendInfo();
+                alert(thrownError);
+            }
+        });
+    }
+    //팝업 닫힘 이벤트 리스너 등록( jquery-ui dialog)
+    $('div#windowPop').bind('dialogclose', function(event) {
+        if(isPopupOpen=="Y"){
+            try{
+                if(SENDPAGE=="Y"){
+                    if(confirm('#springMessage("menu.push.sendManage.alert.goSendStatus")')){ //발송 현황 페이지로 이동 하시겠습니까?
+                        //layout/default.vm에 정의 되어 있는 function
+                        GO_MENU_URL('0000000080','/admin/push/msgSendStatus');
+                    }
+                }
+            }catch(err){
+            }
+        }
+        isPopupOpen = "N";
+    });
+
+    //발송 상태 DB에서 최종 확인
+    function getSentInfo(seqno) {
+        var url = CONTEXT_PATH + "/admin/push/sendDatailJson";
+        var data = {};
+        data["SEQNO"] = seqno;
+        jQuery.ajax({
+            url: url,
+            type: "GET",
+            data: data,
+            dataType: "json",
+            success: function (data) {
+//                alert(JSON.stringify(data));
+                if (data.resultCode == "0000") {
+                    document.getElementById("StatusTD").innerHTML=data.SENTCNT+"/"+data.TOTALSENDCNT;
+                    document.getElementById("SentCNT_TD").innerHTML=data.SUCCESS_CNT+"건";
+                    document.getElementById("FailCNT_TD").innerHTML=data.FAIL_CNT+"건";
+                    document.getElementById("ReadCNT_TD").innerHTML=data.READ_CNT+"건";
+                } else {
+                    alert(data.resultMsg);
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError);
+            }
+        });
+    }
+
+    function stopGetSendInfo(){
+        clearTimeout(timerID);
+    }
+
+    if("${isProgressBarView}"=="Y"){
+        var timerID = setTimeout("getSendInfo()",1500);
+    }
+
+</script>
+
+    <table class="tbl" summary="발송 상세정보" border="0">
+        <colgroup><!--  2cell  -->
+            <col width="20%"/><col width="30%"/> <col width="20%"/><col width="30%"/>
+        </colgroup>
+        <tr>
+            <th scope="row">
+                <label for="SENDERCODE">#springMessage("menu.push.sendManage.sendStatus")</label> <!-- 발송상태 -->
+            </th>
+            <td colspan="3">
+                <table style="width: 100%; height: 40px;" border="0">
+                    <tr>
+                        <td id="progressTD" style="width:400px;font-weight: bold;">
+                            #if(${isProgressBarView}=="N")
+                                #springMessage("menu.push.sendManage.sendSuccess") <!-- 발송완료 -->
+                            #else
+                                <table id="progressTable" style="width:1%;background-image:url('$RESOURCES_PATH/images/progressbar.gif');background-repeat: repeat-x;">
+                                    <tr>
+                                        <td ></td>
+                                    </tr>
+                                </table>
+                            #end
+
+                        </td>
+                        <td id="StatusTD" style="font-weight: bold">${SENTCNT}/${sendMsgStatusBean.TOTAL_SEND_CNT}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row">
+                <label>#springMessage("menu.stats.push.success") </label> <!-- 성공 -->
+            </th>
+            <td id="SentCNT_TD" style="font-weight: bold">${sendMsgStatusBean.SEND_CNT}#springMessage("common.text.gun")</td> <!-- 건 -->
+            <th scope="row">
+                <label>#springMessage("menu.stats.push.fail") </label> <!-- 실패 -->
+            </th>
+            <td id="FailCNT_TD"  style="font-weight: bold">${sendMsgStatusBean.FAIL_CNT}#springMessage("common.text.gun")</td> <!-- 건 -->
+        </tr>
+        <tr>
+            <th scope="row">
+                <label>UPNS #springMessage("menu.stats.push.send") </label> <!-- 발송 -->
+            </th>
+            <td>${sendMsgStatusBean.UPNS_CNT}#springMessage("common.text.gun")</td> <!-- 건 -->
+
+            <th scope="row">
+                <label>APNS #springMessage("menu.stats.push.send") </label> <!-- 발송 -->
+            </th>
+            <td>${sendMsgStatusBean.APNS_CNT}#springMessage("common.text.gun")</td> <!-- 건 -->
+        </tr>
+        <tr>
+            <th scope="row">
+                <label>GCM #springMessage("menu.stats.push.send") </label> <!-- 발송 -->
+            </th>
+            <td>${sendMsgStatusBean.GCM_CNT}</td>
+            <th scope="row">
+                <label>#springMessage("menu.push.sendManage.readCheck") </label> <!-- 읽음확인 -->
+            </th>
+            <td id="ReadCNT_TD">${sendMsgStatusBean.READ_CNT}</td>
+        </tr>
+        <tr>
+            <th scope="row">
+                <label>#springMessage("menu.push.sendManage.appID") </label> <!-- 앱아이디 -->
+            </th>
+            <td>${sendMsgStatusBean.APPID}</td>
+            <th scope="row">
+                <label>#springMessage("menu.stats.push.sender") </label> <!-- 발송자 -->
+            </th>
+            <td>${sendMsgStatusBean.SENDERID}</td>
+        </tr>
+        <tr>
+            <th scope="row">
+                <label>#springMessage("menu.stats.push.sendDate2") </label> <!-- 발송일 -->
+            </th>
+            <td>${sendMsgStatusBean.REGDATE}</td>
+            <th scope="row">
+                <label>TYPE </label>
+            </th>
+            <td>${TypeStr}</td>
+        </tr>
+    </table>
+    
+    <br><br>
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a><!-- 닫기 -->
+	</div>

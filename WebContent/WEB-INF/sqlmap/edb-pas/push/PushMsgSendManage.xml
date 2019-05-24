@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.msgSend.mapper.MsgSendManageDao">
+	<!-- 페이징 처리 쿼리 부분 시작 _test -->
+	<sql id="head">
+		SELECT viewC.*
+		FROM (
+		SELECT
+		(ROW_NUMBER() OVER()) AS "RNUM"
+		,COUNT(*) OVER() AS "TOT_CNT"
+		,viewB.*
+		FROM (SELECT viewA.* FROM (
+	</sql>
+
+	<sql id="bottom">
+		) AS viewA
+		) AS viewB
+		) AS viewC
+		WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+	
+	<!-- push 서비스 리스트 조회 -->
+	<select id="SelectPushServiceAll" parameterType="kr.msp.admin.push.appManage.dto.PushServiceDto" resultType="kr.msp.admin.push.appManage.dto.PushServiceDto">
+		SELECT  A."APP_ID"  AS "APPID"
+            	, A."SVC_ID"
+            	, A."SVC_NM"
+            	, A."SVC_DTL"
+		FROM    "TB_SVC" AS A , "TB_SVC_AUTH" AS B , "TB_SYS_USER_AUTH_GRP" AS C
+		WHERE 	A."SVC_ID" = B."SVC_ID"
+		AND 	B."AUTH_GRP_ID" = C."AUTH_GRP_ID"
+		AND 	C."USER_ID" = #{USER_ID}
+	</select>
+	
+	<select id="SelectPushServiceUse" parameterType="java.util.List" resultType="kr.msp.admin.push.appManage.dto.PushServiceDto">
+		SELECT 	"APPID"
+				,"APPNAME"
+				,"ISDELETED"
+				,"REGDATE"
+				,"MODDATE"
+				,"SVC_ID"
+				,"SVC_DTL"
+		FROM "T_PUSH_APPLICATION" WHERE
+		"APPID" IN
+		<foreach item="PushServiceDto" index="index" collection="list" open="(" separator="," close=")">
+			#{PushServiceDto.APPID}
+		</foreach>
+		AND "ISDELETED" = 'N'
+	</select>
+	
+	<!-- 템플릿 리스트 조회 -->
+    <select id="SelectTemplateAll" resultType="kr.msp.admin.push.template.dto.TemplateDto">
+    	SELECT 
+			"TEMPLATECODE"
+			,"MESSAGE"
+			,"REGDATE"
+			,"MODDATE"
+		FROM "T_PUSH_TEMPLATE"
+		ORDER BY "REGDATE" DESC
+    </select>
+    
+   	<!-- 발송정책 리스트 조회 -->
+    <select id="SelectSendTypeAll" resultType="kr.msp.admin.push.sendType.dto.PushSendTypeDto" >
+           SELECT DISTINCT "SERVICECODE"
+           FROM "T_PUSH_SERVICE"
+    </select>
+    
+    <!-- PUSH 그룹 죄회 -->
+    <select id="SelectGroupAll" resultType="kr.msp.admin.push.group.dto.PushUserGroupDto">
+    	SELECT
+			A."GROUPSEQ"
+			,A."GROUPNAME"
+			,A."REGDATE"
+			,A."MODDATE"
+			,COALESCE(B."GROUPCNT",0) AS "GROUPCNT"
+		FROM "T_PUSH_USER_GROUP_INFO" AS A
+		LEFT JOIN ( SELECT "GROUPSEQ", COUNT(*) AS "GROUPCNT" FROM "T_PUSH_USER_GROUP" GROUP BY "GROUPSEQ" ) AS B
+		ON A."GROUPSEQ" = B."GROUPSEQ"
+		WHERE "ISDELETED" = 'N'
+    </select>
+	
+</mapper>

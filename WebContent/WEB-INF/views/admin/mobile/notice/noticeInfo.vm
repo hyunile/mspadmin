@@ -1,0 +1,144 @@
+<style>
+/*팝업 위에서 date picker 팝업을 띄울 경우 z-index 보정*/
+.ui-datepicker{z-index:102!important}
+</style>
+<form name="frmNotice" method="post">
+	
+	<table class="tbl" summary="제목,내용,만료일자,사용 여부,서비스명">
+		<colgroup>
+			<col width="15%"/>
+			<col width="35%"/>
+			<col width="15%"/>
+			<col width="35%"/>
+		</colgroup>
+		<tr>
+			<th scope="row">
+				<label for="TITLE" class="redNotice">#springMessage("common.header.title")</label> <!-- 제목 -->
+				<input type="hidden" name="NO_NOTICE" style="width:620px;" value="$!mobileNotic.NO_NOTICE"/>
+			</th>
+			<td colspan="3">
+				<input type="text" id="TITLE" name="TITLE" value="$!mobileNoticeOne.TITLE"/>
+				<input type="hidden" name="NOTC_IDX" value="$!mobileNoticeOne.NOTC_IDX"/>
+			</td>
+		</tr>
+		<tr>
+			<th>
+				<label for="CONT" class="redNotice">#springMessage("common.header.contents")</label> <!-- 내용 -->
+			</th>
+			<td colspan="3">
+				<textarea  name="CONT" id="CONT" class="width95" style="height:100px;width:618px;">$!mobileNoticeOne.CONT</textarea>
+			</td>
+		</tr>
+		<tr>
+			<th>
+				<label for="END_VIEW" class="redNotice">#springMessage("menu.mobile.notice.showDate")</label> <!-- 게시기간  -->
+			</th>
+			<td colspan="3">
+				<input type="text" name="START_VIEW" id="START_VIEW" readonly="readonly" class="width95" style="width: 100px;" />
+				<input type="hidden" name="START_DATE" id="START_DATE" style="width: 0px; border-style: none;" />
+				&nbsp; 
+				<select name="START_HOUR" id="START_HOUR">
+				#foreach ( $item in [0..23] )
+					#if($item < 10)
+						<option value="0$item">$item</option>
+					#else
+						<option value="$item">$item</option>
+					#end
+				#end
+				</select>
+				#springMessage("common.text.hour")&nbsp; <!-- 시 -->
+				
+				<select name="START_MINUTE" id="START_MINUTE">
+				#foreach ( $item in [0..59] )
+					#if($item < 10)
+						<option value="0$item">$item</option>
+					#else
+						<option value="$item">$item</option>
+					#end
+				#end
+				</select>
+				#springMessage("common.text.minite")&nbsp; <!-- 분 -->
+				<input type="hidden" name="START_DTTM" id="START_DTTM" value="$!mobileNoticeOne.START_DTTM" />
+				
+				~
+				
+				<input type="text" name="END_VIEW" id="END_VIEW" readonly="readonly" class="width95" style="width: 100px;" />
+				<input type="hidden" name="END_DATE" id="END_DATE" style="width: 0px; border-style: none;" />
+			
+				&nbsp; 
+				<select name="END_HOUR" id="END_HOUR">
+				#foreach ( $item in [0..23] )
+					#if($item < 10)
+						<option value="0$item">$item</option>
+					#else
+						<option value="$item">$item</option>
+					#end
+				#end
+				</select>
+				#springMessage("common.text.hour")&nbsp; <!-- 시 -->
+				
+				<select name="END_MINUTE" id="END_MINUTE">
+				#foreach ( $item in [0..59] )
+					#if($item < 10)
+						<option value="0$item">$item</option>
+					#else
+						<option value="$item">$item</option>
+					#end
+				#end
+				</select>
+				#springMessage("common.text.minite")&nbsp; <!-- 분 -->
+				<input type="hidden" name="END_DTTM" id="END_DTTM" value="$!mobileNoticeOne.END_DTTM" />
+				
+			</td>
+		</tr>
+		<tr>
+			<th>
+				<label for="USE_YN">#springMessage("common.header.useYN")</label> <!-- 사용여부  -->
+			</th>
+			<td>
+				<select id="USE_YN" name="USE_YN">
+					<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+				#if($mobileNoticeOne.USE_YN == "Y")
+					<option value="Y" selected="selected">#springMessage("menu.mobile.deploy.use")</option> <!-- 사용 -->
+				#else
+					<option value="Y" selected="selected">#springMessage("menu.mobile.deploy.use")</option> <!-- 사용  -->
+				#end
+
+				#if($mobileNoticeOne.USE_YN == "N")
+					<option value="N" selected="selected">#springMessage("menu.mobile.deploy.noUse")</option> <!-- 사용 안함 -->
+				#else
+					<option value="N">#springMessage("menu.mobile.deploy.noUse")</option> <!-- 사용 안함 -->
+				#end
+				
+				</select>
+			</td>
+
+			<th>
+				<label for="APP_ID" class="required">#springMessage("common.text.appname")</label> <!-- App. 명 -->
+			</th>
+
+			<td>
+				<select id="APP_ID" name="APP_ID">
+					<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+					#foreach( $mobileSvc in $mobileSvcList )
+						<option value="$mobileSvc.APP_ID" >$mobileSvc.SVC_NM</option>
+                              
+						
+					#end
+				</select>
+				<input type="hidden" name="HIDDEN_APP_ID" id="HIDDEN_APP_ID" value="$!mobileNoticeOne.APP_ID" />
+			</td>
+		</tr>
+	</table>
+	
+	<div class="btn-wrap txtCenter">
+		#if($mobileNoticeOne)
+			<a href="javascript:fn_modify();void(0);" class="btn1">#springMessage("common.button.modify")</a> <!-- 수정 -->
+			<a href="javascript:fn_delete();void(0);" class="btn1 type2">#springMessage("common.button.delete")</a> <!-- 삭제 -->
+		#else
+			<a href="javascript:fn_save();void(0);" class="btn1">#springMessage("common.button.save")</a> <!-- 저장 -->
+		#end
+		<a href="javascript:fn_closePopup();void(0)" class="btn1 type2 close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+	</div>
+
+</form>

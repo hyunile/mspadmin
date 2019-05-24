@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.group.mapper.PushGroupManageDao">
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT CONVERT(integer, #{PAGE_SIZE}) PAGE_SIZE
+	, CONVERT(integer, #{PAGE_NUM}) PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	
+	<!--  PUSH 그룹 리스트 조회  -->
+    <select id="SelectGroupList" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto" resultType="kr.msp.admin.push.group.dto.PushUserGroupDto">
+        <include refid="head"/>
+		    SELECT 
+			    A.GROUPSEQ
+			   ,A.GROUPNAME
+			   ,REPLACE(CONVERT(VARCHAR(13), A.REGDATE, 120), '-' , '.') REGDATE
+			   ,REPLACE(CONVERT(VARCHAR(13), A.MODDATE, 120), '-' , '.') MODDATE			   
+			   ,ISNULL( B.GROUPCNT, 0) GROUPCNT
+			   , ROW_NUMBER() OVER(ORDER BY A.REGDATE DESC, A.GROUPSEQ DESC) PAGE_KEY
+			FROM T_PUSH_USER_GROUP_INFO A
+			LEFT JOIN ( SELECT GROUPSEQ, COUNT(*) AS GROUPCNT FROM T_PUSH_USER_GROUP GROUP BY GROUPSEQ ) B
+			ON A.GROUPSEQ = B.GROUPSEQ
+			WHERE ISDELETED = 'N'
+			<if test="GROUPNAME != null and GROUPNAME != ''">
+				AND GROUPNAME LIKE '%' + #{GROUPNAME} + '%'
+			</if>
+			
+		<include refid="bottom"/>
+    </select>
+    
+    <insert id="InsertPushGroup" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto">
+    	INSERT INTO T_PUSH_USER_GROUP_INFO (
+    										GROUPSEQ
+		                                    , GROUPNAME
+		                                    ,ISDELETED
+		                                    ,REGDATE
+		                                    ,MODDATE
+		                                    ,GROUPDESC
+		                                    ,REGID
+		                                    ,GROUPTYPE
+		                                   ) 
+		SELECT	(SELECT ISNULL(MAX(GROUPSEQ), 0) + 1 FROM T_PUSH_USER_GROUP_INFO)
+                      , #{GROUPNAME}
+                      ,'N'
+                      ,GETDATE()
+                      ,GETDATE()
+                      ,#{GROUPDESC}
+                      ,#{REGID}
+                      ,#{GROUPTYPE}
+    </insert>
+    
+    <select id="SelectGroupOne" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto" resultType="kr.msp.admin.push.group.dto.PushUserGroupDto">
+    	 SELECT TOP 1
+			    A.GROUPSEQ
+			   ,A.GROUPNAME
+			   ,REPLACE(CONVERT(VARCHAR(13), A.REGDATE, 120), '-' , '.') REGDATE
+			   ,REPLACE(CONVERT(VARCHAR(13), A.MODDATE, 120), '-' , '.') MODDATE
+			   ,A.GROUPTYPE
+			   ,A.GROUPDESC
+			FROM T_PUSH_USER_GROUP_INFO A
+			WHERE A.GROUPSEQ = #{GROUPSEQ}
+    </select>
+    
+    <select id="SelectGroupOneByGroupName" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto" resultType="kr.msp.admin.push.group.dto.PushUserGroupDto">
+    	 SELECT 
+			    A.GROUPSEQ
+			FROM T_PUSH_USER_GROUP_INFO A
+			WHERE A.GROUPNAME = #{GROUPNAME}
+    </select>
+    
+    <update id="UpdatePushGroup" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto">
+    	UPDATE 	T_PUSH_USER_GROUP_INFO
+		SET 	GROUPNAME = #{GROUPNAME}
+				,GROUPDESC = #{GROUPDESC}
+				,MODDATE = GETDATE()
+				,GROUPTYPE = #{GROUPTYPE}
+		WHERE 	GROUPSEQ = #{GROUPSEQ}
+    </update>
+    
+    <!--  그룹 정보 수정 - 삭제 -->
+    <update id="updatePushGroupDelete" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto">
+         UPDATE T_PUSH_USER_GROUP_INFO
+		    SET ISDELETED = 'Y'
+		       ,MODDATE   = GETDATE()
+		 WHERE GROUPSEQ = #{GROUPSEQ}
+    </update>
+    
+    <delete id="deletePushGroup" parameterType="kr.msp.admin.push.group.dto.PushUserGroupDto">
+        DELETE FROM T_PUSH_USER_GROUP_INFO
+        WHERE GROUPSEQ = #{GROUPSEQ}
+    </delete>
+    
+</mapper>

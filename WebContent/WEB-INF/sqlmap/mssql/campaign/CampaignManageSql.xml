@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.campaign.campaignManage.mapper.CampaignManageDao">
+
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+	
+	<!--리스트 조회 -->
+	<select id="selectCampaignList" parameterType="kr.msp.admin.campaign.campaignManage.dto.CampaignParamDTO" resultType="kr.msp.admin.campaign.campaignManage.dto.CampaignDTO" >
+		<include refid="head"/>
+		SELECT *
+		, ROW_NUMBER() OVER(ORDER BY CAMPAIGN_IDX ASC) PAGE_KEY 
+		FROM TB_CMP_CAMPAIGN
+		<include refid="bottom"/>
+	</select>
+	
+	<!-- 단건 추가 -->
+	<insert id="insertCampaign" parameterType="kr.msp.admin.campaign.campaignManage.dto.CampaignParamDTO">
+		INSERT INTO TB_CMP_CAMPAIGN(CAMPAIGN_NM, CAMPAIGN_CONTENT, CAMPAIGN_FROM_DT, CAMPAIGN_TO_DT, REG_ID, REG_DTTM, MOD_ID) 
+		VALUES (#{CAMPAIGN_NM}, #{CAMPAIGN_CONTENT}, #{CAMPAIGN_FROM_DT}, #{CAMPAIGN_TO_DT}, #{REG_ID}, GETDATE(), #{MOD_ID})
+	</insert>
+	
+	<!-- 삭제 -->
+	<delete id="deleteCampaign" parameterType="kr.msp.admin.campaign.campaignManage.dto.CampaignParamDTO">
+		DELETE FROM TB_CMP_CAMPAIGN 
+		WHERE CAMPAIGN_IDX IN 
+		<foreach item="LIST_CMP_IDX" index="index" collection="LIST_CMP_IDX" open="(" separator="," close=")">
+        	#{LIST_CMP_IDX}
+  		</foreach>
+	</delete>
+    
+</mapper>

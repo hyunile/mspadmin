@@ -1,0 +1,56 @@
+<td colspan="7" class="tb_subCon" >
+	
+			<table class="tbl-nb" summary="코드,코드명,그룹설명,순위,사용유무,등록자,등록일,수정자,수정일,상세">
+				<colgroup><!--  9cell  -->
+					<col width="8%" /><col width="auto" /><col width="8%" /><col width="11%" /><col width="11%" />
+					<col width="11%" /><col width="11%" /><col width="11%" /><col width="8%" />
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col">#springMessage("common.header.code")</th>  <!-- 코드 -->
+						<th scope="col">#springMessage("common.header.codeName")</th> <!-- 코드명 -->
+						<th scope="col">#springMessage("common.header.rank")</th> <!-- 순위 -->
+						<th scope="col">#springMessage("common.header.useYN")</th> <!-- 사용 -->
+						<th scope="col">#springMessage("common.header.author")</th> <!-- 작성자 -->
+						<th scope="col">#springMessage("common.header.registDate")</th> <!-- 작성일 -->
+						<th scope="col">#springMessage("common.header.modifyUser")</th> <!-- 수정자 -->
+						<th scope="col">#springMessage("common.header.modifyDate")</th> <!-- 수정일 -->
+						<th scope="col">#springMessage("common.header.detail")</th> <!-- 상세 -->
+					</tr>
+				</thead>
+				<tbody>
+				#foreach( $codeSub in $codeSubList )
+					#set($j_tot = $!codeSub.TOT_CNT)
+					<tr>
+						<td>
+							$!codeSub.NO_CD
+							<input type="hidden" class="NO_CD" value="$!codeSub.NO_CD" />
+						</td>
+						<td style="text-align:left;">
+							$esc.xml($!codeSub.NM_CD)
+						</td>
+						<td>$!codeSub.NO_ORDER</td>
+						<td>$!codeSub.YN_USE</td>
+						<td>$!codeSub.ID_INSERT</td>
+						<td>$!codeSub.DT_INSERT</td>
+						<td>$!codeSub.ID_UPDATE</td>
+						<td>$!codeSub.DT_UPDATE</td>
+						<td>
+							<a href="javascript:void(0)" class="btn2" id="codeSubModify">#springMessage("common.button.modify")</a>
+						</td>
+					</tr>
+				#end
+				#if(!$j_tot)
+					<tr>
+						<td colspan="9" class="ta_c">#springMessage("common.alert.nodata")</td>  <!-- 데이터가 없습니다. -->
+					</tr>
+				#end
+				</tbody>
+			</table>
+
+			<div class="btn-wrap txtCenter">
+				<a href="javascript:void(0);" class="btn1" id="subWrite"><strong>#springMessage("common.button.regist")</strong></a> <!--등록-->
+				<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a> <!--닫기-->
+			</div>
+
+</td>

@@ -1,0 +1,108 @@
+<script type="text/javascript">
+$(document).ready(function() {
+	fn_init();
+});
+function fn_init(){
+	$("#btnModify").click(function(){
+		$("#apnName").attr("disabled", false);
+		$("#apnIp").attr("disabled", false);
+		$("#USE_YN").removeAttr("disabled");
+		$("#USE_YN").parent().removeClass("disabled");
+		$("#apnName").focus();
+	});
+	$("#btnSave").click(function(){
+		fn_save($("#apnIp").val());
+	});
+}
+
+//등록 처리.
+function fn_save(){
+	var apnName = $("#apnName").val().trim();
+	var apnIp = $("#apnIp").val().trim();
+	var msg = "APN 설정을 " + apnName + "[" + apnIp + "]로 저장하시겠습니까?";
+	if(!confirm(msg)){
+		return;
+	}
+	var url = CONTEXT_PATH + "/admin/securepush/apn/save";
+	var data = $("form[name=frmApn]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			if(data.result > 0){
+				alert('성공적으로 저장되었습니다.'); // 성공적으로 적용되었습니다.
+			}else{
+				alert(data.msg);
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+		    alert(errorThrown);
+		},
+		complete: function(){
+			$("#apnName").attr("disabled", true);
+			$("#apnIp").attr("disabled", true);
+			$("#USE_YN").attr("disabled", true);
+			$("#USE_YN").parent().addClass("disabled");
+		}
+	});
+}
+
+
+
+</script>
+
+<div class="contents-area">
+	<div class="nav">
+		<span></span>
+		<span></span>
+	</div>
+	<h2 class="page-title">APN 등록</h2>
+	<form name="frmApn" method="post">
+		<table class="tbl">
+			<caption>제목</caption>
+			<colgroup>
+				<col style="width:100px">
+				<col style="width:200px">
+				<col style="width:100px">
+				<col style="width:200px">
+				<col style="width:100px">
+			</colgroup>
+			
+			<tr>
+				<th>APN 명</th>
+				<td>
+					<input id="apnName" name="apnName" type="text" value="$!{apnMap.APN_NAME}" maxlength="30" disabled />
+				</td>
+				<th>APN 주소</th>
+				<td>
+					<input id="apnIp" name="apnIp" type="text" value="$!{apnMap.APN_IP}" disabled />
+				</td>
+				<th>사용여부</th>
+				<td>
+					<div class="tbl-select disabled">
+					#if($!apnMap.USE_YN == "Y")
+						<label for="USE_YN">#springMessage("common.header.use_Y")</label>
+						<select name="USE_YN" id="USE_YN" disabled>
+							<option value="Y" selected="selected">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+							<option value="N">#springMessage("common.select.stop")</option> <!-- 중지 -->
+						</select>
+					#else
+						<label for="USE_YN">#springMessage("common.select.stop")</label>
+						<select name="USE_YN" id="USE_YN" disabled>
+							<option value="Y">#springMessage("common.header.use_Y")</option> <!-- 사용 -->
+							<option value="N" selected="selected">#springMessage("common.select.stop")</option> <!-- 중지 -->
+						</select>
+					#end
+					</div>
+				</td>
+			</tr>
+			
+		</table>
+		<div class="btn-wrap">
+			<a id="btnSave" href="javascript:void(0);" class="btn1 fr">저장</a>
+			<a id="btnModify" href="javascript:void(0);" class="btn1 fr">수정</a>
+		</div>
+	</form>
+</div>

@@ -1,0 +1,222 @@
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+});
+
+function fn_se_select(){
+	fn_groupList(1);
+}
+
+function fn_senderList(PAGE_NUM){
+	var selectRowSize = document.getElementById('selRowSize');
+	var url = CONTEXT_PATH + "/admin/push/sender";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM + "&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;;
+	var target = $("#senderTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//발송자 등록 화면
+$(document).on("click","#senderWrite",function(){
+	var url = CONTEXT_PATH + "/admin/push/sender/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 500;
+	var title =  '#springMessage("menu.push.setting.senderIn")'; //"발송자 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//발송자 수정 화면
+$(document).on("click","#senderModify",function(){
+	var SENDERSEQ = $(this).parent().parent().find(".SENDERSEQ").val();
+	var url = CONTEXT_PATH + "/admin/push/sender/edit";
+	var type = "GET";
+	var data = "SENDERSEQ=" + SENDERSEQ;
+	var target = $("#windowPop");
+	var whideh = 500;
+	var title = '#springMessage("menu.push.setting.senderUpdate")'; //"발송자 수정";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//중복 체크
+function fn_check_code(){
+	if($("#SENDERCODE").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.senderCodeIn")'); //"발송장 코드를 입력해주세요."
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/push/sender/check";
+	var data = $("form[name=frmSenderInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result == 0){
+				$("#CHECK_CODE").val("1");
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//발송자 코드 변경
+function fn_code_change(){
+	$("#CHECK_CODE").val("0");
+}
+
+//발송자 등록
+function fn_senderWrite(){
+
+	if( $("form[name=frmSenderInfo]").find("input[name=SENDERCODE]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.senderCodeIn")'); //"발송자 코드을 입력해주세요."
+		return;
+	} else if($("#CHECK_CODE").val() == '0'){
+		alert('#springMessage("menu.push.setting.alert.senderCodeCheck")'); //"발송자 코드 중복체크를 해주새요."
+		return;
+	}else if( $("form[name=frmSenderInfo]").find("input[name=SENDERNAME]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.senderNameIn")'); //"발송자 이름을 입력해주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/sender/regist";
+	var data = $("form[name=frmSenderInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_senderList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//발송자 수정
+function fn_senderModify(){
+
+	if( $("form[name=frmSenderInfo]").find("input[name=SENDERNAME]").val() == ""){
+		alert('#springMessage("menu.push.setting.alert.senderNameIn")'); //"발송자 이름을 입력해주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/sender/edit";
+	var data = $("form[name=frmSenderInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_senderList($("#SENDER_NUM").val());
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//발송자 삭제
+function fn_senderDelete(){
+
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/sender/delete";
+	var data = $("form[name=frmSenderInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_senderList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_senderList(1);
+}
+
+</script>
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.push.setting")</span>			<!-- 설정 -->
+		<span>#springMessage("menu.push.setting.messageType")</span>	<!-- 메시지 구분 설정 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.push.setting.messageType")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="senderWrite">#springMessage("common.button.regist")</a> <!-- 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		
+		<div class="btnArea1 ta_r">
+			
+		</div>
+		
+		<div id="senderTableDiv">
+			#parse("admin/push/sender/senderList.vm")
+		</div>
+		
+	</form>
+	#### E : 리스트  폼 부분  ####
+</div>

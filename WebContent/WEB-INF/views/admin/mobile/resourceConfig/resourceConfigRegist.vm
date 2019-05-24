@@ -1,0 +1,46 @@
+<form name="frmSenderInfo" method="POST">
+	<div>
+		
+		<table class="tbl" summary="확장자, 확장자 설명">
+			<colgroup><!--  2cell  -->
+				<col width="20%"/><col width="auto"/>
+			</colgroup>
+			<tr>
+				<th scope="row">
+					<label for="SENDERNAME" class="redNotice">#springMessage("menu.mobile.upload.fileForm")</label> <!-- 파일 형식 -->
+				</th>
+				<td>
+					#if(!$resourceExeOne)
+						<input type="text" id="FILE_EXT" name="FILE_EXT" value="$!resourceExeOne.FILE_EXT" />
+						<br/>
+						ex) png,js,css
+					#else
+						$!resourceExeOne.FILE_EXT
+						<input type="hidden" id="FILE_EXT" name="FILE_EXT" value="$!resourceExeOne.FILE_EXT" />
+					#end
+				</td>
+			</tr>
+			<tr>
+				<th>
+					#springMessage("common.header.desc") <!-- 설명 -->
+				</th>
+				<td>
+					<textarea id="EXE_DTL" name="EXE_DTL" style="width:350px;height:70px;">$!resourceExeOne.EXE_DTL</textarea>
+				</td>
+			</tr>
+		</table>
+		
+		<div class="btn-wrap txtCenter">
+		#if(!$resourceExeOne)
+			<a href="javascript:fn_RscExeWrite();void(0);" class="btn1">#springMessage("common.button.save")</a>	<!-- 저장 -->
+		#else
+			<a href="javascript:fn_RscExeModify();void(0);" class="btn1">#springMessage("common.button.modify")</a>	<!-- 수정 -->
+			<a href="javascript:fn_RscExeDelete();void(0);" class="btn1 type2">#springMessage("common.button.delete")</a>	<!-- 삭제 -->
+		#end
+			<!-- <button type="button" onclick="fn_closePopup();" class="btn_style1"><span>닫기</span></button>  -->
+		</div>
+		
+	</div>
+	
+	
+</form>

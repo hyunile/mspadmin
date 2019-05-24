@@ -1,0 +1,325 @@
+<style type="text/css">
+.mp_lnk {cursor:pointer;}
+</style>
+
+## multipart-form Ajax 전송
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/jquery/ajaxfileupload.js"></script>
+
+<script type="text/javascript">
+	jQuery(document).ready(function() {
+		//공통 페지징 처리
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	});
+
+	jQuery(document).on("change", "#conSelect", function() {
+		var su = jQuery(this).val();
+		jQuery(".se_con").hide();
+		jQuery(".se_con").val("");
+		jQuery(".se_con:eq(" + su + ")").show();
+	});
+
+	function ch_search() {
+		var sfrm=document.frmSearch;
+    	var sval=$("#conSelect").val();
+    	if(sval==0){
+    		if(sfrm.empno.value.length>0&&sfrm.empno.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.empno.value="";
+    			sfrm.empno.focus();
+    		}
+    	}else if(sval==1){
+    		if(sfrm.empnm.value.length>0&&sfrm.empnm.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.empnm.value="";
+    			sfrm.empnm.focus();
+    		}
+    	}else if(sval==2){
+    		if(sfrm.dvcnm.value.length>0&&sfrm.dvcnm.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.dvcnm.value="";
+    			sfrm.dvcnm.focus();
+    		}
+    	}else if(sval==3){
+    		if(sfrm.brdnm.value.length>0&&sfrm.brdnm.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.brdnm.value="";
+    			sfrm.brdnm.focus();
+    		}
+    	}else if(sval==4){
+    		if(sfrm.mfgnm.value.length>0&&sfrm.mfgnm.value.length<2){
+    			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+    			sfrm.mfgnm.value="";
+    			sfrm.mfgnm.focus();
+    		}
+    	}
+		fn_deviceList(1);
+	}
+
+	//테이블 리스트 갱신페이지 구현
+	function fn_deviceList(PAGE_NUM) {
+		var url    = CONTEXT_PATH + "/admin/store/userdevice/searchList";
+		var data   = jQuery("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+		var target = jQuery("#userdeviceTableDiv");
+		var type   = "POST";
+		//common.js 에 정의
+		fn_getCommonList(url, type, data, target);
+		fn_page('j_page_div', '$!{CONTEXT_PATH}');
+	}
+
+	//팝업 등록 (화면)
+	function fn_newWrite() {
+        	var url    = CONTEXT_PATH + "/admin/store/userdevice/userdeviceAdd";
+    		var type   = "GET";
+    		var data   = "EMP_NO=";
+    		var target = $("#windowPop");
+    		var width  = 700;
+    		var title  = '#springMessage("menu.store.userDevice.regist")';//"사용자 단말기 등록";
+
+    		fn_getCommonPopupDiv(url, type, data , target , width, title);
+	}
+
+	// 마스크 및 파업창 닫기
+	$(document).on("click","#maskClose",function(e) {
+		fn_closePopup();
+	});
+
+	//팝업 삭제
+	function fn_delete(count, type) {
+	
+		var url  = CONTEXT_PATH + "/admin/store/userdevice/deleteUserdevice";
+		var data = $("form[id=content_frm]").serialize();
+
+		if(Number(count) >1 && type=='1')
+		{
+			alert('#springMessage("menu.store.userDevice.alert.subDevice")'); //보조단말기가 존재 하므로\n대표단말기 삭제가 불가능 합니다.
+		}else {
+			if(confirm('#springMessage("menu.store.userDevice.alert.deviceDelete")')) { //사용자 단말기 정보는 삭제하면 복구할 수 없습니다.\n삭제 하시겠습니까?
+        		jQuery.ajax( {
+        			url      : url,
+        			type     : "POST",
+        			data     : data,
+        			dataType : "json",
+        			success:function(data) {
+
+        				if(data.count>=0){
+        					alert('#springMessage("menu.mobile.common.successDelete")'); //"삭제되었습니다."
+        					document.location.href='searchList';
+            				fn_closePopup();
+            				fn_deviceList(1);
+        				}else{
+        					alert('#springMessage("menu.store.device.alert.deleteError")'); //삭제중 장애가 발생하였니다
+        				}
+
+        			}
+        		});
+			}
+		}
+	}
+	
+	//상세화면이동(POST)
+	jQuery(document).on('click','.mp_lnk',function(){
+        	var url    = CONTEXT_PATH + "/admin/store/userdevice/selectUserDevice";
+    		var type   = "POST";
+    		var data   = "USERDEVC_IDX="+jQuery('input', jQuery(this).closest('tr')).val();
+    		var target = $("#windowPop");
+    		var width  = 600;
+    		var title  = '#springMessage("menu.store.userDevice.info")';//"사용자 단말기 정보";
+
+    		fn_getCommonPopupDiv(url, type, data , target , width, title);	
+	});
+	
+	//리스트 삭제
+    $(document).on("click","#deleteSelected",function( e ){ 
+       
+		var cnt = $(".chkCls:checkbox:checked").length;
+       
+        if(cnt < 1){
+             alert('#springMessage("menu.store.userDevice.alert.useMoreDevice")'); //한 개 이상 사용자 단말기를 선택하셔야 합니다
+        }else{
+             if(confirm('#springMessage("common.alert.doDelete")')){ //'삭제하시겠습니까?'
+                var checkBoxList = [];
+                $('.chkCls:not(#checkAll):checkbox:checked').each(function(i) {
+                       checkBoxList.push($(this).val());
+                });
+    
+                var data = "DEL_LIST="+checkBoxList;
+              
+                jQuery.ajax({
+                        url: CONTEXT_PATH +"/admin/store/userdevice/userdeviceList"
+                        ,type:"post"
+                        ,data:data
+                        ,dataType:"json"
+                        ,success:function(data){
+                            alert(data.msg);
+                            if(data.result > 0){
+                                 document.location.href= CONTEXT_PATH + '/admin/store/userdevice';
+                            }
+                     }
+                }) 
+                
+            }
+        }
+    });
+
+	function fn_saveDevice(){
+	
+    	if(jQuery("#content_frm").fn_mp_validate() && confirm('#springMessage("common.alert.doSave")')){ //"저장 하시겠습니까?"
+    		fn_saveProcess();
+		}
+	}
+	function fn_updateDevice(){
+	
+    	if(jQuery("#content_frm").fn_mp_validate() && confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+    		fn_saveProcess();
+		}
+	}
+	function fn_saveProcess()
+	{
+		jQuery.ajax({
+			url              : jQuery('input[name="USERDEVC_IDX"]','#frmTable').val().length>0?'updateUserdevice':'saveUserdevice',
+			type             : 'post',
+			data             : {
+				USERDEVC_IDX : jQuery('input[name="USERDEVC_IDX"]','#frmTable').val(),
+				EMP_NO 		 : jQuery('input[name="EMP_NO"]','#frmTable').val(),
+				DEVC_IDX	 : jQuery('select[name="DEVC_IDX"] option:selected','#frmTable').val(),
+				GUBUN_CD     : jQuery('select[name="GUBUN_CD"] option:selected','#frmTable').val(),
+				PHONE_NO     : jQuery('input[name="PHONE_NO"]','#frmTable').val()
+			} ,
+			dataType         : 'json',
+			success          : function (json) {
+    			        				if(json.count>=0){
+    			        					alert('#springMessage("menu.store.device.alert.save")'); //저장되었습니다.
+                        					document.location.href='searchList';
+                        				}else{
+                        					alert('#springMessage("menu.store.device.alert.saveError")'); //저장중 장애가 발생하였습니다
+                        				}
+                        			}
+		});	
+	}
+
+	//============== 사용자관리 ====================
+	//사용자 조회 팝업
+	function fn_userSearchPopup() {
+        	var url    = CONTEXT_PATH + "/admin/store/userdevice/userSearch";
+    		var type   = "GET";
+    		var data   = "";
+    		var target = $("#dialogPop");
+    		var width  = 680;
+    		var height  = 480;
+    		var title  = '#springMessage("menu.store.userDevice.search")'; //"사용자 검색";
+
+    		fn_getCommonPopupDivY(url, type, data , target , width, height, title);
+	}	
+	/*
+	//다이얼로그 생성(ID별로 생성 가능)
+	jQuery( "#dialogPop" ).dialog({
+		autoOpen : false,
+		modal    : true,
+		width    : 680,
+		height   : 480, // 'auto' 가능
+		title    : "사용자 검색",
+		open     : function(){ fn_dialogdesign('#dialogPop'); } //타이틀 및 닫기버튼디자인적용(ID전달 필요)
+	})
+	;
+	*/
+	/*
+	//다이얼로그 열기
+	jQuery('#userSearch').click(function(){
+		//콘텐츠 채우기(url, method, data, targetObject)
+    	fn_getCommonList( "userSearch", "GET", "", jQuery('#dialogPop') );
+		//열기
+		jQuery("#dialogPop").dialog('open');
+	});
+	
+	//다이얼로그 닫기(button.#id 로 지정한다.)
+	jQuery(document).on('click','button.dialogPop',function(){
+		jQuery("#dialogPop").dialog('close');
+	});
+	*/
+	
+	function fn_changeRowSize(){
+    	fn_commonSetRowSize();
+    	fn_deviceList(1);
+    }
+
+
+</script>
+
+<div id="dialogPop" title="플랫폼 관리" style="display:none;"></div>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+    <div class="nav">
+		<span>#springMessage("menu.system.serviceAppstore")</span>		<!-- 앱스토어 -->
+		<span></span>									
+		<span></span>									
+	</div>
+	<h2 class="page-title"></h2>	
+
+	#### S : 조회 폼 부분  ####
+	  
+   	<form name="frmSearch" method="post">
+   		<table class="tbl-search">
+   			<colgroup>
+				<col style="width:300px">
+				<col>
+			</colgroup>
+			
+			<thead>
+   			<tr>
+				<td>
+					<select id="conSelect" class="w120">
+       		            <option value="0">#springMessage("menu.store.user.number")</option> <!-- 사번 -->
+       		            <option value="1">#springMessage("common.text.name")</option> <!-- 이름 -->
+       		          	<option value="2">#springMessage("menu.store.appManage.modelName")</option> <!-- 모델명 -->
+       		          	<option value="3">#springMessage("menu.store.appManage.brandName")</option> <!-- 브랜드명 -->
+       		          	<option value="4">#springMessage("menu.store.appManage.makeName")</option> <!-- 제조사명 -->
+       			    </select>    
+       			    <input class="se_con" type="text" id="empno" name="EMP_NO" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+       			    <input class="se_con" type="text" id="empnm" name="EMP_NM"  style="display:none" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+       		        <input class="se_con" type="text" id="dvcnm" name="DEVC_ID" style="display:none" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+       		        <input class="se_con" type="text" id="brdnm" name="BRD_NM"  style="display:none" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+       		        <input class="se_con" type="text" id="mfgnm" name="MFG_NM"  style="display:none" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/>
+                   </td>
+                   <td>
+                   		<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+                   </td>
+               </tr>
+               </thead>
+           </table>
+		
+		<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+		<input type="hidden" name="ORDER_FIELD" /> <!--  정렬 할 필드  -->
+		<input type="hidden" name="ORDER_TYPE" /> <!--  정렬 순서(ASC, DESC)  -->
+       </form>
+    
+
+   	#### S : 리스트  폼 부분  ####
+	<table class="tbl-info">
+		<caption></caption>
+		<tr>
+			<td>
+				<a href="javascript:void(0)" class="btn2" onclick="fn_newWrite();" title="#springMessage("common.button.regist")">#springMessage("common.button.regist")</a>	<!-- 등록 -->
+			</td>
+			<td class="txtRight">
+				#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+				<div class="tbl-info-select">
+					<label for="num">#springMessage("common.select.options_10")</label>
+					<select id="selRowSize" onchange="fn_changeRowSize()">
+           				<option value="10">#springMessage("common.select.options_10")</option>
+           				<option value="30">#springMessage("common.select.options_30")</option>
+           				<option value="50">#springMessage("common.select.options_50")</option>
+           			</select>
+				</div>
+			</td>
+		</tr>
+	</table>
+		
+    <div id="userdeviceTableDiv">
+		<!--  templete vm include  -->					
+		#parse ("/admin/store/userdevice/userdeviceList.vm")
+    </div>
+	   
+    
+    #### E : 리스트  폼 부분  ####
+</div>

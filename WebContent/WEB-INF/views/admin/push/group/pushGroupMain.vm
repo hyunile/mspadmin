@@ -1,0 +1,224 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	//공통 페지징 처리
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+
+	//검색메뉴 hide
+	$(".se_con").each(function(i){
+		if(i != 0){
+			$(this).hide();
+		}
+	});
+	
+	
+});
+
+function ch_search(){
+		var sfrm=document.frmSearch.grpnm;
+		if(sfrm.value.length>0&&sfrm.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.value="";
+			sfrm.focus();
+		}
+		fn_groupList(1);
+}
+
+$(document).on("change","#conSelect",function(){
+	var su = $(this).val();
+	$(".se_con").hide();
+	$(".se_con").val("");
+	$(".se_con:eq(" + su + ")").show();
+});
+
+//페이징
+function fn_groupList(PAGE_NUM){
+	var url = CONTEXT_PATH + "/admin/push/group";
+	var type = "POST";
+	var data = $("form[name=frmSearch]").serialize() + "&PAGE_NUM=" + PAGE_NUM;
+	var target = $("#groupTableDiv");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//그룹 등록 화면
+$(document).on("click","#groupWrite",function(){
+	var url = CONTEXT_PATH + "/admin/push/group/regist";
+	var type = "GET";
+	var data = "";
+	var target = $("#windowPop");
+	var whideh = 500;
+	var title = '#springMessage("menu.push.user.groupIn")'; //"그룹 등록";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+
+//그룹 등록
+function fn_groupWrite(){
+	if( $("form[name=frmGroupInfo]").find("input[name=GROUPNAME]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.groupIn")'); //"그룹명을 입력해주세요."
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doSave")')){ //"저장 하시겠습니까?"
+		return;
+	}
+	
+	var url = CONTEXT_PATH + "/admin/push/group/regist";
+	var data = $("form[name=frmGroupInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_groupList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//그룹 수정 화면
+$(document).on("click","#groupModify",function(){
+	var GROUPSEQ = $(this).parent().parent().find(".GROUPSEQ").val();
+	var url = CONTEXT_PATH + "/admin/push/group/edit";
+	var type = "GET";
+	var data = "GROUPSEQ=" + GROUPSEQ;
+	var target = $("#windowPop");
+	var whideh = 500;
+	var title = '#springMessage("menu.push.user.groupUpdate")';//"그룹 수정";
+	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+});
+
+//그룹 수정
+function fn_groupModify(){
+	if( $("form[name=frmGroupInfo]").find("input[name=GROUPNAME]").val() == ""){
+		alert('#springMessage("menu.push.user.alert.groupIn")'); //"그룹명을 입력해주세요."
+		return; 
+	}
+	
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/group/edit";
+	var data = $("form[name=frmGroupInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_groupList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+//그룹 삭제
+function fn_groupDelete(){
+
+	if(! confirm('#springMessage("common.alert.doModify")')){ //"수정 하시겠습니까?"
+		return;
+	}
+
+	var url = CONTEXT_PATH + "/admin/push/group/delete";
+	var data = $("form[name=frmGroupInfo]").serialize();
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_groupList(1);
+				fn_closePopup();
+			}
+		},
+        error:function(request,status,error){
+            alert("code:"+request.status+"\n"+"error:"+error);
+        }
+	});
+}
+
+function fn_changeRowSize(){
+	fn_commonSetRowSize();
+	fn_groupList(1);
+}
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.system.userManage")</span>			<!-- 사용자 관리 -->
+		<span>#springMessage("menu.system.targetGroupManage")</span>			<!-- 발송대상 그룹 관리 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.system.targetGroupManage")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		
+			<table class="tbl-search">
+				<thead>
+	    			<tr>
+	    				<td>
+							<select id="conSelect" title="#springMessage('menu.mobile.notice.title.selectSearch')" class="w90"> <!-- 검색항목선택 -->
+								<option value="0">#springMessage("menu.push.user.groupName")</option> <!-- 그룹명 -->
+							</select>
+							<input class="se_con" type="text" id="grpnm" name="GROUPNAME" class="inputField" title="#springMessage('common.title.searchIn')" onkeydown="javascript:if(event.keyCode==13){ch_search();return false;}"/> <!-- 검색어입력 -->
+							<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+	    				</td>
+	                </tr>
+                </thead>
+            </table>
+			
+			<input type="hidden" id="PAGE_SIZE" name="PAGE_SIZE"/>
+		
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+	#### S : 리스트  폼 부분  ####
+		<table class="tbl-info">
+			<caption></caption>
+			<tr>
+				<td>
+					<a href="javascript:void(0)" class="btn2" id="groupWrite">#springMessage("menu.push.user.groupIn")</a> <!-- 그룹 등록 -->
+				</td>
+				<td class="txtRight">
+					#springMessage("common.header.searchResult") <span id="spaTotCnt"></span> ㅣ  <!-- 검색결과 -->
+					<div class="tbl-info-select">
+						<label for="num">#springMessage("common.select.options_10")</label>
+						<select id="selRowSize" onchange="fn_changeRowSize()">
+            				<option value="10">#springMessage("common.select.options_10")</option>
+            				<option value="30">#springMessage("common.select.options_30")</option>
+            				<option value="50">#springMessage("common.select.options_50")</option>
+            			</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+   
+		<div class="tbCon" id="groupTableDiv">
+			#parse("admin/push/group/pushGroupList.vm")
+		</div>
+			
+		<br><br>
+		
+	#### E : 리스트  폼 부분  ####
+	</form>
+</div>

@@ -1,0 +1,93 @@
+<link rel="stylesheet" type="text/css" href="$!{RESOURCES_PATH}/js/chart/style.css" /><!--  챠트관련  -->
+<script type="text/javascript" src="$!{RESOURCES_PATH}/js/chart/amcharts.js" ></script> <!--  챠트관련  -->
+
+<script type="text/javascript">
+ 	var chartDataPeriod = null			// chart data
+ 
+    // 차트 데이터를 추가 함
+    function addChartDataPeriod(date, cnt)
+    {
+        if(chartDataPeriod == null)
+        {
+            chartDataPeriod 	= [{DAY: date,		CNT: cnt}];
+        }
+        else
+        {
+            chartDataPeriod.push({DAY: date,	CNT: cnt});
+        }
+    }
+	
+	
+
+    // 차트를 초기하 시킴
+    function initChartPeriod()
+    {
+
+        //console.debug("init chart !!");
+
+        //chart의 타입을 정의..
+        // SERIAL CHART
+        chartPeriod = new AmCharts.AmSerialChart();
+        chartPeriod.dataProvider = chartDataPeriod;
+        chartPeriod.categoryField = "DAY";
+        chartPeriod.startDuration = 0;  //20120615 그래프 액션 없앰 Minwoo.Yoon
+        chartPeriod.balloon.color = "#FFFFFF";
+        chartPeriod.columnWidth = 0.2; //BAR Width.
+
+        // AXES
+        // category
+        var categoryAxisPeriod = chartPeriod.categoryAxis;
+        categoryAxisPeriod.fillAlpha = 1;
+        categoryAxisPeriod.fillColor = "#FAFAFA";
+        categoryAxisPeriod.gridAlpha = 0;
+        categoryAxisPeriod.axisAlpha = 0;
+        categoryAxisPeriod.gridPosition = "start";
+        categoryAxisPeriod.position = "bottom";
+
+        // value
+        var valueAxisPeriod = new AmCharts.ValueAxis();
+        valueAxisPeriod.dashLength = 5;
+        valueAxisPeriod.axisAlpha = 0;
+        valueAxisPeriod.minimum = 0;
+        //valueAxisPeriod.maximum = 900000; //그래프 최대값
+        valueAxisPeriod.integersOnly = true;
+        valueAxisPeriod.gridCount = 10;
+        valueAxisPeriod.reversed = false; // this line makes the value axis reversed
+        chartPeriod.addValueAxis(valueAxisPeriod);
+
+
+        // prev graph
+        var graphPeriod = new AmCharts.AmGraph();
+        graphPeriod.title = '#springMessage("common.text.gunNum")';//"건수";
+        graphPeriod.type = "line";
+        graphPeriod.valueField = "CNT";
+        graphPeriod.hidden = false; 									// this line makes the graph initially hidden
+        graphPeriod.balloonText = "[[value]]";
+        graphPeriod.lineAlpha = 1;
+        graphPeriod.bullet = "triangleUp";
+        graphPeriod.lineColor = "#1B6099";
+        chartPeriod.addGraph(graphPeriod);
+
+        // WRITE
+        chartPeriod.write("chartDivPeriod");
+    }
+    #foreach( $row in $listData)
+    addChartDataPeriod("$!{row.TITLE}", ${row.CNT});
+    #end
+	
+	 initChartPeriod();
+</script>
+
+<style>
+
+.chart2 {padding:10px 0;}
+.chart2 div{height:149px;}
+
+</style>
+
+
+<h2>[#springMessage("menu.mobile")] #springMessage("menu.stats.common.termUseStat") <small>$strPeriodParam</small></h2> <!-- 모바일관리    기간별 사용통계-->
+
+<div class="chart2">
+	<div id="chartDivPeriod"></div>
+</div>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.mobile.resourceUpload.mapper.MobResourceUploadDao">
+
+	<!-- 페이징 처리 쿼리 부분 시작 -->
+	<sql id="head">
+    SELECT viewC.*
+    FROM (
+      SELECT
+            (ROW_NUMBER() OVER()) AS "RNUM"
+            ,COUNT(*) OVER() AS "TOT_CNT"
+            ,viewB.*
+      FROM (SELECT viewA.* FROM (
+    </sql>
+
+	<sql id="bottom">
+		) AS viewA
+		) AS viewB
+		) AS viewC
+		WHERE "RNUM" BETWEEN (#{PAGE_NUM} -1) * #{PAGE_SIZE} + 1 AND #{PAGE_NUM} * #{PAGE_SIZE}
+	</sql>
+	<!-- 페이징 처리 쿼리 부분 끝 -->
+
+	<!-- 조회 -->
+	<select id="SelectMobService" parameterType="String" resultType="kr.msp.admin.mobile.resourceUpload.dto.MobServiceDto">
+		SELECT	A."SVC_ID"
+	           	, A."APP_ID"
+	           	, A."SVC_NM"
+		FROM  	"TB_SVC" AS A,
+	           	"TB_SVC_AUTH" AS B,
+	           	"TB_SYS_USER_AUTH_GRP" AS C,
+	          	"TB_MOB_SVC" AS D
+		WHERE  	A."SVC_ID" = B."SVC_ID"
+	           	AND  B."AUTH_GRP_ID" = C."AUTH_GRP_ID"
+	           	AND  C."USER_ID" = #{S_ID_USER}
+	           	AND  A."SVC_ID" = D."SVC_ID"
+	           	AND D."USE_YN" = 'Y'
+	</select>
+	
+	<insert id="InsertRscTemp" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto" >
+		INSERT INTO	"TB_MOB_RSC_TEMP_FILE" (
+			"RSC_FILE_IDX"
+			, "FILE_NM"
+			, "FILE_PATH"
+			, "FILE_EXT"
+			, "FILE_SIZE"
+			, "REG_DTTM"
+			, "STS_CD"
+			, "SVC_ID" )
+		VALUES(
+			NEXTVAL('"SEQ_TB_MOB_RSC_TEMP_FILE"')
+			, #{FILE_NM}
+			, #{FILE_PATH}
+			, #{FILE_EXT}
+			, #{FILE_SIZE}
+			, now()
+			, #{STS_CD}
+			, CAST(#{SVC_ID} AS BIGINT))
+	</insert>
+	
+	<delete id="DeleteRscTemp" parameterType="String">
+	    DELETE FROM "TB_MOB_RSC_TEMP_FILE" WHERE "SVC_ID" = CAST(#{SVC_ID} AS BIGINT)
+	</delete>
+	
+	<select id="SelsectResourceSummary" resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+	    SELECT 
+	    	A."FILE_EXT"
+	    	, A."EXT_CONT"
+	    	, CASE WHEN B."FILE_EXT" is NULL THEN 'X' ELSE 'O' END AS "EXT_USE"
+	    FROM 
+	    	( SELECT 
+				"FILE_EXT"
+				, COUNT("FILE_EXT") AS "EXT_CONT"
+			FROM "TB_MOB_RSC_TEMP_FILE"
+			WHERE 
+				"SVC_ID" = CAST(#{SVC_ID} AS BIGINT)
+			GROUP BY "FILE_EXT"
+			) AS A LEFT JOIN "TB_MOB_RSC_EXT" AS B
+				ON A."FILE_EXT" = B."FILE_EXT"
+	</select>
+	
+	<select id="SelectDeleteTempResSummay" resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto" parameterType="java.util.HashMap" >
+	    SELECT 
+	    	"RSC_FILE_IDX"
+			, "FILE_PATH"
+			, "FILE_NM"
+			, "FILE_EXT"
+			, "FILE_SIZE"
+			, "STS_CD"
+			, "SVC_ID"
+	    FROM 
+	    	"TB_MOB_RSC_TEMP_FILE"
+	    WHERE 
+	    	"SVC_ID" = #{SVC_ID}
+	    	AND "FILE_EXT" IN
+	    	<foreach item="FILE_EXT" index="index" collection="FILE_EXT" open="(" separator="," close=")">
+				#{FILE_EXT}
+			</foreach>
+	</select>
+	
+	<delete id="DeleteTempResSummay" parameterType="java.util.HashMap" >
+	    DELETE FROM 
+	    	"TB_MOB_RSC_TEMP_FILE"
+	    WHERE 
+	    	"SVC_ID" = CAST(#{SVC_ID} AS BIGINT)
+	    	AND "FILE_EXT" IN
+	    	<foreach item="FILE_EXT" index="index" collection="FILE_EXT" open="(" separator="," close=")">
+				#{FILE_EXT}
+			</foreach>
+	</delete>
+	
+	<select id="SelsectResourceTree"  parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto"  resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+		SELECT * FROM "TB_MOB_RSC_TEMP_FILE"
+		where "SVC_ID" = CAST(#{SVC_ID} AS BIGINT)
+	</select>
+	
+	<select id="SelectDeleteTempResTree" resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto" parameterType="java.util.HashMap" >
+	    SELECT 
+	    	"RSC_FILE_IDX"
+			, "FILE_PATH"
+			, "FILE_NM"
+			, "FILE_EXT"
+			, "FILE_SIZE"
+			, "STS_CD"
+			, "SVC_ID"
+	    FROM 
+	    	"TB_MOB_RSC_TEMP_FILE"
+	    WHERE 
+	    	"RSC_FILE_IDX" IN
+	    	<foreach item="RSC_FILE_IDX" index="index" collection="RSC_FILE_IDX" open="(" separator="," close=")">
+				#{RSC_FILE_IDX}
+			</foreach>
+	</select>
+	
+	<delete id="DeleteTempResTree" parameterType="java.util.HashMap" >
+	    DELETE FROM 
+	    	"TB_MOB_RSC_TEMP_FILE"
+	    WHERE 
+	    	"RSC_FILE_IDX" IN
+	    	<foreach item="RSC_FILE_IDX" index="index" collection="RSC_FILE_IDX" open="(" separator="," close=")">
+				CAST(#{RSC_FILE_IDX} AS BIGINT)
+			</foreach>
+	</delete>
+
+    <select id="ChkRSCFileList" parameterType="java.lang.String" resultType="java.util.HashMap">
+        SELECT
+        "FILE_PATH"
+        FROM
+        "TB_MOB_RSC_FILE"
+        WHERE
+        "SVC_ID" = CAST(#{SVC_ID} AS BIGINT)
+    </select>
+
+	<select id="SelsectResourceTempCount" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto" resultType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+	    /* MobileResourceUpdateSql - SelsectResourceTempCount */
+	    SELECT 
+	    	*
+	    FROM 
+	    	"TB_MOB_RSC_FILE"
+	    WHERE
+	    	"SVC_ID" = CAST(#{SVC_ID} AS BIGINT)
+	    	AND "FILE_PATH" = #{FILE_PATH}
+	</select>
+	
+	<insert id="InsertResourceTemp" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+		/* MobileResourceUpdateSql - InsertResourceTemp */
+		INSERT INTO	"TB_MOB_RSC_FILE"
+			( "RSC_FILE_IDX"
+			, "RSC_ID"
+			, "FILE_PATH", "FILE_NM"
+			, "FILE_EXT", "FILE_SIZE"
+			, "REG_DTTM", "MOD_DTTM"
+			, "DEL_YN"
+			, "STS_CD"
+			, "SVC_ID" )
+		VALUES
+			( NEXTVAL('"SEQ_TB_MOB_RSC_FILE"')
+			, NEXTVAL('"SEQ_RSC_ID"')
+			, #{FILE_PATH}
+			, #{FILE_NM}
+			, #{FILE_EXT}
+			, #{FILE_SIZE}
+			, now()
+			, now()
+			, 'N'
+			, #{STS_CD}
+			, CAST(#{SVC_ID} AS BIGINT) )
+	</insert>
+	
+	<update id="UpdateResourceTemp" parameterType="kr.msp.admin.mobile.resourceUpload.dto.ResourceFileDto">
+		/* MobileResourceUpdateSql - UpdateResourceTemp */
+	    UPDATE "TB_MOB_RSC_FILE"
+		<set>
+			"MOD_DTTM" = now() ,
+				"FILE_SIZE" = #{FILE_SIZE},
+				"STS_CD" = #{STS_CD},
+				"DEL_YN" = 'N'
+		</set>
+		WHERE 
+			"SVC_ID" = CAST(#{SVC_ID} AS BIGINT)
+	    	AND "FILE_PATH" = #{FILE_PATH}
+	</update>
+	
+	<select id="SelectMobExtAll" resultType="kr.msp.admin.mobile.resourceConfig.dto.ResourceExtDto">
+	    SELECT 
+	   		"FILE_EXT"
+			, "REG_ID"
+			, "MOD_ID"
+			, "REG_DTTM"
+			, "MOD_DTTM"
+			, "EXE_DTL"
+		FROM 
+			"TB_MOB_RSC_EXT"
+	</select>
+
+</mapper>

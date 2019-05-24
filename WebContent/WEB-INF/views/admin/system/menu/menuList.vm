@@ -1,0 +1,30 @@
+<table class="tbl-nb full-width" style="width:100%;">
+	<tr class="menu_row">
+		<td class="menu_level_0" style="cursor:pointer; text-align:left;">
+			<b>TOP</b>
+			<input type="hidden" class="ID_MENU" value="" />
+		</td>
+	</tr>
+#foreach( $menu in $menuList )
+	<tr class="menu_row" id="mu$!menu.ID_MENU">
+	#if($menu.MENU_LEVEL == 1)
+		<td class="menu_level_1" style="cursor:pointer; text-align:left;padding-left:10px;">
+			<b>$!menu.NM_MENU</b>
+			<input type="hidden" class="ID_MENU" value="$!menu.ID_MENU"/>
+		</td>
+	#elseif($menu.MENU_LEVEL == 2)
+		<td class="menu_level_2" style="cursor:pointer; text-align:left;padding-left:30px;" > 
+			<img src="$!{CONTEXT_PATH}/resources/images/common/icon_menu2.gif" alt=""/>
+			$!menu.NM_MENU
+			<input type="hidden" class="ID_MENU" value="$!menu.ID_MENU"/>
+		</td>
+	#elseif($menu.MENU_LEVEL == 3)
+		<td class="menu_level_3" style="cursor:pointer; text-align:left;padding-left:50px;"> 
+			<img src="$!{CONTEXT_PATH}/resources/images/common/icon_menu_dot2.gif" class="slash" alt=""/>
+			$!menu.NM_MENU
+			<input type="hidden" class="ID_MENU" value="$!menu.ID_MENU"/>
+		</td>
+	#end
+	</tr>
+#end
+</table>

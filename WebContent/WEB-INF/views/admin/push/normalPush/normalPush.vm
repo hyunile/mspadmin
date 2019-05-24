@@ -1,0 +1,1087 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery-te-1.4.0.css" >
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery-te-1.4.0.js"></script>
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/ajaxfileupload.js"></script>
+<style>
+    .backgroundPopupDiv{
+        display:none;
+        position:fixed;
+        _position:absolute; /* hack for internet explorer 6*/
+        height:100%;
+        width:100%;
+        top:0px;
+        left:0px;
+        z-index:100;
+        text-align: center;
+    }
+</style>
+<script type="text/javascript">
+
+	$(document).ready(function() {
+		jQuery("textarea[name=WEBEDIT]").jqte();
+		
+		$.datepicker.setDefaults($.datepicker.regional['ko']);
+		//달력 구현
+	    $("#DATE_VIEW_S").datepicker( {
+	        regional        : "ko",
+	        dateFormat      : "yy.mm.dd",
+	        showOn          : "button",
+	        buttonImage     : CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+	        buttonImageOnly : true,
+	        altField        : "#DATE_VIEW_S",
+	        altFormat       : "yy.mm.dd"
+	    });
+	
+	    //달력 구현
+	    $("#DATE_VIEW_E").datepicker( {
+	            regional        : "ko",
+	            dateFormat      : "yy.mm.dd",
+	            showOn          : "button",
+	            buttonImage     : CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+	            buttonImageOnly : true,
+	            altField        : "#DATE_VIEW_E",
+	            altFormat       : "yy.mm.dd"
+	    });
+	    
+	    //달력 구현
+	    $("#dateViewSendDate").datepicker( {
+	            regional        : "ko",
+	            dateFormat      : "yy.mm.dd",
+	            showOn          : "button",
+	            buttonImage     : CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+	            buttonImageOnly : true,
+	            altField        : "#DATE_VIEW_E",
+	            altFormat       : "yy.mm.dd"
+	    });
+	    
+	    //달력 구현
+	    $("#DATE_VIEW_EXPIRE_DATE").datepicker( {
+	            regional        : "ko",
+	            dateFormat      : "yy.mm.dd",
+	            showOn          : "button",
+	            buttonImage     : CONTEXT_PATH + "/resources/images/common/icon_calen.gif",
+	            buttonImageOnly : true,
+	            altField        : "#DATE_VIEW_E",
+	            altFormat       : "yy.mm.dd"
+	    });
+	    
+	    // 발송 시간 설정 라디오 버튼 핸들러
+	    $("input[name=rdoMsgSendTime]").change(function() {
+	    	if($(this).val()==0){
+	    		$("#tdSetTime").css("display","none");
+	    	}else{//1
+	    		$("#tdSetTime").css("display","");
+	    	}
+	    });
+	    
+	    fn_initPage();
+	    
+	    
+	});
+	
+	function fn_initPage(){
+		//os선택 라디오 버튼 초기화.
+		$("#idRdoMsgType0").prop("checked", true);
+		
+		//os선택 라디오 버튼 초기화.
+		$("#idRdoOsALL").prop("checked", true);
+		//받는사람 라디오 버튼 초기화.
+		$("#idRdoMsgTargetType0").prop("checked", true);
+		//즉시발송 라디오 버튼 초기화.
+		$("#idrdoMsgSendTime0").prop("checked", true);
+		$("#tdSetTime").css("display","none");
+
+		//받는사람 TR 초기화.
+		fn_changeMsgTargetType(0);
+		//메세지 입력 방식 초기화
+		fn_changeMsgInputType(0);
+		
+		fn_setMsgSender("");
+		
+		fn_changeRdoMsgTargetListType(0);
+		$("#trMsgTargetListLater").prop("checked", true);
+		
+		selMsgCategoryOnChangeHandler(0);
+
+	}
+	
+	//타게팅 추출 조건 삭제
+	function fn_delExtractCondition(trId){
+		$("#"+trId).remove();
+		var totCnt = $(".trTargetCondition").length;
+		$("#thTargetRowspan").attr("rowspan", parseInt(totCnt)+1);
+		
+	}
+	
+	function fn_changeMsgInputType(inputType){
+		if(inputType == 0){
+			$(".trMsgInputTypeText").css("display","");
+			$(".trMsgInputTypeRich").css("display","none");
+		}else if(inputType == 1){
+			$(".trMsgInputTypeText").css("display","none");
+			$(".trMsgInputTypeRich").css("display","");
+		}
+	}
+	
+	// 받는 사람 TR 변경
+	function fn_changeMsgTargetType(val){
+		if(val == 0){
+			$(".trMsgTargetType1").css("display","none");
+			$(".trMsgTargetType3").css("display","none");
+		}else if(val == 1){
+			$(".trMsgTargetType1").css("display","");
+			$(".trMsgTargetType3").css("display","none");
+		}else if(val == 2){
+			$(".trMsgTargetType1").css("display","none");
+			$(".trMsgTargetType3").css("display","none");
+		}else if(val == 3){
+			$(".trMsgTargetType1").css("display","none");
+			$(".trMsgTargetType3").css("display","");
+		}
+	}
+	
+	function fn_changeRdoMsgTargetListType(val){
+		if(val == 0){
+			$(".trPreTargetList").css("display","none");
+		}else if(val == 1){
+			$(".trPreTargetList").css("display","");
+		}
+	}
+	
+	//발송자 선택 팝업 호출
+	function fn_msgSender(){
+        var url = CONTEXT_PATH + "/admin/commonPush/popup/msgSender";
+    	var type = "GET";
+    	var target = $("#windowPop");
+    	var whideh = 600;
+    	var data = "PAGE_NUM=" + 1;
+    	var title = '#springMessage("menu.push.sendManage.senderSet")';//"발송자 설정";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+	
+	
+	//발송자 선택적용.
+	function fn_setMsgSender(msgSender){
+		var lbl = $("#tdRegDt").find("#lblRegDt")
+		lbl.remove();
+		
+		var now = new Date();
+		var res = now.toISOString().slice(0,10);
+		$("#tdRegDt").append("<label id='lblRegDt'>" + res + " / " + msgSender + "</label>");
+		
+		$("#senderCode").val(msgSender);
+	}
+	
+	//대상자 선택
+	function fn_targetSelection(){
+		var appId = $("#selAppId").val();
+		var serviceCode = fn_getServiceCode();
+		
+		if(appId == ""){
+			alert("APP ID"+'#springMessage("menu.push.sendManage.alert.doChoose")'); //를 선택해 주십요.
+			return;
+		}
+		
+		if(serviceCode ==""){
+			alert('#springMessage("menu.push.sendManage.alert.sendTypeChoose")');  //발송유형을 선택해 주십요.
+			return;
+		}
+	
+        var url = CONTEXT_PATH + "/admin/commonPush/popup/targetSelection";
+    	var type = "GET";
+    	var target = $("#windowPop");
+    	var whideh = 800;
+    	var data = "PAGE_NUM=" + 1 + "&" + 
+				   "APPID=" + appId + "&" + 
+				   "SERVICECODE=" + serviceCode;
+    	var title = '#springMessage("menu.push.sendManage.targetPerson")';//"대상자 선택";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+	
+	//선택된 대상자 적용(사용자)
+	function fn_setTargetSelected_user(arrPsid, arrCuid, totCnt){
+		$("#lblTotCnt").text(totCnt + '#springMessage("common.text.personUnit")'); //명
+		
+		$("#userTargetType").val("U");
+		$("#userTargetCuids").val(arrCuid);
+		$("#userTargetPsids").val(arrPsid);
+	}
+	
+	//선택된 대상자 적용(그룹)
+	function fn_setTargetSelected_group(arrGroupSeq, totCnt){
+		$("#lblGroup").text(arrGroupSeq.length + '#springMessage("common.text.objectUnit")'); //개
+		$("#lblTotCnt").text(totCnt + '#springMessage("common.text.personUnit")'); //명
+		
+		$("#userTargetType").val("G");
+		$("#userTargetGroupSeqs").val(arrGroupSeq);
+	}
+	
+	
+	//템플릿 선택 팝업.
+	function fn_templateSelection(){
+        var url = CONTEXT_PATH + "/admin/commonPush/popup/template";
+    	var type = "GET";
+    	var target = $("#windowPop");
+    	var whideh = 850;
+    	var data = "PAGE_NUM=" + 1;
+    	var title = '#springMessage("menu.push.sendManage.template")'+' '+'#springMessage("menu.push.sendManage.load")';//"템플릿 불러오기";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+	
+	// 템플릿 불러오기로 가져온 템플릿의 원본 코드
+	// 수정이 일어났는지 여부를 판단하는데 사용.
+	var originalTemplateCode = '';
+	
+	function fn_displayTempData(tempData){
+		selMsgCategoryOnChangeHandler(tempData.CATEGORY_TYPE);
+		document.getElementById("selMsgCategory").selectedIndex = tempData.CATEGORY_TYPE;
+		originalTemplateCode = tempData.TEMPLATE_CODE;
+		$("#txtTempleteTitle").val(tempData.TEMPLATE_TITLE);
+		$("#txtMessage").val(tempData.MESSAGE);
+		$("#txtExt").val(tempData.SUB_MESSAGE);
+		$("#txtRichExt").jqteVal(tempData.WEBEDIT);
+		$("#txtUrl").val(tempData.IMAGE_URL);
+		$("#txtVideoUrl").val(tempData.VIDEO_URL);
+	}
+	
+	function fn_saveTempData(){
+		// 템플릿 코드가 입력되었는지 확인 후 업로드 실행.
+		if($("#txtTempleteTitle").val()==null || $("#txtTempleteTitle").val()==''){
+			alert('#springMessage("menu.push.sendManage.alert.templateIn")'); //템플릿명을 입력해 주세요.
+			return;
+		}
+		var templateTitle = $("#txtTempleteTitle").val();
+		var message = $("#txtMessage").val();
+		var subMessage = $("#txtExt").val();
+		var webEdit = $("#txtRichExt").val();
+		var imageUrl = $("#txtUrl").val();
+		var videoUrl = $("#txtVideoUrl").val();
+		var categoryType = fn_getMsgType();
+		
+		var formData = new FormData();
+		formData.append("TEMPLATE_TITLE" , templateTitle );
+		formData.append("MESSAGE" , message );
+		formData.append("SUB_MESSAGE" , subMessage );
+		formData.append("WEBEDIT" , webEdit );
+		formData.append("IMAGE_URL" , imageUrl );
+		formData.append("VIDEO_URL" , videoUrl );
+		formData.append("CATEGORY_TYPE" , categoryType );
+		if($("input[name=IMAGE_FILE]")[0].files[0]){
+			formData.append("IMAGE_FILE" , $("input[name=IMAGE_FILE]")[0].files[0]);
+		}
+		
+		var url = CONTEXT_PATH + "/admin/push/template/regist";
+		// 템플릿 불러오기를 실행한 후 내용을 바꿨다면 업데이트를 호출한다.
+		if(originalTemplateCode != ''){
+			url = CONTEXT_PATH + "/admin/push/template/edit";
+			formData.append("TEMPLATE_CODE" , originalTemplateCode );
+		}
+		jQuery.ajax({
+			url:url,
+	        type:"POST",
+	        cache: false,
+	        contentType: false,
+	        processData: false,
+	        data:formData,
+	        dataType:"json",
+			success:function(data){
+				if(data.result > 0){
+					alert('#springMessage("menu.push.sendManage.alert.doSave")'); //저장했습니다.
+				}else{
+					alert('#springMessage("menu.push.sendManage.alert.processError")'); //처리 중 오류가 발생하였습니다.
+				}
+			},
+	        error:function(request,status,error){
+	            alert("code:"+request.status+"\n"+"error:"+error);
+	        }
+		});
+	}
+	
+	function fn_showTestSendPopUp(){
+		var appId = $("#selAppId").val();
+		var message = $("#txtMessage").val();
+		var senderCode = $("#senderCode").val(); 
+		var serviceCode = fn_getServiceCode();
+	
+		if(appId == ""){
+			alert("APP ID"+'#springMessage("menu.push.sendManage.alert.doChoose")'); //를 선택해 주십요.
+			return;
+		}
+		
+		if(serviceCode == ""){
+			alert('#springMessage("menu.push.sendManage.alert.sendPolicy")'); //발송정책 선택해 주십시오.
+			return;
+		}
+		
+		if(senderCode ==""){
+			alert('#springMessage("menu.push.sendManage.alert.sendInfoIn")'); //발송자 정보를 입력해 주세요.
+			return;
+		}
+		if(message == ""){
+			alert('#springMessage("menu.push.sendManage.alert.messageIn")'); //발송할 메세지를 입력해 주세요.
+			return;
+		}
+	
+	
+		var url = CONTEXT_PATH + "/admin/commonPush/popup/tester";
+    	var type = "GET";
+    	var target = $("#windowPop");
+    	var whideh = 850;
+    	var data = "PAGE_NUM=" + 1;
+    	var title = '#springMessage("menu.push.sendManage.testSend")';//"테스트 발송";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+	}
+	
+	function fn_sendTestPush(testerPsids, testerCuids){
+		var message = $("#txtMessage").val();
+		var appId = $("#selAppId").val();
+		var psids = testerPsids;
+		
+		var ext = $("#txtExt").val();
+		var categoryType = fn_getMsgType();
+		var webedit = categoryType==1 ? $("#txtRichExt").val() : undefined; // 웹페이지일 경우에만 값을 보냄
+		
+		var senderCode = $("#senderCode").val(); 
+		var serviceCode = fn_getServiceCode();
+		
+		if(appId == ""){
+			alert("APP ID"+'#springMessage("menu.push.sendManage.alert.doChoose")'); //를 선택해 주십요.
+			return;
+		}
+		
+		if(serviceCode == ""){
+			alert('#springMessage("menu.push.sendManage.alert.sendPolicy")'); //발송정책 선택해 주십시오.
+			return;
+		}
+		
+		if(senderCode ==""){
+			alert('#springMessage("menu.push.sendManage.alert.sendInfoIn")'); //발송자 정보를 입력해 주세요.
+			return;
+		}
+		if(message == ""){
+			alert('#springMessage("menu.push.sendManage.alert.messageIn")'); //발송할 메세지를 입력해 주세요.
+			return;
+		}
+		
+		url = CONTEXT_PATH + "/admin/push/normalPush/sendNorPushMsg";
+		
+		var imageUrl = $("#txtUrl").val();
+		
+		var data = {
+				   "MESSAGE" : message ,
+				   "USER_TYPE" : 'EACH' ,
+				   "EXT" : ext,
+				   "WEBEDIT" : webedit,
+				   "PRIORITY" : '5',
+				   "APPID" : appId,
+				   "DB_IN" : 'N',
+				   "PSID_SELS" : psids,
+				   "CUIDS" : testerCuids,
+				   "SEND_TYPE" : 'I',
+				   "SERVICECODE" : '0001',
+				   "SENDERCODE" : senderCode,
+				   "MSGTYPE" : categoryType,
+				   "imageUrl" : imageUrl
+				   };
+		
+		jQuery.ajaxFileUpload({
+    			url           : url,
+	    		secureuri     : false,
+				cache: false,
+	    		fileElementId :'IMAGE_FILE',
+				dataType	  : 'json', 
+	    		data          : data,
+	    		contentType   : 'multipart/form-data',
+    			success:function(returnData){
+    				if(returnData.resultCode=="0000"){ //성공
+    					fn_closePopup();
+		            	alert(returnData.resultMsg);
+		            }else{ //실패
+		            	fn_closePopup();
+		                alert('#springMessage("menu.push.sendManage.alert.sendFail")'+' '+'#springMessage("menu.push.sendManage.errorMsg")'+':['+returnData.resultMsg+']'); //발송에 실패하였습니다.    //에러메시지
+		            }
+    			}
+		});
+	}
+	
+	function fn_sendMsg(isApproval){
+		var adminTitle = $("#txtAdminTitle").val();
+		var message = $("#txtMessage").val();
+		var appId = $("#selAppId").val();
+		var userType = fn_getUSERTYPE();
+		var cuids = fn_getCuids();
+		var groupSeqs = $("#userTargetGroupSeqs").val();
+		
+		var priority = fn_getPRIORITY();
+		var dbIn = fn_getDB_IN();
+		
+		var delaySecond;
+		var splitMsgCnt;
+		if(fn_getSplitSend() == 1){
+			delaySecond= $("#selDelaySecond").val();
+			splitMsgCnt= $("#selSplitMsgCnt").val();
+		}
+	
+		var ext = $("#txtExt").val();
+		var categoryType = fn_getMsgType();
+		var webedit = categoryType==1 ? $("#txtRichExt").val() : ""; // 웹페이지일 경우에만 값을 보냄
+		
+		var reservedate;
+		var sendDate;
+		var sendHour;
+		var sendMinute;
+		var sendType = fn_getSendType();
+		if(sendType =="R"){
+			sendDate = $("#dateViewSendDate").val();
+			sendHour = $("#txtSendHour").val(); 
+			sendMinute = $("#txtSendMinute").val(); 
+		}
+		
+		var serviceCode = fn_getServiceCode();
+		var senderCode = $("#senderCode").val(); 
+		var imageUrl = $("#txtUrl").val();
+		var videoUrl = $("#txtVideoUrl").val();
+		
+		var isSecure = fn_getSecure();
+		var isDozmode = fn_getDozmode();
+		
+		if(appId == ""){
+			alert("APP ID"+'#springMessage("menu.push.sendManage.alert.doChoose")'); //를 선택해 주십요.
+			return;
+		}
+		
+		if(serviceCode == ""){
+			alert('#springMessage("menu.push.sendManage.alert.sendPolicy")'); //발송정책 선택해 주십시오.
+			return;
+		}
+		
+		if(senderCode ==""){
+			alert('#springMessage("menu.push.sendManage.alert.sendInfoIn")'); //발송자 정보를 입력해 주세요.
+			return;
+		}
+		
+		if(message == ""){
+			alert('#springMessage("menu.push.sendManage.alert.messageIn")'); //발송할 메세지를 입력해 주세요.
+			return;
+		}
+		
+		var formData = new FormData();
+		formData.append("ADMINTITLE" , adminTitle);
+		formData.append("MESSAGE" , message );
+		formData.append("USER_TYPE" , userType); 
+		formData.append("EXT" , ext);
+		formData.append("WEBEDIT" , webedit);
+		formData.append("PRIORITY" , priority);
+		formData.append("APPID" , appId);
+		formData.append("DB_IN" , dbIn);
+		formData.append("CUIDS" , cuids);
+		formData.append("SEND_TYPE" , sendType);
+		formData.append("SEND_DATE" , sendDate);
+		formData.append("SEND_HOUR" , sendHour);
+		formData.append("SEND_MINUTE" , sendMinute);
+		formData.append("SERVICECODE" , serviceCode);
+		formData.append("SENDERCODE" , senderCode);
+		formData.append("GROUPSEQS" , groupSeqs);
+		formData.append("MSGTYPE" , categoryType);
+		formData.append("videoUrl" , videoUrl);
+		formData.append("imageUrl" , imageUrl);
+		formData.append("SECURE" , isSecure);
+		formData.append("DOZ_GCM_SEND" , isDozmode);
+		
+		if($("input[name=CSV_FILE]")[0].files[0]){
+			formData.append("CSV_FILE" , $("input[name=CSV_FILE]")[0].files[0]);
+		}
+		//
+		if(categoryType != 0){
+			if($("input[name=IMAGE_FILE]")[0].files[0]){
+				formData.append("IMAGE_FILE" , $("input[name=IMAGE_FILE]")[0].files[0]);
+			}
+		}
+		
+		var url;
+		if(isApproval == 1){
+			url = CONTEXT_PATH + "/admin/push/normalPush/sendNorPushMsgApproval";
+		}else{
+			url = CONTEXT_PATH + "/admin/push/normalPush/sendNorPushMsg";
+		}
+
+		document.getElementById("loading-indicator").style.display="block";
+		jQuery.ajax({
+        url:url,
+        type:"POST",
+        cache: false,
+        contentType: false,
+        processData: false,
+        data:formData,
+        dataType:"json",
+        success:function(returnData){
+        	document.getElementById("loading-indicator").style.display="none";
+            if(returnData.resultCode=="0000"){ //성공
+		    	var ReceiverHostUrl = "";
+		    	if(returnData.bodyData!=undefined){
+		            if(returnData.bodyData.HOST_URL!=undefined){
+		                ReceiverHostUrl = returnData.bodyData.HOST_URL;
+		            }
+		            if(returnData.bodyData.SENDMSG_SEQNO != undefined){
+		            	sendDetailInfoPop(returnData.bodyData.SENDMSG_SEQNO,ReceiverHostUrl);
+		            }else
+		            	alert('#springMessage("menu.push.sendManage.alert.sendRequest")'); //"발송 요청되었습니다."
+		    	}else{
+		    		// 승인 요청을 위한 DB insert만 성공하여 bodyData 구조가 없을 경우(발송 메시지 정보가 없을 경우)
+		    		alert('#springMessage("menu.push.sendManage.alert.sendRequest")'+'#springMessage("menu.push.sendManage.alert.waitApprove")'); //"발송 요청되었습니다. 승인을 기다려 주세요."
+		    	}
+            
+//              alert(returnData.resultMsg);
+            }else{ //실패
+                alert(returnData.resultMsg);
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+        	document.getElementById("loading-indicator").style.display="none";
+            alert(errorThrown);
+        }
+        });
+	}
+	
+    function fn_getSecure(){
+    	var result = 'N';
+    	if($("#chkSecure").is(":checked")){
+    		result = 'Y';
+    	}
+    	return result;
+    }
+    
+    function fn_getDozmode(){
+    	var result = 'N';
+    	if($("#chkDozmode").is(":checked")){
+    		result = 'Y';
+    	}
+    	return result;
+    }
+
+	function fn_getCuids(){
+		var result = "";
+		if($("#idRdoMsgTargetType1").is(":checked")){
+			result =$("#userTargetCuids").val();
+		} else if($("#idRdoMsgTargetType2").is(":checked")){
+			result =$("#preTargetCuids").val();
+		}
+		return result;
+	}
+	
+	function fn_getMsgType(){
+    	return $("#selMsgCategory").val();
+    }
+    
+    
+    function fn_getUSERTYPE(){
+    	var result;
+    	if($("#idRdoMsgTargetType0").is(":checked")){
+    		//전체, 로그인 사용자, 비 로그인 사용자
+    		
+    		var selectedIdx = $("#selAllMsgTarget").val();
+    		if(selectedIdx == 0){
+    			result = "ALL";
+    		}else if(selectedIdx == 1){
+    			result = "MEMBER";
+    		}else if(selectedIdx == 2){
+    			result = "GUESTS";
+    		}
+    	}
+    	else if($("#idRdoMsgTargetType1").is(":checked")){
+    		//선택(사용자, 그룹)
+    		if($("#userTargetType").val() == "U"){
+    			result = "EACH";
+    		}else if($("#userTargetType").val() == "G"){
+    			result = "GROUP";
+    		}
+    		
+    	}
+    	else if($("#idRdoMsgTargetType2").is(":checked")){
+    		//타게팅
+    		result = "EACH";
+    	}
+    	else if($("#idRdoMsgTargetType3").is(":checked")){
+    		//엑셀파일 업로드
+    		result = "CSV";
+    	}
+    	return result;
+    }
+    
+    function fn_getPRIORITY(){
+    	var result = 1;
+    	if($("#chkPriority").is(":checked")){
+    		result = 5;
+    	}
+    	return result;
+    }
+    
+    function fn_getDB_IN(){
+    	var result = 'N';
+    	if($("#chkDbin").is(":checked")){
+    		result = 'Y';
+    	}
+    	return result;
+    }
+    
+    
+    function fn_getSplitSend(){
+    	var result = 0;
+    	if($("#chkSplitSend").is(":checked")){
+    		result = 1;
+    	}
+    	return result;
+    }
+    
+    function fn_getAdminTitle(){
+    	var result;
+    	result = result = $("#txtAdminTitle").val();
+    	return result;
+    }
+    
+    function fn_getSendType(){
+    	var result = "I";
+    	if($("#idrdoMsgSendTime0").is(":checked")){
+    		result = "I";
+    	}else if($("#idrdoMsgSendTime1").is(":checked")){
+    		result = "R";
+    	}
+    	return result;
+    }
+    
+    function fn_getServiceCode(){
+    	var result;
+    	result = result = $("#serviceCodeList").val();
+//    	if($("#idRdoOsALL").is(":checked")){
+//    		result = "0001";
+//    	}else if($("#idRdoOsAndroid").is(":checked")){
+//    		result = "0002";
+//    	}else if($("#idRdoOsIOS").is(":checked")){
+//    		result = "0003";
+//    	}
+    	return result;
+    }
+	
+	function fn_goPreview(){
+		var categoryType = fn_getMsgType();
+		var formData = new FormData(document.getElementById('frmList'));
+		formData.append("MESSAGE", $("#txtMessage").val());
+	 	formData.append("EXT", $("#txtExt").val());
+ 		//'기본' 카테고리의 경우  이미지 파일을 넘기지 않게 함.
+	 	if(categoryType == 0){
+	 		formData.delete("IMAGE_FILE");
+	 	}else{
+	 		formData.append("imageUrl", $("#txtUrl").val());
+	 	}
+ 		
+ 		//'웹페이지' 카테고리가 아닌 경우 WEBEDIT textarea의 값을 넘기지 않게 함.
+	 	if(categoryType != 1)
+	 		formData.delete("WEBEDIT");
+	 		
+	 	previewPop(formData,"/admin/commonPush/popup/preview");
+	}
+	
+	
+	function previewPop(data,POP_URL){
+		var url = CONTEXT_PATH + POP_URL;
+	    var type = "POST";
+	    var target = $("#windowPop");
+	    var width = 400;
+	    var title = ' #springMessage("menu.push.sendManage.preview")';//"미리보기";
+	    //fn_getCommonPopupDiv( url, type, data , target , width, title );
+	    target.dialog({
+			autoOpen: false,
+			modal   : true,
+			width   : width,
+			height  : "auto",
+			title   : title,
+			open    : function(){ fn_commondialogDesign(target.attr("id")); }//타이틀 및 닫기버튼디자인적용(ID전달 필요)
+		});
+		var AjaxHTML = $.ajax({
+								url: url ,
+								type: type ,
+								data: data ,
+								dataType: "html" ,
+								async: false ,
+								cache:false, 
+								contentType: false,
+								processData: false
+							}).responseText;
+		if(target)
+		{
+			target.html(AjaxHTML);
+//        	target[0].innerHTML=AjaxHTML;
+		}
+		
+		target.dialog('open');
+	} 
+
+
+//발송정보 상세
+function sendDetailInfoPop(SEQNO,HOST_URL){
+    var url = CONTEXT_PATH + "/admin/push/sendDatailPop";
+    var type = "POST";
+    var data = "SEQNO=" + SEQNO + "&HOST_URL=" + HOST_URL;
+    var target = $("#windowPop");
+    var whideh = 800;
+    var title = '#springMessage("menu.push.sendManage.sendInfoDetail")'; //"발송정보 상세"
+    fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+} 	
+
+
+function selMsgCategoryOnChangeHandler(msgCategory){
+	if(msgCategory == "0"){
+		$(".trMsgInputImage").css("display","none");
+		$(".trMsgInputTypeRich").css("display","none");
+		$(".trMsgInputVideoUrl").css("display","none");
+	}else if(msgCategory == "1"){
+		$(".trMsgInputImage").css("display","");
+		$(".trMsgInputTypeRich").css("display","");
+		$(".trMsgInputVideoUrl").css("display","none");
+	}else if(msgCategory == "2"){
+		$(".trMsgInputImage").css("display","");
+		$(".trMsgInputTypeRich").css("display","none");
+		$(".trMsgInputVideoUrl").css("display","");
+	}else if(msgCategory == "3"){
+		$(".trMsgInputImage").css("display","");
+		$(".trMsgInputTypeRich").css("display","none");
+		$(".trMsgInputVideoUrl").css("display","none");
+	}
+}
+    	
+</script>
+
+<div id="loading-indicator" class="backgroundPopupDiv">
+    <img alt="loading" src= "$RESOURCES_PATH/images/loading.gif" style="margin-top: 15%";/>
+</div>
+
+
+<div class="contents-area">
+	<form name="frmList" id="frmList" enctype="multipart/form-data">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.push.sendManage")</span>			<!-- 발송 관리 -->
+		<span>#springMessage("menu.push.sendManage.normalpush")</span>	<!-- 일반 푸시 발송 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.push.sendManage.normalpush")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+	
+	<table class="tbl full-width">
+		<colgroup>
+       		<col style="width:140px;"/><col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/>
+     		</colgroup>
+     		<thead>
+     			<tr>
+       			<th colspan="4" align="left">01. #springMessage("menu.push.sendManage.sendInfo")</th> <!-- 발송 정보 -->
+     			</tr>
+     		</thead>
+			<tbody>
+				<tr>
+					<th><label class="redNotice">APP #springMessage("common.select.choose")</label></th> <!-- 선택 -->
+					<td colspan="3">
+						<select name="APPID" id="selAppId">
+								<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+								#foreach( $pushService in $pushServiceList )
+								<option value="$!pushService.APPID">$!pushService.APPNAME</option>
+								#end
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th><label class="redNotice">#springMessage("menu.mobile.deploy.date") / #springMessage("menu.stats.push.sender")</label></th> <!-- 등록일 / 발송자 -->
+					<td id="tdRegDt" colspan="2">
+						<input type="hidden" id="senderCode" />
+					</td>
+					<td>
+						<a href="javascript:void(0)" onClick="fn_msgSender()" class="tbl-btn1">#springMessage("menu.push.sendManage.senderSet")</a>	<!-- 발송자 설정 -->
+					</td>
+				</tr>
+
+				<tr style="display: none">
+					<th>#springMessage("menu.push.sendManage.messageName")</th> <!-- 메세지 명  -->
+					<td colspan="3"><input id="txtAdminTitle" class="width100" type="text" /></td>
+				</tr>
+			</tbody>
+		</table>
+		
+		
+	    <br/>
+	    <table class="tbl full-width">
+	    	<colgroup>
+				<col style="width:140px;"/><col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/>
+				<col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/>
+			</colgroup>
+			<thead>
+				<tr>
+					<th colspan="10" align="left">02. #springMessage("menu.push.sendManage.targetChoose")</th> <!-- 대상선택 -->
+		        </tr>
+		    </thead>
+		    <tbody>    
+		        <tr>
+		        	<th><label class="redNotice">#springMessage("menu.push.sendManage.sendPolicy")</label></th> <!-- 발송정책 선택 -->
+		        	<td colspan="9">
+		        		<select id="serviceCodeList">
+							<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							#foreach( $sendType in $sendTypeList )
+							<option value="$!sendType.SERVICECODE">$!sendType.SERVICECODE</option>
+							#end
+						</select>
+		        	</td>
+		        </tr>
+		        <tr>
+		        	<th>#springMessage("menu.push.sendManage.to")</th> <!-- 받는사람 -->
+		        	<td colspan="3">
+		    			<input type="radio" id="idRdoMsgTargetType0" name="rdoMsgTargetType" value="0" onClick="fn_changeMsgTargetType(this.value)"><label for="idRdoMsgTargetType0"></label>
+		        		<select id="selAllMsgTarget">
+		        			<option value="0">#springMessage("menu.push.sendManage.allUser")</option> <!-- 전체 사용자 -->
+		        			<option value="1">#springMessage("menu.push.sendManage.loginUser")</option> <!-- 로그인 사용자 -->
+		        			<option value="2">#springMessage("menu.push.sendManage.noLoginUser")</option> <!-- 비 로그인 사용자 -->
+						</select>
+					</td>
+					<td colspan="3">	
+						<input type="radio" id="idRdoMsgTargetType1" name="rdoMsgTargetType" value="1" onClick="fn_changeMsgTargetType(this.value)"> 
+						<label for="idRdoMsgTargetType1"></label>
+						#springMessage("common.select.choose")(#springMessage("common.text.user")/#springMessage("common.text.group")) <!-- 선택(사용자/그룹) -->
+					</td>
+					<td colspan="3">	
+						<input type="radio" id="idRdoMsgTargetType3" name="rdoMsgTargetType" value="3" onClick="fn_changeMsgTargetType(this.value)"> 
+						<label for="idRdoMsgTargetType3"></label>
+						#springMessage("menu.push.sendManage.excelUpload")<!-- 엑셀파일 업로드  -->
+		        	</td>
+		        </tr>
+		        
+		        <!-- 선택(사용자/그룹) -->
+		        <tr class="trMsgTargetType1">
+		        	<th>#springMessage("menu.push.sendManage.targetPerson")</th> <!-- 대상자 선택 -->
+		        	<td>
+		        		<label>#springMessage("common.text.group")</label> <!-- 그룹  -->
+		        	</td>
+		        	<td>	
+						<label id="lblGroup"></label>
+					</td>
+					<td colspan="2">				
+						<label >#springMessage("menu.push.sendManage.allTarget")</label> <!-- 총 대상자 -->
+					</td>	
+					<td>	
+						<label id="lblTotCnt"></label>
+					</td>
+	<!--				
+					<td>
+						<button type="button" class="btn_basic">대상자 확인</button>
+					</td>
+	-->				
+					<td colspan="4">
+						<a href="javascript:void(0)" onClick="fn_targetSelection()" class="tbl-btn1">#springMessage("menu.push.sendManage.targetPerson")</a>	<!-- 대상자 선택 -->
+						
+						<input type="hidden" id="userTargetType"/>
+						<input type="hidden" id="userTargetCuids"/>
+						<input type="hidden" id="userTargetPsids"/>
+						<input type="hidden" id="userTargetGroupSeqs"/>
+					</td>
+		        </tr>
+	
+				<!-- 엑셀파일 업로드 -->
+				<tr class="trMsgTargetType3">
+					<th>#springMessage("menu.push.sendManage.fileUpload")</th> <!-- 파일 업로드 -->
+					<td colspan="9">
+						<input type="file" id="CSV_FILE" name="CSV_FILE"/>
+					</td>
+				</tr>
+			<tbody>
+	    </table>
+	    
+	    <br/>
+	    
+      	<table class="tbl full-width">
+			<colgroup>
+				<col style="width:140px;"/><col style="width:auto;"/><col style="width:120px;"/>
+			</colgroup>
+	  		<thead>
+	    		<tr>
+	    			<th colspan="2" align="left">03. #springMessage("menu.push.sendManage.messageIn")</th> 	<!-- 메세지 입력 -->
+	    			<th>
+	    				<select id="selMsgCategory" onchange="selMsgCategoryOnChangeHandler(this.value)">
+	    					<option value="0">#springMessage("common.text.base")</option> <!-- 기본 -->
+            				<option value="1">#springMessage("common.text.webPage")</option> <!-- 웹페이지 -->
+            				<option value="2">#springMessage("common.text.video")</option> <!-- 동영상 -->
+            				<option value="3">#springMessage("common.text.image")</option> <!-- 이미지 -->
+            				<!-- <option value="4">#springMessage("common.text.security")</option> --> <!-- 보안 -->
+	    				</select>
+	    			</th>
+	      		</tr>
+	    	</thead>
+	    	<tbody>
+	      		<tr>
+	        		<th>#springMessage("menu.push.sendManage.template")</th> <!-- 템플릿 -->
+	        		<td colspan="2">
+	              		<input id="txtTempleteTitle" type="text" style="width:75%;"/>
+	              		<a href="javascript:void(0)" onClick="fn_saveTempData()" class="tbl-btn1">#springMessage("menu.push.sendManage.saveTemplate")</a>	 <!-- 템플릿으로저장 -->
+	              		<a href="javascript:void(0)" onClick="fn_templateSelection();" class="tbl-btn1">#springMessage("menu.push.sendManage.load")</a>	<!-- 불러오기 -->
+	            	</td>
+	            	
+	      		</tr>
+	      		<tr>
+	        		<th><label class="redNotice">#springMessage("menu.stats.push.message")</label></th> <!-- 메세지 -->
+	        		<td colspan="2">
+	          			<input id="txtMessage" type="text" style="width:90%;"/>
+	          			<a href="javascript:void(0)" onClick="fn_goPreview()" class="tbl-btn1">#springMessage("menu.push.sendManage.preview")</a>	<!-- 미리보기 -->
+	        		</td>
+	      		</tr>
+	      
+	      		<tr class="trMsgInputTypeExt">
+	        		<th>EXT</th>
+	        		<td colspan="2">
+	         			<textarea id="txtExt" cols="105" rows="2"></textarea>
+	        		</td>
+	      		</tr>
+	      		<tr class="trMsgInputTypeRich">
+	        		<th>web page</th>
+	        		<td colspan="2">
+	      				<textarea id="txtRichExt" name="WEBEDIT" cols="105" rows="10"></textarea>
+	    			</td>
+	      		</tr>
+	     		<tr class="trMsgInputImage">
+	        		<th>#springMessage("common.text.image")</th> <!-- 이미지 -->
+	        		<td colspan="2">
+	          			<input type="file" name="IMAGE_FILE"  id="IMAGE_FILE" />
+	          			<br><br>
+	          			<input id="txtUrl" type="text" style="width:99%;"/>
+	        		</td>
+	      		</tr>
+	      		<!-- 
+	      		<tr class="trMsgInputImage">
+	      			<td colspan="9">
+	      				 <input id="txtUrl" type="text" style="width:99%;"/>
+	      			<td>
+				<tr>
+				 -->
+	      		<tr class="trMsgInputVideoUrl">
+	      			<th>동영상 URL</th>
+	      			<td colspan="2">
+	      				<input id="txtVideoUrl" type="text" style="width:99%;"/>
+	      			</td>
+				<tr>
+			</tbody>
+		</table>
+
+		<br/>
+	    
+	    <table class="tbl full-width">
+			<colgroup>
+	        	<col style="width:140px;"/><col style="width:auto;"/><col style="width:auto;"/><col style="width:auto;"/>
+	      	</colgroup>
+			<thead>
+        	<tr>
+        		<th colspan="4" align="left">04. #springMessage("menu.push.sendManage.sendSet")</th> <!-- 발송설정 -->
+			</tr>
+      		</thead>
+			<tbody>
+				<tr>
+					<th>#springMessage("menu.push.sendManage.sendTime")</th> <!-- 발송시간 -->
+        			<td>
+	          			<input type="radio" id="idrdoMsgSendTime0" name="rdoMsgSendTime" value="0"><label for="idrdoMsgSendTime0">#springMessage("menu.push.sendManage.nowSend")</label> <!-- 즉시발송 -->
+	          			<input type="radio" id="idrdoMsgSendTime1" name="rdoMsgSendTime" value="1"><label for="idrdoMsgSendTime1">#springMessage("menu.push.sendManage.reserveSend")</label> <!-- 예약발송 -->
+	        		</td>
+	        		<td colspan="2" id="tdSetTime">
+	          			<input type="text" name="sDate" id="dateViewSendDate" class="datepicker sDate" readonly placeholder="날짜선택">
+	        			<label for="sDate"><img src="$RESOURCES_PATH/images/common/datepicker.png" alt=""></label>
+	        			
+	          			<input id="txtSendHour" size="2" type="text"/> :
+	          			<input id="txtSendMinute" size="2" type="text"/>
+	        		</td>
+				</tr>
+
+      			<tr>
+        			<th rowspan="5">#springMessage("menu.push.sendManage.sendSet")</th> <!-- 발송설정 -->
+        			<td>
+          				<input id="chkSplitSend" type="checkbox" value="" /><label for="chkSplitSend">Push#springMessage("menu.push.sendManage.splitSend") </label><!-- 분할발송 -->
+        			</td>
+        			<td colspan="2">
+          				<select id="selDelaySecond">
+            				<option value="0">#springMessage("menu.push.sendManage.delayTime")</option> <!-- 지연시간선택 -->
+            				<option value="600">10#springMessage("common.text.minite")</option> <!-- 분 -->
+            				<option value="900">15#springMessage("common.text.minite")</option>
+            				<option value="1200">20#springMessage("common.text.minite")</option>
+            				<option value="1800">30#springMessage("common.text.minite")</option>
+            				<option value="2400">40#springMessage("common.text.minite")</option>
+            				<option value="3000">50#springMessage("common.text.minite")</option>
+            				<option value="3600">1#springMessage("common.text.time")</option> <!-- 시간 -->
+          				</select>
+          				<select id="selSplitMsgCnt">
+            				<option value="0">#springMessage("menu.push.sendManage.splitUnit")</option> <!-- 분할단위선택 -->
+            				<option value="5000">5#springMessage("menu.push.sendManage.thousand")</option> <!-- 천건 -->
+            				<option value="10000">1#springMessage("menu.push.sendManage.10thousand")</option> <!-- 만건 -->
+            				<option value="20000">2#springMessage("menu.push.sendManage.10thousand")</option>
+            				<option value="30000">3#springMessage("menu.push.sendManage.10thousand")</option>
+            				<option value="50000">5#springMessage("menu.push.sendManage.10thousand")</option>
+            				<option value="70000">7#springMessage("menu.push.sendManage.10thousand")</option>
+            				<option value="100000">10#springMessage("menu.push.sendManage.10thousand")</option>
+            				<option value="200000">20#springMessage("menu.push.sendManage.10thousand")</option>
+            				<option value="300000">30#springMessage("menu.push.sendManage.10thousand")</option>
+          				</select>
+    				</td>
+      			</tr>
+      			<tr>
+        			<td>  
+          				<input id="chkDbin" type="checkbox" value="" /><label for="chkDbin">#springMessage("menu.push.sendManage.sendSave")</label> <!-- 발송결과저장 -->
+        			</td>
+        			<td colspan="2">
+          				(#springMessage("menu.push.sendManage.desc.sendSave")) <!-- 발송된 메세지의 수신율, 클릭율 통계 등 더 자세한 정보를 확인할 수 있습니다. -->
+        			</td>
+      			</tr>
+      			<tr>  
+        			<td>  
+          				<input id="chkPriority" type="checkbox" value="" /><label for="chkPriority">#springMessage("menu.push.sendManage.urgentSend")</label> <!-- 긴급발송 -->
+        			</td>
+        			<td colspan="2">
+          				(#springMessage("menu.push.sendManage.desc.urgentSend")) <!-- 다른 푸시메세지보다 발송 우선순위가 높게 지정됩니다. -->
+        			</td>
+      			</tr>
+       			<tr>
+        			<td>  
+          				<input id="chkSecure" type="checkbox" value="" /><label for="chkSecure">#springMessage("menu.push.sendManage.securitySet")</label> <!-- 보안설정 -->
+        			</td>
+        			<td colspan="2">
+          				(#springMessage("menu.push.sendManage.desc.securitySet")) <!-- 푸시 메세지 발송 시 웹 에디터로 작성된 html 내용이 암호화 처리 되어 발송됩니다. -->
+        			</td>
+      			</tr>
+      			<tr>
+        			<td>  
+          				<input id="chkDozmode" type="checkbox" value="Y" /><label for="chkDozmode">DOZ MODE 설정</label> <!-- 설정 -->
+        			</td>
+        			<td colspan="2">
+          				(GCM 서비스 가입이 되어 있고 UPNS로 발송 시 GCM으로 더미 데이터를 보내 DOZ 모드를 깨어나게 합니다.) <!-- GCM 서비스 가입이 되어 있고 UPNS로 발송 시 GCM으로 더미 데이터를 보내 DOZ 모드를 깨어나게 합니다. -->
+        			</td>
+      			</tr>
+
+			</tbody>
+		</table>
+	    
+	
+	<br/>
+	
+	<div class="btn-wrap">
+		<a href="javascript:void(0)" onClick="fn_showTestSendPopUp()" class="btn1 type2 fl">#springMessage("menu.push.sendManage.testSend")</a>	<!-- 테스트발송 -->
+		
+		#if($auth == "0000000001" || $auth == "0000000002")
+		<!-- 푸시발송 -->
+		<a href="javascript:void(0)" onClick="fn_sendMsg(0)" class="btn1 fr">#springMessage("menu.push.sendManage.pushSend")</a>	
+		#else
+		
+		<!-- 발송요청 -->
+		<!--
+		<a href="javascript:void(0)" onClick="fn_sendMsg(1)" class="btn1 fr">#springMessage("menu.push.sendManage.sendRequest")</a>
+		-->	
+		<a href="javascript:void(0)" onClick="fn_sendMsg(0)" class="btn1 fr">#springMessage("menu.push.sendManage.pushSend")</a>
+		#end
+		
+		<input type="hidden" id="userId" value="$!userId"/>
+		
+	</div>
+	
+	<br><br>
+	
+	
+
+	</form>
+</div>

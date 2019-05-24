@@ -1,0 +1,300 @@
+<script type="text/javascript">
+$(document).ready(function(){
+
+});
+
+
+$(document).on("click",".CUID",function(){
+	if($(this).is(":checked")){
+		$(this).parent().parent().removeClass().addClass("selected");
+	}else{
+		$(this).parent().parent().removeClass();
+	}
+});
+
+$(document).on("click","#in_all_check",function(){
+	if($(this).is(":checked")){
+		$(".in_userList_div").find(".CUID").each(function(){
+			$(this).parent().parent().removeClass().addClass("selected");
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+		});
+	} else {
+		$(".in_userList_div").find(".CUID").each(function(){
+			$(this).parent().parent().removeClass();
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+		});
+	}
+});
+
+$(document).on("click","#out_all_check",function(){
+	if($(this).is(":checked")){
+		$(".out_userList_div").find(".CUID").each(function(){
+			$(this).parent().parent().removeClass().addClass("selected");
+			var selectBox = $(this)[0];
+			selectBox.checked = true;
+		});
+	} else {
+		$(".out_userList_div").find(".CUID").each(function(){
+			$(this).parent().parent().removeClass();
+			var selectBox = $(this)[0];
+			selectBox.checked = false;
+		});
+	}
+});
+
+//그룹 리스트 변경
+$(document).on("change","#GROUPSEQ",function(){
+	if($(this).val() != ""){
+		fn_OutUserList(1);
+		fn_InUserList(1);
+	} else {
+		document.location.href=CONTEXT_PATH + "/admin/push/groupAuth"
+		return;
+	}
+});
+
+//검색
+function fn_se_select(){
+	if($("#GROUPSEQ").val() == ""){
+		alert('#springMessage("menu.push.user.alert.groupChoose")'); //그룹을 선택해주세요.
+		return;
+	}
+	ch_search();
+}
+
+function ch_search(){
+	var sfrm=document.frmSearch;
+	if(sfrm.OUT_CNAME.value.length>0&&sfrm.OUT_CNAME.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.OUT_CNAM.value="";
+			sfrm.OUT_CNAM.focus();
+	}
+	if(sfrm.IN_CNAME.value.length>0&&sfrm.IN_CNAME.value.length<2){
+			alert('#springMessage("common.alert.lowerlimitSeachKeyword")');  //"검색어를 2글자 이상 입력해 주세요."
+			sfrm.IN_CNAME.value="";
+			sfrm.IN_CNAME.focus();
+	}
+	fn_OutUserList(1);
+	fn_InUserList(1);
+}
+
+//미등록 사용자 리스트 페이징
+function fn_OutUserList(PAGE_NUM){
+	var CNAME = $("#OUT_CNAME").val();
+	var GROUPSEQ = $("#GROUPSEQ").val();
+	var url = CONTEXT_PATH + "/admin/push/groupAuth/outuser";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM + "&GROUPSEQ=" + GROUPSEQ + "&CNAME=" + CNAME;
+	var target = $(".out_userList_div");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+//등록 사용자 리슨트 페이징
+function fn_InUserList(PAGE_NUM){
+	var CNAME = $("#IN_CNAME").val();
+	var GROUPSEQ = $("#GROUPSEQ").val();
+	var url = CONTEXT_PATH + "/admin/push/groupAuth/inuser";
+	var type = "POST";
+	var data = "PAGE_NUM=" + PAGE_NUM + "&GROUPSEQ=" + GROUPSEQ + "&CNAME=" + CNAME;
+	var target = $(".in_userList_div");
+	fn_getCommonList( url, type, data , target );
+	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+}
+
+$(document).on("click","#fn_insertUser",function(){
+	if($("#GROUPSEQ").val() == ""){
+		alert('#springMessage("menu.push.user.alert.groupChoose")'); //그룹을 선택해주세요.
+		return;
+	}
+
+	var su = 0;
+
+	$(".out_userList_div").find(".CUID").each(function( i ){
+		if($(this).is(":checked")){
+			$(this).attr("name", "pushGroupAuthList[" + su + "].CUID").removeAttr("disabled");
+			su += 1;
+		}
+	});
+
+	if(su == 0){
+		alert('#springMessage("menu.push.user.alert.selectInUser")'); //등록할 사용자를 선택해 주세요.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doRegist")')){ //"등록 하시겠습니까?"
+		return;
+	}
+
+	var GROUPSEQ = $("#GROUPSEQ").val();
+	var url = CONTEXT_PATH + "/admin/push/groupAuth/regist";
+	var data = $("form[name=frmList]").serialize() + "&GROUPSEQ=" + GROUPSEQ;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_OutUserList(1);
+				fn_InUserList(1);
+			} else {
+				fn_OutUserList($("#OUT_USER_NUM").val());
+			}
+		},
+		error:function(){
+			fn_OutUserList($("#OUT_USER_NUM").val());
+		}
+	});
+});
+
+
+$(document).on("click","#fn_deleteUser",function(){
+	if($("#GROUPSEQ").val() == ""){
+		alert('#springMessage("menu.push.user.alert.groupChoose")'); //그룹을 선택해주세요.
+		return;
+	}
+
+	var su = 0;
+	$(".in_userList_div").find(".CUID").each(function( i ){
+		if($(this).is(":checked")){
+			$(this).attr("name", "pushGroupAuthList[" + su + "].CUID").removeAttr("disabled");
+			su += 1;
+		}
+	});
+
+	if(su == 0){
+		alert('#springMessage("menu.push.user.alert.selectDeleteUser")'); //삭제할 사용자를 선택해 주세요.
+		return;
+	}
+	
+	if(! confirm('#springMessage("common.alert.doDelete")')){ //"삭제 하시겠습니까?"
+		return;
+	}
+
+	var GROUPSEQ = $("#GROUPSEQ").val();
+	var url = CONTEXT_PATH + "/admin/push/groupAuth/delete";
+	var data = $("form[name=frmList]").serialize() + "&GROUPSEQ=" + GROUPSEQ;
+	jQuery.ajax({
+		url:url,
+		type:"POST",
+		data:data,
+		dataType:"json",
+		success:function(data){
+			alert(data.msg);
+			if(data.result > 0){
+				fn_OutUserList(1);
+				fn_InUserList(1);
+			} else {
+				fn_InUserList($("#IN_USER_NUM").val());
+			}
+		},
+		error:function(){
+			fn_InUserList($("#IN_USER_NUM").val());
+		}
+	});
+});
+
+</script>
+
+<div class="contents-area">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="nav">
+		<span>#springMessage("menu.push")</span>					<!-- 푸시 -->
+		<span>#springMessage("menu.system.userManage")</span>			<!-- 사용자 관리 -->
+		<span>#springMessage("menu.push.user.groupAuth")</span>			<!-- 사용자 그룹 등록 관리 -->
+	</div>
+	<h2 class="page-title">#springMessage("menu.push.user.groupAuth")</h2>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<form name="frmSearch" method="post">
+		
+		
+		<table class="tbl-search">
+			<colgroup>
+				<col style="width:120px">
+				<col style="width:200px">
+				<col style="width:120px">
+				<col>
+			</colgroup>
+			<thead>
+	   			<tr>
+					<th>#springMessage("menu.push.user.groupName")</th> <!-- 그룹 명 -->
+					<td colspan="2">
+	       				<select name="GROUPSEQ" id="GROUPSEQ" class="w120" >
+	   						<option value="">#springMessage("common.select.choose")</option> <!-- 선택 -->
+							#foreach( $pushUserGroup in $pushUserGroupList )
+	   						<option value="$!pushUserGroup.GROUPSEQ">$!pushUserGroup.GROUPNAME</option>
+							#end
+	   					</select>
+	   					<a href="javascript:void(0)" onclick="ch_search()" class="tbl-btn2">#springMessage("common.button.view")</a><!-- 조회  -->
+					</td>
+					<td>
+						
+					</td>
+	            </tr>
+				<tr>
+					<th>#springMessage("menu.push.user.noInUserName")</th> <!-- 미등록 사용자명 -->
+					<td>
+						<input type="text" id="OUT_CNAME" class="w120" onkeydown="javascript:if(event.keyCode==13){ fn_se_select();return false;}"/>
+	                </td>
+	                <th>#springMessage("menu.push.user.inUserName")</th> <!-- 등록 사용자명 -->
+					<td>
+						<input type="text" id="IN_CNAME" class="w120" onkeydown="javascript:if(event.keyCode==13){ fn_se_select();return false;}"/>
+	                </td>
+	            </tr>
+			</thead>
+        </table>
+   	
+	</form>
+	#### E : 조회 폼 부분  ####
+
+	<form name="frmList" method="post">
+		##HIDDEN##
+		<input type="hidden" id="CLICK_ID_MENU" value="" />
+		##HIDDEN##
+		
+		<table class="full-width">
+			<caption></caption>
+			<colgroup>
+				<col>
+				<col style="width:100px">
+				<col>
+			</colgroup>
+			<tr>
+				<td valign="top">
+					<div class="tbl-wrap">
+						
+						<div class="out_userList_div">
+							#parse("admin/push/groupAuth/pushGroupAuthOutUserList.vm")
+						</div>
+						
+					</div>	
+				</td>
+
+				<td class="txtCenter">
+					<a href="javascript:void(0)" id="fn_insertUser" class="btn-arrow"></a>
+					<br />
+					<br />
+					<a href="javascript:void(0)" id="fn_deleteUser" class="btn-arrow reverse"></a>
+				</td>
+
+				<td valign="top">
+					<div class="tbl-wrap">
+						
+						<div class="in_userList_div">
+							#parse("admin/push/groupAuth/pushGroupAuthInUserList.vm")
+						</div>
+						
+					</div>
+				</td>
+			</tr>
+		</table>
+
+	</form>
+</div>
+

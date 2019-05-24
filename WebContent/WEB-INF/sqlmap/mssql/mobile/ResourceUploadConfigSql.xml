@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.mobile.resourceConfig.mapper.MobileResourceConfigDao">
+
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+
+	<!--  조회  -->
+	<select id="SelectResourceConfig" parameterType="kr.msp.admin.mobile.resourceConfig.dto.ResourceExtDto" resultType="kr.msp.admin.mobile.resourceConfig.dto.ResourceExtDto">
+	    <include refid="head"/>
+		SELECT 
+			FILE_EXT
+			, EXE_DTL
+  			, REG_ID
+  			, MOD_ID
+  			, CONVERT(CHAR(10), REG_DTTM, 102) AS REG_DTTM
+  			, CONVERT(CHAR(10), MOD_DTTM, 102) AS MOD_DTTM
+  			, FILE_EXT PAGE_KEY
+		FROM TB_MOB_RSC_EXT
+		<include refid="bottom"/>
+	</select>
+	
+	<select id="SelectResourceConfigCount" parameterType="kr.msp.admin.mobile.resourceConfig.dto.ResourceExtDto" resultType="java.lang.Integer">
+	    SELECT COUNT(*) FROM TB_MOB_RSC_EXT WHERE FILE_EXT = #{FILE_EXT}
+	</select>
+	
+	<insert id="InsertResourceConfig" parameterType="kr.msp.admin.mobile.resourceConfig.dto.ResourceExtDto">
+	    INSERT INTO TB_MOB_RSC_EXT 
+	    	(
+	    	FILE_EXT
+	    	, EXE_DTL
+  			, REG_ID
+  			, REG_DTTM 
+  			)
+  		VALUES 
+  			(
+  			#{FILE_EXT}
+  			, #{EXE_DTL}
+  			, #{REG_ID}
+  			, GETDATE()
+  			)
+	</insert>
+	
+	<select id="SelectResourceConfigOne" parameterType="kr.msp.admin.mobile.resourceConfig.dto.ResourceExtDto" resultType="kr.msp.admin.mobile.resourceConfig.dto.ResourceExtDto">
+		SELECT 
+			FILE_EXT
+			, EXE_DTL
+  			, REG_ID
+  			, MOD_ID
+  			, CONVERT(CHAR(10), REG_DTTM, 102) AS REG_DTTM
+  			, CONVERT(CHAR(10), MOD_DTTM, 102) AS MOD_DTTM
+		FROM TB_MOB_RSC_EXT
+		WHERE FILE_EXT = #{FILE_EXT}
+	</select>
+	
+	<update id="UpdateResourceConfig" parameterType="kr.msp.admin.mobile.resourceConfig.dto.ResourceExtDto">
+	    UPDATE TB_MOB_RSC_EXT 
+			SET EXE_DTL	= #{EXE_DTL}
+			, MOD_ID 	= #{MOD_ID}
+			, MOD_DTTM 	= GETDATE()
+		WHERE FILE_EXT 	= #{FILE_EXT}
+	</update>
+	
+	<delete id="DeleteFesourceConfig" parameterType="kr.msp.admin.mobile.resourceConfig.dto.ResourceExtDto">
+	    DELETE FROM TB_MOB_RSC_EXT WHERE FILE_EXT = #{FILE_EXT}
+	</delete>
+
+</mapper>

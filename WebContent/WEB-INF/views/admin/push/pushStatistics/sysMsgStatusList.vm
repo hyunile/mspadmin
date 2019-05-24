@@ -1,0 +1,90 @@
+<table class="tbl-nb">
+    <colgroup><!--  7cell  -->
+        <col width="10%"/>
+        <col width="10%"/>
+        <col width="10%"/>
+		<col width="10%"/>
+        <col width="10%"/>
+		<col width="10%"/>
+		<col width="10%"/>
+    </colgroup>
+    <thead>
+    <tr>
+        <th>
+             #springMessage("menu.stats.push.sendDate") <!-- 발송일자 -->
+        </th>
+        <th>
+             #springMessage("menu.stats.push.sender")  <!-- 발송자 -->
+        </th>
+        <th>
+            #springMessage("menu.stats.push.sendNum")  <!--발송수  -->
+        </th>
+        <th>
+            #springMessage("menu.stats.push.failNum")  <!--실패수  -->
+        </th>
+        <th>
+            UPNS #springMessage("menu.stats.push.send")  <!-- 발송 -->
+        </th>
+        <th>
+            APNS #springMessage("menu.stats.push.send")  <!-- 발송 -->
+        </th>
+        <th>
+            GCM #springMessage("menu.stats.push.send")  <!-- 발송 -->
+        </th>
+    </tr>
+    </thead>
+
+    <tbody>
+        #set($j_tot = 0)
+        #foreach( $sysSentMsg in $sysSentMsgList )
+            #set($j_tot = $sysSentMsg.TOT_CNT)
+            #set($TotalSentCnt = $sysSentMsg.SENT_CNT+$sysSentMsg.FAIL_CNT)
+        <tr>
+            <td style="text-align:center;">
+                $!sysSentMsg.SENDDATE
+##                <a href="javascript:csvDown('$!sysSentMsg.SENDDATE')">$!sysSentMsg.SENDDATE</a>
+            </td>
+            <td style="text-align:center;">
+                $!sysSentMsg.SENDERCODE
+            </td>
+            <td style="text-align:center;">
+                $!sysSentMsg.SENT_CNT
+            </td>
+            <td style="text-align:center;">
+                $!sysSentMsg.FAIL_CNT
+            </td>
+            <td style="text-align:center;">
+                $!sysSentMsg.UPNS_SENT_CNT
+            </td>
+            <td style="text-align:center;">
+                $!sysSentMsg.APNS_SENT_CNT
+            </td>
+            <td style="text-align:center;">
+                $!sysSentMsg.GCM_SENT_CNT
+            </td>
+        </tr>
+        #end
+        #if($j_tot==0)
+        <tr>
+            <td colspan="7">
+                #springMessage("common.alert.nodata") <!-- 데이터가 없습니다. -->
+            </td>
+        </tr>
+        #end
+    </tbody>
+</table>
+<div class="j_page_div">
+    ##현재 페이지
+    <input type="hidden" name="j_now" value="$!R_PAGE_NUM" />
+	##총 개수
+	<input type="hidden" name="J_tot" value="$!j_tot" />
+	##한페이지의 로우수
+	<input type="hidden" name="j_row" value="$!R_ROW_SIZE" />
+	##한페이지수
+	<input type="hidden" name="j_page" value="$!R_PAGE_SIZE" />
+    ##이밴트
+    <input type="hidden" name="j_event" value="fn_se_select">
+    </div>
+</div>
+
+

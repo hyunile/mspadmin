@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.push.SendMsgStatusDao">
+    <!--  ================================================================================================= -->
+    <!-- begin of paging query -->
+    <!--  ================================================================================================= -->
+    <sql id="head">
+        SELECT viewC.*
+        FROM (
+        SELECT
+        (ROW_NUMBER() OVER()) AS "RNUM"
+        ,COUNT(*) OVER() AS "TOT_CNT"
+        ,viewB.*
+        FROM (SELECT viewA.* FROM (
+    </sql>
+
+    <sql id="bottom">
+        ) AS viewA
+        ) AS viewB
+        ) AS viewC
+        WHERE "RNUM" BETWEEN (CAST(#{PAGE_NUM} AS INTEGER) -1) * CAST(#{PAGE_SIZE} AS INTEGER) + 1 AND CAST(#{PAGE_NUM} AS INTEGER) * CAST(#{PAGE_SIZE} AS INTEGER)
+    </sql>
+
+    <select id="selSendMsgStatusList" resultType="kr.msp.admin.push.msgSendStatus.dto.SendMsgStatusBean" parameterType="hashmap">
+        <include refid="head"/>
+        select "SEQNO","SOUNDFILE","BADGENO","MESSAGE",TO_CHAR("RESERVEDATE",'YYYY.MM.DD') as "RESERVEDATE","PRIORITY"
+        ,"SENDERID",TO_CHAR("REGDATE", 'YYYY.MM.DD') as "REGDATE","APPID","SERVICECODE","TYPE"
+        ,"TOTAL_SEND_CNT","SEND_CNT","FAIL_CNT","REV_CNT","READ_CNT","UPNS_CNT","APNS_CNT","GCM_CNT","DB_IN"
+        from "T_PUSH_MSG_RECV_MASTER"
+        <where>
+            <if test="DATE_VIEW_S!=null and DATE_VIEW_S!='' and DATE_VIEW_E!=null and DATE_VIEW_E!=''">
+                "RESERVEDATE" BETWEEN TO_DATE(#{DATE_VIEW_S}, 'YYYY.MM.DD hh24:mi:ss') AND TO_DATE(#{DATE_VIEW_E}, 'YYYY.MM.DD hh24:mi:ss')
+            </if>
+            <if test="APPID != null and APPID!=''">
+                AND "APPID"=#{APPID}
+            </if>
+        </where>
+        order by "SEQNO" desc
+        <include refid="bottom"/>
+    </select>
+
+    <select id="selSendMsgStatusDetail" resultType="kr.msp.admin.push.msgSendStatus.dto.SendMsgStatusBean" parameterType="hashmap">
+        select "SEQNO","SOUNDFILE","BADGENO","MESSAGE",TO_CHAR("RESERVEDATE",'YYYY.MM.DD hh24:mi:ss') as "RESERVEDATE","PRIORITY"
+        ,"SENDERID",TO_CHAR("REGDATE",'YYYY.MM.DD hh24:mi:ss') as "REGDATE","APPID","SERVICECODE","TYPE"
+        ,"TOTAL_SEND_CNT","SEND_CNT","FAIL_CNT","REV_CNT","READ_CNT","UPNS_CNT","APNS_CNT","GCM_CNT"
+        from "T_PUSH_MSG_RECV_MASTER"
+        where "SEQNO"= CAST(#{SEQNO} AS BIGINT)
+    </select>
+
+    <select id="selFailMsgList" resultType="kr.msp.admin.push.msgSendStatus.dto.FailMsgBean" parameterType="hashmap">
+        <include refid="head"/>
+        select * from "T_PUSH_FAIL"
+        where "SEQNO"=CAST(#{SEQNO} AS BIGINT)
+        <include refid="bottom"/>
+    </select>
+    
+    <select id="selConFailMsgCount" resultType="Integer" parameterType="hashmap">
+        select count(*) from "T_PUSH_FAIL" where "SEQNO"=CAST(#{SEQNO} AS BIGINT) and "RESULTCODE"='9000'
+    </select>
+    
+    <select id="selNotRecvMsgCount" resultType="Integer" parameterType="hashmap">
+      	<![CDATA[
+        select count(*) from "T_PUSH_SUCCESS" where "SEQNO"=CAST(#{SEQNO} AS BIGINT) and "STATUS"<2
+        ]]> 
+    </select>
+    
+    <select id="selNotReadMsgCount" resultType="Integer" parameterType="hashmap">
+    	 <![CDATA[
+        select count(*) from "T_PUSH_SUCCESS" where "SEQNO"=CAST(#{SEQNO} AS BIGINT) and "STATUS"<3
+        ]]>
+    </select>
+</mapper>

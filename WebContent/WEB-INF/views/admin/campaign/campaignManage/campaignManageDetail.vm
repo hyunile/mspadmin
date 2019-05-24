@@ -1,0 +1,75 @@
+<link rel="stylesheet" type="text/css" href="$RESOURCES_PATH/css/jquery-te-1.4.0.css" >
+<script type="text/javascript" src="$RESOURCES_PATH/js/jquery/jquery-te-1.4.0.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+    jQuery("textarea[name=WEBEDIT]").jqte();
+    
+		//달력 구현
+        $("#pSTART_DT").datepicker({
+            regional        : "ko",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true
+        });
+
+        //달력 구현
+        $("#pEND_DT").datepicker({
+            regional        : "ko",
+            showOn          : "button",
+            buttonImage     : CONTEXT_PATH + "/resources/css/4.0/img/icon_calen.gif",
+            buttonImageOnly : true
+        });
+    });
+	
+	
+</script>
+<form name="frmServiceInfo">
+	<div class="popup_content">
+		<fieldset>
+			<legend>캠페인 상세</legend>
+			<table class="tb_view" summary="캠페인 명,캠페인 기간,캠페인 내용">
+				<colgroup>
+					<col width="30%"/><col width="70%"/>
+				</colgroup>
+				<tr>
+					<th>
+						<label for="txtCampaignNm" class="required">#springMessage("campaign.name")</label> <!-- 캠페인 명 -->
+					</th>
+					<td>
+						<input type="text" id="txtCampaignNm" class="width95">
+					</td>
+				</tr>
+				<tr>
+					<th>
+						<label for="lblCampaignPeriod" class="required">#springMessage("menu.mobile.manage.term")</label> <!-- 기간 -->
+					</th>
+					<td>
+						<input class="datePicker_dtB w120" type="text" id="pSTART_DT" name="pSTART_DT" maxlength="8" style="margin-right: 5px"/>
+	                    ~
+	                    <input class="datePicker_dtE w120" type="text" id="pEND_DT" name="pEND_DT" maxlength="8"  style="margin-right: 5px"/>
+					</td>
+				</tr>
+				
+				<tr>
+					<th>
+						<label for="WEBEDIT" class="required"> Web page</label>
+					</th>
+					<td colspan="3">
+						<textarea id="WEBEDIT" name="WEBEDIT" rows="10"></textarea>
+					</td>
+				</tr>
+			</table>
+			<div class="btn_pop">
+			#if($popUpType == 1)
+				<button type="button" onclick="fn_save();" class="btn_basic"><span>#springMessage("common.button.save")</span></button> <!-- 저장 -->
+			#elseif($popUpType == 0) 
+				<button type="button" onclick="fn_getAppManageDetailDelete();" class="btn_pink"><span>#springMessage("common.button.delete")</span></button> <!-- 삭제 -->
+				<button type="button" onclick="fn_modify();" class="btn_basic">#springMessage("common.button.modify")</button> <!-- 수정 -->
+			#end
+			<button type="button" onclick="fn_closePopup();" class="btn_basic"><span>#springMessage("common.button.close")</span></button> <!-- 닫기 -->
+			</div>
+		</fieldset>
+		<input type="hidden" name="AppId">
+	</div>
+</form>

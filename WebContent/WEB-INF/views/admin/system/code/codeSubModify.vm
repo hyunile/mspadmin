@@ -1,0 +1,82 @@
+<form name="frmSubInfo" method="POST">
+		<div >
+			
+				<table class="tbl" summary="그룹코드,그룹명,코드설명,우선순위,변경구분">
+					<colgroup><!--  4cell  -->
+						<col width="25%"/><col width="25%"/><col width="25%"/><col width="25%"/>
+					</colgroup>
+					<tr>
+						<th>
+							<label for="NO_CD" class="redNotice">#springMessage("common.header.code")</label> <!-- 코드 -->
+						</th>
+						<td colspan="3">
+						#if( !$codeSub )
+							<input type="text" id="NO_CD" name="NO_CD"  />
+						#else
+							$!codeSub.NO_CD
+							<input type="hidden" id="NO_CD" name="NO_CD" value="$!codeSub.NO_CD"/>
+						#end
+						</td>
+					</tr>
+					<tr>
+						<th>
+							<label for="NM_CD" class="redNotice">#springMessage("common.header.codeName")</label>  <!-- 코드명 -->
+						</th>
+						<td colspan="3">
+							<input type="text" id="NM_CD" name="NM_CD" value="$!codeSub.NM_CD" />
+						</td>
+					</tr>
+					<tr>
+						<th>
+							<label for="DESC_CD">#springMessage("common.header.codeDesc")</label>  <!-- 코드설명 -->
+						</th>
+						<td colspan="3">
+							<input type="text" id="DESC_CD" name="DESC_CD" value="$!codeSub.DESC_CD" />
+						</td>
+					</tr>
+					<tr>
+						<th>
+							<label for="NO_ORDER" class="redNotice">#springMessage("common.header.rank")</label>  <!-- 우선순위 -->
+						</th>
+						<td>
+						<input type="text" id="NO_ORDER" onkeydown="onlyNumber();" name="NO_ORDER" value="$!codeSub.NO_ORDER" />
+						</td>
+					</tr>
+					<tr>
+						<th>
+							<label for="YN_USE" class="redNotice">#springMessage("common.header.updateYN")</label> <!-- 변경구분 -->
+						</th>
+						<td>
+								<select id="YN_USE" name="YN_USE">
+									<option value="" >#springMessage("common.select.choose")</option>
+								#if($codeSub.YN_USE == "Y")
+									<option value="Y" selected="selected">#springMessage("common.header.update_Y")</option> <!-- 변경 가능 -->
+								#else
+									<option value="Y">#springMessage("common.header.update_Y")</option> <!-- 변경 가능 -->
+								#end
+
+								#if($codeSub.YN_USE == "N")
+									<option value="N" selected="selected">#springMessage("common.header.update_N")</option> <!-- 변경 불가능 -->
+								#else
+									<option value="N">#springMessage("common.header.update_N")</option> <!-- 변경 불가능 -->
+								#end
+								</select>
+							
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="btn-wrap txtCenter">
+				<a href="javascript:fn_gocodelist();void(0);" class="btn1"><strong>#springMessage("common.button.codeList")</strong></a> <!-- 코드 목록 -->
+				#if(!$codeSub)
+					<a href="javascript:fn_codeSubWrite();void(0);" class="btn1"><strong>#springMessage("common.button.regist")</strong></a> <!-- 등록 -->
+				#else
+					<a href="javascript:fn_codeSubModify();void(0);" class="btn1"><strong>#springMessage("common.button.modify")</strong></a> <!-- 수정 -->
+					<a href="javascript:fn_codeSubDelete();void(0);" class="btn1 type2"><strong>#springMessage("common.button.delete")</strong></a> <!-- 삭제 -->
+				#end
+				<a href="javascript:fn_closePopup();void(0);" class="btn1 type2 close">#springMessage("common.button.close")</a> <!-- 닫기 -->
+			</div>
+		
+	</div>
+</form>

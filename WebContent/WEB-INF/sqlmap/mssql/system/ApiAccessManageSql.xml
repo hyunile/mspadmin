@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.msp.admin.system.apiAccess.mapper.ApiAccessManageDao">
+
+
+<!--   =================================================================================================  -->
+<!--  begin of paging query  -->
+<!--   =================================================================================================  -->
+
+<!--  head of paging query  -->
+<sql id="head">
+WITH 
+PAGE_INFO AS
+(
+	SELECT #{PAGE_SIZE} PAGE_SIZE
+	, #{PAGE_NUM} PAGE_NUM
+)
+, LST AS
+(
+	SELECT *
+	,		ROW_NUMBER() OVER (ORDER BY PAGE_KEY) RNUM
+	FROM
+	(
+</sql>
+	
+	<!--  tail of paging query  -->
+<sql id="bottom">
+	) A
+)
+SELECT TOP (SELECT PAGE_SIZE FROM PAGE_INFO) *
+, (SELECT COUNT(1) FROM LST) TOT_CNT
+FROM LST 
+WHERE	PAGE_KEY NOT IN
+		(
+			SELECT TOP (((SELECT PAGE_NUM FROM PAGE_INFO)  - 1) * (SELECT PAGE_SIZE FROM PAGE_INFO) ) PAGE_KEY
+			FROM LST 
+		)
+</sql>
+<!--   =================================================================================================  -->
+<!--  end of paging query  -->
+<!--   =================================================================================================  -->
+    
+	
+	<!--  AUTH ACCESS  -->
+    <select id="GetAuthAccess" parameterType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto" resultType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto">
+    	<include refid="head"/>
+		SELECT 	AUTH_IDX 
+			  	, ACCESS_KEY  
+			  	, CONVERT(CHAR(10), REG_DTTM, 102) AS REG_DTTM 
+			  	, CONVERT(CHAR(10), MOD_DTTM, 102) AS MOD_DTTM    
+			  	, USE_YN      
+			  	, CONSUMER_KEY
+			  	, ROW_NUMBER() OVER(ORDER BY AUTH_IDX) PAGE_KEY
+		FROM TB_AUTH_ACCESS
+		<where>
+			<if test="ACCESS_KEY != null and ACCESS_KEY != ''">
+				ACCESS_KEY = #{ACCESS_KEY}
+			</if>
+		</where>
+		<include refid="bottom"/>
+	</select>
+	
+	<select id="GetAuthAccessOne" parameterType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto" resultType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto">
+		SELECT 	AUTH_IDX 
+			  	, ACCESS_KEY 
+			  	, CONVERT(CHAR(10), REG_DTTM, 102) AS REG_DTTM 
+			  	, CONVERT(CHAR(10), MOD_DTTM, 102) AS MOD_DTTM  
+			  	, USE_YN      
+			  	, CONSUMER_KEY
+		FROM TB_AUTH_ACCESS
+		WHERE AUTH_IDX = #{AUTH_IDX}
+	</select>
+	
+	<select id="AccessKeycheck" parameterType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto" resultType="java.lang.Integer">
+		SELECT COUNT(AUTH_IDX) FROM TB_AUTH_ACCESS WHERE ACCESS_KEY = #{ACCESS_KEY}
+	</select>
+	
+	<insert id="InsertAuthAccess" parameterType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto" >
+		INSERT INTO	
+		TB_AUTH_ACCESS(  ACCESS_KEY 
+					   	, REG_DTTM 
+					  	, USE_YN
+					  	, CONSUMER_KEY)
+		VALUES(			#{ACCESS_KEY}
+						, GETDATE()
+						, #{USE_YN}
+						, #{CONSUMER_KEY} )
+	</insert>
+	
+	<update id="UpdateAuthAccess" parameterType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto">
+		UPDATE TB_AUTH_ACCESS SET 
+		MOD_DTTM = GETDATE()
+			, USE_YN = #{USE_YN}
+			, CONSUMER_KEY = #{CONSUMER_KEY}
+		WHERE AUTH_IDX = #{AUTH_IDX}
+	</update>
+	
+	<delete id="DeleteAuthAccess" parameterType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto" >
+		DELETE FROM TB_AUTH_ACCESS WHERE AUTH_IDX = #{AUTH_IDX}
+	</delete>
+	
+	<delete id="DeleteApiAuthAccessAuth" parameterType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto">
+		DELETE FROM TB_API_AUTH_ACCESS
+		WHERE AUTH_IDX = #{AUTH_IDX}
+	</delete>
+	
+	<!--  REST API  -->
+	<select id="GetRestAPI" parameterType="kr.msp.admin.system.apiAccess.dto.AuthAccessDto" resultType="kr.msp.admin.system.apiAccess.dto.RestApiDto">
+		<include refid="head"/>
+		SELECT 	S1.API_IDX
+				, S1.URL_PATH
+				, S1.CONTENTS
+				, CONVERT(CHAR(10), S1.REG_DTTM, 102) AS REG_DTTM 
+				, (CASE S2.API_IDX WHEN S1.API_IDX  THEN 'Y' ELSE 'N' END) AS USE_YN
+				, ROW_NUMBER() OVER(ORDER BY S1.API_IDX) PAGE_KEY
+		FROM TB_REST_API S1 
+		LEFT OUTER JOIN TB_API_AUTH_ACCESS S2
+		ON S1.API_IDX = S2.API_IDX
+		AND S2.AUTH_IDX = #{AUTH_IDX}
+		<include refid="bottom"/>
+	</select>
+	
+	<select id="GetRestAPIone" parameterType="kr.msp.admin.system.apiAccess.dto.ApiAuthAccessDto" resultType="kr.msp.admin.system.apiAccess.dto.RestApiDto">
+		SELECT 	API_IDX
+				, URL_PATH
+				, CONTENTS
+				, REG_DTTM
+		FROM TB_REST_API 
+		WHERE API_IDX = #{API_IDX}
+	</select>
+	
+	<insert id="InsertRestAPI" parameterType="kr.msp.admin.system.apiAccess.dto.RestApiDto">
+		INSERT INTO	TB_REST_API
+		( 
+			URL_PATH
+			, CONTENTS
+			, REG_DTTM 
+	   )VALUES(
+	   	   	 #{URL_PATH}
+			, #{CONTENTS}
+			, GETDATE() )
+	</insert>
+	
+	<update id="UpdateRestAPI" parameterType="kr.msp.admin.system.apiAccess.dto.RestApiDto">
+		UPDATE TB_REST_API SET 
+		REG_DTTM = GETDATE()
+			, URL_PATH = #{URL_PATH}
+			, CONTENTS = #{CONTENTS}
+		WHERE API_IDX = #{API_IDX}
+	</update>
+	
+	<delete id="DeleteRestAPI" parameterType="kr.msp.admin.system.apiAccess.dto.RestApiDto">
+		DELETE FROM TB_REST_API WHERE API_IDX = #{API_IDX}
+	</delete>
+	
+	<delete id="DeleteApiAuthAccessApi" parameterType="kr.msp.admin.system.apiAccess.dto.RestApiDto">
+		DELETE FROM TB_API_AUTH_ACCESS
+		WHERE API_IDX = #{API_IDX}
+	</delete>
+	
+	<insert id="InsertApiAuthAccess" parameterType="kr.msp.admin.system.apiAccess.dto.ApiAuthAccessDto">
+		INSERT INTO	TB_API_AUTH_ACCESS
+		( 	API_IDX
+			, AUTH_IDX
+			, REG_DTTM
+		) VALUES (
+			#{API_IDX}
+			, #{AUTH_IDX}
+			, GETDATE()
+		)
+	</insert>
+	
+	<delete id="DeleteApiAuthAccess" parameterType="kr.msp.admin.system.apiAccess.dto.ApiAuthAccessDto">
+		DELETE FROM TB_API_AUTH_ACCESS
+		WHERE API_IDX = #{API_IDX} 
+		AND AUTH_IDX = #{AUTH_IDX}
+	</delete>
+    
+</mapper>

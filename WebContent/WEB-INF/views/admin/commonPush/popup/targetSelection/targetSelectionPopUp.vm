@@ -1,0 +1,112 @@
+<link rel="stylesheet" type="text/css" href="$!{RESOURCES_PATH}/css/admin_style_tab.css" />
+<script type="text/javascript">
+	
+	//공통코드 페이지 호출(공통)
+    function fn_getPage( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+    
+    //저장(적용)
+	function fn_use(){
+    	// 탭에 대한 onclick 이벤트 핸들러 등록 후 flag 처리 필요.
+    	if(document.getElementById("tabUser").style.display == "inline" || document.getElementById("tabUser").style.display == "block"){
+    		//사용자
+    		fn_getCheckedUser();
+    	}else{
+    		//그룹
+    		fn_getCheckedGroup();
+    	}
+    	fn_closePopup();
+    }
+    
+    function fn_getCheckedUser(){
+    	console.log("test");
+    	var arrPsid = new Array();
+    	var arrCuid = new Array();
+    	var totCnt = 0;
+    	var userIdType = $("#selIDType").val();
+    	var inUserArr = $("#tblInUser").find($(".classTrInUser"));
+    	
+		if(userIdType == "CUID"){
+			for(var i=0; i < inUserArr.size(); i++){
+				arrCuid.push(inUserArr[i].id);
+				totCnt++;
+			}
+    	}else if(userIdType == "PSID"){
+    		for(var i=0; i < inUserArr.size(); i++){
+    			arrPsid.push(inUserArr[i].id);
+    			totCnt++;
+			}
+    	}
+		fn_setTargetSelected_user(arrPsid, arrCuid, totCnt);
+	}
+	
+	function fn_getCheckedGroup(){
+		var arrGroupSeq = new Array();
+		var totCnt = 0;
+		$(".trInGroup").each(function(){
+			var groupSeq = $(this).find("#groupKey").val();
+			var cnt = $(this).find("td:eq(2)").text();
+			arrGroupSeq.push(groupSeq);
+			totCnt = totCnt + parseInt(cnt);
+		});
+		fn_setTargetSelected_group(arrGroupSeq, totCnt);
+	}
+	
+	function openTab(evt, tabId) {
+		// Declare all variables
+		var i, tabcontent, tablinks;
+
+		// Get all elements with class="tabcontent" and hide them
+		tabcontent = document.getElementsByClassName("tabcontent");
+		for (i = 0; i < tabcontent.length; i++) {
+			tabcontent[i].style.display = "none";
+		}
+
+		// Get all elements with class="tablinks" and remove the class "active"
+		tablinks = document.getElementsByClassName("tablinks");
+		for (i = 0; i < tablinks.length; i++) {
+			tablinks[i].className = tablinks[i].className.replace(" active", "");
+		}
+		// Show the current tab, and add an "active" class to the link that opened the tab
+		document.getElementById(tabId).style.display = "block";
+		evt.currentTarget.className += " active";
+	}
+</script>
+
+<form name="frmServiceInfo">
+	<input type="hidden" id="appId" name="APPID" value='$!appId'/>
+	<input type="hidden" id="serviceCode" name="SERVICECODE" value="$!serviceCode"/>
+
+	<div >
+
+			<ul class="tab">
+				<li><a class="tablinks active" onclick="openTab(event, 'tabUser')"><span> #springMessage("common.text.user")</span></a></li> <!-- 사용자 -->
+				<li><a class="tablinks" onclick="openTab(event, 'tabGroup')"><span> #springMessage("common.text.group")</span></a></li> <!-- 그룹 -->
+			</ul>
+			
+			<div id="tabUser" class="tabcontent" style="display: block;">
+				#parse("admin/commonPush/popup/targetSelection/targetSelectionPopUpTabUser.vm")
+			</div>
+			<div id="tabGroup" class="tabcontent" style="display: none;">
+				#parse("admin/commonPush/popup/targetSelection/targetSelectionPopUpTabGroup.vm")
+			</div>
+
+	</div>
+	
+	<br><br>
+	
+	<div class="btn-wrap txtCenter">
+		<a href="javascript:void(0)" onclick="fn_use();" class="btn1 type2">#springMessage("common.button.save")</a>	<!-- 저장 -->
+		<a href="javascript:void(0)" onclick="fn_closePopup();" class="btn1 type2 close">#springMessage("common.button.close")</a>	<!-- 닫기 -->
+	</div>
+</form>

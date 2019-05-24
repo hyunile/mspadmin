@@ -1,0 +1,181 @@
+<script type="text/javascript">
+	$(document).ready(function(){
+		//공통 페지징 처리
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    });
+	
+    //조회 검색
+    function ch_search(){
+		fn_getList(1);
+    }
+	
+	
+	$(document).on("click",".trMonitorSession",function(){
+
+		var psid = $(this).find("#PSID").val();
+
+		$(".select").removeClass().addClass("trMonitorSession");
+		$(this).removeClass().addClass("select");
+		$(this).addClass("on");
+
+
+		fn_popUpDetil(psid);
+	});
+	
+	//세션 모니터링 상세 팝업 호출
+    function fn_popUpDetil(psid){
+		var url = CONTEXT_PATH + "/admin/push/monitoring/sessionDetail";
+    	var type = "POST";
+    	var data = "PSID=" + psid;
+    	var target = $("#windowPop");
+    	var whideh = 600;
+    	var title = '#springMessage("menu.push.monitoring.sessionDetail")';//"세션 모니터링 상세";
+    	fn_getCommonPopupDiv( url, type, data , target , whideh, title );
+    }
+	
+    
+    //페이징 처리
+    function fn_getList(PAGE_NUM){
+		var selectRowSize = document.getElementById('selRowSize');
+		var SERVER_NAME = $(selectServ).val();
+    	var APP_ID = $(selectSvc).val();
+    	var CUID = $(txtCUID).val();
+    	var url = CONTEXT_PATH + "/admin/push/monitoring/session";
+    	var type = "POST";
+    	var data = "APPID=" + APP_ID +
+				   "&SERVERNAME=" + SERVER_NAME +
+				   "&CUID=" + CUID +
+				   "&PAGE_NUM=" + PAGE_NUM +
+				   "&PAGE_SIZE="+selectRowSize[selectRowSize.selectedIndex].value;
+    	var target = $("#divList");
+    	fn_getPage( url, type, data , target );
+    	fn_page('j_page_div', '$!{CONTEXT_PATH}');
+    }
+	
+    //공통코드 페이지 호출(공통)
+    function fn_getPage( url, type, data, target ){
+    	var AjaxHTML = jQuery.ajax({
+    		url: url ,
+    		type: type ,
+    		data: data ,
+    		dataType: "html" ,
+    		async: false ,
+    		cache:false
+    	}).responseText;
+    
+    	target.html(AjaxHTML);
+    }
+	
+	function fn_checkUserSession(psid, servername){
+		var url = CONTEXT_PATH + "/admin/push/monitoring/checkSession";
+    	var data = "PSID=" + psid + "&" + 
+    			   "SERVERNAME=" + servername + "&";
+    	jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+				cache: false,
+    			success:function(data){
+					var msg;
+					if(data.result == true){
+						msg = '#springMessage("menu.push.alert.session")'; //해상 세션은 유효합니다.
+					}else{
+						msg = '#springMessage("menu.push.alert.noSession")'; //해상 세션은 유효 하지 않습니다.
+					}
+    				alert(msg);
+    			}
+    		});
+	}
+	
+	function fn_terminateUserSession(psid, servername){
+		var url = CONTEXT_PATH + "/admin/push/monitoring/terminateSession";
+    	var data = "PSID=" + psid + "&" + 
+    			   "SERVERNAME=" + servername + "&";
+    	jQuery.ajax({
+    			url:url,
+    			type:"POST",
+    			data:data,
+    			dataType:"json",
+				cache: false,
+    			success:function(data){
+					var msg;
+					if(data.result == true){
+						msg = '#springMessage("menu.push.alert.sessionEnd")'; //해당 세션을 종료 시켰습니다.
+					}else{
+						msg = '#springMessage("menu.push.alert.sessionEndFail")'; //해당 세션 종료를 실패하였습니다.
+					}
+    				alert(msg);
+    			}
+    		});
+	}
+	
+
+	
+	
+	function fn_changeRowSize(){
+    	fn_commonSetRowSize();
+    	fn_getList(1);
+	}
+</script>
+<div id="conWrap">
+	#### S : 프로그램 위치 기술 부분  ####
+	<div class="header_bg">
+		<div class="inner_navi"></div>
+		<div class="tb_tit"></div>
+	</div>
+	#### E : 프로그램 위치 기술 부분  ####
+
+	#### S : 조회 폼 부분  ####
+	<fieldset class="search_type">
+		<table>
+			<tr>
+				<th>#springMessage("common.text.server")</th> <!-- 서버 -->
+				<td>
+					<select id="selectServ" class="w120">
+						<option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+						#foreach($server in $serverList)
+						<option value="$server.SERVERNAME">$server.SERVERNAME</option>
+						#end
+					</select>
+                </td>
+				<th>#springMessage("common.text.serviceName")</th> <!-- 서비스명 -->
+				<td>
+					<select id="selectSvc" class="w120">
+						<option value="">#springMessage("menu.mobile.manage.all")</option> <!-- 전체 -->
+						#foreach($svc in $serviceList)
+						<option value="$svc.APP_ID">$svc.SVC_NM</option>
+						#end
+					</select>
+				</td>
+				<th>CUID</th>
+				<td>
+					<input type="text" id="txtCUID"/>
+                </td>
+            </tr>
+        </table>
+		<button type="button" onclick="ch_search()" class="btn_inquiry">#springMessage("common.button.view")</button> <!-- 조회  -->
+	</fieldset>
+	#### E : 조회 폼 부분  ####
+
+	<div class="content">
+		<div class="tbCon">
+			## listView Header
+			<div class="btn_sel_group stats_group">
+            	<div class="fl"></div>
+            	<div class="fr">
+					<p>#springMessage("common.header.searchResult")<span id="spaTotCnt"></span></p> <!-- 검색결과  -->
+            		<select id="selRowSize" title="#springMessage('common.title.selectOne')" onchange="fn_changeRowSize()"> <!-- 항목선택 -->
+            			<option value="10">#springMessage("common.select.options_10")</option> <!-- 10개씩 보기 -->
+            			<option value="30">#springMessage("common.select.options_30")</option> <!-- 30개씩 보기 -->
+            			<option value="50">#springMessage("common.select.options_50")</option> <!-- 50개씩 보기 -->
+            		</select>	
+                </div>
+			</div>
+			## ListView Body
+			<div id="divList">
+				#parse("admin/push/monitorSession/monitorSessionList.vm")
+			</div>
+		</div>
+	</div>
+</div>
