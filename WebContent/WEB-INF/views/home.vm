@@ -37,7 +37,7 @@ window.onload=function(){
 
     function fn_windowOnLoad(){
 
-        ##쿠키정보 화면 셋팅
+        ##쿠키정보 화면 셋팅 
         fn_setCookieInfo();
 
         ##로그인 실패 메시지 호출 함수
