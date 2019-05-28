@@ -114,7 +114,7 @@ public class HomeController {
             int LOGIN = (Integer)respMap.get("LOGINCODE");
 			//로그인 성공
 			if(LOGIN == 1){
-//				login_msg = request.getSession().getAttribute("S_NM_USER") +" 로그인 하셨습니다.";
+//				login_msg = request.getSession().getAttribute("S_NM_USER") +" 로그인 하셨습니다. ";
 				go_url = "admin/common/msg_handling";
 				model.addAttribute("msg",login_msg);
 				// 메인 홈에 대한 첫 페이지 분기.

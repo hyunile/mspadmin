@@ -69,7 +69,8 @@
 	          maxActive="20"
 	          maxIdle="10"
 	          minIdle="5"
-	          maxWait="-1" 
+	          maxWait="-1"
+	         factory="org.apache.tomcat.jdbc.pool.DataSourceFactory" 
 	/> 
 	<Resource name="jdbc/msp_oracle_push"
 	          auth="Container"
